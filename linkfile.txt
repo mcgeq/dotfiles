@@ -1,0 +1,28 @@
+[DIR]
+USERPROFILE\.config\scoop D:\config\dotfiles\scoop
+USERPROFILE\.config\wezterm D:\config\dotfiles\wezterm
+USERPROFILE\.rustup D:\devTools\rust\.rustup
+USERPROFILE\.cargo D:\devTools\rust\.cargo
+USERPROFILE\.ctags.d D:\config\.ctags.d
+USERPROFILE\.vscode G:\registory\.vscode
+USERPROFILE\vimfiles D:\config\vimfiles
+USERPROFILE\OneDrive G:\registory\OneDrive
+USERPROFILE\pipx D:\devTools\pipx
+USERPROFILE\.local D:\config\.local
+USERPROFILE\.gradle G:\registory\gradle
+USERPROFILE\.bun D:\bin\.bun
+APPDATA\.emacs.d D:\config\.emacs.d
+APPDATA\Code D:\devTools\Roaming\Code
+APPDATA\fnm G:\registory\nodejs\fnm
+APPDATA\nushell D:\config\dotfiles\nushell
+APPDATA\pip D:\config\pip
+DATALOCAL\lf D:\config\dotfiles\lf
+DATALOCAL\npm-cache G:\registory\nodejs\node_cache
+DATALOCAL\nvim D:\config\nvim
+DATALOCAL\nvim-data D:\config\nvim-data
+DATALOCAL\pdm D:\Local\pdm
+DATALOCAL\pip D:\Local\pip
+DATALOCAL\tauri G:\registory\tauri
+DATALOCAL\fnm_multishells G:\registory\nodejs\fnm_multishells
+[FILE]
+USERPROFILE\.bunfig.toml G:\registory\bun\bunfig.toml
