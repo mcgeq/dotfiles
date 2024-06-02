@@ -1,0 +1,134 @@
+add_newline = false
+scan_timeout = 500
+command_timeout = 5000
+format = '$all$line_break$env_var$character'
+ 
+[env_var.VIRTUAL_ENV]
+format = 'venv:[$env_value]($style) '
+style = 'yellow bold'
+ 
+[time]
+disabled = false
+format = '🕙[$time]($style) '
+
+[username]
+style_user = "blue bold"
+style_root = "red bold"
+format = "[ $user ]($style)"
+disabled = false
+show_always = true
+
+[directory]
+format = "[](243)[ $path]($style)[$read_only]($read_only_style)[](243) "
+style = "bg:243"
+read_only_style = "bg:243"
+truncation_symbol = '…/'
+ 
+[cmd_duration]
+min_time = 100
+format = '🐌[$duration](bold yellow) '
+ 
+[aws]
+symbol = "  "
+ 
+[buf]
+symbol = " "
+ 
+[c]
+symbol = " "
+ 
+[conda]
+symbol = " "
+ 
+[dart]
+symbol = " "
+ 
+[docker_context]
+symbol = " "
+ 
+[elixir]
+symbol = " "
+ 
+[elm]
+symbol = " "
+ 
+[fossil_branch]
+symbol = " "
+ 
+[git_branch]
+symbol = " "
+format = "[$symbol$branch(:$remote_branch)]($style) "
+style = "bold yellow"
+ 
+[git_status]
+conflicted = '🏳'
+ahead = '🏎💨'
+behind = '😰'
+diverged = '😵'
+up_to_date = '✓'
+untracked = '🤷'
+stashed = '📦'
+modified = '📝'
+staged = '[++\($count\)](green)'
+renamed = '👅'
+deleted = '🗑'
+ 
+[golang]
+symbol = " "
+ 
+[guix_shell]
+symbol = " "
+ 
+[haskell]
+symbol = " "
+ 
+[haxe]
+symbol = " "
+ 
+[hg_branch]
+symbol = " "
+ 
+[hostname]
+ssh_symbol = " "
+ 
+[java]
+symbol = " "
+ 
+[julia]
+symbol = " "
+ 
+[lua]
+symbol = " "
+ 
+[meson]
+symbol = "󰔷 "
+ 
+[nim]
+symbol = "󰆥 "
+ 
+[nix_shell]
+symbol = " "
+ 
+[nodejs]
+symbol = " "
+ 
+[package]
+symbol = "󰏗 "
+ 
+[pijul_channel]
+symbol = " "
+ 
+[python]
+symbol = " "
+ 
+[erlang]
+symbol = "󰟔 "
+ 
+[ruby]
+symbol = " "
+ 
+[rust]
+symbol = " "
+ 
+[scala]
+symbol = " "
