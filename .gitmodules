@@ -4,9 +4,6 @@
 [submodule "vim-which-key"]
 	path = mcge-vimrc/pack/mcge/start/vim-which-key
 	url = git@github.com:liuchengxu/vim-which-key.git
-[submodule "vim-gruvbox"]
-	path = mcge-vimrc/pack/mcge/start/vim-airline-themes
-	url = git@github.com:vim-airline/vim-airline-themes.git
 [submodule "vim-ale"]
 	path = mcge-vimrc/pack/mcge/start/ale
 	url = git@github.com:dense-analysis/ale.git
@@ -43,6 +40,12 @@
 [submodule "vim-css-color"]
 	path = mcge-vimrc/pack/mcge/start/vim-css-color
 	url = git@github.com:ap/vim-css-color.git
+[submodule "vim-gruvbox"]
+	path = mcge-vimrc/pack/mcge/start/vim-gruvbox
+	url = git@github.com:morhetz/gruvbox.git
+[submodule "vim-airline-themes"]
+	path = mcge-vimrc/pack/mcge/start/vim-airline-themes
+	url = git@github.com:vim-airline/vim-airline-themes.git
 [submodule "emacs-beacon"]
 	path = mcge-emacs/site-lisp/extensions/beacon
 	url = git@github.com:Malabarba/beacon.git
