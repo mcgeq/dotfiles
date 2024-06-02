@@ -1,0 +1,16 @@
+[user]
+    email = ge942812@gmail.com
+    name = mcge
+[init]
+    defaultbranch = main
+[core]
+    autocrlf = true
+    editor = vim
+    quotePath = false
+    whitespace = fix,-indent-with-non-tab,-tab-in-indent,-space-before-tab,-trailing-space,cr-at-eol
+[gui]
+    encoding = utf-8
+[i18n]
+    logoutputencoding = utf-8
+[i18n "commit"]
+    encoding = utf-8

@@ -1,0 +1,75 @@
+:$0:
+# head: <type>(<scope>): <subject>
+# - type: feat, fix, docs, style, refactor, test, chore
+# - scope: can be empty (eg. if the change is a global or difficult to assign to a single component)
+# - subject: start with verb (such as 'change'), 50-character line
+#
+# body: 72-character wrapped. This should answer:
+# * Why was this change necessary?
+# * How does it address the problem?
+# * Are there any side effects?
+#
+# footer:
+# - Include a link to the ticket, if any.
+# - BREAKING CHANGE
+#
+# gitmoji
+# :sparkles:                    引入新的特性
+# :art:                         改进代码结构/代码格式
+# :zap: :racehorse:             提升性能
+# :fire:                        移除代码或文件
+# :bug:                         修复bug
+# :ambulance:                   重要补丁
+# :memo:                        撰写文档
+# :rocket:                      部署功能
+# :lipstick:                    更新UI和样式文件
+# :tada:                        初次提交
+# :white_check_mark:            增加测试
+# :lock:                        修复安全问题
+# :apple:                       修复macOS下的内容
+# :penguin:                     修复Linux下的内容
+# :checkered_flag:              修复Windows下的内容
+# :robot:                       修复Android上的某些内容
+# :green_apple:                 解决ios上的某些内容
+# :bookmark:                    发行/版本标签
+# :rotating_light:              移除linter警告
+# :construction:                工作进行中
+# :green_heart:                 修复CI构建问题
+# :arrow_down:                  降级依赖
+# :arrow_up:                    升级依赖
+# :pushpin:                     将依赖关系固定到特定版本
+# :construction_worker:         添加CI构建系统
+# :chart_with_upwards_trend:    添加分析或跟踪代码
+# :recycle:                     重构代码
+# :hammer:                      重大重构
+# :heavy_minus_sign:            减少一个依赖
+# :whale:                       Docker相关工作
+# :heavy_plus_sign:             增加一个依赖
+# :wrench:                      修改配置文件
+# :globe_with_meridians:        国际化与本地化
+# :pencil2:                     修复typo
+# :hankey:                      编写需要改进的错误代码
+# :rewind:                      恢复更改
+# :twisted_rightwards_arrow:    合并分支
+# :package:                     更新编译的文件或包
+# :alien:                       由于外部API更改而更新代码
+# :truck:                       移动或重命名文件
+# :page_facing_up:              添加或更新许可证
+# :boom:                        介绍突破性变化
+# :bento:                       添加或变更资产
+# :ok_hand:                     由于代码审查更改而更新代码
+# :wheelchair:                  提高可访问性
+# :bulb:                        记录源代码
+# :beers:                       醉生梦死的写代码
+# :speech_balloon:              更新文字
+# :card_file_box:               执行与数据库相关的更改
+# :loud_sound:                  添加日志
+# :mute:                        删除日志
+# :busts_in_silhouette:         添加贡献者
+# :children_crossing:           改善用户体验/可用性
+# :building_construction:       进行架构更改
+# :iphone:                      致力于响应式设计
+# :clown_face:                  嘲笑事务
+# :egg:                         彩蛋
+# :see_no_evil:                 添加或更新.gitignore
+# :camera_flash:                添加或更新快照
