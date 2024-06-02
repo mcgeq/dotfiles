@@ -1,0 +1,53 @@
+vim9script
+# Update the file modification time.
+# augroup MCGE_AUTO
+#     autocmd!
+#     autocmd BufWritePre,FileWritePre *.c,*.h,*.cpp,*.py,*.rs,*.ts,*.js,*.cs execute "normal ma"
+#     autocmd BufWritePre,FileWritePre *.c,*.h,*.cpp,*.py,*.rs,*.ts,*.js,*.cs exe $":1,12g/Last modified:.*/s/Last Modified:.*/Last Modified:  {strftime('%Y-%m-%d %H:%M:%S')}"
+# autocmd BufWritePre,FileWritePre *.c,*.h,*.cpp,*.py,*.rs,*.ts,*.js,*.cs exe $":1,12g/Modify Counts:.*/s/Modify Counts:.*/Modify Counts:  {(str2nr(submatch(1)) + 1)}"
+#     autocmd BufWritePost,FileWritePost *.c,*.h,*.cpp,*.py,*.rs,*.ts,*.js,*.cs execute "normal `a"
+# augroup END
+
+def SetPackPath(custom_dir: string)
+    var packpath_exist = index(split(&packpath, ','), custom_dir) != -1
+    if !packpath_exist
+        execute 'set packpath+=' .. custom_dir
+    endif
+enddef
+
+# 自定义一些全局变量
+g:mcge_custom_author = "mcge"
+g:mcge_custom_email = "<mcgeq@outlook.com>"
+g:mcge_custom_vista_executive = "ctags"
+g:mcge_custom_copyright = $"Copyright (C) {strftime('%Y')} Mcge. All rights reserved."
+g:mcge_custom_project = "F:/2024/projects"
+g:mcge_custom_workspace = "F:/workspace"
+g:mcge_custom_fzf_dir = "D:/bin/fzf"
+g:mcge_custom_preview_bash = "D:/bin/Git/bin/bash.exe"
+
+# 自定义vim配置文件路径
+g:mcge_customvimrcdir = "D:/config/dotfiles/mcge-vimrc"
+
+if has("unix")
+    g:mcge_customvimrcdir = "~/mcge-vimrc"
+    g:mcge_custom_project = "~/projects"
+    g:mcge_custom_workspace = "~/workspace"
+    g:mcge_custom_fzf_dir = "~/.fzf"
+    g:mcge_custom_preview_bash = "/usr/bin/bash"
+endif
+
+SetPackPath(g:mcge_customvimrcdir)
+
+if has("gui_running")
+    var vim_pos_x = 1000
+    var vim_pos_y = 10
+    var vim_width = 50
+    var vim_height = 90
+
+    execute $"set lines={vim_width}"
+    execute $"set columns={vim_height}"
+    execute $"winpos {vim_pos_x} {vim_pos_y}"
+endif
+
+execute 'source ' .. fnameescape(g:mcge_customvimrcdir .. '/init.vim')
+

@@ -1,0 +1,175 @@
+#+TITLE: Vim Config
+#+AUTHOR: mcge
+#+DATE: <2024-03-27 19:38:19>
+* A simple vim configuration
+此 vimrc 配置是使用 vim9script 编写。
+
+** 使用方式
+
+1. windows平台运行=install.bat=文件
+2. Linux平台运行=install.sh=文件
+
+** 配置文件目录介绍
+- colors :: 自定义 colorscheme
+- pack :: 插件，使用 vim 内置的包管理功能
+- config :: 存放具体配置的目录
+  + core :: 全局变量等
+- ftdetect :: 设置文件类型检测
+- ftplugin :: 针对文件类型加载的插件
+
+** 废弃
+*** 配置 vimrc
+在=vimrc=文件中写入以下内容
+#+BEGIN_SRC vimscript
+    vim9script
+
+    def SetPackPath(custom_dir: string)
+        var packpath_exist = index(split(&packpath, ','), custom_dir) != -1
+        if !packpath_exist
+            execute 'set packpath+=' .. custom_dir
+        endif
+    enddef
+    
+    # 自定义一些全局变量
+    g:mcge_custom_project = "F:/2024/projects"
+    g:mcge_custom_workspace = "F:/workspace"
+    g:mcge_custom_fzf_dir = "D:/bin/fzf"
+    g:mcge_custom_preview_bash = "D:/bin/Git/bin/bash.exe"
+
+    # 自定义vim配置文件路径
+    g:mcge_customvimrcdir = "D:/config/mcge-vimrc"
+
+    if has("unix")
+        g:mcge_customvimrcdir = "~/mcge-vimrc"
+        g:mcge_custom_project = "~/projects"
+        g:mcge_custom_workspace = "~/workspace"
+        g:mcge_custom_fzf_dir = "~/.fzf"
+        g:mcge_custom_preview_bash = "/usr/bin/bash"
+    endif
+
+    SetPackPath(g:mcge_customvimrcdir)
+    var vim_pos_x = 1000
+    var vim_pos_y = 10
+    var vim_width = 50
+    var vim_height = 90
+
+    execute $"set lines={vim_width}"
+    execute $"set columns={vim_height}"
+    execute $"winpos {vim_pos_x} {vim_pos_y}"
+    
+    execute 'source ' .. fnameescape(g:mcge_customvimrcdir .. '/init.vim')
+#+END_SRC
+
+*** 废弃
+#+BEGIN_SRC vimscript
+    vim9script
+
+    def SetRuntimePath(custom_dir: string)
+        var runtimepath_exist = index(split(&runtimepath, ','), custom_dir) != -1
+        if !runtimepath_exist
+            execute 'set runtimepath+=' .. custom_dir
+        endif
+    enddef
+
+    def SetPackPath(custom_dir: string)
+        var packpath_exist = index(split(&packpath, ','), custom_dir) != -1
+        if !packpath_exist
+            execute 'set packpath+=' .. custom_dir
+        endif
+    enddef
+    
+    # 自定义一些全局变量
+    g:mcge_custom_project = "F:/2024/projects"
+    g:mcge_custom_workspace = "F:/workspace"
+    g:mcge_custom_fzf_dir = "D:/bin/fzf"
+
+    # 自定义vim配置文件路径
+    g:mcge_customvimrcdir = "D:/config/mcge-vimrc"
+
+    if has('unix')
+        g:mcge_customvimrcdir = "~/mcge-vimrc"
+        g:mcge_custom_project = "~/projects"
+        g:mcge_custom_workspace = "~/workspace"
+        g:mcge_custom_fzf_dir = "~/.fzf"
+    endif
+
+    SetRuntimePath(g:mcge_customvimrcdir)
+    SetRuntimePath(g:mcge_custom_fzf_dir)
+
+    SetPackPath(g:mcge_customvimrcdir)
+
+    execute 'source ' .. fnameescape(g:mcge_customvimrcdir .. '/init.vim')
+#+END_SRC
+
+*** 废弃
+#+BEGIN_SRC vimscript
+  vim9script
+  # 自定义一些全局变量
+  g:mcge_custom_project = "F:/2024/projects"
+  g:mcge_custom_workspace = "F:/workspace"
+
+  # 自定义vim配置文件路径
+  g:mcge_customvimrcdir = "D:/config/mcge-vimrc"
+
+  if has('unix')
+      g:mcge_customvimrcdir = "~/mcge-vimrc"
+      g:mcge_custom_project = "~/projects"
+      g:mcge_custom_workspace = "~/workspace"
+  endif
+  
+  var runtimepath_exist = index(split(&runtimepath, ','), g:mcge_customvimrcdir) != -1
+  if !runtimepath_exist
+      # 将自定义的配置文件路径加入`runtimepath'
+      execute 'set runtimepath+=' .. g:mcge_customvimrcdir
+  endif
+  # 判断自定义的配置文件路径是否已经存在packpath中使用vim内置包管理自动加载
+  var packpath_exist = index(split(&packpath, ','), g:mcge_customvimrcdir) != -1
+  if !packpath_exist
+      execute 'set packpath+=' .. g:mcge_customvimrcdir
+  endif
+  # 加载配置文件
+  execute 'source ' .. fnameescape(g:mcge_customvimrcdir .. '/init.vim')
+#+END_SRC
+
+*** 废弃的方法
+#+BEGIN_SRC vimscript
+# 获取指定字符串结尾目录的下一级目录
+def GetSubDirectories(path: string, suffix: string, next: bool): list<string> 
+    var subdirectories = []
+    def RecursiveTraversal(directory: string)
+	for entry in glob(directory .. '/*', 1, 1)
+		if isdirectory(entry)
+			if fnamemodify(entry, ':t') ==# suffix
+				if next
+					for sub_entry in glob(entry .. '/*', 1, 1)
+						if isdirectory(sub_entry)
+                			add(subdirectories, sub_entry)
+						endif
+					endfor
+				else
+					add(subdirectories, entry)
+				endif
+			endif
+			call RecursiveTraversal(entry)
+		endif
+	endfor
+    enddef
+    call RecursiveTraversal(path)
+    return subdirectories
+enddef
+
+
+var subdires = GetSubDirectories(g:mcge_customvimrcdir, 'start', true)
+# for directory in subdires
+#	execute 'set runtimepath+=' .. directory
+#	var docdir = directory .. "\\doc"
+#	if isdirectory(docdir)
+#		execute "helptags " .. docdir
+#	endif
+# endfor
+var optdires = GetSubDirectories(g:mcge_customvimrcdir, 'opt', false)
+# for dires in optdires
+#	execute 'set runtimepath+=' .. dires
+# endfor
+#+END_SRC
+
