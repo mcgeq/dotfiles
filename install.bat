@@ -60,7 +60,7 @@ if "%isAdmin%" == "true" (
 ) else (
     echo Update the git project and update the child module.
     call :pullAndUpdateGitProject %configHome%
-    call :traverseAndCheckGitProject %configHome%
+    REM call :traverseAndCheckGitProject %configHome%
     echo Request administrator privileges
     powershell -Command "Start-Process '%0' -Verb RunAs -ArgumentList '%configHome%'"
     exit /b
@@ -73,6 +73,7 @@ git pull
 if exist ".gitmodules" (
     echo Start the update submodule...
     git submodule update --init --recursive
+    git submodule foreach git reset --hard
 ) else (
     echo You don't need to update submodule.
 )
