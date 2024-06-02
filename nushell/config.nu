@@ -1,0 +1,1 @@
+source D:/config/starship/init.nu
