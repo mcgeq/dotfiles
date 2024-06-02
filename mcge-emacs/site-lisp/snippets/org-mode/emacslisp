@@ -1,0 +1,38 @@
+# -*- mode: snippet -*-
+# name: emacs-lisp
+# key: <elt
+# --
+* init-tm.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle (concat temporary-file-directory "init-tm.el") :lexical t
+:END:
+
+** Headers
+#+begin_src emacs-lisp
+  ;;; init-tm.el --- config  -*- lexical-binding: t; -*-
+
+  ;;; Commentary:
+
+#+end_src
+
+** Require
+#+begin_src emacs-lisp
+  ;;; Require:
+
+
+  ;;; Code :
+  
+#+end_src
+
+** Code
+#+begin_src emacs-lisp
+
+#+end_src
+
+** Ends
+#+begin_src emacs-lisp
+
+  (provide 'init-tm)
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;;; init-tm.el ends here
+#+end_src

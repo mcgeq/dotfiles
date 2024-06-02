@@ -1,0 +1,39 @@
+* init-org-roam.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle (concat temporary-file-directory "init-org-roam.el") :lexical t
+:END:
+
+** Headers
+#+begin_src emacs-lisp
+  ;;; init-org-roam.el --- org-roam config  -*- lexical-binding: t; -*-
+
+  ;;; Commentary:
+
+  #+end_src
+
+** Require
+#+begin_src emacs-lisp
+  ;;; Require:
+  (require 'org-roam)
+  (require 'init-const)
+
+  ;;; Code :
+
+  #+end_src
+
+** Code
+#+begin_src emacs-lisp
+  (setq org-roam-directory (concat mcgemacs-org-dir "/roam"))
+  (add-hook 'after-init-hook 'org-roam-mode)
+
+  ;; org-roam-ui
+  ;(setq org-roam-ui-sync-theme t)
+#+end_src
+
+** Ends
+#+begin_src emacs-lisp
+
+(provide 'init-org-roam)
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;;; init-org-roam.el ends here
+  #+end_src

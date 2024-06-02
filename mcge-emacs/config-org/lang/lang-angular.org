@@ -1,0 +1,30 @@
+* lang-angular.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle (concat temporary-file-directory "lang-angular.el") :lexical t
+:END:
+
+** Headers
+#+begin_src emacs-lisp
+  ;;; lang-angular.el ---   -*- lexical-binding: t; -*-
+
+  ;;; Commentary:
+
+  #+end_src
+
+** Require
+#+begin_src emacs-lisp
+  (require 'eglot)
+  ;;; Code :
+  #+end_src
+
+** Code
+#+begin_src emacs-lisp
+  (add-to-list 'eglot-server-programs '(web-mode . ("ngserver")))
+#+end_src
+
+** Ends
+#+begin_src emacs-lisp
+(provide 'lang-angular)
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;;; lang-angular.el ends here
+  #+end_src

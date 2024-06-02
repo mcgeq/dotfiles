@@ -1,0 +1,34 @@
+* init-rainbow-delimiters.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle (concat temporary-file-directory "init-rainbow-delimiters.el") :lexical t
+:END:
+
+** Headers
+#+begin_src emacs-lisp
+  ;;; init-rainbow-delimiters.el --- rainbow config  -*- lexical-binding: t; -*-
+
+  ;;; Commentary:
+
+  #+end_src
+
+** Require
+#+begin_src emacs-lisp
+  ;;; Require:
+  (require 'rainbow-delimiters)
+
+  ;;; Code :
+
+  #+end_src
+
+** Code
+#+begin_src emacs-lisp
+  (add-hook 'prog-mode-hook #'rainbow-delimiters-mode)
+#+end_src
+
+** Ends
+#+begin_src emacs-lisp
+
+(provide 'init-rainbow-delimiters)
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;;; init-rainbow-delimiters.el ends here
+  #+end_src

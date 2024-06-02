@@ -1,0 +1,67 @@
+* init.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle (concat temporary-file-directory "init.el") :lexical t
+:END:
+
+** Headers
+#+BEGIN_SRC emacs-lisp
+  ;;; init.el -- Emacs initialization config -*- lexical-binding: t -*-
+  ;;; Commentary:
+#+END_SRC
+
+** Require
+#+BEGIN_SRC emacs-lisp
+  ;;; Require:
+  (require 'init-const)
+  (require 'init-font)
+
+  ;;; Code:
+#+END_SRC
+
+** Hide tools menu vertical-scroll
+#+BEGIN_SRC emacs-lisp
+  (push '(menu-bar-lines   . 0) default-frame-alist)
+  (push '(tool-bar-lines    . 0) default-frame-alist)
+  (push '(vertical-scroll-bars) default-frame-alist)
+#+END_SRC
+
+** System code
+#+BEGIN_SRC emacs-lisp
+  (prefer-coding-system 'utf-8)
+  (unless *is-win32p*
+    (set-selection-coding-system 'utf-8))
+#+END_SRC
+
+** Set `gc-cons-threshold'
+#+BEGIN_SRC emacs-lisp
+  (let (
+      ;; 加载的时候临时增大`gc-cons-threshold'以加速启动速度
+      (gc-cons-threshold most-positive-fixnum)
+      (gc-cons-percentage 0.6)
+      ;; 清空避免加载远程文件的时候分析文件
+      (file-name-handler-alist nil))
+  ;; 让窗口启动更平滑
+  (setq frame-inhibit-implied-resize t)
+  (setq-default inhibit-redisplay t
+		inhibit-message t)
+  (add-hook 'window-setup-hook
+	    (lambda ()
+	      (setq-default inhibit-redisplay nil
+			    inhibit-message nil)
+	      (redisplay)))
+  )
+#+END_SRC
+
+** require core config
+#+BEGIN_SRC emacs-lisp
+  (require 'init-generic)
+  (require 'init-core)
+#+END_SRC
+
+** Ends
+#+BEGIN_SRC emacs-lisp
+  (provide 'init)
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;;; init.el ends here
+#+END_SRC
+

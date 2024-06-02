@@ -1,0 +1,94 @@
+* init-const.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle (concat temporary-file-directory "init-const.el") :lexical t
+:END:
+
+** Judge Operation System
+#+BEGIN_SRC emacs-lisp
+  (defconst *is-win32p*
+    (memq system-type '(cygwin windows-nt ms-dos))
+    "Running on a WinNT System.")
+
+  (defconst *is-linux*
+    (eq system-type 'gnu/linux)
+    "Running on a GNU/Linux System.")
+
+  (defconst *is-mac*
+    (eq system-type 'darwin)
+    "Running on a MacOS System.")
+#+END_SRC
+
+** GUI window-system
+#+BEGIN_SRC emacs-lisp
+  ;; GUI `window-system'
+  (defconst *is-gui-p*
+    (memq window-system '(x w32 ns pc pgtk))
+    "Currently running in terminal mode.")
+#+END_SRC
+
+** Set font
+#+BEGIN_SRC emacs-lisp
+  (defvar mcg--fonts-default '("FiraCode Nerd Font" "DejaVuSansMono Nerd Font Mono" "Consolas" "Source Code Pro" "Hack" "Fira Code"))
+  (defvar mcg--fonts-unicode '("Symbola" "Segoe UI Symbol" "Symbol"))
+  (defvar mcg--fonts-emoji    '("Noto Color Emoji" "Apple Color Emoji"))
+  (defvar mcg--fonts-cjk     '("KaiTi" "WenQuanYi Micro Hei" "Microsoft Yahei UI" "Microsoft Yahei" "STFangsong"))
+#+END_SRC
+
+** Emacs version
+#+BEGIN_SRC emacs-lisp
+  (defconst emacs/>=29p
+    (>= emacs-major-version 29)
+  "Emacs is 29 or above.")
+#+END_SRC
+
+** Custom some directory
+#+BEGIN_SRC emacs-lisp
+  ;; 定义 emacs 配置文件目录上级目录
+  (defvar mcgemacs-custom-dir (if *is-win32p* (file-truename "D:/config")
+                                (file-truename "~")))
+  ;; 自定义博客目录
+  (defvar mcgemacs-blog-dir      (if *is-win32p* (file-truename "D:/workspaces/blog/mcge-blog")
+                                   (file-truename "~/workspaces/blog/mcge-blog")))
+
+  (defvar mcgemacs-blog-org-dir  (concat mcgemacs-blog-dir "/content-org"))
+  ;; 自定义 org 目录
+  (defvar mcgemacs-org-dir       (if *is-win32p* (file-truename "D:/org")
+                                   (file-truename "~/org")))
+  ;; 定义一些启动目录，方便下次迁移
+  (defvar mcgemacs-root-dir      (concat mcgemacs-custom-dir "/mcgemacs"))
+  (defvar mcgemacs-config-dir    (concat mcgemacs-root-dir "/config-org"))
+  (defvar mcgemacs-extension-dir (concat mcgemacs-root-dir "/extensions"))
+
+
+  (defvar org-file-note     (expand-file-name "notes.org"     (concat mcgemacs-org-dir "/notes")))
+  (defvar org-file-task     (expand-file-name "tasks.org"      mcgemacs-org-dir))
+  (defvar org-file-calendar (expand-file-name "calendar.org"  mcgemacs-org-dir))
+  (defvar org-file-finished (expand-file-name "finished.org"  mcgemacs-org-dir))
+  (defvar org-file-canceled (expand-file-name "canceled.org"  mcgemacs-org-dir))
+  (defvar org-file-diary    (expand-file-name "diary.org"     mcgemacs-org-dir))
+  (defvar org-file-journal  (expand-file-name "inbox.org"    (concat mcgemacs-org-dir "/journal")))
+  (defvar org-file-billing  (expand-file-name "billing.org"  (concat mcgemacs-org-dir "/billing")))
+  (defvar org-file-password (expand-file-name "passwords.org.cpt" (concat mcgemacs-org-dir "/private")))
+  (defvar org-file-blog   (expand-file-name "all-posts.org" mcgemacs-blog-org-dir))
+#+END_SRC
+
+** Set image size
+#+BEGIN_SRC emacs-lisp
+  ;; image size
+  (defvar mcge/image-scale-mode-step 1.2
+    "Image scale factor.")
+#+END_SRC
+
+** Custom C# paths
+#+BEGIN_SRC emacs-lisp :tangle no
+  (defvar mcgemacs-eglot-csharp-dir (if *is-win32p* (file-truename "D:/lsp/csharp")
+                                      (file-truename "~/lsp/csharp")))
+#+END_SRC
+
+** Ends
+#+BEGIN_SRC emacs-lisp
+  (provide 'init-const)
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;;; init-const.el ends here
+#+END_SRC
+

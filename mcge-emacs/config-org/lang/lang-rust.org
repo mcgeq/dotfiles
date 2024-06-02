@@ -1,0 +1,80 @@
+* lang-rust.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle (concat temporary-file-directory "lang-rust.el") :lexical t
+:END:
+
+** Headers
+#+begin_src emacs-lisp
+  ;;; lang-rust.el --- Rust config  -*- lexical-binding: t; -*-
+
+  ;;; Commentary:
+
+  #+end_src
+
+** Require
+#+begin_src emacs-lisp
+  ;;; Require:
+  (require 'rust-mode)
+  (require 'eglot)
+
+  ;;; Code :
+  #+end_src
+
+** Rust
+#+begin_src emacs-lisp
+  (add-hook 'rust-mode-hook #'(lambda () (setq tab-width 4)))
+  (add-hook 'eglot-managed-mode-hook 'mcg/eglot-hook)
+
+  ;; Rust
+  (add-to-list 'eglot-server-programs `((rust-ts-mode rust-mode) . ("rust-analyzer"
+                                                        :initializationOptions
+                                                        (
+                                                         :cargo (:buildScripts (:enable t) :feature "all")
+                                                         :check (:command "clippy")
+                                                         :diagnostics (:experimental (:enable t))
+                                                         :inlayHints (:parameterHints (:enable :json-false)
+                                                                                      :closingBraceHints (:enable t
+                                                                                                          :minLines 20))
+                                                                )
+                                                        )))
+
+  (setq rust-format-on-save t)
+
+  (defun mcg/eglot-hook ()
+    "Show flymake diagnostics first"
+    (setq eldoc-documentation-functions
+          (cons #'flymake-eldoc-function
+                (remove #'flymake-eldoc-function eldoc-documentation-functions))))
+
+  (setq eldoc-echo-area-use-multiline-p 3
+        eldoc-echo-area-display-truncation-message nil)
+
+  (set-face-attribute 'eglot-highlight-symbol-face nil
+                      :background "#b3d7ff")
+
+  (defun mcg/rust-expand-macro ()
+    "Expand macro at point, same as `lsp-rust-analyzer-expand-macro'."
+    (interactive)
+    (jsonrpc-async-request
+     (eglot--current-server-or-lose)
+     :rust-analyzer/expandMacro (eglot--TextDocumentPositionParams)
+     :error-fn (lambda (msg) (error"Macro expand failed, msg: %s." msg))
+     :success-fn
+     (lambda (expanded-macro)
+       (cl-destructuring-bind (name format expansion result) expanded-macro
+         (let* ((pr (eglot--current-project))
+                (buf (get-buffer-create (format "*rust macro expansion %s*" (project-root pr)))))
+           (with-current-buffer buf
+             (let ((inhibit-read-only t))
+               (erase-buffer)
+               (insert result)
+               (rust-mode)))
+           (switch-to-buffer-other-window buf))))))
+#+end_src
+
+** Ends
+#+begin_src emacs-lisp
+  (provide 'lang-rust)
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;;; lang-rust.el ends here
+  #+end_src

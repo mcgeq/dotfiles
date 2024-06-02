@@ -1,0 +1,90 @@
+* init-corfu.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle (concat temporary-file-directory "init-corfu.el") :lexical t
+:END:
+
+** Headers
+#+begin_src emacs-lisp
+  ;;; init-corfu.el --- corfu config  -*- lexical-binding: t; -*-
+
+  ;;; Commentary:
+
+  #+end_src
+
+** Require
+#+begin_src emacs-lisp
+  ;;; Require:
+  (require 'corfu)
+  (require 'corfu-popupinfo)
+  (require 'corfu-quick)
+  (require 'nerd-icons-corfu)
+
+  ;;; Code :
+  #+end_src
+
+** Code
+#+begin_src emacs-lisp
+  (add-hook 'after-init-hook 'global-corfu-mode-hook)
+  (add-to-list 'corfu-margin-formatters #'nerd-icons-corfu-formatter)
+
+  (global-corfu-mode)
+  (setq corfu-cycle t)
+  (corfu-popupinfo-mode)
+  (setq completion-cycle-threshold 0)
+  (setq tab-always-indent 'complete)
+  (setq corfu-preselect 'prompt)
+
+  (setq-default corfu-auto    t
+        corfu-auto-delay    0.2
+        corfu-auto-prefix   1
+        completion-styles   '(orderless partial-completion basic))
+
+  (setq-default corfu-quit-at-boundary t)
+  (setq-default corfu-separator nil)
+#+end_src
+
+** ispell
+#+begin_src emacs-lisp :tangle no
+;(setq-default corfu-quit-no-match 'separator)
+
+;(advice-add 'ispell-lookup-words :around
+;            (lambda (orig &rest args)))
+;              ;(shut-up (apply orig args))
+#+end_src
+
+** Optionally
+#+begin_src emacs-lisp
+  ;; Optionally:
+  (setq nerd-icons-corfu-mapping
+        '((array :style "cod" :icon "symbol_array" :face font-lock-type-face)
+          (boolean :style "cod" :icon "symbol_boolean" :face font-lock-builtin-face)
+          ;; ...
+          (t :style "cod" :icon "code" :face font-lock-warning-face)))
+
+  (defun corfu-enable-always-in-minibuffer ()
+    "Enable Corfu in the minibuffer if Vertico/Mct are not active."
+    (unless (or (bound-and-true-p mct--active)
+                (bound-and-true-p vertico--input))
+      (corfu-mode 1)))
+#+end_src
+
+** Minibuffer
+#+begin_src emacs-lisp
+  (add-hook 'minibuffer-setup-hook #'corfu-enable-always-in-minibuffer 1)
+#+end_src
+
+** eshell
+#+begin_src emacs-lisp
+  ;; enable corfu in eshell
+  (add-hook 'eshell-mode-hook
+            (lambda ()
+              (setq-local corfu-auto nil)
+              (corfu-mode)))
+#+end_src
+
+** Ends
+#+begin_src emacs-lisp
+  (provide 'init-corfu)
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;;; init-corfu.el ends here
+  #+end_src

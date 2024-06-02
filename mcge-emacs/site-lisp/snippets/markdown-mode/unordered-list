@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: Unordered List
+# contributor: liuyinz <liuyinz95@gmail.com>
+# key: ul
+# --
+
+- ${1:Item}
+$0

@@ -43,3 +43,168 @@
 [submodule "vim-css-color"]
 	path = mcge-vimrc/pack/mcge/start/vim-css-color
 	url = git@github.com:ap/vim-css-color.git
+[submodule "emacs-beacon"]
+	path = mcge-emacs/site-lisp/extensions/beacon
+	url = git@github.com:Malabarba/beacon.git
+[submodule "emacs-doom-themes"]
+	path = mcge-emacs/site-lisp/extensions/themes/doom-themes
+	url = git@github.com:doomemacs/themes.git
+[submodule "emacs-ibuffer-vc"]
+	path = mcge-emacs/site-lisp/extensions/themes/ibuffer-vc
+	url = git@github.com:purcell/ibuffer-vc.git
+[submodule "emacs-nerd-icons"]
+	path = mcge-emacs/site-lisp/extensions/nerd-icons
+	url = git@github.com:rainstormstudio/nerd-icons.el.git
+[submodule "emacs-nerd-icons-dired"]
+	path = mcge-emacs/site-lisp/extensions/nerd-icons-dired
+	url = git@github.com:rainstormstudio/nerd-icons-dired.git
+[submodule "emacs-diredfl"]
+	path = mcge-emacs/site-lisp/extensions/diredfl
+	url = git@github.com:purcell/diredfl.git
+[submodule "emacs-dirvish"]
+	path = mcge-emacs/site-lisp/extensions/dirvish
+	url = git@github.com:alexluigit/dirvish.git
+[submodule "emacs-nerd-icons-completion"]
+	path = mcge-emacs/site-lisp/extensions/nerd-icons-completion
+	url = git@github.com:rainstormstudio/nerd-icons-completion.git
+[submodule "emacs-vertico"]
+	path = mcge-emacs/site-lisp/extensions/vertico
+	url = git@github.com:minad/vertico.git
+[submodule "emacs-pinyinlib"]
+	path = mcge-emacs/site-lisp/extensions/pinyinlib
+	url = git@github.com:cute-jumper/pinyinlib.el.git
+[submodule "emacs-orderless"]
+	path = mcge-emacs/site-lisp/extensions/orderless
+	url = git@github.com:oantolin/orderless.git
+[submodule "emacs-marginalia"]
+	path = mcge-emacs/site-lisp/extensions/marginalia
+	url = git@github.com:minad/marginalia.git
+[submodule "emacs-color-rg"]
+	path = mcge-emacs/site-lisp/extensions/color-rg
+	url = git@github.com:manateelazycat/color-rg.git
+[submodule "emacs-embark"]
+	path = mcge-emacs/site-lisp/extensions/embark
+	url = git@github.com:oantolin/embark.git
+[submodule "emacs-compat"]
+	path = mcge-emacs/site-lisp/extensions/compat
+	url = git@github.com:emacs-compat/compat.git
+[submodule "emacs-consult"]
+	path = mcge-emacs/site-lisp/extensions/consult
+	url = git@github.com:minad/consult.git
+[submodule "emacs-pangu-spacig"]
+	path = mcge-emacs/site-lisp/extensions/pangu-spacig
+	url = git@github.com:coldnew/pangu-spacing.git
+[submodule "emacs-magit"]
+	path = mcge-emacs/site-lisp/extensions/magit
+	url = git@github.com:magit/magit.git
+[submodule "emacs-diff-hl"]
+	path = mcge-emacs/site-lisp/extensions/diff-hl
+	url = git@github.com:dgutov/diff-hl.git
+[submodule "emacs-rainbow-delimiters"]
+	path = mcge-emacs/site-lisp/extensions/rainbow-delimiters
+	url = git@github.com:Fanael/rainbow-delimiters.git
+[submodule "emacs-dash"]
+	path = mcge-emacs/site-lisp/extensions/dash
+	url = git@github.com:magnars/dash.el.git
+[submodule "emacs-with-editor"]
+	path = mcge-emacs/site-lisp/extensions/with-editor
+	url = git@github.com:magit/with-editor.git
+[submodule "emacs-treesit-auto"]
+	path = mcge-emacs/site-lisp/extensions/treesit-auto
+	url = git@github.com:renzmann/treesit-auto.git
+[submodule "emacs-flycheck"]
+	path = mcge-emacs/site-lisp/extensions/flycheck
+	url = git@github.com:flycheck/flycheck.git
+[submodule "emacs-yasnippet"]
+	path = mcge-emacs/site-lisp/extensions/snippets/yasnippet
+	url = git@github.com:joaotavora/yasnippet.git
+[submodule "emacs-rime"]
+	path = mcge-emacs/site-lisp/extensions/rime
+	url = git@github.com:DogLooksGood/emacs-rime.git
+[submodule "emacs-markdown-mode"]
+	path = mcge-emacs/site-lisp/extensions/markdown-mode
+	url = git@github.com:jrblevin/markdown-mode.git
+[submodule "emacs-rust-mode"]
+	path = mcge-emacs/site-lisp/extensions/lsp/rust-mode
+	url = git@github.com:rust-lang/rust-mode.git
+[submodule "emacs-emacs-rime"]
+	path = mcge-emacs/site-lisp/extensions/emacs-rime
+	url = git@github.com:DogLooksGood/emacs-rime.git
+[submodule "emacs-posframe"]
+	path = mcge-emacs/site-lisp/extensions/posframe
+	url = git@github.com:tumashu/posframe.git
+[submodule "emacs-mini-frame"]
+	path = mcge-emacs/site-lisp/extensions/mini-frame
+	url = git@github.com:muffinmad/emacs-mini-frame.git
+[submodule "emacs-nerd-icons-corfu"]
+	path = mcge-emacs/site-lisp/extensions/nerd-icons-corfu
+	url = git@github.com:LuigiPiucco/nerd-icons-corfu.git
+[submodule "emacs-awesome-pair"]
+	path = mcge-emacs/site-lisp/extensions/awesome-pair
+	url = git@github.com:manateelazycat/awesome-pair.git
+[submodule "emacs-emacs-async"]
+	path = mcge-emacs/site-lisp/extensions/org/emacs-async
+	url = git@github.com:jwiegley/emacs-async.git
+[submodule "emacs-embark-consult"]
+	path = mcge-emacs/site-lisp/extensions/embark-consult
+	url = git@github.com:emacs-straight/embark-consult.git
+[submodule "emacs-cal-chinese-x"]
+	path = mcge-emacs/site-lisp/extensions/org/cal-china-x
+	url = git@github.com:xwl/cal-china-x.git
+[submodule "emacs-corfu"]
+	path = mcge-emacs/site-lisp/extensions/corfu
+	url = git@github.com:minad/corfu.git
+[submodule "emacs-cape"]
+	path = mcge-emacs/site-lisp/extensions/cape
+	url = git@github.com:minad/cape.git
+[submodule "emacs-emacsql"]
+	path = mcge-emacs/site-lisp/extensions/emacsql
+	url = git@github.com:magit/emacsql.git
+[submodule "emacs-ht"]
+	path = mcge-emacs/site-lisp/extensions/ht
+	url = git@github.com:Wilfred/ht.el.git
+[submodule "emacs-org-appear"]
+	path = mcge-emacs/site-lisp/extensions/org/org-appear
+	url = git@github.com:awth13/org-appear.git
+[submodule "emacs-org-download.git"]
+	path = mcge-emacs/site-lisp/extensions/org/org-download
+	url = git@github.com:abo-abo/org-download.git
+[submodule "emacs-org-modern"]
+	path = mcge-emacs/site-lisp/extensions/org/org-modern
+	url = git@github.com:minad/org-modern.git
+[submodule "emacs-org-roam"]
+	path = mcge-emacs/site-lisp/extensions/org/org-roam
+	url = git@github.com:org-roam/org-roam.git
+[submodule "emacs-org-popup-posframe"]
+	path = mcge-emacs/site-lisp/extensions/org/org-popup-posframe
+	url = git@github.com:A7R7/org-popup-posframe.git
+[submodule "emacs-ox-hugo"]
+	path = mcge-emacs/site-lisp/extensions/org/ox-hugo
+	url = git@github.com:kaushalmodi/ox-hugo.git
+[submodule "emacs-quickrun"]
+	path = mcge-emacs/site-lisp/extensions/quickrun
+	url = git@github.com:emacsorphanage/quickrun.git
+[submodule "emacs-svg-lib"]
+	path = mcge-emacs/site-lisp/extensions/org/svg-lib
+	url = git@github.com:rougier/svg-lib.git
+[submodule "emacs-svg-tag-mode"]
+	path = mcge-emacs/site-lisp/extensions/svg-tag-mode
+	url = git@github.com:rougier/svg-tag-mode.git
+[submodule "emacs-htmlize"]
+	path = mcge-emacs/site-lisp/extensions/htmlize
+	url = git@github.com:hniksic/emacs-htmlize.git
+[submodule "emacs-tabspaces"]
+	path = mcge-emacs/site-lisp/extensions/tabspaces
+	url = git@github.com:mclear-tools/tabspaces.git
+[submodule "emacs-treemacs"]
+	path = mcge-emacs/site-lisp/extensions/treemacs
+	url = git@github.com:Alexander-Miller/treemacs.git
+[submodule "emacs-tomelr"]
+	path = mcge-emacs/site-lisp/extensions/org/tomelr
+	url = git@github.com:kaushalmodi/tomelr.git
+[submodule "emacs-valign"]
+	path = mcge-emacs/site-lisp/extensions/org/valign
+	url = git@github.com:casouri/valign.git
+[submodule "emacs-web-mode"]
+	path = mcge-emacs/site-lisp/extensions/lsp/web-mode
+	url = git@github.com:fxbois/web-mode.git

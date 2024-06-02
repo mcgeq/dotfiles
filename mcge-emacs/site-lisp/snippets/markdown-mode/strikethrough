@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: striKeThrough
+# contributor: liuyinz <liuyinz95@gmail.com>
+# key: kt 
+# --
+
+~~${1:striKe Through}~~ $0
+

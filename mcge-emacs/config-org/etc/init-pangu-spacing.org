@@ -1,0 +1,45 @@
+* init-pangu-spacing.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle (concat temporary-file-directory "init-pangu-spacing.el") :lexical t
+:END:
+
+** Headers
+#+begin_src emacs-lisp
+  ;;; init-pangu-spacing.el --- pangu-spacing config  -*- lexical-binding: t; -*-
+
+  ;;; Commentary:
+
+  #+end_src
+
+** Require
+#+begin_src emacs-lisp
+  ;;; Require:
+  (require 'pangu-spacing)
+
+  ;;; Code :
+
+  #+end_src
+
+英文字符前后添加空格
+** Code
+#+begin_src emacs-lisp
+  (global-pangu-spacing-mode 1)
+  (setq pangu-spacing-real-insert-separtor t)
+#+end_src
+
+** unless
+#+begin_src emacs-lisp :tangle no
+  hook(text-mode . pangu-spacing-mode)
+  ;; Always insert `real' space in org-mode
+  (add-hook 'org-mode-hook
+            #'(lambda ()
+                (set (make-local-variable 'pangu-spacing-real-insert-separtor) t)))
+#+end_src
+
+** Ends
+#+begin_src emacs-lisp
+
+  (provide 'init-pangu-spacing)
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;;; init-pangu-spacing.el ends here
+  #+end_src

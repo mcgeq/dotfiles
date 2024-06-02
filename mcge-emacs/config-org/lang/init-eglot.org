@@ -1,0 +1,40 @@
+* init-eglot.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle (concat temporary-file-directory "init-eglot.el") :lexical t
+:END:
+
+** Headers
+#+begin_src emacs-lisp
+  ;;; init-eglot.el ---   -*- lexical-binding: t; -*-
+
+  ;;; Commentary:
+
+  #+end_src
+
+** Require
+#+begin_src emacs-lisp
+  (require 'eglot)
+  (require 'lang-rust)
+  (require 'lang-cpp)
+  (require 'lang-typescript)
+  (require 'lang-web-mode)
+  (require 'lang-angular)
+  (require 'lang-java)
+  ;;; Code:
+#+end_src
+
+** Code
+#+begin_src emacs-lisp
+  (add-hook 'rust-ts-mode-hook 'eglot-ensure)
+  (add-hook 'c++-ts-mode-hook  'eglot-ensure)
+  (add-hook 'c-ts-mode-hook    'eglot-ensure)
+  (add-hook 'typescript-ts-mode-hook 'eglot-ensure)
+  ;; (add-to-list 'eglot-stay-out-of 'flymake)
+#+end_src
+
+** Ends
+#+begin_src emacs-lisp
+  (provide 'init-eglot)
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;;; init-eglot.el ends here
+  #+end_src

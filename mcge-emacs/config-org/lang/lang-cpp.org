@@ -1,0 +1,37 @@
+* lang-cpp.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle (concat temporary-file-directory "lang-cpp.el") :lexical t
+:END:
+
+** Headers
+#+begin_src emacs-lisp
+  ;;; lang-cpp.el ---   -*- lexical-binding: t; -*-
+
+  ;;; Commentary:
+
+  #+end_src
+
+** Require
+#+begin_src emacs-lisp
+  ;;; Require:
+  (require 'eglot)
+
+  ;;; Code :
+  #+end_src
+
+** Code
+#+begin_src emacs-lisp
+  (add-hook 'c++-ts-mode-hook #'(lambda () (setq tab-width 4)))
+  (add-hook 'c-ts-mode-hook #'(lambda () (setq tab-width 4)))
+  (add-hook 'before-save-hook #'eglot-format-buffer)
+
+  (add-to-list 'eglot-server-programs '((c++-ts-mode c-ts-mode c++-mode c-mode) "clangd"))
+
+#+end_src
+
+** Ends
+#+begin_src emacs-lisp
+(provide 'lang-cpp)
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;;; lang-cpp.el ends here
+  #+end_src

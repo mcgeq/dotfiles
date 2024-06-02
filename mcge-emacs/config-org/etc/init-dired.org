@@ -1,0 +1,137 @@
+* init-dired.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle (concat temporary-file-directory "init-dired.el") :lexical t
+:END:
+
+** Headers
+#+begin_src emacs-lisp
+  ;;; init-dired.el ---   -*- lexical-binding: t; -*-
+
+  ;;; Commentary:
+
+  #+end_src
+
+** Require
+#+begin_src emacs-lisp
+  ;;; Require:
+  (require 'dired)
+  (require 'diredfl)
+  (require 'dirvish)
+  (require 'dirvish-side)
+  (require 'dirvish-emerge)
+  (require 'dirvish-ls)
+  (require 'dirvish-collapse)
+  (require 'dirvish-history)
+  (require 'dirvish-quick-access)
+  ;(require 'dirvish-fd)
+  (require 'dirvish-narrow)
+  ;(require 'dirvish-file-info-menu)
+  
+  ;;; Code :
+  #+end_src
+
+** Code
+#+begin_src emacs-lisp
+  (add-hook 'dired-mode-hook #'diredfl-mode)
+  (add-hook 'dirvish-directory-view-mode #'diredfl-mode)
+  (set-face-attribute 'diredfl-dir-name nil :bold t)
+
+  ;; 使用 dirvish 替代 dired
+  (dirvish-override-dired-mode)
+  (dirvish-side-follow-mode)
+  (setq delete-by-moving-to-trash t)
+#+end_src
+
+** Dired
+#+begin_src emacs-lisp
+  ;; Dired
+  (setq dired-dwim-target t)
+  (setq dired-listing-switches "-l --almost-all --human-readable --group-directories-first --no-group"
+        dired-auto-revert-buffer t)
+  (setq dired-recursive-copies 'always)
+  (setq dired-kill-when-opening-new-dired-buffer t)
+#+end_src
+
+** Current directory
+#+begin_src emacs-lisp
+  ;; 当前目录
+  (defun +evan/dirvish-side-current-path ()
+    (interactive)
+    (dirvish-side))
+#+end_src
+
+** 文件归类
+#+begin_src emacs-lisp
+  ;; 文件归类
+  (setq dirvish-emerge-groups '(("Recent files" (predicate . recent-files-2h))
+                                ("Documents" (extensions "pdf" "tex" "bib" "epub"))
+                                ("Video" (extensions "mp4" "mkv" "webm"))
+                                ("Pictures" (extensions "jpg" "png" "svg" "gif"))
+                                ("Audio" (extensions "mp3" "flac" "wav" "ape" "aac"))
+                                ("Archives" (extensions "gz" "rar" "zip"))))
+#+end_src
+
+** 每个 entry 可显示的属性
+#+begin_src emacs-lisp
+  ;; 每个 entry 可显示的属性
+  (setq dirvish-attributes
+        '(git-msg
+          nerd-icons
+          file-time
+          file-size
+          substree-state))
+#+end_src
+
+** Settings
+#+begin_src emacs-lisp
+  (setq dirvish-mode-line-format '(:left (sort file-time " " file-size symlink) :right (omit yank index)))
+  ;(setq dirvish-header-line-height '(25 . 35))
+  ;(setq dirvish-side-width 38)
+  (setq dirvish-header-line-format '(:left (path) :right (free-space)))
+
+  ;; pdf 预览使用 pdf-preface
+  (setq dirvish-preview-dispatchers
+        (cl-substitute 'pdf-preface 'pdf dirvish-preview-dispatchers))
+
+  ;; 使用 exa 进行预览
+  (dirvish-define-preview exa (file)
+    "Use `exa' to generate directory preview."
+    :require ("exa")
+    (when (file-directory-p file)
+      `(shell . ("exa" "-al" "--color=always" "--icons"
+                 "--group-directories-first" ,file))))
+  (add-to-list 'dirvish-preview-dispatchers 'exa)
+
+  ;; dirvish-side 模式下关闭行号显示
+  (add-hook 'dirvish-side-follow-mode-hook (lambda () (display-line-numbers-mode -1)))
+
+  ;; 快捷菜单
+  (transient-define-prefix dirvish-dispatch ()
+    "Main menu for Dired/Dirvish."
+    [:description
+     (lambda () (dirvish--format-menu-heading
+                 "Dirvish main menu"
+                 "Press ? to see more info for the current menu"))
+     "Transient commands"
+     ("a" "Quick access"               dirvish-quick-access)
+     ("h" "Go to history entries"      dirvish-history-menu)
+     ("s" "Sort current buffer"        dirvish-quicksort)
+     ("l" "Setup listing switches"     dirvish-ls-switches-menu)
+     ("f" "Setup fd-find switches"     dirvish-fd-switches-menu
+      :if (lambda () (dirvish-prop :fd-arglist)))
+     ("m" "Manage marks"               dirvish-mark-menu)
+     ("e" "Manage emerged groups"      dirvish-emerge-menu)
+     ("r" "Rename files"               dirvish-renaming-menu)
+     ("i" "Get file information"       dirvish-file-info-menu)
+     "" "Actions | Essential commands"
+     ("n" "Live narrowing"             dirvish-narrow)
+     ("u" "User interface setup"       dirvish-setup-menu)
+     ("c" "Dired cheatsheet"           dirvish-dired-cheatsheet)])
+#+end_src
+
+** Ends
+#+begin_src emacs-lisp
+  (provide 'init-dired)
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;;; init-dired.el ends here
+  #+end_src

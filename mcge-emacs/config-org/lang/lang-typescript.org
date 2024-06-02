@@ -1,0 +1,33 @@
+* lang-typescript.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle (concat temporary-file-directory "lang-typescript.el") :lexical t
+:END:
+
+** Headers
+#+begin_src emacs-lisp
+  ;;; lang-typescript.el ---   -*- lexical-binding: t; -*-
+
+  ;;; Commentary:
+
+  #+end_src
+
+** Require
+#+begin_src emacs-lisp
+  ;;; Require:
+
+  ;;; Code :
+  #+end_src
+
+** TypeScript
+#+begin_src emacs-lisp
+  (add-to-list 'auto-mode-alist '("\\.ts\\'" . typescript-ts-mode))
+  (add-to-list 'auto-mode-alist '("\\.tsx\\'" . typescript-ts-mode))
+  (add-hook 'eglot-server-programs '(typescript-mode-hook . ("typescript-language-server" "--stdio")))
+#+end_src
+
+** Ends
+#+begin_src emacs-lisp
+  (provide 'lang-typescript)
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;;; lang-typescript.el ends here
+  #+end_src

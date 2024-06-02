@@ -1,0 +1,43 @@
+* init-rime.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle (concat temporary-file-directory "init-rime.el") :lexical t
+:END:
+
+** Headers
+#+begin_src emacs-lisp
+  ;;; init-rime.el --- rime config  -*- lexical-binding: t; -*-
+
+  ;;; Commentary:
+
+  #+end_src
+
+** Require
+#+begin_src emacs-lisp
+  ;;; Require:
+  (require 'rime)
+
+  ;;; Code :
+
+  #+end_src
+
+** Code
+#+begin_src emacs-lisp
+  (setq rime-user-data-dir (expand-file-name "~/.config/fcitx/rime"))
+
+  (setq rime-posframe-properties
+        (list :background-color "#333333"
+              :foreground-color "#dcdccc"
+              :font "FiraCode Nerd Font"
+              :internal-border-width 10))
+
+  (setq default-input-method "rime"
+        rime-show-candidate 'posframe)
+#+end_src
+
+** Ends
+#+begin_src emacs-lisp
+
+  (provide 'init-rime)
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;;; init-rime.el ends here
+  #+end_src

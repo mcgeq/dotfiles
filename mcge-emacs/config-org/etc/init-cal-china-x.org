@@ -1,0 +1,94 @@
+* init-cal-china-x.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle (concat temporary-file-directory "init-cal-china-x.el") :lexical t
+:END:
+
+** Headers
+#+begin_src emacs-lisp
+  ;;; init-cal-china-x.el ---   -*- lexical-binding: t; -*-
+
+  ;;; Commentary:
+
+  #+end_src
+
+** Require
+#+begin_src emacs-lisp
+  ;;; Require:
+  (require 'cal-china-x)
+
+  ;;; Code :
+  #+end_src
+
+** Add hook
+#+begin_src emacs-lisp
+  (add-hook 'after-init-hook 'cal-china-x-setup)
+#+end_src
+
+** Settings
+#+begin_src emacs-lisp
+  ;; 重要节日设置
+  (setq cal-china-x-important-holidays cal-china-x-chinese-holidays)
+  ;; 所有节日设置
+  (setq cal-china-x-general-holidays
+        '(;;公历节日
+            (holiday-fixed 1 1 "元旦")
+            (holiday-fixed 2 14 "情人节")
+            (holiday-fixed 3 8 "妇女节")
+            (holiday-fixed 3 14 "白色情人节")
+            (holiday-fixed 4 1 "愚人节")
+            (holiday-fixed 5 1 "劳动节")
+            (holiday-fixed 5 4 "青年节")
+            (holiday-float 5 0 2 "母亲节")
+            (holiday-fixed 6 1 "儿童节")
+            (holiday-float 6 0 3 "父亲节")
+            (holiday-fixed 9 10 "教师节")
+            (holiday-fixed 10 1 "国庆节")
+            (holiday-fixed 10 2 "国庆节")
+            (holiday-fixed 10 3 "国庆节")
+            (holiday-fixed 10 24 "程序员节")
+            (holiday-fixed 11 11 "双 11 购物节")
+            (holiday-fixed 12 25 "圣诞节")
+            ;; 农历节日
+            (holiday-lunar 12 30 "春节" 0)
+            (holiday-lunar 1 1 "春节" 0)
+            (holiday-lunar 1 2 "春节" 0)
+            (holiday-lunar 1 15 "元宵节" 0)
+            (holiday-solar-term "清明" "清明节")
+            (holiday-solar-term "小寒" "小寒")
+            (holiday-solar-term "大寒" "大寒")
+            (holiday-solar-term "立春" "立春")
+            (holiday-solar-term "雨水" "雨水")
+            (holiday-solar-term "惊蛰" "惊蛰")
+            (holiday-solar-term "春分" "春分")
+            (holiday-solar-term "谷雨" "谷雨")
+            (holiday-solar-term "立夏" "立夏")
+            (holiday-solar-term "小满" "小满")
+            (holiday-solar-term "芒种" "芒种")
+            (holiday-solar-term "夏至" "夏至")
+            (holiday-solar-term "小暑" "小暑")
+            (holiday-solar-term "大暑" "大暑")
+            (holiday-solar-term "立秋" "立秋")
+            (holiday-solar-term "处暑" "处暑")
+            (holiday-solar-term "白露" "白露")
+            (holiday-solar-term "秋分" "秋分")
+            (holiday-solar-term "寒露" "寒露")
+            (holiday-solar-term "霜降" "霜降")
+            (holiday-solar-term "立冬" "立冬")
+            (holiday-solar-term "小雪" "小雪")
+            (holiday-solar-term "大雪" "大雪")
+            (holiday-solar-term "冬至" "冬至")
+            (holiday-lunar 5 5 "端午节" 0)
+            (holiday-lunar 8 15 "中秋节" 0)
+            (holiday-lunar 7 7 "七夕情人节" 0)
+            (holiday-lunar 12 8 "腊八节" 0)
+            (holiday-lunar 9 9 "重阳节" 0)))
+  ;; 设置日历的节日，通用节日已经包含了所有节日
+  (setq calendar-holidays (append cal-china-x-general-holidays))
+#+end_src
+
+** Ends
+#+begin_src emacs-lisp
+  (provide 'init-cal-china-x)
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;;; init-cal-china-x.el ends here
+  #+end_src

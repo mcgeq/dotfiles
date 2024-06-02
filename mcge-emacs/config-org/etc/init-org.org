@@ -1,0 +1,296 @@
+* init-org.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle (concat temporary-file-directory "init-org.el") :lexical t
+:END:
+
+** Headers
+#+begin_src emacs-lisp
+  ;;; init-org.el --- org config  -*- lexical-binding: t; -*-
+
+  ;;; Commentary:
+
+  #+end_src
+
+** Require
+#+begin_src emacs-lisp
+  ;;; Require:
+  (require 'org)
+  (require 'init-const)
+  (require 'org-modern)
+
+  ;;; Code :
+
+  #+end_src
+
+** Code
+#+begin_src emacs-lisp
+(setq org-directory mcgemacs-org-dir)
+(setq auto-mode-alist (append '(("\\.org$" . org-mode)) auto-mode-alist))
+
+(add-hook 'org-mode-hook #'(lambda () (setq org-modern-hide-stars 'leading)
+                               (global-org-modern-mode t)))
+
+(add-hook 'org-mode-hook 'my/org-prettify-symbols)
+
+;; org mode
+
+(setq org-default-notes-file (expand-file-name "capture.org" org-directory))
+;; ================================
+;; 在 org mode 里美化字符串
+;; ================================
+(defun my/org-prettify-symbols ()
+  (setq prettify-symbols-alist
+        (mapcan (lambda (x) (list x (cons (upcase (car x)) (cdr x))))
+				  '(
+					;; ("[ ]"              . 9744)         ; ☐
+					;; ("[X]"              . 9745)         ; ☑
+					;; ("[-]"              . 8863)         ; ⊟
+					("#+begin_src"      . 9998)         ; ✎
+					("#+end_src"        . "♠")            ; 9763
+					("#+begin_example"  . 129175)       ; 🢗
+					("#+end_example"    . 129173)       ; 🢕
+					("#+results:"       . 9776)         ; ☰
+					("#+attr_latex:"    . "🍄")
+					("#+attr_html:"     . "🄗")
+					("#+attr_org:"      . "🔔")
+					("#+name:"          . "(N)")         ; 127261
+					("#+caption:"       . "(c)")         ; 127250
+					("#+date:"          . "⚓")         ; 128197
+					("#+author:"        . "👨")         ; 
+					("#+setupfile:"     . 128221)       ; 📝
+					("#+email:"         . 128231)       ; 📧
+					("#+startup:"       . 10034)        ; ✲
+					("#+options:"       . "⌥")         ; ⛭ 9965
+					("#+title:"         . 10162)        ; ➲
+					("#+subtitle:"      . 11146)        ; ⮊
+					("#+downloaded:"    . 8650)         ; ⇊
+					("#+language:"      . 128441)       ; 🖹
+					("#+begin_quote"    . 187)          ; »
+					("#+end_quote"      . 171)          ; «
+                                        ("#+begin_results"  . 8943)         ; ⋯
+                                        ("#+end_results"    . 8943)         ; ⋯
+                                        ("#+property:"      . "☸")
+                                        (":PROPERTIES:"     . "⚙")
+					)))
+    (setq prettify-symbols-unprettify-at-point t)
+    (prettify-symbols-mode 1))
+
+
+;; TODO Keyword
+(setq org-todo-keywords '((sequence "TODO(t!)" "HOLD(h!)" "WIP(i!)" "WAIT(w@/!)" "|" "DONE(d@!)" "CANCELLED(c@/!)")
+                          (sequencen "REPORT(r)" "BUG(b)" "KNOWNCAUSE(k)" "|" "FIXED(f!)")))
+(setq org-todo-keyword-faces '(("TODO"       :foreground "#7c7c75" :weight bold)
+			       ("HOLD"       :foreground "#feb24c" :weight bold)
+			       ("WIP"        :foreground "#0098dd" :weight bold)
+			       ("WAIT"       :foreground "#9f7efe" :weight bold)
+			       ("DONE"       :foreground "#50a14f" :weight bold)
+			       ("CANCELLED"  :foreground "#ff6480" :weight bold)
+			       ("REPORT"     :foreground "magenta" :weight bold)
+			       ("BUG"        :foreground "red"     :weight bold)
+			       ("KNOWNCAUSE" :foreground "yellow"  :weight bold)
+			       ("FIXED"      :foreground "green"   :weight bold)))
+
+(setq org-todo-state-tags-triggers
+      (quote (("CANCELLED" ("CANCELLED" . t))
+	      ("WAIT" ("WAIT" . t))
+	      ("HOLD" ("WAIT") ("HOLD" . t))
+	      (done ("WAIT") ("HOLD"))
+	      ("TODO" ("WAIT") ("CANCELLED") ("HOLD"))
+	      ("DONE" ("WAIT") ("CANCELLED") ("HOLD")))))
+;; 优先级样式设置
+(setq org-priority-faces '((?A :foreground "red")
+			   (?B :foreground "orange")
+			   (?C :foreground "yellow")))
+;; 标题行全局属性设置
+(setq org-global-properties '(("EFFORT_ALL" . "0:15 0:30 0:45 1:00 2:00 3:00 4:00 5:00 6:00 7:00 8:00")
+			 ("APPT_WARNTIME_ALL" . "0 5 10 15 20 25 30 45 60")
+			 ("RISK_ALL" . "Low Medium High")
+			 ("STYLE_ALL" . "habit")))
+
+;; 当状态从 DONE 改成其他状态时，移除 CLOSED: [timestamp]
+(setq org-closed-keep-when-no-todo t)
+;; DONE 时加上时间戳
+(setq org-log-done 'time)
+;; 重复执行时加上时间戳
+(setq org-log-repeat 'time)
+;; Deadline 修改时加上一条记录
+(setq org-log-redeadline 'note)
+;; Schedule 修改时加上一条记录
+(setq org-log-reschedule 'note)
+;; 以抽屉的方式记录
+(setq org-log-into-drawer t)
+;; 紧接着标题行或者计划/截止时间戳后加上记录抽屉
+(setq org-log-state-notes-insert-after-drawers nil)
+
+;; 自动对齐标签
+(setq org-auto-align-tags t)
+;; 标签不继承
+(setq org-use-tag-inheritance nil)
+;; 标签快速选择
+(setq org-use-fast-tag-selection t)
+;; 标签选择不需要回车确认
+(setq org-fast-tag-selection-single-key t)
+;; 定义了有序属性的标题行也加上 OREDERD 标签
+(setq org-track-ordered-property-with-tag t)
+;; 始终存在的的标签
+(setq org-tag-persistent-alist '(("@outdoors" . ?o)
+                                 ("INBOX" . ?i)))
+;; 预定义好的标签
+(setq org-tag-alist '((:startgrouptag)
+		      ("Mcg"             . ?M)
+                      (:grouptags        . nil)
+		      ("@Read"           . ?R)
+                      ("@Work"           . ?W)
+                      ("@Home"           . ?h)
+                      ("@Software"       . ?S)
+                      ("@Hardware"       . ?H)
+                      (:endgrouptag)
+                      (:startgrouptag)
+                      ("@Read"           . ?R)
+                      (:grouptags)
+                      ("read_book"       . ?r)
+                      ("read_ebook"      . ?e)
+                      ("news"            . ?n)
+                      (:endgrouptag)
+                      (:startgrouptag)
+                      ("@Work"           . ?W)
+                      (:grouptags)
+                      ("meeting"         . ?m)
+                      ("testing"         . ?t)
+                      (:endgrouptag)
+                      (:startgrouptag)
+                      ("@Software"       . ?S)
+                      (:grouptags)
+                      ("vscode"          . ?v)
+                      ("emacs"           . ?e)
+                      ("IDEA"            . ?I)
+                      (:endgrouptag)
+                      (:startgrouptag)
+                      ("@Hardware"       . ?H)
+                      (:grouptags)
+                      ("computer"        . ?c)
+                      ("phone"           . ?p)
+                      (:endgrouptag)))
+
+;; Coding system for HTML export.
+;(setq org-html-coding-system 'utf-8)
+;(setq org-html-doctype "html5")
+
+;; Block
+;; 如何在 Source Block 中像在语言 mode 中一样的缩进
+;(setq org-src-tab-acts-natively t)
+;(setq org-src-preserve-indentation nil)
+;; code block 默认折叠展示
+(setq org-hide-block-startup t)
+;; code block 折叠时显示为一个符号
+;; learn from: https://github.com/Elilif/.elemacs
+(defun eli-hide-org-block-begin-line (orig from to flag spec)
+  (if (eq spec 'org-hide-block)
+      (let* ((beg-of-line (save-excursion
+                            (beginning-of-line)
+                            (point)))
+             (lang (car (org-babel-get-src-block-info)))
+             (beg (+ beg-of-line 12 (length lang))))
+        (funcall orig beg to flag spec))
+    (funcall orig from to flag spec)))
+
+(advice-add 'org-flag-region :around #'eli-hide-org-block-begin-line)
+
+;; 如何美化 quote 和 verse block
+(setq org-fontify-quote-and-verse-blocks t)
+
+;; 更改子 list 的显示符号
+(setq org-list-demote-modify-bullet
+      '(("+" . "-") ("-" . "+") ("*" . "+") ("1." . "a.")))
+
+;; 隐藏强调标记
+(setq org-hide-emphasis-markers t)
+
+;; 额外的行间距，0.1 表示 10%，1表示 1px
+(setq-default line-spacing 0.1)
+;; tag 边框宽度，还可以设置为 `auto' 即自动计算
+(setq org-modern-label-border 1)
+;; 设置表格竖线宽度，默认为 3
+(setq org-modern-table-vertical 2)
+;; 设置表格横线为 0，默认为 0.1
+(setq org-modern-table-horizontal 0)
+;; 复选框美化
+(setq org-modern-checkbox
+      '((?X . #("▢✓" 0 2 (composition ((2)))))
+        (?- . #("▢–" 0 2 (composition ((2)))))
+        (?\s . #("▢" 0 1 (composition ((1)))))))
+;; 列表符号美化
+(setq org-modern-list
+      '((?- . "•")
+        (?+ . "◦")
+        (?* . "▹")))
+;; 代码块左边加上一条竖边线（需要 Org mode 顶头，如果启用了 `visual-fill-column-mode' 会很难看）
+(setq org-modern-block-fringe t)
+;; 代码块类型美化，我们使用了 `prettify-symbols-mode'
+(setq org-modern-block-name nil)
+;; #+关键字美化，我们使用了 `prettify-symbols-mode'
+(setq org-modern-keyword nil)
+
+;(setq org-modern-star ["◉" "○" "✸" "✳" "◈" "◇" "✿" "❀" "✜"])
+; Hexagrams "✡" "⎈" "✽" "✲" "✱" "✻" "✼" "✽" "✾" "✿" "❀" "❁" "❂" "❃" "❄" "❅" "❆" "❇"
+; Poker Sybmols "♠" "♣" "♥" "♦" "♤" "♧" "♡" "♢"
+; yinyang "☯" "☰" "☱" "☲" "☳" "☴" "☵" "☶" "☷"
+; music  𝄞, ♩, ♪, ♫, ♬, ♭, ♮, ♯
+;(setq org-modern-star ["◉" "☯" "○" "☯" "✸" "☯" "✿" "☯" "✜" "☯" "◆" "☯" "▶"])
+(setq org-modern-star ["✾" "✿" "❀" "❁" "❂" "❃" "⎈" "❄" "❅" "❆" "❇"])
+;(setq org-modern-star ["☯" "☰" "☱" "☲" "☳" "☴" "☵" "☶" "☷"])
+;; 使用"⤵" 指示隐藏内容
+(setq org-ellipsis "⤵")
+
+
+;; custom face
+;; 设置 org 标题 1-8 级的字体大小和颜色，颜色摘抄自 monokai。;希望 org-mode 标题的字体大小和正文一致，设成 1.0， 如果希望标题字体大一点可以设成 1.2
+(custom-set-faces
+  '(org-document-title ((t (:height 1.75 :weight bold ))))
+  '(org-level-1 ((t (:inherit outline-1 :height 1.2  :foreground "#FD971F"))))
+  '(org-level-2 ((t (:inherit outline-2 :height 1.15  :foreground "#002EFF"))))
+  '(org-level-3 ((t (:inherit outline-3 :height 1.1  :foreground "#004EFF"))))
+  '(org-level-4 ((t (:inherit outline-4 :height 1.05  :foreground "#008EFF"))))
+  '(org-level-5 ((t (:inherit outline-5 :height 1.0  :foreground "#00AEFF"))))
+  '(org-level-6 ((t (:inherit outline-6 :height 1.0  :foreground "#00EEFF"))))
+  '(org-level-7 ((t (:inherit outline-7 :height 1.0  :foreground "#66EEFF"))))
+  '(org-level-8 ((t (:inherit outline-8 :height 1.0  :foreground "#66D9EF"))))
+ )
+
+(custom-set-faces
+   '(region ((t (:foreground "green" :background "#464646")))))
+
+;; 关闭 indent
+;(custom-set-variables
+;   '(org-startup-indented nil))
+;; 标题缩进
+(setq org-startup-indented t)
+
+;; 解决标记符号前后空格问题
+(setq org-emphasis-regexp-components '("-[:space:]('\"{[:nonascii:]"
+                                         "-[:space:].,:!?;'\")}\\[[:nonascii:]"
+                                         "[:space:]"
+                                         "."
+                                         1))
+
+(setq org-match-substring-regexp
+        (concat
+         ;; 限制上标和下标的匹配范围，org 中对其的介绍见：(org) Subscripts and superscripts
+         "\\([0-9a-zA-Zα-γΑ-Ω]\\)\\([_^]\\)\\("
+         "\\(?:" (org-create-multibrace-regexp "{" "}" org-match-sexp-depth) "\\)"
+         "\\|"
+         "\\(?:" (org-create-multibrace-regexp "(" ")" org-match-sexp-depth) "\\)"
+         "\\|"
+         "\\(?:\\*\\|[+-]?[[:alnum:].,\\]*[[:alnum:]]\\)\\)"))
+(org-set-emph-re 'org-emphasis-regexp-components org-emphasis-regexp-components)
+(org-element-update-syntax)
+(add-hook 'org-mode-hook #'corfu-mode)
+#+end_src
+
+** Ends
+#+begin_src emacs-lisp
+
+ (provide 'init-org)
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;;; init-org.el ends here
+  #+end_src

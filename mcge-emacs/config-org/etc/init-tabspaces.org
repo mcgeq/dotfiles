@@ -1,0 +1,64 @@
+* init-tabspaces.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle (concat temporary-file-directory "init-tabspaces.el") :lexical t
+:END:
+
+** Headers
+#+begin_src emacs-lisp
+  ;;; init-tabspaces.el --- config  -*- lexical-binding: t; -*-
+
+  ;;; Commentary:
+
+  #+end_src
+
+** Require
+#+begin_src emacs-lisp
+  ;;; Require:
+  (require 'tabspaces)
+  (require 'consult)
+
+  ;;; Code :
+
+  #+end_src
+
+** Code
+#+begin_src emacs-lisp
+  (add-hook 'after-init-hook 'tabspaces-mode)
+
+  (autoload 'tabspaces-switch-or-create-workspace "tabspaces-open-or-create-project-and-workspace" t)
+
+  (setq tabspaces-use-filtered-buffers-as-default t)
+  (setq tabspaces-default-tab "Default")
+  (setq tabspaces-remove-to-default t)
+  (setq tabspaces-include-buffers '("*scratch*"))
+  ;; maybe slow
+  ;(setq tabspaces-session t)
+  ;(setq tabspaces-session-auto-restore t)
+
+  (with-eval-after-load 'consult
+      ;; hide full buffer list (still available with "b" prefix)
+      (consult-customize consult--source-buffer :hidden nil :default nil)
+      ;; set consult-workspace buffer list
+      (defvar consult--source-workspace
+        (list :name "Workspace Buffers"
+	      :narrow ?w
+	      :history 'buffer-name-history
+	      :category 'buffer
+	      :state #'consult--buffer-state
+	      :default t
+  	      :items (lambda () (consult--buffer-query
+			         :predicate #'tabspaces--local-buffer-p
+			         :sort 'visibility
+	  		         :as #'buffer-name)))
+
+        "Set workspace buffer list for consult-buffer.")
+      (add-to-list 'consult-buffer-sources 'consult--source-workspace))
+#+end_src
+
+** Ends
+#+begin_src emacs-lisp
+
+  (provide 'init-tabspaces)
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;;; init-tabspaces.el ends here
+  #+end_src

@@ -1,0 +1,92 @@
+* init-function.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle (concat temporary-file-directory "init-function.el") :lexical t
+:END:
+
+** Headers
+#+begin_src emacs-lisp
+  ;;; init-function.el --- custome function  -*- lexical-binding: t; -*-
+
+  ;;; Commentary:
+
+  #+end_src
+
+** Require
+#+begin_src emacs-lisp
+  ;;; Require:
+  (require 'init-const)
+  (require 'org)
+
+  ;;; Code :
+  #+end_src
+
+** Code
+#+begin_src emacs-lisp
+  (defun mcg/open-init-file()
+    "Quick open configuration file."
+    (interactive)
+    (if (file-exists-p (concat mcgemacs-config-dir "/init.org"))
+        (find-file (concat mcgemacs-config-dir "/init.org"))
+      (message "Please chek the file does not exist.")
+      )
+  )
+
+  ;; 将列表加入到列表的函数
+  (defun add-list-to-list (dst src)
+    "Similar to `add-to-list', DST SRC but accepts a list as 2nd argument."
+    (set dst
+         (append (eval dst) src)))
+
+  (defun +vc-branch-name ()
+    (when vc-mode
+      (propertize
+       (replace-regexp-in-string
+        "Git[-:]"
+        ""
+        (substring-no-properties vc-mode))
+       'face
+       'bold)))
+
+  (defun mcg/customize-image-file-name ()
+    "Define the image save directory and name based on the current file name."
+    (defvar full-file-name)
+      (setq full-file-name (file-name-sans-extension (file-name-nondirectory buffer-file-name)))
+      (let* ((imagefile "./images/"))
+        (unless (file-exists-p imagefile)
+          (make-directory imagefile))
+      (setq imagefile (concat "./images/" full-file-name "/"))
+  ;;    (setq imagefile (concat "./images/" (format-time-string "%Y%m%d") "/"))
+      (unless (file-exists-p imagefile)
+        (make-directory imagefile))
+      (concat (make-temp-name (concat imagefile
+                                      (format-time-string "%Y%m%d_%H%M%S_")))
+              ".png"))
+    )
+
+  ;; window insert org images
+  ;; `https://emacs-china.org/t/win10-emacs-org-mode/21942/2'
+  (defun mcg/org-screenshot-on-windows ()
+    "Windows platform insert pictures in the org file."
+    (interactive)
+    (let ((filename (mcg/customize-image-file-name)))
+    (shell-command (concat "powershell -command \"Add-Type -AssemblyName System.Windows.Forms;if ($([System.Windows.Forms.Clipboard]::ContainsImage())) {$image = [System.Windows.Forms.Clipboard]::GetImage();[System.Drawing.Bitmap]$image.Save('"
+                           filename "',[System.Drawing.Imaging.ImageFormat]::Png); Write-Output 'clipboard content saved as file'} else {Write-Output 'clipboard does not contain image data'}\""))
+    (insert (concat "[[file:" filename "]]")))
+    (org-display-inline-images)
+    )
+#+end_src
+
+** 指定代码目录
+#+begin_src emacs-lisp
+  (defun mcg/open-source-code-dir ()
+    "Open source coding directory."
+    (interactive)
+    )
+#+end_src
+
+** Ends
+#+begin_src emacs-lisp
+  (provide 'init-function)
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;;; init-function.el ends here
+  #+end_src

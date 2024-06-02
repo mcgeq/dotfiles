@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: org title
+# key: <t
+# --
+#+TITLE: 
+#+AUTHOR: mcge
+#+DATE: `(format-time-string "<%Y-%m-%d %H:%M:%S>" (current-time))`

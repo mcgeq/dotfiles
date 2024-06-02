@@ -1,0 +1,34 @@
+* init-saveplace.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle (concat temporary-file-directory "init-saveplace.el") :lexical t
+:END:
+
+** Headers
+#+begin_src emacs-lisp
+  ;;; init-saveplace.el --- saveplace config  -*- lexical-binding: t; -*-
+
+  ;;; Commentary:
+
+  #+end_src
+
+** Require
+#+begin_src emacs-lisp
+  ;;; Require:
+  (require 'saveplace)
+
+  ;;; Code :
+
+  #+end_src
+
+** Code
+#+begin_src emacs-lisp
+  (add-hook 'after-init-hook 'save-place-mode)
+#+end_src
+
+** Ends
+#+begin_src emacs-lisp
+
+  (provide 'init-saveplace)
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;;; init-saveplace.el ends here
+  #+end_src

@@ -1,0 +1,51 @@
+* init-yasnippet.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle (concat temporary-file-directory "init-yasnippet.el") :lexical t
+:END:
+
+** Headers
+#+begin_src emacs-lisp
+  ;;; init-yasnippet.el --- yasnippet config  -*- lexical-binding: t; -*-
+
+  ;;; Commentary:
+
+  #+end_src
+
+** Require
+#+begin_src emacs-lisp
+  ;;; Require:
+  (require 'yasnippet)
+  (require 'yasnippet-snippets)
+  (require 'init-const)
+
+  ;;; Code :
+
+  #+end_src
+
+** Code
+#+begin_src emacs-lisp
+  (add-hook 'prog-mode-hook
+            #'(lambda ()
+                (require 'yasnippet)
+                (defun get-git-user-name ()
+                   (interactive)
+                  (replace-regexp-in-string "\n$" "" (shell-command-to-string "git config --get user.name"))
+                  (replace-regexp-in-string "\n$" "" (shell-command-to-string "git config --get user.email")))
+                (add-to-list `yas/root-directory (concat mcgemacs-root-dir "/site-lisp/snippets"))
+                (yas-global-mode 1)
+
+                ;; Disable yasnippet mode on some mode.
+                (dolist (hook (list
+                               'term-mode-hook
+                               ))
+                  (add-hook hook #'(lambda () (yas-minor-mode -1))))
+                ))
+#+end_src
+
+** Ends
+#+begin_src emacs-lisp
+
+  (provide 'init-yasnippet)
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;;; init-yasnippet.el ends here
+  #+end_src

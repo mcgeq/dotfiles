@@ -1,0 +1,36 @@
+* init-markdown.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle (concat temporary-file-directory "init-markdown.el") :lexical t
+:END:
+
+** Headers
+#+begin_src emacs-lisp
+  ;;; init-markdown.el --- markdown config  -*- lexical-binding: t; -*-
+
+  ;;; Commentary:
+
+  #+end_src
+
+** Require
+#+begin_src emacs-lisp
+  ;;; Require:
+  (require 'markdown-mode)
+  (require 'eglot)
+
+  ;;; Code :
+
+  #+end_src
+
+** Code
+#+begin_src emacs-lisp
+  (add-to-list 'eglot-server-programs '(markdown-mode . ("marksman")))
+  (add-hook 'markdown-mode-hook #'eglot-ensure)
+
+#+end_src
+
+** Ends
+#+begin_src emacs-lisp
+  (provide 'init-markdown)
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;;; init-markdown.el ends here
+  #+end_src

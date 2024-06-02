@@ -1,0 +1,65 @@
+* init-recentf.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle (concat temporary-file-directory "init-recentf.el") :lexical t
+:END:
+
+** Headers
+#+begin_src emacs-lisp
+  ;;; init-recentf.el --- recentf config  -*- lexical-binding: t; -*-
+
+  ;;; Commentary:
+
+  #+end_src
+
+** Require
+#+begin_src emacs-lisp
+  ;;; Require:
+  (require 'recentf)
+
+  ;;; Code :
+
+  #+end_src
+
+** Code
+#+begin_src emacs-lisp
+  (add-hook 'after-init-hook 'recentf-mode)
+
+  (setq recentf-max-saved-items 300)
+  (setq recentf-auto-cleanup    'never)
+  (setq recentf-filename-handlers '(abbreviate-file-name))
+
+  (setq recentf-exclude `(,@(cl-loop for f in `(,package-user-dir
+                                             ;,no-littering-var-directory
+                                          ;,no-littering-etc-directory)
+                                                )
+                                  collect (abbreviate-file-name f))
+                       ;; Folders on MacOS start
+                       "^/private/recentfp/"
+                       "^/var/folders/"
+                       ;; Folders on MacOS end
+                       ".cache"
+                       ".cask"
+                       ".elfeed"
+                       "elfeed"
+                       "bookmarks"
+                       "cache"
+                       "ido.*"
+                       "persp-confs"
+                       "recentf"
+                       "undo-tree-hist"
+                       "url"
+                       "^/recentfp/"
+                       "/ssh\\(x\\)?:"
+                       "/su\\(do\\)?:"
+                       "^/usr/include/"
+                       "/TAGS\\'"
+                       "COMMIT_EDIRECENTFSG\\'"))
+#+end_src
+
+** Ends
+#+begin_src emacs-lisp
+
+  (provide 'init-recentf)
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;;; init-recentf.el ends here
+  #+end_src
