@@ -1,1 +1,1 @@
-source D:/config/starship/init.nu
+source D:/config/dotfiles/mcge-starship/init.nu
