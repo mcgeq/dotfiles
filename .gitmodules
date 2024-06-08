@@ -211,3 +211,6 @@
 [submodule "emacs-web-mode"]
 	path = mcge-emacs/site-lisp/extensions/lsp/web-mode
 	url = git@github.com:fxbois/web-mode.git
+[submodule "emacs-yasnippet-snippet"]
+	path = mcge-emacs/site-lisp/extensions/snippets/yasnippet-snippet
+	url = git@github.com:AndreaCrotti/yasnippet-snippets.git
