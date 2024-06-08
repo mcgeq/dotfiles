@@ -16,7 +16,7 @@
   ;;; Require:
   (require 'org-popup-posframe)
 
-  ;;; Code :
+  ;;; Code:
 
   #+end_src
 
@@ -29,6 +29,6 @@
 #+begin_src emacs-lisp
 
 (provide 'init-org-popup-posframe)
-  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-  ;;; init-org-popup-posframe.el ends here
-  #+end_src
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; init-org-popup-posframe.el ends here
+#+end_src

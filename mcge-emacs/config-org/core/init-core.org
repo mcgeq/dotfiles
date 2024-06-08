@@ -101,14 +101,14 @@
     (require 'init-org-agenda)
     ;; org-capture
     (require 'init-org-capture)
-    ;; org-popup-posframe
-    (require 'init-org-popup-posframe)
     ;; ox-hugo
     (require 'init-ox-hugo)
     ;; eshell
     (require 'init-eshell)
     ;; tabspaces
     (require 'init-tabspaces)
+    ;; org-popup-posframe
+    (require 'init-org-popup-posframe)
 )
 #+END_SRC
 

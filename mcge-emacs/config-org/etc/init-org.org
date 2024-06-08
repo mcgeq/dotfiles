@@ -264,7 +264,7 @@
 ;(custom-set-variables
 ;   '(org-startup-indented nil))
 ;; 标题缩进
-(setq org-startup-indented t)
+;;(setq org-startup-indented t)
 
 ;; 解决标记符号前后空格问题
 (setq org-emphasis-regexp-components '("-[:space:]('\"{[:nonascii:]"
