@@ -223,3 +223,14 @@ nnoremap <silent><nowait> <leader>vg :<c-u>Vista!! toggle<CR>   # 切换Vista窗
 nnoremap <silent><nowait> <leader>vr :<c-u>Vista refresh<CR>    # 刷新Vista窗口
 nnoremap <silent><nowait> <leader>vt :<c-u>Vista kind<CR>       # 选择Vista窗口显示的符号类型
 # -------------------- vista   end --------------------
+
+# -------------------- floaterm start --------------------
+nnoremap   <silent>   <F7>    :FloatermNew<CR>
+tnoremap   <silent>   <F7>    <C-\><C-n>:FloatermNew<CR>
+nnoremap   <silent>   <F8>    :FloatermPrev<CR>
+tnoremap   <silent>   <F8>    <C-\><C-n>:FloatermPrev<CR>
+nnoremap   <silent>   <F9>    :FloatermNext<CR>
+tnoremap   <silent>   <F9>    <C-\><C-n>:FloatermNext<CR>
+nnoremap   <silent>   <F12>   :FloatermToggle<CR>
+tnoremap   <silent>   <F12>   <C-\><C-n>:FloatermToggle<CR>
+# -------------------- floaterm   end --------------------

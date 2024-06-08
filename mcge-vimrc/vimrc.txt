@@ -21,9 +21,11 @@ g:mcge_custom_email = "<mcgeq@outlook.com>"
 g:mcge_custom_vista_executive = "ctags"
 g:mcge_custom_copyright = $"Copyright (C) {strftime('%Y')} Mcge. All rights reserved."
 g:mcge_custom_project = "F:/2024/projects"
-g:mcge_custom_workspace = "F:/workspace"
+g:mcge_custom_workspace = "D:/workspaces"
 g:mcge_custom_fzf_dir = "D:/bin/fzf"
 g:mcge_custom_preview_bash = "D:/bin/Git/bin/bash.exe"
+g:mcge_custom_shell = "pwsh"
+
 
 # 自定义vim配置文件路径
 g:mcge_customvimrcdir = "D:/config/dotfiles/mcge-vimrc"

@@ -214,3 +214,6 @@
 [submodule "emacs-yasnippet-snippet"]
 	path = mcge-emacs/site-lisp/extensions/snippets/yasnippet-snippet
 	url = git@github.com:AndreaCrotti/yasnippet-snippets.git
+[submodule "vim-floaterm"]
+	path = mcge-vimrc/pack/mcge/start/vim-floaterm
+	url = git@github.com:voldikss/vim-floaterm.git
