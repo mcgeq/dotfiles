@@ -25,3 +25,4 @@ DATALOCAL\tauri G:\registory\tauri
 DATALOCAL\fnm_multishells G:\registory\nodejs\fnm_multishells
 [FILE]
 USERPROFILE\.bunfig.toml G:\registory\bun\bunfig.toml
+USERPROFILE\.config\starship.toml D:\config\dotfiles\mcge-starship\starship.toml
