@@ -1,8 +1,0 @@
-{
-  "root_path": "D:\\devTools\\Scoop",
-  "global_dir": "D:\\devTools\\Scoop\\GlobalScoopApps",
-  "last_update": "2024-05-26T16:18:53.1600021+08:00",
-  "aria2-enabled": true,
-  "scoop_repo": "https://github.com/ScoopInstaller/Scoop",
-  "scoop_branch": "master"
-}
