@@ -3,3 +3,5 @@ mcge-vimrc/coc-data/*
 mcge-vimrc/pack/mcge/start/ultisnips/tags
 
 mcge-emacs/site-lisp/config/*
+
+mcge-nushell/history.txt
