@@ -5,30 +5,30 @@
 
 ** Headers
 #+begin_src emacs-lisp
-  ;;; init-color-rg.el ---   -*- lexical-binding: t; -*-
+;;; init-color-rg.el ---   -*- lexical-binding: t; -*-
 
-  ;;; Commentary:
+;;; Commentary:
 
   #+end_src
 
 ** Require
 #+begin_src emacs-lisp
-  ;;; Require:
-  (require 'color-rg)
-  (require 'init-const)
+;;; Require:
+(require 'color-rg)
+(require 'init-const)
 
-  ;;; Code :
+;;; Code:
   #+end_src
 
 ** Color-rg
 #+begin_src emacs-lisp
-  (when *is-win32p*
-    (setq color-rg-search-ignore-rules nil))
+(when *is-win32p*
+  (setq color-rg-search-ignore-rules nil))
 #+end_src
 
 ** Ends
 #+begin_src emacs-lisp
-  (provide 'init-color-rg)
-  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-  ;;; init-color-rg.el ends here
+(provide 'init-color-rg)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; init-color-rg.el ends here
   #+end_src

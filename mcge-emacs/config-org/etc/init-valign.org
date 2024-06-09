@@ -5,31 +5,31 @@
 
 ** Headers
 #+begin_src emacs-lisp
-  ;;; init-valign.el --- valign config  -*- lexical-binding: t; -*-
+;;; init-valign.el --- valign config  -*- lexical-binding: t; -*-
 
-  ;;; Commentary:
+;;; Commentary:
 
   #+end_src
 
 ** Require
 #+begin_src emacs-lisp
-  ;;; Require:
-  (require 'valign)
+;;; Require:
+(require 'valign)
 
-  ;;; Code :
+;;; Code:
 
   #+end_src
 
 ** Code
 #+begin_src emacs-lisp
-  (setq valign-fancy-bar t)
-  (add-hook 'org-mode-hook #'valign-mode)
+(setq valign-fancy-bar t)
+(add-hook 'org-mode-hook #'valign-mode)
 #+end_src
 
 ** Ends
 #+begin_src emacs-lisp
 
-  (provide 'init-valign)
-  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-  ;;; init-valign.el ends here
+(provide 'init-valign)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; init-valign.el ends here
   #+end_src

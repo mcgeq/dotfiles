@@ -5,22 +5,22 @@
 
 ** Headers
 #+begin_src emacs-lisp
-  ;;; lang-java.el ---   -*- lexical-binding: t; -*-
+;;; lang-java.el ---   -*- lexical-binding: t; -*-
 
-  ;;; Commentary:
+;;; Commentary:
 
   #+end_src
 
 ** Require
 #+begin_src emacs-lisp
-  ;;; Require:
+;;; Require:
 
-  ;;; Code :
+;;; Code:
   #+end_src
 
 ** Ends
 #+begin_src emacs-lisp
-  (provide 'lang-java)
-  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-  ;;; lang-java.el ends here
+(provide 'lang-java)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; lang-java.el ends here
   #+end_src

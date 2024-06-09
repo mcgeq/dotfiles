@@ -5,24 +5,24 @@
 
 ** Headers
 #+begin_src emacs-lisp
-  ;;; init-org-popup-posframe.el --- org-popup-posframeconfig  -*- lexical-binding: t; -*-
+;;; init-org-popup-posframe.el --- org-popup-posframeconfig  -*- lexical-binding: t; -*-
 
-  ;;; Commentary:
+;;; Commentary:
 
   #+end_src
 
 ** Require
 #+begin_src emacs-lisp
-  ;;; Require:
-  (require 'org-popup-posframe)
+;;; Require:
+(require 'org-popup-posframe)
 
-  ;;; Code:
+;;; Code:
 
   #+end_src
 
 ** Code
 #+begin_src emacs-lisp
-  (org-popup-posframe-mode 1)
+(org-popup-posframe-mode 1)
 #+end_src
 
 ** Ends

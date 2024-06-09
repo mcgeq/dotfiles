@@ -5,31 +5,31 @@
 
 ** Headers
 #+begin_src emacs-lisp
-  ;;; init-marginalia.el --- marginalia config  -*- lexical-binding: t; -*-
+;;; init-marginalia.el --- marginalia config  -*- lexical-binding: t; -*-
 
-  ;;; Commentary:
+;;; Commentary:
 
   #+end_src
 
 ** Require
 #+begin_src emacs-lisp
-  ;;; Require:
-  (require 'marginalia)
+;;; Require:
+(require 'marginalia)
 
-  ;;; Code :
+;;; Code:
 
   #+end_src
 
 ** Code
 #+begin_src emacs-lisp
-  ;; Display the purpose and comment of each command in minibuffer
-  (add-hook 'after-init-hook 'marginalia-mode)
-  (setq marginalia-mode t)
+;; Display the purpose and comment of each command in minibuffer
+(add-hook 'after-init-hook 'marginalia-mode)
+(setq marginalia-mode t)
 #+end_src
 
 ** Ends
 #+begin_src emacs-lisp
-  (provide 'init-marginalia)
-  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-  ;;; init-marginalia.el ends here
+(provide 'init-marginalia)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; init-marginalia.el ends here
   #+end_src

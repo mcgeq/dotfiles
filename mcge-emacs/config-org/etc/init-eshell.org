@@ -5,27 +5,27 @@
 
 ** Headers
 #+begin_src emacs-lisp
-  ;;; init-eshell.el --- eshell config  -*- lexical-binding: t; -*-
+;;; init-eshell.el --- eshell config  -*- lexical-binding: t; -*-
 
-  ;;; Commentary:
+;;; Commentary:
 
   #+end_src
 
 ** Require
 #+begin_src emacs-lisp
-  ;;; Require:
-  (require 'em-term)
-  (require 'eshell)
-  (require 'esh-mode)
-  (require 'em-rebind)
-  (require 'em-hist)
+;;; Require:
+(require 'em-term)
+(require 'eshell)
+(require 'esh-mode)
+(require 'em-rebind)
+(require 'em-hist)
 
-  ;;; Code :
+;;; Code:
   #+end_src
 
 ** Code
 #+begin_src emacs-lisp
-  (add-hook 'eshell-mode-hook #'(lambda () (term-mode-common-init)
+(add-hook 'eshell-mode-hook #'(lambda () (term-mode-common-init)
                                 (modify-syntax-entry ?- "w")
                                 (visual-line-mode 1)
                                 (setenv "PAGER" "cat")))
@@ -61,38 +61,38 @@ current directory."
                 "'*" filename "*'")))
       (eshell-command-result cmd)))
 
-  ;; custome
-  (setq eshell-banner-message 
-        '(format "%s %s\n"
-                 (propertize (format " %s " (string-trim (buffer-name)))
-                             'face 'mode-line-highlight)
-                 (propertize (current-time-string)
-                             'face 'font-lock-keyword-face)))
-  (setq eshell-scroll-to-bottom-on-input 'all
-        eshell-scroll-to-bottom-on-output 'all)
-  (setq eshell-kill-on-exit t)
-  (setq eshell-kill-processes-on-exit t)
-  (setq eshell-input-filter 'eshell-input-filter-initial-space)
-  (setq eshell-error-if-no-glob t)
-  (setq eshell-glob-case-insensitive t)
-  ;; set scripts
-  (setq eshell-rc-script (locate-user-emacs-file "etc/eshell/profile"))
-  (setq eshell-login-script (locate-user-emacs-file "etc/eshell/login"))
+;; custome
+(setq eshell-banner-message
+      '(format "%s %s\n"
+               (propertize (format " %s " (string-trim (buffer-name)))
+                           'face 'mode-line-highlight)
+               (propertize (current-time-string)
+                           'face 'font-lock-keyword-face)))
+(setq eshell-scroll-to-bottom-on-input 'all
+      eshell-scroll-to-bottom-on-output 'all)
+(setq eshell-kill-on-exit t)
+(setq eshell-kill-processes-on-exit t)
+(setq eshell-input-filter 'eshell-input-filter-initial-space)
+(setq eshell-error-if-no-glob t)
+(setq eshell-glob-case-insensitive t)
+;; set scripts
+(setq eshell-rc-script (locate-user-emacs-file "etc/eshell/profile"))
+(setq eshell-login-script (locate-user-emacs-file "etc/eshell/login"))
 
-  (setq eshell-history-size 1024)
-  (setq eshell-hist-ignoredups t)
-  (setq eshell-save-history-on-exit t)
+(setq eshell-history-size 1024)
+(setq eshell-hist-ignoredups t)
+(setq eshell-save-history-on-exit t)
 
-  ;; top command
-  (setq eshell-visual-commands '("top" "htop" "less" "more"))
-  (setq eshell-visual-subcommands '(("git" "help" "lg" "log" "diff" "show")))
-  (setq eshell-visual-options '(("git" "--help" "--paginate")))
-  (setq eshell-destroy-buffer-when-process-dies t)
+;; top command
+(setq eshell-visual-commands '("top" "htop" "less" "more"))
+(setq eshell-visual-subcommands '(("git" "help" "lg" "log" "diff" "show")))
+(setq eshell-visual-options '(("git" "--help" "--paginate")))
+(setq eshell-destroy-buffer-when-process-dies t)
 #+end_src
 
 ** Ends
 #+begin_src emacs-lisp
-  (provide 'init-eshell)
-  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-  ;;; init-eshell.el ends here
+(provide 'init-eshell)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; init-eshell.el ends here
   #+end_src

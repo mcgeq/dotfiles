@@ -5,36 +5,38 @@
 
 ** Headers
 #+begin_src emacs-lisp
-  ;;; init-eglot.el ---   -*- lexical-binding: t; -*-
+;;; init-eglot.el ---   -*- lexical-binding: t; -*-
 
-  ;;; Commentary:
+;;; Commentary:
 
   #+end_src
 
 ** Require
 #+begin_src emacs-lisp
-  (require 'eglot)
-  (require 'lang-rust)
-  (require 'lang-cpp)
-  (require 'lang-typescript)
-  (require 'lang-web-mode)
-  (require 'lang-angular)
-  (require 'lang-java)
-  ;;; Code:
+(require 'eglot)
+(require 'lang-rust)
+(require 'lang-cpp)
+(require 'lang-typescript)
+(require 'lang-web-mode)
+(require 'lang-angular)
+(require 'lang-java)
+
+;;; Code:
 #+end_src
 
 ** Code
 #+begin_src emacs-lisp
-  (add-hook 'rust-ts-mode-hook 'eglot-ensure)
-  (add-hook 'c++-ts-mode-hook  'eglot-ensure)
-  (add-hook 'c-ts-mode-hook    'eglot-ensure)
-  (add-hook 'typescript-ts-mode-hook 'eglot-ensure)
-  ;; (add-to-list 'eglot-stay-out-of 'flymake)
+
+(add-hook 'rust-ts-mode-hook 'eglot-ensure)
+(add-hook 'c++-ts-mode-hook  'eglot-ensure)
+(add-hook 'c-ts-mode-hook    'eglot-ensure)
+(add-hook 'typescript-ts-mode-hook 'eglot-ensure)
+;; (add-to-list 'eglot-stay-out-of 'flymake)
 #+end_src
 
 ** Ends
 #+begin_src emacs-lisp
-  (provide 'init-eglot)
-  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-  ;;; init-eglot.el ends here
+(provide 'init-eglot)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; init-eglot.el ends here
   #+end_src

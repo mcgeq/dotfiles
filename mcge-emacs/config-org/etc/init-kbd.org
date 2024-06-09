@@ -26,7 +26,7 @@
   (require 'awesome-pair)
   (require 'tabspaces)
 
-  ;;; Code :
+  ;;; Code:
   #+end_src
 
 ** Flymake

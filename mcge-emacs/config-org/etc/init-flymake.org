@@ -5,32 +5,32 @@
 
 ** Headers
 #+begin_src emacs-lisp
-  ;;; init-flymake.el --- flymake config  -*- lexical-binding: t; -*-
+;;; init-flymake.el --- flymake config  -*- lexical-binding: t; -*-
 
-  ;;; Commentary:
+;;; Commentary:
 
   #+end_src
 
 ** Require
 #+begin_src emacs-lisp
-  ;;; Require:
-  (require 'flymake)
+;;; Require:
+(require 'flymake)
 
-  ;;; Code :
+;;; Code:
   #+end_src
 
 ** Code
 #+begin_src emacs-lisp
-  (add-hook 'prog-mode-hook 'flymake-mode)
-  (setq flymake-no-changes-timeout nil
-        flymake-fringe-indicator-position 'right-fringe)
-  (setq elisp-flymake-byte-compile-load-path
-        (append elisp-flymake-byte-compile-load-path load-path))
+(add-hook 'prog-mode-hook 'flymake-mode)
+(setq flymake-no-changes-timeout nil
+      flymake-fringe-indicator-position 'right-fringe)
+(setq elisp-flymake-byte-compile-load-path
+      (append elisp-flymake-byte-compile-load-path load-path))
 #+end_src
 
 ** Ends
 #+begin_src emacs-lisp
-  (provide 'init-flymake)
-  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-  ;;; init-flymake.el ends here
+(provide 'init-flymake)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; init-flymake.el ends here
   #+end_src

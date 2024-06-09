@@ -5,20 +5,20 @@
 
 ** Headers
 #+begin_src emacs-lisp
-  ;;; init-org.el --- org config  -*- lexical-binding: t; -*-
+;;; init-org.el --- org config  -*- lexical-binding: t; -*-
 
-  ;;; Commentary:
+;;; Commentary:
 
   #+end_src
 
 ** Require
 #+begin_src emacs-lisp
-  ;;; Require:
-  (require 'org)
-  (require 'init-const)
-  (require 'org-modern)
+;;; Require:
+(require 'org)
+(require 'init-const)
+(require 'org-modern)
 
-  ;;; Code :
+;;; Code:
 
   #+end_src
 
@@ -290,7 +290,7 @@
 ** Ends
 #+begin_src emacs-lisp
 
- (provide 'init-org)
-  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-  ;;; init-org.el ends here
+(provide 'init-org)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; init-org.el ends here
   #+end_src

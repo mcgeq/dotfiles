@@ -5,33 +5,33 @@
 
 ** Headers
 #+begin_src emacs-lisp
-  ;;; init-diff-hl.el ---   -*- lexical-binding: t; -*-
+;;; init-diff-hl.el ---   -*- lexical-binding: t; -*-
 
-  ;;; Commentary:
+;;; Commentary:
 
   #+end_src
 
 ** Require
 #+begin_src emacs-lisp
-  ;;; Require:
-  (require 'diff-hl)
+;;; Require:
+(require 'diff-hl)
 
-  ;;; Code :
+;;; Code:
   #+end_src
 
 ** Code
 #+begin_src emacs-lisp
-  (global-diff-hl-mode t)
-  (add-hook 'dired-mode-hooik      'diff-hl-dir-mode)
-  (add-hook 'magit-pre-refresh     'diff-hl-magit-pre-refresh)
-  (add-hook 'magit-post-refresh    'diff-hl-magit-post-refresh)
-  (unless (display-graphic-p)
-    (diff-hl-margin-mode))
+(global-diff-hl-mode t)
+(add-hook 'dired-mode-hooik      'diff-hl-dir-mode)
+(add-hook 'magit-pre-refresh     'diff-hl-magit-pre-refresh)
+(add-hook 'magit-post-refresh    'diff-hl-magit-post-refresh)
+(unless (display-graphic-p)
+  (diff-hl-margin-mode))
 #+end_src
 
 ** Ends
 #+begin_src emacs-lisp
-  (provide 'init-diff-hl)
-  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-  ;;; init-diff-hl.el ends here
+(provide 'init-diff-hl)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; init-diff-hl.el ends here
   #+end_src

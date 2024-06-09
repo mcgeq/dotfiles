@@ -5,36 +5,36 @@
 
 ** Headers
 #+begin_src emacs-lisp
-  ;;; init-org-appear.el --- org-appear config  -*- lexical-binding: t; -*-
+;;; init-org-appear.el --- org-appear config  -*- lexical-binding: t; -*-
 
-  ;;; Commentary:
+;;; Commentary:
 
   #+end_src
 
 ** Require
 #+begin_src emacs-lisp
-  ;;; Require:
-  (require 'org-appear)
+;;; Require:
+(require 'org-appear)
 
-  ;;; Code :
+;;; Code:
 
   #+end_src
 
 ** Code
 #+begin_src emacs-lisp
-  (add-hook 'org-mode-hook #'org-appear-mode)
+(add-hook 'org-mode-hook #'org-appear-mode)
 
-  (setq org-appear-autoemphasis    t
-        org-appear-autosubmarkers  t
-        org-appear-autolinks       t
-        org-appear-autokeywords    t
-        org-appear-inside-latex    t)
+(setq org-appear-autoemphasis    t
+      org-appear-autosubmarkers  t
+      org-appear-autolinks       t
+      org-appear-autokeywords    t
+      org-appear-inside-latex    t)
 #+end_src
 
 ** Ends
 #+begin_src emacs-lisp
 
-  (provide 'init-org-appear)
-  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-  ;;; init-org-appear.el ends here
+(provide 'init-org-appear)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; init-org-appear.el ends here
   #+end_src

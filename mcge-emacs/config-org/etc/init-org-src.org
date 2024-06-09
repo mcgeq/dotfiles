@@ -5,21 +5,21 @@
 
 ** Headers
 #+begin_src emacs-lisp
-  ;;; init-org-src.el --- org-src config  -*- lexical-binding: t; -*-
+;;; init-org-src.el --- org-src config  -*- lexical-binding: t; -*-
 
-  ;;; Commentary:
+;;; Commentary:
 
   #+end_src
 
 ** Require
 #+begin_src emacs-lisp
-  ;;; Require:
-  (require 'org-src)
-  (require 'org-element)
-  (require 'elisp-mode)
-  (require 'python)
+;;; Require:
+(require 'org-src)
+(require 'org-element)
+(require 'elisp-mode)
+(require 'python)
 
-  ;;; Code :
+;;; Code:
 
   #+end_src
 
@@ -226,7 +226,7 @@
 ** Ends
 #+begin_src emacs-lisp
 
-  (provide 'init-org-src)
-  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-  ;;; init-org-src.el ends here
+(provide 'init-org-src)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; init-org-src.el ends here
   #+end_src

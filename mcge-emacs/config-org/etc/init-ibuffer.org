@@ -5,48 +5,48 @@
 
 ** Headers
 #+begin_src emacs-lisp
-  ;;; init-ibuffer.el --- Config buffer  -*- lexical-binding: t; -*-
+;;; init-ibuffer.el --- Config buffer  -*- lexical-binding: t; -*-
 
-  ;;; Commentary:
+;;; Commentary:
 
   #+end_src
 
 ** Require
 #+begin_src emacs-lisp
-  ;;; Require:
-  (require 'ibuffer)
-  ;; the ibuffer-vc
-  (require 'ibuffer-vc)
+;;; Require:
+(require 'ibuffer)
+;; the ibuffer-vc
+(require 'ibuffer-vc)
 
-  ;;; Code :
+;;; Code:
   #+end_src
 
 ** Code
 #+begin_src emacs-lisp :tangle no
-  ;; https://egh0bww1.com/posts/2022-03-17-18-buffer-manage-ibuffer-usage/#org-H-1
+;; https://egh0bww1.com/posts/2022-03-17-18-buffer-manage-ibuffer-usage/#org-H-1
 
-  ;(setq uniquify-buffer-name-style      'reverse)    ; 
-  ;(setq uniquify-separator              " · ")       ; 修饰内容与 buffer 名字之间的间隔符
-  ;(setq uniquify-after-kill-buffer-p    t)           ; 关闭 buffer 时是否刷新名字
-  ;(setq uniquify-ignore-buffers-re      "^\\*")      ; 满足该表达式的 buffer 不会被修饰
+;(setq uniquify-buffer-name-style      'reverse)    ; 
+;(setq uniquify-separator              " · ")       ; 修饰内容与 buffer 名字之间的间隔符
+;(setq uniquify-after-kill-buffer-p    t)           ; 关闭 buffer 时是否刷新名字
+;(setq uniquify-ignore-buffers-re      "^\\*")      ; 满足该表达式的 buffer 不会被修饰
 #+end_src
 
 ** Init
 #+begin_src emacs-lisp
-  ;; Don't open other window when in a Ibuffer
-  (defun init-ibuffer-ibuffer()
-    "Init ibuffer ibuffer."
-    (interactive)
-    (if (string= (buffer-name) "*Ibuffer*")
-        (ibuffer-update nil t)
-      (ibuffer)
-      )
+;; Don't open other window when in a Ibuffer
+(defun init-ibuffer-ibuffer()
+  "Init ibuffer ibuffer."
+  (interactive)
+  (if (string= (buffer-name) "*Ibuffer*")
+      (ibuffer-update nil t)
+    (ibuffer)
     )
+  )
 #+end_src
 
 ** ibuffer
 #+begin_src emacs-lisp
-  ;; ibuffer formats
+;; ibuffer formats
 ;; see ibuffer.el
 (setq ibuffer-formats
       '((mark modified read-only locked
@@ -204,7 +204,7 @@
 #+end_src
 ** Ends
 #+begin_src emacs-lisp
-  (provide 'init-ibuffer)
-  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-  ;;; init-ibuffer.el ends here
+(provide 'init-ibuffer)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; init-ibuffer.el ends here
   #+end_src

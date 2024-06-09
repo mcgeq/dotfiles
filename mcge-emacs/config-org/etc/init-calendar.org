@@ -5,76 +5,76 @@
 
 ** Headers
 #+begin_src emacs-lisp
-  ;;; init-calendar.el ---   -*- lexical-binding: t; -*-
+;;; init-calendar.el ---   -*- lexical-binding: t; -*-
 
-  ;;; Commentary:
+;;; Commentary:
 
   #+end_src
 
 ** Require
 #+begin_src emacs-lisp
-  ;;; Require:
-  (require 'calendar)
-  (require 'parse-time)
-  (require 'cal-china-x)
+;;; Require:
+(require 'calendar)
+(require 'parse-time)
+(require 'cal-china-x)
 
-  ;;; Code :
+;;; Code:
   #+end_src
 
 ** Add hook
 #+begin_src emacs-lisp
-  (add-hook 'calendar-today-visible-hook 'calendar-mark-today)
+(add-hook 'calendar-today-visible-hook 'calendar-mark-today)
 #+end_src
 
 ** Set cal-chinese-x
 #+begin_src emacs-lisp
-  ;; 是否显示中国节日，我们使用 `cal-chinese-x' 插件
-  (setq calendar-chinese-all-holidays-flag nil)
-  ;; 是否显示节日
-  (setq calendar-mark-holidays-flag t)
-  ;; 是否显示 Emacs 的日记，我们使用 org 的日记
-  (setq calendar-mark-diary-entries-flag nil)
-  ;; 数字方式显示时区，如 +0800，默认是字符方式如 CST
-  (setq calendar-time-zone-style 'numeric)
-  ;; 日期显示方式：year/month/day
-  (setq calendar-date-style 'iso)
-  ;; 中文天干地支设置
-  (setq calendar-chinese-celestial-stem ["甲" "乙" "丙" "丁" "戊" "己" "庚" "辛" "壬" "癸"])
-  (setq calendar-chinese-terrestrial-branch ["子" "丑" "寅" "卯" "辰" "巳" "午" "未" "申" "酉" "戌" "亥"])
-  ;; 设置中文月份
-  (setq calendar-month-name-array ["一月" "二月" "三月" "四月" "五月" "六月" "七月" "八月" "九月" "十月" "十一月" "十二月"])
-  ;; 设置星期标题显示
-  (setq calendar-day-name-array ["日" "一" "二" "三" "四" "五" "六"])
-  ;; 周一作为一周第一天
-  (setq calendar-week-start-day 1)
+;; 是否显示中国节日，我们使用 `cal-chinese-x' 插件
+(setq calendar-chinese-all-holidays-flag nil)
+;; 是否显示节日
+(setq calendar-mark-holidays-flag t)
+;; 是否显示 Emacs 的日记，我们使用 org 的日记
+(setq calendar-mark-diary-entries-flag nil)
+;; 数字方式显示时区，如 +0800，默认是字符方式如 CST
+(setq calendar-time-zone-style 'numeric)
+;; 日期显示方式：year/month/day
+(setq calendar-date-style 'iso)
+;; 中文天干地支设置
+(setq calendar-chinese-celestial-stem ["甲" "乙" "丙" "丁" "戊" "己" "庚" "辛" "壬" "癸"])
+(setq calendar-chinese-terrestrial-branch ["子" "丑" "寅" "卯" "辰" "巳" "午" "未" "申" "酉" "戌" "亥"])
+;; 设置中文月份
+(setq calendar-month-name-array ["一月" "二月" "三月" "四月" "五月" "六月" "七月" "八月" "九月" "十月" "十一月" "十二月"])
+;; 设置星期标题显示
+(setq calendar-day-name-array ["日" "一" "二" "三" "四" "五" "六"])
+;; 周一作为一周第一天
+(setq calendar-week-start-day 1)
 #+end_src
 
 ** 时间解析增加中文拼音
 #+begin_src emacs-lisp
-  (setq parse-time-months
-        (append '(("yiy" . 1) ("ery" . 2) ("sany" . 3)
-                  ("siy" . 4) ("wuy" . 5) ("liuy" . 6)
-                  ("qiy" . 7) ("bay" . 8) ("jiuy" . 9)
-                  ("shiy" . 10) ("shiyiy" . 11) ("shiery" . 12)
-                  ("yiyue" . 1) ("eryue" . 2) ("sanyue" . 3)
-                  ("siyue" . 4) ("wuyue" . 5) ("liuyue" . 6)
-                  ("qiyue" . 7) ("bayue" . 8) ("jiuyue" . 9)
-                  ("shiyue" . 10) ("shiyiyue" . 11) ("shieryue" . 12))
-                parse-time-months))
+(setq parse-time-months
+      (append '(("yiy" . 1) ("ery" . 2) ("sany" . 3)
+                ("siy" . 4) ("wuy" . 5) ("liuy" . 6)
+                ("qiy" . 7) ("bay" . 8) ("jiuy" . 9)
+                ("shiy" . 10) ("shiyiy" . 11) ("shiery" . 12)
+                ("yiyue" . 1) ("eryue" . 2) ("sanyue" . 3)
+                ("siyue" . 4) ("wuyue" . 5) ("liuyue" . 6)
+                ("qiyue" . 7) ("bayue" . 8) ("jiuyue" . 9)
+                ("shiyue" . 10) ("shiyiyue" . 11) ("shieryue" . 12))
+              parse-time-months))
 
-  (setq parse-time-weekdays
-        (append '(("zri" . 0) ("zqi" . 0)
-                  ("zyi" . 1) ("zer" . 2) ("zsan" . 3)
-                  ("zsi" . 4) ("zwu" . 5) ("zliu" . 6)
-                  ("zr" . 0) ("zq" . 0)
-                  ("zy" . 1) ("ze" . 2) ("zs" . 3)
-                  ("zsi" . 4) ("zw" . 5) ("zl" . 6))
-                parse-time-weekdays))
+(setq parse-time-weekdays
+      (append '(("zri" . 0) ("zqi" . 0)
+                ("zyi" . 1) ("zer" . 2) ("zsan" . 3)
+                ("zsi" . 4) ("zwu" . 5) ("zliu" . 6)
+                ("zr" . 0) ("zq" . 0)
+                ("zy" . 1) ("ze" . 2) ("zs" . 3)
+                ("zsi" . 4) ("zw" . 5) ("zl" . 6))
+              parse-time-weekdays))
 #+end_src
 
 ** Ends
 #+begin_src emacs-lisp
-  (provide 'init-calendar)
-  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-  ;;; init-calendar.el ends here
+(provide 'init-calendar)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; init-calendar.el ends here
   #+end_src

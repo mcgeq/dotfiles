@@ -5,35 +5,35 @@
 
 ** Headers
 #+begin_src emacs-lisp
-  ;;; init-org-roam.el --- org-roam config  -*- lexical-binding: t; -*-
+;;; init-org-roam.el --- org-roam config  -*- lexical-binding: t; -*-
 
-  ;;; Commentary:
+;;; Commentary:
 
   #+end_src
 
 ** Require
 #+begin_src emacs-lisp
-  ;;; Require:
-  (require 'org-roam)
-  (require 'init-const)
+;;; Require:
+(require 'org-roam)
+(require 'init-const)
 
-  ;;; Code :
+;;; Code:
 
   #+end_src
 
 ** Code
 #+begin_src emacs-lisp
-  (setq org-roam-directory (concat mcgemacs-org-dir "/roam"))
-  (add-hook 'after-init-hook 'org-roam-mode)
+(setq org-roam-directory (concat mcgemacs-org-dir "/roam"))
+(add-hook 'after-init-hook 'org-roam-mode)
 
-  ;; org-roam-ui
-  ;(setq org-roam-ui-sync-theme t)
+;; org-roam-ui
+;(setq org-roam-ui-sync-theme t)
 #+end_src
 
 ** Ends
 #+begin_src emacs-lisp
 
 (provide 'init-org-roam)
-  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-  ;;; init-org-roam.el ends here
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; init-org-roam.el ends here
   #+end_src

@@ -5,26 +5,26 @@
 
 ** Headers
 #+begin_src emacs-lisp
-  ;;; lang-angular.el ---   -*- lexical-binding: t; -*-
+;;; lang-angular.el ---   -*- lexical-binding: t; -*-
 
-  ;;; Commentary:
+;;; Commentary:
 
   #+end_src
 
 ** Require
 #+begin_src emacs-lisp
-  (require 'eglot)
-  ;;; Code :
+(require 'eglot)
+;;; Code:
   #+end_src
 
 ** Code
 #+begin_src emacs-lisp
-  (add-to-list 'eglot-server-programs '(web-mode . ("ngserver")))
+(add-to-list 'eglot-server-programs '(web-mode . ("ngserver")))
 #+end_src
 
 ** Ends
 #+begin_src emacs-lisp
 (provide 'lang-angular)
-  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-  ;;; lang-angular.el ends here
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; lang-angular.el ends here
   #+end_src

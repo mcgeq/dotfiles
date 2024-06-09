@@ -5,29 +5,29 @@
 
 ** Headers
 #+begin_src emacs-lisp
-  ;;; init-treesit-auto.el ---   -*- lexical-binding: t; -*-
+;;; init-treesit-auto.el ---   -*- lexical-binding: t; -*-
 
-  ;;; Commentary:
+;;; Commentary:
 
 
   #+end_src
 
 ** Require
 #+begin_src emacs-lisp
-  (require 'treesit-auto)
-  ;;; Code :
+(require 'treesit-auto)
+;;; Code:
   #+end_src
 
 ** Code
 #+begin_src emacs-lisp
-  (setq treesit-auto-install 'prompt)
-  (treesit-auto-add-to-auto-mode-alist)
-  (global-treesit-auto-mode)
+(setq treesit-auto-install 'prompt)
+(treesit-auto-add-to-auto-mode-alist)
+(global-treesit-auto-mode)
 #+end_src
 
 ** Ends
 #+begin_src emacs-lisp
-  (provide 'init-treesit-auto)
-  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-  ;;; init-treesit-auto.el ends here
+(provide 'init-treesit-auto)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; init-treesit-auto.el ends here
   #+end_src

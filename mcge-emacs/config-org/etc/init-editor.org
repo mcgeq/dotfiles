@@ -5,70 +5,70 @@
 
 ** Headers
 #+begin_src emacs-lisp
-  ;;; init-editor.el ---   -*- lexical-binding: t; -*-
+;;; init-editor.el ---   -*- lexical-binding: t; -*-
 
-  ;;; Commentary:
+;;; Commentary:
 
   #+end_src
 
 ** Require
 #+begin_src emacs-lisp
-  ;;; Require:
-  (require 'delsel)
-  (require 'beacon)
-  (require 'htmlize)
-  (require 'display-line-numbers)
+;;; Require:
+(require 'delsel)
+(require 'beacon)
+(require 'htmlize)
+(require 'display-line-numbers)
 
-  ;;; Code :
+;;; Code:
   #+end_src
 
 ** Code
 #+begin_src emacs-lisp
-  (add-hook 'after-init-hook 'delete-selection-mode)
+(add-hook 'after-init-hook 'delete-selection-mode)
 
-  (defvar mcg/indent-tabs-modes-list
-    '(makefile-gmake-mode
-      makefile-mode
-      )
+(defvar mcg/indent-tabs-modes-list
+  '(makefile-gmake-mode
+    makefile-mode
     )
+  )
 
-  (defun mcg/toggle-indent-tabs-mode ()
-    "Toogle indent tabs mode."
-    (if (member major-mode mcg/indent-tabs-modes-list)
-        (setq indent-tabs-mode t)
-      (setq indent-tabs-mode nil)))
+(defun mcg/toggle-indent-tabs-mode ()
+  "Toogle indent tabs mode."
+  (if (member major-mode mcg/indent-tabs-modes-list)
+      (setq indent-tabs-mode t)
+    (setq indent-tabs-mode nil)))
 
-  (add-hook 'after-change-major-mode-hook 'mcg/toggle-indent-tabs-mode)
+(add-hook 'after-change-major-mode-hook 'mcg/toggle-indent-tabs-mode)
 #+end_src
 
 ** 光标彩虹
 #+begin_src emacs-lisp
-  ;; 光标彩虹插件
+;; 光标彩虹插件
 
-  (add-hook 'after-init-hook #'beacon-mode)
-  (beacon-mode 1)
-  (setq beacon-lighter "")
-  (setq beacon-size    20)
-  (setq beacon-blink-when-window-scrolls nil)
+(add-hook 'after-init-hook #'beacon-mode)
+(beacon-mode 1)
+(setq beacon-lighter "")
+(setq beacon-size    20)
+(setq beacon-blink-when-window-scrolls nil)
 #+end_src
 
 ** Show line number
 #+begin_src emacs-lisp
-  ;; show line number
+;; show line number
 
-  (setq display-line-numbers-type 'relative)
-  (add-hook 'prog-mode-hook     #'display-line-numbers-mode)
-  (add-hook 'yaml-mode-hook     #'display-line-numbers-mode)
-  (add-hook 'conf-mode-hook     #'display-line-numbers-mode)
-  (add-hook 'markdown-mode-hook #'display-line-numbers-mode)
-  (add-hook 'prog-mode-hook     'hs-minor-mode)   ;代码折叠
-  ;; line number align right
-  (setq display-line-numbers-width-start t)
+(setq display-line-numbers-type 'relative)
+(add-hook 'prog-mode-hook     #'display-line-numbers-mode)
+(add-hook 'yaml-mode-hook     #'display-line-numbers-mode)
+(add-hook 'conf-mode-hook     #'display-line-numbers-mode)
+(add-hook 'markdown-mode-hook #'display-line-numbers-mode)
+(add-hook 'prog-mode-hook     'hs-minor-mode)   ;代码折叠
+;; line number align right
+(setq display-line-numbers-width-start t)
 #+end_src
 
 ** Ends
 #+begin_src emacs-lisp
-  (provide 'init-editor)
-  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-  ;;; init-editor.el ends here
+(provide 'init-editor)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; init-editor.el ends here
   #+end_src

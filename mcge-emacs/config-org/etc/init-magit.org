@@ -5,31 +5,31 @@
 
 ** Headers
 #+begin_src emacs-lisp
-  ;;; init-magit.el --- magit config  -*- lexical-binding: t; -*-
+;;; init-magit.el --- magit config  -*- lexical-binding: t; -*-
 
-  ;;; Commentary:
+;;; Commentary:
 
   #+end_src
 
 ** Require
 #+begin_src emacs-lisp
-  ;;; Require:
-  (require 'magit)
+;;; Require:
+(require 'magit)
 
-  ;;; Code :
+;;; Code:
 
   #+end_src
 
 ** Code
 #+begin_src emacs-lisp
-  (add-hook 'git-commit-mode-hook #'flyspell-mode)
-  (setq magit-diff-refine-hunk t)
-  (setq magit-ediff-dwim-show-on-hunks t)
+(add-hook 'git-commit-mode-hook #'flyspell-mode)
+(setq magit-diff-refine-hunk t)
+(setq magit-ediff-dwim-show-on-hunks t)
 #+end_src
 
 ** Ends
 #+begin_src emacs-lisp
-  (provide 'init-magit)
-  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-  ;;; init-magit.el ends here
+(provide 'init-magit)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; init-magit.el ends here
   #+end_src

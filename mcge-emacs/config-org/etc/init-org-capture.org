@@ -5,25 +5,26 @@
 
 ** Headers
 #+begin_src emacs-lisp
-  ;;; init-org-capture.el --- org-capture config  -*- lexical-binding: t; -*-
+;;; init-org-capture.el --- org-capture config  -*- lexical-binding: t; -*-
 
-  ;;; Commentary:
+;;; Commentary:
 
   #+end_src
 
 ** Require
 #+begin_src emacs-lisp
-  ;;; Require:
-  (require 'init-const)
-  (require 'org-capture)
+;;; Require:
+(require 'init-const)
+(require 'org-capture)
 
-  ;;; Code :
+;;; Code:
 
   #+end_src
 
 ** Code
 #+begin_src emacs-lisp
-  (add-hook 'org-capture-mode-hook #'(lambda() (setq-local org-complete-tags-always-offer-all-agenda-tags t)))
+(add-hook 'org-capture-mode-hook #'(lambda() (setq-local
+                                              org-complete-tags-always-offer-all-agenda-tags t)))
 (add-hook 'org-capture-mode-hook 'delete-other-windows)
 
 (setq org-capture-use-agenda-date nil)
@@ -133,7 +134,7 @@
 ** Ends
 #+begin_src emacs-lisp
 
-  (provide 'init-org-capture)
-  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-  ;;; init-org-capture.el ends here
+(provide 'init-org-capture)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; init-org-capture.el ends here
   #+end_src

@@ -5,26 +5,26 @@
 
 ** Headers
 #+begin_src emacs-lisp
-  ;;; init-org-agenda.el --- org-agenda config  -*- lexical-binding: t; -*-
+;;; init-org-agenda.el --- org-agenda config  -*- lexical-binding: t; -*-
 
-  ;;; Commentary:
+;;; Commentary:
 
   #+end_src
 
 ** Require
 #+begin_src emacs-lisp
-  ;;; Require:
-  (require 'org-agenda)
-  (require 'cal-china-x)
-  (require 'svg-tag-mode)
+;;; Require:
+(require 'org-agenda)
+(require 'cal-china-x)
+(require 'svg-tag-mode)
 
-  ;;; Code :
+;;; Code:
 
   #+end_src
 
 ** Code
 #+begin_src emacs-lisp
-  (add-hook 'org-agenda-finalize-hook 'org-agenda-to-appt)
+(add-hook 'org-agenda-finalize-hook 'org-agenda-to-appt)
 
 ;; org agenda
 (setq org-agenda-files (directory-files-recursively org-directory "\\.org$"))
@@ -277,7 +277,7 @@ This function makes sure that dates are aligned for easy reading."
 ** Ends
 #+begin_src emacs-lisp
 
-  (provide 'init-org-agenda)
-  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-  ;;; init-org-agenda.el ends here
+(provide 'init-org-agenda)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; init-org-agenda.el ends here
   #+end_src

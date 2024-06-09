@@ -5,54 +5,54 @@
 
 ** Headers
 #+begin_src emacs-lisp
-  ;;; init-consult.el --- consult config  -*- lexical-binding: t; -*-
+;;; init-consult.el --- consult config  -*- lexical-binding: t; -*-
 
-  ;;; Commentary:
+;;; Commentary:
 
   #+end_src
 
 ** Require
 #+begin_src emacs-lisp
-  ;;; Require:
-  (require 'consult)
-  (require 'consult-xref)
-  (require 'consult-imenu)
-  (require 'consult-org)
-  (require 'consult-register)
+;;; Require:
+(require 'consult)
+(require 'consult-xref)
+(require 'consult-imenu)
+(require 'consult-org)
+(require 'consult-register)
 
-  ;;; Code :
+;;; Code:
   #+end_src
 
 ** Code
 #+begin_src emacs-lisp
-  (add-hook 'completion-list-mode-hook 'consult-preview-at-point-mode)
-  (setq ;register-preview-delay 0.5
-        register-preview-function #'consult-register-format)
+(add-hook 'completion-list-mode-hook 'consult-preview-at-point-mode)
+(setq ;register-preview-delay 0.5
+ register-preview-function #'consult-register-format)
 
-  (advice-add #'register-preview :override #'consult-register-window)
+(advice-add #'register-preview :override #'consult-register-window)
 
-  ;; Use consult to select xref locations with preview
-  (setq xref-show-xrefs-function #'consult-xref
-        xref-show-definitions-function #'consult-xref)
+;; Use consult to select xref locations with preview
+(setq xref-show-xrefs-function #'consult-xref
+      xref-show-definitions-function #'consult-xref)
 #+end_src
 
 ** Custom function
 #+begin_src emacs-lisp
-  (defun mcg/consult-find-org-headings (&optional match)
-    "MATCH find headngs in all org files."
-    (interactive)
-    (consult-org-heading match (directory-files org-directory t "^[0-9]\\{8\\}.+\\.org$")))
+(defun mcg/consult-find-org-headings (&optional match)
+  "MATCH find headngs in all org files."
+  (interactive)
+  (consult-org-heading match (directory-files org-directory t "^[0-9]\\{8\\}.+\\.org$")))
 
-  ;; Use `consult-ripgrep' instead of `consult-line' in large buffers
-  (defun consult-line-symbol-at-point ()
-    "Consult line the symbol where the point is."
-    (interactive)
-    (consult-line (thing-at-point 'symbol)))
+;; Use `consult-ripgrep' instead of `consult-line' in large buffers
+(defun consult-line-symbol-at-point ()
+  "Consult line the symbol where the point is."
+  (interactive)
+  (consult-line (thing-at-point 'symbol)))
 #+end_src
 
 ** Ends
 #+begin_src emacs-lisp
-  (provide 'init-consult)
-  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-  ;;; init-consult.el ends here
+(provide 'init-consult)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; init-consult.el ends here
   #+end_src
