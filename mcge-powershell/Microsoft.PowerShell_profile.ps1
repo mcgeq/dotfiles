@@ -73,7 +73,8 @@ function gitCz() {
 }
 
 function gitCommit {
-	git commit
+#	git commit
+    pnpm run commit
 }
 # git pull all branch
 
