@@ -10,7 +10,8 @@
 		"preview": "vite preview",
 		"format": "prettier --write 'src/**/*.+(js|ts|jsx|tsx)'",
 		"prepare": "husky",
-		"commit": "git add . && cz"
+		"commit": "git add . && cz",
+		"style": "stylelint --cache --fix 'src/**/*.+(css|scss|tsx)'"
 	},
 	"dependencies": {
 		"classnames": "^2.5.1",
@@ -40,6 +41,11 @@
 		"lint-staged": "^15.2.5",
 		"prettier": "^3.3.1",
 		"sass": "^1.77.4",
+		"stylelint": "^16.6.1",
+		"stylelint-config-standard": "^36.0.0",
+		"stylelint-config-standard-scss": "^13.1.0",
+		"stylelint-order": "^6.0.4",
+		"stylelint-prettier": "^5.0.0",
 		"typescript": "^5.2.2",
 		"vite": "^5.2.0"
 	},
