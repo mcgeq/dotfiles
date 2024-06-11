@@ -1,30 +1,30 @@
 {
-	"name": "dotfiles",
-	"private": true,
-	"version": "0.0.1",
-	"type": "module",
-	"scripts": {
-		"lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-		"preview": "vite preview",
-		"format": "prettier --write 'src/**/*.+(js|ts|jsx|tsx)'",
-		"prepare": "husky",
-		"commit": "cz"
-	},
-	"devDependencies": {
-		"@commitlint/config-conventional": "^19.2.2",
-		"commitizen": "^4.3.0",
-		"commitlint": "^19.3.0",
-		"commitlint-config-gitmoji": "^2.3.1",
-		"cz-customizable": "^7.0.0",
-		"husky": "^9.0.11",
-		"lint-staged": "^15.2.5"
-	},
-	"config": {
-		"commitizen": {
-			"path": "node_modules/cz-customizable"
-		},
-		"cz-customizable": {
-			"config": ".cz-config.cjs"
-		}
-	}
+  "name": "dotfiles",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "preview": "vite preview",
+    "format": "prettier --write 'src/**/*.+(js|ts|jsx|tsx)'",
+    "prepare": "husky",
+    "commit": "git add . && cz"
+  },
+  "devDependencies": {
+    "@commitlint/config-conventional": "^19.2.2",
+    "commitizen": "^4.3.0",
+    "commitlint": "^19.3.0",
+    "commitlint-config-gitmoji": "^2.3.1",
+    "cz-customizable": "^7.0.0",
+    "husky": "^9.0.11",
+    "lint-staged": "^15.2.5"
+  },
+  "config": {
+    "commitizen": {
+      "path": "node_modules/cz-customizable"
+    },
+    "cz-customizable": {
+      "config": ".cz-config.cjs"
+    }
+  }
 }

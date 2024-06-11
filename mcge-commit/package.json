@@ -1,5 +1,5 @@
 {
-	"name": "mcge-demo",
+	"name": "mcge",
 	"private": true,
 	"version": "0.0.0",
 	"type": "module",
@@ -10,7 +10,7 @@
 		"preview": "vite preview",
 		"format": "prettier --write 'src/**/*.+(js|ts|jsx|tsx)'",
 		"prepare": "husky",
-		"commit": "cz"
+		"commit": "git add . && cz"
 	},
 	"dependencies": {
 		"classnames": "^2.5.1",
