@@ -35,6 +35,64 @@ module.exports = {
       name: "💩 poo         一坨: 写了一些屎一样待优化的代码",
     },
     { value: ":tada: init", name: "🎉 init        初始: 初始化提交" },
+    { value: ":rocket: deploy", name: "🚀 deploy      部署: 部署东西" },
+    {
+      value: ":lock: security",
+      name: "🔒️security    安全: 解决安全或隐私问题",
+    },
+    {
+      value: ":closed_lock_with_key secrets:",
+      name: "🔐 secrets     机密: 添加或更新机密",
+    },
+    {
+      value: ":construction_worker: cli",
+      name: "👷 cli         构建: 添加或更新 CI 生成系统",
+    },
+    {
+      value: ":arrow_up: dependencies",
+      name: "⬆️ dependencies 依赖: 升级依赖",
+    },
+    {
+      value: ":arrow_down: dependencies",
+      name: "⬇️ dependencies 依赖: 降级依赖",
+    },
+    {
+      value: ":pushpin: dependencies",
+      name: "📌 dependencies 依赖: 将依赖固定到特定版本",
+    },
+    {
+      value: ":heavy_plus_sign: dependencies",
+      name: "➕ dependencies 依赖: 添加一个依赖",
+    },
+    {
+      value: ":heavy_minus_sign: dependencies",
+      name: "➖ dependencies 依赖: 移除一个依赖",
+    },
+    {
+      value: ":hammer: script",
+      name: "🔨 script      脚本: 添加或更新开发脚本",
+    },
+    {
+      value: ":globe_with_meridians: globe",
+      name: "🌐 globe       国际: 国际化和本地化",
+    },
+    { value: ":pencil2: typos", name: "✏️ typos       字体: 修正错别字" },
+    {
+      value: ":alien: change",
+      name: "👽️alien       更新: 由于外部API更改而更新代码",
+    },
+    {
+      value: ":truck: rename",
+      name: "🚚 rename      命名: 移动或重命名资源(例如: 文件、路径、路由)",
+    },
+    {
+      value: ":page_facing_up: license",
+      name: "📄 license     协议: 添加或更新协议",
+    },
+    {
+      value: ":bento: assets",
+      name: "🍱 assets      资源: 添加或更新资源",
+    },
   ],
 
   scopes: [
