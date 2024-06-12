@@ -93,6 +93,22 @@ module.exports = {
       value: ":bento: assets",
       name: "🍱 assets      资源: 添加或更新资源",
     },
+    {
+      value: ":iphone: design",
+      name: "📱 design      设计: 致力于响应式设计",
+    },
+    {
+      value: ":camera_flash: snapshots",
+      name: "📸 snapshots   快照: 添加或更新快照",
+    },
+    {
+      value: ":coffin: code",
+      name: "⚰️ code        代码: 删除死代码",
+    },
+    {
+      value: ":clown_face: mock",
+      name: "🤡 mock        模拟: Mock things",
+    },
   ],
 
   scopes: [
