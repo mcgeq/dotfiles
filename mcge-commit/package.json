@@ -6,9 +6,9 @@
 	"scripts": {
 		"dev": "vite",
 		"build": "tsc && vite build",
-		"lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+		"lint": "eslint src --fix --ext .ts,.tsx,.js,.jsx --report-unused-disable-directives --max-warnings 0",
 		"preview": "vite preview",
-		"format": "prettier --write 'src/**/*.+(js|ts|jsx|tsx)'",
+		"format": "prettier --write 'src/**/*.{js|ts|jsx|tsx}'",
 		"prepare": "husky",
 		"commit": "git add . && cz",
 		"style": "stylelint --cache --fix 'src/**/*.{css,scss,tsx}'"
