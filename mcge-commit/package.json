@@ -11,7 +11,8 @@
 		"format": "prettier --write 'src/**/*.{js|ts|jsx|tsx}'",
 		"prepare": "husky",
 		"commit": "git add . && cz",
-		"style": "stylelint --cache --fix 'src/**/*.{css,scss,tsx}'"
+		"lint:stylelint": "stylelint --cache --fix 'src/**/*.{css,scss,html,vue}'",
+		"lint:lint-staged": "lint-staged"
 	},
 	"dependencies": {
 		"classnames": "^2.5.1",
@@ -39,9 +40,15 @@
 		"eslint-plugin-react-refresh": "^0.4.6",
 		"husky": "^9.0.11",
 		"lint-staged": "^15.2.5",
+		"postcss": "^8.4.38",
+		"postcss-html": "^1.7.0",
+		"postcss-scss": "^4.0.9",
 		"prettier": "^3.3.1",
 		"sass": "^1.77.4",
 		"stylelint": "^16.6.1",
+		"stylelint-config-html": "^1.1.0",
+		"stylelint-config-recommended-scss": "^14.0.0",
+		"stylelint-config-recommended-vue": "^1.5.0",
 		"stylelint-config-standard": "^36.0.0",
 		"stylelint-config-standard-scss": "^13.1.0",
 		"stylelint-order": "^6.0.4",
