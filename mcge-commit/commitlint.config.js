@@ -37,7 +37,7 @@ const Configuration = {
 				'prune',
 				'wip',
 				'merge',
-				'perf'
+				'perf',
 			],
 		],
 		'scope-empty': [0, 'never', 'none'],
