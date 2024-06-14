@@ -2,6 +2,10 @@
 
 This is the configuration information about using the software.
 
+## Eslint
+
+配置前端开发工具
+
 ## Terminal
 
 Terminal configuration information.
