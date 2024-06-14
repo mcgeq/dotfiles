@@ -21,6 +21,7 @@ const Configuration = {
         "build",
         "init",
         "config",
+        "dependencies",
       ],
     ],
     "scope-empty": [0, "never", "none"],
