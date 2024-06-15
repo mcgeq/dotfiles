@@ -26,6 +26,10 @@ export default [
 				...globals.es2020,
 				...globals.node,
 			},
+			ecmaVersion: 'latest',
+		},
+		linterOptions: {
+			reportUnusedDisableDirectives: 'error',
 		},
 	},
 	{
