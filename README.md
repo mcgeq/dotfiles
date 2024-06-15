@@ -21,6 +21,8 @@ Terminal configuration information.
 
 - <https://github.com/QianSong1/wezterm-config>
 
+[Wezterm README](mcge-wezterm/README.md)
+
 ### powershell
 
 ## Editor
