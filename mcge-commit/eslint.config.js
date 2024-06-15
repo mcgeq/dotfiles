@@ -1,17 +1,26 @@
 import globals from 'globals';
 import pluginJs from '@eslint/js';
 import tseslint from 'typescript-eslint';
-import pluginReactConfig from 'eslint-plugin-react/configs/recommended.js';
-import { fixupConfigRules } from '@eslint/compat';
+import reactRecommended from 'eslint-plugin-react/configs/recommended.js';
+import react from 'eslint-plugin-react/configs/all.js';
 import pluginPrettierRecommendedConfigs from 'eslint-plugin-prettier/recommended';
 import vitest from 'eslint-plugin-vitest';
 
 export default [
-	{ languageOptions: { globals: { ...globals.browser, ...globals.es2020, ...globals.node } } },
 	pluginJs.configs.recommended,
 	...tseslint.configs.recommended,
 	pluginPrettierRecommendedConfigs,
 	{
+		languageOptions: {
+			globals: {
+				...globals.browser,
+				...globals.es2020,
+				...globals.node,
+			},
+		},
+	},
+	{
+		name: 'vitest/recommended',
 		files: ['test/**'],
 		plugins: {
 			vitest,
@@ -32,8 +41,21 @@ export default [
 		},
 	},
 	{
-		files: ['**/*.jsx', '**/*.tsx'],
-		languageOptions: { parserOptions: { ecmaFeatures: { jsx: true } } },
+		files: ['**/*.{js,ts,mjs,cjs,jsx,mjsx,tsx,mtsx}'],
+		plugins: {
+			react,
+		},
+		settings: {
+			react: {
+				version: 'detect',
+			},
+		},
+		...reactRecommended,
+		languageOptions: {
+			...reactRecommended.languageOptions,
+			globals: {
+				...globals.serviceworker,
+			},
+		},
 	},
-	...fixupConfigRules(pluginReactConfig),
 ];
