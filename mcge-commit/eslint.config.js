@@ -3,7 +3,6 @@ import jseslint from "@eslint/js";
 import tseslint from "typescript-eslint";
 import reactRecommended from "eslint-plugin-react/configs/recommended.js";
 import react from "eslint-plugin-react/configs/all.js";
-import pluginPrettierRecommendedConfigs from "eslint-plugin-prettier/recommended";
 import vitest from "eslint-plugin-vitest";
 import eslint_vue from "eslint-plugin-vue";
 import vue_parser from "vue-eslint-parser";
@@ -11,7 +10,6 @@ import vue_parser from "vue-eslint-parser";
 export default [
   jseslint.configs.recommended,
   ...tseslint.configs.recommended,
-  pluginPrettierRecommendedConfigs,
   ...eslint_vue.configs["flat/recommended"],
   {
     languageOptions: {
