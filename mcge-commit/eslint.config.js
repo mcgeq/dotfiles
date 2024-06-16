@@ -2,11 +2,13 @@ import globals from 'globals';
 import jseslint from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import reactRecommended from 'eslint-plugin-react/configs/recommended.js';
+import reactJsRuntime from 'eslint-plugin-react/configs/jsx-runtime.js';
 import react from 'eslint-plugin-react/configs/all.js';
 import pluginPrettierRecommendedConfigs from 'eslint-plugin-prettier/recommended';
 import vitest from 'eslint-plugin-vitest';
 import eslint_vue from 'eslint-plugin-vue';
 import vue_parser from 'vue-eslint-parser';
+import eslint_p_prettier from 'eslint-plugin-prettier';
 
 export default [
 	jseslint.configs.recommended,
@@ -36,6 +38,7 @@ export default [
 		files: ['**/*.{js,ts,mjs,cjs,jsx,mjsx,tsx,mtsx}'],
 		plugins: {
 			react,
+			eslint_p_prettier,
 		},
 		settings: {
 			react: {
@@ -43,6 +46,7 @@ export default [
 			},
 		},
 		...reactRecommended,
+		...reactJsRuntime,
 		languageOptions: {
 			...reactRecommended.languageOptions,
 			globals: {
