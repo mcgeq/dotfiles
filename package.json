@@ -4,13 +4,10 @@
   "version": "0.0.1",
   "type": "module",
   "scripts": {
-    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview",
     "format": "prettier --write 'src/**/*.+(js|ts|jsx|tsx)'",
     "prepare": "husky",
     "commit": "git add . && cz",
-    "lint:stylelint": "stylelint --cache --fix 'src/**/*.{css,scss,html,vue}'",
-		"lint:lint-staged": "lint-staged"
+    "lint:lint-staged": "lint-staged"
   },
   "devDependencies": {
     "@commitlint/config-conventional": "^19.2.2",
