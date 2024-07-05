@@ -38,6 +38,7 @@
   "vim.useCtrlKeys": true,
   "vim.hlsearch": true,
   "vim.flash.enable": true,
+  "vim.cursorStylePerMode.normal": "line",
   "vim.handleKeys": {
     "<C-a>": false,
     "<C-f>": false,
