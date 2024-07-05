@@ -7,6 +7,7 @@
   "editor.letterSpacing": 0.5,
   "editor.tabSize": 4,
   "editor.insertSpaces": true,
+  "editor.lineNumbers": "relative",
   "editor.wordWrap": "on",
   "editor.minimap.enabled": true,
   "editor.formatOnSave": true,
@@ -30,7 +31,20 @@
   },
 
   "workbench.startupEditor": "newUntitledFile",
-
+  // config vim
+  "vim.leader": "<space>",
+  "vim.easymotion": true,
+  "vim.useSystemClipboard": true,
+  "vim.useCtrlKeys": true,
+  "vim.hlsearch": true,
+  "vim.flash.enable": true,
+  "vim.handleKeys": {
+    "<C-a>": false,
+    "<C-f>": false,
+    "<C-d>": true,
+    "<C-s>": false,
+    "<C-z>": false
+  },
   // prettier
   "[javascript]": {
     "editor.tabSize": 2,
