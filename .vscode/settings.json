@@ -32,6 +32,7 @@
 
   "workbench.startupEditor": "newUntitledFile",
   // config vim
+  // 绑定
   "vim.leader": "<space>",
   "vim.easymotion": true,
   "vim.useSystemClipboard": true,
@@ -46,6 +47,82 @@
     "<C-s>": false,
     "<C-z>": false
   },
+  "vim.autoSwitchInputMethod.enable": true,
+"vim.autoSwitchInputMethod.defaultIM": "1033",
+  "vim.autoSwitchInputMethod.obtainIMCmd": "D:\\devTools\\im-select.exe",
+  "vim.autoSwitchInputMethod.switchIMCmd": "D:\\devTools\\im-select.exe {im}",
+  // vim 快捷键
+  // 插入模式下的非递归快捷键绑定
+  "vim.insertModeKeyBindings": [
+    {
+      "before": ["j", "j"],
+      "after": ["<Esc>"]
+    }
+  ],
+  // 普通模式下的非递归按键绑定
+  "vim.normalModeKeyBindingsNonRecursive": [
+    {
+      "before": ["<leader>", "d"],
+      "after": ["d", "d"]
+    },
+    {
+      // 取消高亮搜索
+      "before": ["<C-n>"],
+      "commands": [":nohl"]
+    },
+    {
+      "before": ["K"],
+      "commands": ["lineBreakInsert"],
+      "silent": true
+    },
+    {
+      "before": [
+        "H"
+      ],
+      "after": [
+        "^"
+      ]
+    },
+    {
+      "before": [
+        "L"
+      ],
+      "after": [
+        "$"
+      ]
+    },
+    {
+      "before": [
+        "z",
+        "z",
+      ],
+      "commands": [
+        "editor.toggleFold"
+      ]
+    },
+    {
+      "before": [
+        "g",
+        "[",
+      ],
+      "commands": [
+        "editor.action.marker.prevInFiles"
+      ]
+    },
+    {
+      "before": [
+        "g",
+        "]",
+      ],
+      "commands": [
+        "editor.action.marker.nextInFiles"
+      ]
+    },
+    {
+      "before": ["<leader>", "g", "c"],
+      "commands": ["workbench.action.showCommands"]
+    }
+  ],
   // prettier
   "[javascript]": {
     "editor.tabSize": 2,

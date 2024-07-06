@@ -116,6 +116,7 @@ module.exports = {
     "vimrc",
     "nvim",
     "emacs",
+    "vscode",
     "powershell",
     "docs",
     "scoop",
