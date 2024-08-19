@@ -30,6 +30,7 @@ New-Alias -Name gpha -Value GitPushAllBranch
 
 New-Alias -Name ppm -Value pnpm
 
+New-Alias -Name pru -Value PdmRunPython
 function gitAdd() {
 	git add .
 }
@@ -110,6 +111,13 @@ function PullAllBranches  {
     }
 	# 输出完成信息
 	Write-Host "All branches pulled successfully."
+}
+
+function PdmRunPython {
+	param (
+		[string[]]$branchs
+	)
+	pdm run python $($branchs -join ' ')
 }
 
 function GitSubmoduleUpdate {
