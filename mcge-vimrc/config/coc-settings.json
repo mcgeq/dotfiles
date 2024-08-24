@@ -40,6 +40,16 @@
     "typeParameter": "\uf728",
     "default": " "
   },
+  "python.linting.enabled": true,
+  "python.linting.pylintEnabled": true,
+  "python.linting.pylamaPath": "pylint",
+  "python.linting.lintOnSave": true,
+  "python.linting.pylintArgs": [
+    "--disable=too-few-public-methods",
+    "--disable=unused-argument",
+    "--disable=invalid-name",
+    "--disable=too-many-instance-attributes"
+  ],
   "diagnostic.errorSign": "\uf467",
   "diagnostic.warningSign": "\uf071",
   "diagnostic.infoSign": "\uf129",
