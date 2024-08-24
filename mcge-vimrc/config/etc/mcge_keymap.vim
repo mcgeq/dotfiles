@@ -212,7 +212,8 @@ nnoremap <silent><nowait> <leader>om :<c-u>Clap marks<CR>
 nnoremap <silent><nowait> <leader>ow :<c-u>Clap windows<CR>
 nnoremap <silent><nowait> <leader>ot :<c-u>Clap tags<CR>
 nnoremap <silent><nowait> <leader>os :<c-u>Clap colors<CR>
-nnoremap <silent><nowait> <leader>og :<c-u>Clap grep2<CR>
+nnoremap <silent><nowait> <leader>og :<c-u>Clap igrep<CR>
+nnoremap <silent><nowait> <leader>or :<c-u>Clap recent_file:<CR>
 # -------------------- vim-clap   end --------------------
 
 # -------------------- vista start --------------------
