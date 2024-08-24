@@ -205,6 +205,7 @@ nnoremap <silent><nowait> <leader>ob :<c-u>Clap buffers<CR>
 nnoremap <silent><nowait> <leader>oc :<c-u>Clap command<CR>
 nnoremap <silent><nowait> <leader>oh :<c-u>Clap history<CR>
 nnoremap <silent><nowait> <leader>of :<c-u>Clap files ++finder=rg --ignore --hidden --files<CR>
+nnoremap <silent><nowait> <leader>qf :<c-u>Clap filer<CR>
 nnoremap <silent><nowait> <leader>oq :<c-u>Clap quickfix<CR>
 nnoremap <silent><nowait> <leader>oj :<c-u>Clap jumps<CR>
 nnoremap <silent><nowait> <leader>om :<c-u>Clap marks<CR>
