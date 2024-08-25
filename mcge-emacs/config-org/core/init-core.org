@@ -33,6 +33,9 @@
 (require 'init-recentf)
 ;; Key bindings
 (require 'init-kbd)
+(require 'init-awesome-tray)
+;; sort tab
+(require 'init-sort-tab)
 #+END_SRC
 
 ** Load language part file

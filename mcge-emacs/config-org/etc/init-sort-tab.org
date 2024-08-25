@@ -1,0 +1,32 @@
+* init-sort-tab.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle (concat temporary-file-directory "init-sort-tab.el") :lexical t
+:END:
+
+** Headers
+#+begin_src emacs-lisp
+;;; init-sort-tab.el --- modeline config  -*- lexical-binding: t; -*-
+
+;;; Commentary:
+
+  #+end_src
+
+** Require
+#+begin_src emacs-lisp
+;;; Require:
+(require 'sort-tab)
+
+;;; Code:
+  #+end_src
+
+** Code
+#+begin_src emacs-lisp
+(sort-tab-mode 1)
+#+end_src
+
+** Ends
+#+begin_src emacs-lisp
+(provide 'init-sort-tab)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; init-sort-tab.el ends here
+  #+end_src

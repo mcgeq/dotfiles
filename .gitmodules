@@ -220,3 +220,9 @@
 [submodule "vim-fzf"]
 	path = mcge-vimrc/pack/mcge/start/fzf.vim
 	url = git@github.com:junegunn/fzf.vim.git
+[submodule "emacs-awesome-tray"]
+	path = mcge-emacs/site-lisp/extensions/awewome-tray
+	url = git@github.com:manateelazycat/awesome-tray.git
+[submodule "emacs-sort-tab"]
+	path = mcge-emacs/site-lisp/extensions/sort-tab
+	url = git@github.com:manateelazycat/sort-tab.git

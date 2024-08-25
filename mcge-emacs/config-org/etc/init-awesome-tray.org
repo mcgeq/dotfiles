@@ -1,0 +1,32 @@
+* init-awesome-tray.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle (concat temporary-file-directory "init-awesome-tray.el") :lexical t
+:END:
+
+** Headers
+#+begin_src emacs-lisp
+;;; init-awesome-tray.el --- modeline config  -*- lexical-binding: t; -*-
+
+;;; Commentary:
+
+  #+end_src
+
+** Require
+#+begin_src emacs-lisp
+;;; Require:
+(require 'awesome-tray)
+
+;;; Code:
+  #+end_src
+
+** Code
+#+begin_src emacs-lisp
+(awesome-tray-mode 1)
+#+end_src
+
+** Ends
+#+begin_src emacs-lisp
+(provide 'init-awesome-tray)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; init-awesome-tray.el ends here
+  #+end_src
