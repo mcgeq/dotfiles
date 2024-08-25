@@ -226,3 +226,6 @@
 [submodule "emacs-sort-tab"]
 	path = mcge-emacs/site-lisp/extensions/sort-tab
 	url = git@github.com:manateelazycat/sort-tab.git
+[submodule "emacs-lsp-bridge"]
+	path = mcge-emacs/site-lisp/extensions/lsp/lsp-bridge
+	url = git@github.com:manateelazycat/lsp-bridge.git

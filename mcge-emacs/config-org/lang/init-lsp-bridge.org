@@ -1,0 +1,54 @@
+* init-lsp-bridge.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle (concat temporary-file-directory "init-lsp-bridge.el") :lexical t
+:END:
+
+** Headers
+#+begin_src emacs-lisp
+;;; init-lsp-bridge.el --- Emacs initialization config  -*- lexical-binding: t; -*-
+
+;;; Commentary:
+
+#+end_src
+  
+** Require
+#+begin_src emacs-lisp
+(require 'lsp-bridge)
+;;; Code:
+#+end_src
+
+** Config bridge
+
+#+begin_src emacs-lisp
+(setq lsp-bridge-enable-completion-in-minibuffer t)
+(setq lsp-bridge-signature-show-function 'lsp-bridge-signature-show-with-frame)
+(setq lsp-bridge-enable-with-tramp t)
+(setq lsp-bridge-enable-org-babel t)
+(setq acm-enable-capf t)
+(setq acm-enable-quick-access t)
+(setq acm-backend-yas-match-by-trigger-keyword t)
+(setq acm-enable-tabnine nil)
+
+(global-lsp-bridge-mode)
+
+(setq lsp-bridge-python-lsp-server "basedpyright")
+
+(setq lsp-bridge-get-multi-lang-server-by-project
+      (lambda (project-path filepath)
+        ;;
+        (save-excursion
+          (when (string-equal (file-name-extension filepath) "ts")
+            (dolist (buf (buffer-list))
+              (when (string-equal (buffer-file-name buf) filepath)
+                (with-current-buffer buf
+                  (goto-char (point-min))
+                  (when (search-backward-regexp (regexp-quote "from \"https://deno.land") nil t)
+                    (return "deno")))))))))
+#+end_src
+
+** End
+#+begin_src emacs-lisp
+(provide 'init-lsp-bridge)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; init-lsp-bridge.el ends here
+#+end_src

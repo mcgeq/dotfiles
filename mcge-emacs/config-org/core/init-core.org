@@ -42,6 +42,8 @@
 #+BEGIN_SRC emacs-lisp
 (defun load-language-part-file()
   "Load language part file.  `run-with-idle-timer' 2."
+  ;; lsp-bridge
+  (require 'init-lsp-bridge)
   ;; flymake
   (require 'init-flymake)
   ;; treesit-quto
