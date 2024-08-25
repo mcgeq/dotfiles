@@ -115,9 +115,6 @@
 [submodule "emacs-treesit-auto"]
 	path = mcge-emacs/site-lisp/extensions/treesit-auto
 	url = git@github.com:renzmann/treesit-auto.git
-[submodule "emacs-flycheck"]
-	path = mcge-emacs/site-lisp/extensions/flycheck
-	url = git@github.com:flycheck/flycheck.git
 [submodule "emacs-yasnippet"]
 	path = mcge-emacs/site-lisp/extensions/snippets/yasnippet
 	url = git@github.com:joaotavora/yasnippet.git
