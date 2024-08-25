@@ -36,6 +36,15 @@
   (global-set-key (kbd "M-p")      'flymake-goto-prev-error)
 #+end_src
 
+** sort-tab
+#+begin_src emacs-lisp
+;; sort-tab
+(global-set-key (kbd "M-s <left>") 'sort-tab-select-prev-tab)
+(global-set-key (kbd "M-s <right>") 'sort-tab-select-next-tab)
+(global-set-key (kbd "M-s q") 'sort-tab-close-current-tab)
+(global-set-key (kbd "M-s o") 'sort-tab-close-other-tabs)
+#+end_src
+
 ** kbd
 #+begin_src emacs-lisp
 ;; tabspaces
