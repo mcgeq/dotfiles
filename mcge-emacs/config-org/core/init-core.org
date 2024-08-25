@@ -48,8 +48,6 @@
   (require 'init-flymake)
   ;; treesit-quto
   (require 'init-treesit-auto)
-  ;; eglot
-  (require 'init-eglot)
   ;; init-quickrun
   (require 'init-quickrun)
   ;; markdown
@@ -82,10 +80,6 @@
   (require 'init-rainbow-delimiters)
   ;; emacs-rime
   (require 'init-rime)
-  ;; corfu
-  (require 'init-corfu)
-  ;; cape
-  (require 'init-cape)
   ;; newcomment
   (require 'init-newcomment)
   ;; valign

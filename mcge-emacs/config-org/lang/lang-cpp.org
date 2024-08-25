@@ -14,7 +14,6 @@
 ** Require
 #+begin_src emacs-lisp
 ;;; Require:
-(require 'eglot)
 
 ;;; Code:
   #+end_src
@@ -22,10 +21,8 @@
 ** Code
 #+begin_src emacs-lisp
 (add-hook 'c++-ts-mode-hook #'(lambda () (setq tab-width 4)))
-(add-hook 'c-ts-mode-hook #'(lambda () (setq tab-width 4)))
-(add-hook 'before-save-hook #'eglot-format-buffer)
+(add-hook 'c-ts-mode-hook #'(lambda () (setq tab-width 3)))
 
-(add-to-list 'eglot-server-programs '((c++-ts-mode c-ts-mode c++-mode c-mode) "clangd"))
 
 #+end_src
 

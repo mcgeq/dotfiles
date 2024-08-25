@@ -13,13 +13,11 @@
 
 ** Require
 #+begin_src emacs-lisp
-(require 'eglot)
 ;;; Code:
   #+end_src
 
 ** Code
 #+begin_src emacs-lisp
-(add-to-list 'eglot-server-programs '(web-mode . ("ngserver")))
 #+end_src
 
 ** Ends

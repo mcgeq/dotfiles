@@ -15,9 +15,6 @@
 #+begin_src emacs-lisp
 ;;; Require:
 (require 'web-mode)
-(require 'lang-cpp)
-(require 'eglot)
-
 ;;; Code:
   #+end_src
 
@@ -38,7 +35,6 @@
 ** TypeScript
 #+begin_src emacs-lisp
 ;; TypeScript
-(add-to-list 'eglot-server-programs '(web-mode . ("typescript-language-server" "--stdio")))
 #+end_src
 
 
@@ -50,7 +46,7 @@
   (setq web-mode-css-indent-offset 2)
   (setq web-mode-code-indent-offset 2)
   (setq web-mode-style-padding 1)
-  (setq web-mode-script-padding 1)
+  (setq web-mode-script-padding 0)
   (setq web-mode-block-padding 0)
   (setq web-mode-comment-style 2)
   (set-face-attribute 'web-mode-css-at-rule-face nil :foreground "Pink3"))

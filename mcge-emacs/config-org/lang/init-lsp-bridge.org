@@ -14,6 +14,11 @@
 ** Require
 #+begin_src emacs-lisp
 (require 'lsp-bridge)
+(require 'lang-rust)
+(require 'lang-cpp)
+(require 'lang-java)
+(require 'lang-typescript)
+(require 'lang-web-mode)
 ;;; Code:
 #+end_src
 
@@ -28,10 +33,10 @@
 (setq acm-enable-quick-access t)
 (setq acm-backend-yas-match-by-trigger-keyword t)
 (setq acm-enable-tabnine nil)
+(setq lsp-bridge-python-lsp-server "pyright")
 
 (global-lsp-bridge-mode)
 
-(setq lsp-bridge-python-lsp-server "basedpyright")
 
 (setq lsp-bridge-get-multi-lang-server-by-project
       (lambda (project-path filepath)

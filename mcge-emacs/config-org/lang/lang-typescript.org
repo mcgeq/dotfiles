@@ -22,7 +22,6 @@
 #+begin_src emacs-lisp
 (add-to-list 'auto-mode-alist '("\\.ts\\'" . typescript-ts-mode))
 (add-to-list 'auto-mode-alist '("\\.tsx\\'" . typescript-ts-mode))
-(add-hook 'eglot-server-programs '(typescript-mode-hook . ("typescript-language-server" "--stdio")))
 #+end_src
 
 ** Ends
