@@ -31,7 +31,34 @@
 
 ** Flymake
 #+begin_src emacs-lisp
-  ;; flymake
+;; insert newline
+(global-set-key (kbd "M-<down>")
+                (lambda ()
+                  (interactive)
+                  (end-of-line)
+                  (newline-and-indent)))
+(global-set-key (kbd "M-<up>")
+                (lambda ()
+                  (interactive)
+                  (beginning-of-line)
+                  (newline)
+                  (forward-line -1)
+                  (indent-according-to-mode)))
+(global-set-key (kbd "C-M-<down>")
+                (lambda ()
+                  (interactive)
+                  (forward-line 1)
+                  (transpose-lines 1)
+                  (forward-line -1)
+                  (indent-according-to-mode)))
+;; move current line to prev or next line
+(global-set-key (kbd "C-M-<up>")
+                (lambda ()
+                  (interactive)
+                  (transpose-lines 1)
+                  (forward-line -2)
+                  (indent-according-to-mode)))
+;; flymake
   (global-set-key (kbd "M-n")      'flymake-goto-next-error)
   (global-set-key (kbd "M-p")      'flymake-goto-prev-error)
 #+end_src
