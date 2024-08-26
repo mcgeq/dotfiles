@@ -5,7 +5,7 @@
 
 ** Headers
 #+begin_src emacs-lisp
-;;; init-pangu-spacing.el --- pangu-spacing config  -*- lexical-binding: t; -*-
+;;; init-pangu-spacing.el --- pangu-spacing config  -*- lexical-binding: t -*-
 
 ;;; Commentary:
 

@@ -71,8 +71,9 @@
   (require 'init-color-rg)
   ;; awesome-pair
   (require 'init-awesome-pair)
+  (if (version< emacs-version "31")
   ;; pangu-spacing
-  (require 'init-pangu-spacing)
+  (require 'init-pangu-spacing))
   ;; magit
   ;(require 'init-vc)
   (require 'init-diff-hl)

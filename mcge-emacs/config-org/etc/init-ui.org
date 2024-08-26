@@ -15,7 +15,7 @@
 #+begin_src emacs-lisp
 ;;; Require:
 (require 'doom-themes)
-
+(require 'init-const)
 ;;; Code:
 
   #+end_src

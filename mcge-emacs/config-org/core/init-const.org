@@ -32,6 +32,7 @@
 (defvar mcg--fonts-unicode '("Symbola" "Segoe UI Symbol" "Symbol"))
 (defvar mcg--fonts-emoji    '("Noto Color Emoji" "Apple Color Emoji"))
 (defvar mcg--fonts-cjk     '("KaiTi" "WenQuanYi Micro Hei" "Microsoft Yahei UI" "Microsoft Yahei" "STFangsong"))
+(defvar mcgemacs-custom-icon-font-family "FiraCode Nerd Font")
 #+END_SRC
 
 ** Emacs version
