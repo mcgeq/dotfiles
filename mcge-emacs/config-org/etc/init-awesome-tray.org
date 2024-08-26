@@ -21,6 +21,7 @@
 
 ** Code
 #+begin_src emacs-lisp
+(setq awesome-tray-date-format "%-m-%-d %-H:%-M")
 (setq awesome-tray-active-modules '("git" "location" "belong" "file-path" "mode-name" "last-command" "battery" "date"))
 (setq awesome-tray-info-padding-right 1)
 
