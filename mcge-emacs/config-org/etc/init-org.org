@@ -284,7 +284,6 @@
          "\\(?:\\*\\|[+-]?[[:alnum:].,\\]*[[:alnum:]]\\)\\)"))
 (org-set-emph-re 'org-emphasis-regexp-components org-emphasis-regexp-components)
 (org-element-update-syntax)
-(add-hook 'org-mode-hook #'corfu-mode)
 #+end_src
 
 ** Ends

@@ -18,7 +18,6 @@
   (require 'init-const)
   (require 'vertico)
   (require 'consult)
-  (require 'corfu)
   (require 'org-agenda)
   (require 'org-src)
   (require 'dirvish)
@@ -76,7 +75,8 @@
 (global-set-key (kbd "M-g n")    'lsp-bridge-rename)
 (global-set-key (kbd "M-g j n")  'lsp-bridge-diagnostic-jump-next)
 (global-set-key (kbd "M-g j p")  'lsp-bridge-diagnostic-jump-prev)
-
+(global-set-key (kbd "M-g <up>") 'lsp-bridge-popup-documentation-scroll-up)
+(global-set-key (kbd "M-g <down>") 'lsp-bridge-popup-documentation-scroll-down)
 #+end_src
 
 ** sort-tab
@@ -178,35 +178,6 @@
   (global-set-key (kbd "C-h B")                'embark-bindings-at-point)
   (global-set-key (kbd "C-x n")                'embark-next-symbol)
   (global-set-key (kbd "C-x p")                'embark-previous-symbol)
-
-  ;; corfu
-  (let ((map corfu-map))
-    (define-key map (kbd "SPC")     'corfu-insert-separator)
-    (define-key map (kbd "M-q")     'corfu-quick-complete)
-    (define-key map (kbd "TAB")     'corfu-next)
-  ;  (define-key map (kbd [tab])     'corfu-next)
-    (define-key map (kbd "S-TAB")   'corfu-previous)
-   ; (define-key map (kbd [backtab]) 'corfu-previous)
-  )
-
-  ;; cape
-  (global-set-key (kbd "C-c p p")     'completion-at-point) ;; capf
-  (global-set-key (kbd "C-c p t")     'complete-tag)        ;; etags
-  (global-set-key (kbd "C-c p d")     'cape-dabbrev)        ;; or dabbrev-completion
-  (global-set-key (kbd "C-c p h")     'cape-history)
-  (global-set-key (kbd "C-c p f")     'cape-file)
-  (global-set-key (kbd "C-c p k")     'cape-keyword)
-  (global-set-key (kbd "C-c p s")     'cape-elisp-symbol)
-  (global-set-key (kbd "C-c p e")     'cape-elisp-block)
-  (global-set-key (kbd "C-c p a")     'cape-abbrev)
-  (global-set-key (kbd "C-c p l")     'cape-line)
-  (global-set-key (kbd "C-c p w")     'cape-dict)
-  (global-set-key (kbd "C-c p :")     'cape-emoji)
-  (global-set-key (kbd "C-c p \\")     'cape-tex)
-  (global-set-key (kbd "C-c p _")     'cape-tex)
-  (global-set-key (kbd "C-c p ^")     'cape-tex)
-  (global-set-key (kbd "C-c p &")     'cape-sgml)
-  (global-set-key (kbd "C-c p r")     'cape-rfc1345)
 
   ;;; init-magit.el
   ;; magit
