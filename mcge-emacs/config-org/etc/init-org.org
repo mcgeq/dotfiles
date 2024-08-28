@@ -16,10 +16,42 @@
 ;;; Require:
 (require 'org)
 (require 'init-const)
-
+(require 'org-num)
 #+end_src
 
 ** Code
+
+*** Org num
+#+begin_src emacs-lisp
+;; 全局启用 org-num，启用时会自动为所有标题添加编号
+(add-hook 'org-mode-hook #'org-num-mode)
+
+;; 基本设置
+(setq org-num-skip-unnumbered nil)       ; 为所有标题编号，即使是没有 `NUM:nil` 的标题
+(setq org-num-max-level 6)               ; 仅为6级以内的标题编号
+(setq org-num-format-function #'org-num-format) ; 使用默认的编号格式化函数
+
+;; 自定义编号格式
+;; 设置自定义的编号格式，可以根据需要调整
+(setq org-num-face '(:foreground "#ff79c6" :weight bold)) ; 设置编号的字体样式
+(setq org-num-format-function
+      (lambda (numbers) 
+        (concat (mapconcat #'number-to-string numbers ".") " "))) ; 格式为“1.1.1 ”形式
+
+;; 跳过编号的标题
+(setq org-num-skip-tags '("no-num" "skip"))  ; 标有这些标签的标题不会被编号
+
+;; 针对特定标题进行编号控制
+(defun mcge/org-num-custom ()
+  "为 Org-mode 自定义编号格式."
+  ;; 为当前 buffer 的所有标题添加编号
+  (org-num-mode 1)
+  ;; 可以进一步添加个性化设置
+  )
+
+;; 添加到 org-mode 的钩子中
+(add-hook 'org-mode-hook 'mcge/org-num-custom)
+#+end_src
 
 *** Org Mode
 #+begin_src emacs-lisp
