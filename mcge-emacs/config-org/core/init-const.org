@@ -60,6 +60,10 @@
 (defvar mcgemacs-config-dir    (concat mcgemacs-root-dir "/config-org"))
 (defvar mcgemacs-extension-dir (concat mcgemacs-root-dir "/extensions"))
 
+;; custom lsp-bridge
+(defvar mcgemacs-custom-lsp-bridge-langserver-dir (concat mcgemacs-root-dir "/langservers"))
+(defvar mcgemacs-custom-lsp-bridge-multiserver-dir (concat mcgemacs-root-dir "/multiservers"))
+
 
 (defvar org-file-note     (expand-file-name "notes.org"     (concat mcgemacs-org-dir "/notes")))
 (defvar org-file-task     (expand-file-name "tasks.org"      mcgemacs-org-dir))
