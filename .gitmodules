@@ -151,12 +151,6 @@
 [submodule "emacs-cal-chinese-x"]
 	path = mcge-emacs/site-lisp/extensions/org/cal-china-x
 	url = git@github.com:xwl/cal-china-x.git
-[submodule "emacs-corfu"]
-	path = mcge-emacs/site-lisp/extensions/corfu
-	url = git@github.com:minad/corfu.git
-[submodule "emacs-cape"]
-	path = mcge-emacs/site-lisp/extensions/cape
-	url = git@github.com:minad/cape.git
 [submodule "emacs-emacsql"]
 	path = mcge-emacs/site-lisp/extensions/emacsql
 	url = git@github.com:magit/emacsql.git
