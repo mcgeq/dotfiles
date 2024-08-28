@@ -220,9 +220,3 @@
 [submodule "emacs-lsp-bridge"]
 	path = mcge-emacs/site-lisp/extensions/lsp/lsp-bridge
 	url = git@github.com:manateelazycat/lsp-bridge.git
-[submodule "emacs-flymake-ruff"]
-	path = mcge-emacs/site-lisp/extensions/flymake-ruff
-	url = git@github.com:erickgnavar/flymake-ruff.git
-[submodule "emacs-sideline-flymake"]
-	path = mcge-emacs/site-lisp/extensions/sideline-flymake
-	url = git@github.com:emacs-sideline/sideline-flymake.git

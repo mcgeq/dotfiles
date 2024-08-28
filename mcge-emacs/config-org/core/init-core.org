@@ -44,8 +44,6 @@
   "Load language part file.  `run-with-idle-timer' 2."
   ;; lsp-bridge
   (require 'init-lsp-bridge)
-  ;; flymake
-  (require 'init-flymake)
   ;; treesit-quto
   (require 'init-treesit-auto)
   ;; init-quickrun
