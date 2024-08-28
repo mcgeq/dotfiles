@@ -9,7 +9,7 @@
 
 ;;; Commentary:
 
-  #+end_src
+#+end_src
 
 ** Require
 #+begin_src emacs-lisp
@@ -17,24 +17,80 @@
 (require 'org)
 (require 'init-const)
 (require 'org-modern)
-
-;;; Code:
-
-  #+end_src
+#+end_src
 
 ** Code
+
+*** Org Mode
 #+begin_src emacs-lisp
+;;; Code:
+
 (setq org-directory mcgemacs-org-dir)
-(setq auto-mode-alist (append '(("\\.org$" . org-mode)) auto-mode-alist))
+(setq org-default-notes-file (expand-file-name "capture.org" org-directory))
+
+;; 关闭 indent
+;(custom-set-variables
+;   '(org-startup-indented nil))
+;; 标题缩进
+;;(setq org-startup-indented t)
+
+;; 当状态从 DONE 改成其他状态时，移除 CLOSED: [timestamp]
+(setq org-closed-keep-when-no-todo t)
+;; DONE 时加上时间戳
+(setq org-log-done 'time)
+;; 重复执行时加上时间戳
+(setq org-log-repeat 'time)
+;; Deadline 修改时加上一条记录
+(setq org-log-redeadline 'note)
+;; Schedule 修改时加上一条记录
+(setq org-log-reschedule 'note)
+;; 以抽屉的方式记录
+(setq org-log-into-drawer t)
+;; 紧接着标题行或者计划/截止时间戳后加上记录抽屉
+(setq org-log-state-notes-insert-after-drawers nil)
+
+;; 自动对齐标签
+(setq org-auto-align-tags t)
+;; 标签不继承
+(setq org-use-tag-inheritance nil)
+;; 标签快速选择
+(setq org-use-fast-tag-selection t)
+;; 标签选择不需要回车确认
+(setq org-fast-tag-selection-single-key t)
+;; 定义了有序属性的标题行也加上 OREDERD 标签
+(setq org-track-ordered-property-with-tag t)
+;; 始终存在的的标签
+(setq org-tag-persistent-alist '(("@outdoors" . ?o)
+                                 ("INBOX" . ?i)))
+
+;; Block
+;; 如何在 Source Block 中像在语言 mode 中一样的缩进
+;(setq org-src-tab-acts-natively t)
+;(setq org-src-preserve-indentation nil)
+;; code block 默认折叠展示
+(setq org-hide-block-startup t)
+
+;; 如何美化 quote 和 verse block
+(setq org-fontify-quote-and-verse-blocks t)
+
+;; 更改子 list 的显示符号
+(setq org-list-demote-modify-bullet
+      '(("+" . "-") ("-" . "+") ("*" . "+") ("1." . "a.")))
+
+;; 隐藏强调标记
+(setq org-hide-emphasis-markers t)
+
+;; 额外的行间距，0.1 表示 10%，1表示 1px
+(setq-default line-spacing 0.1)
+
+;; 使用"⤵" 指示隐藏内容
+(setq org-ellipsis "⤵")
 
 (add-hook 'org-mode-hook #'(lambda () (setq org-modern-hide-stars 'leading)
                                (global-org-modern-mode t)))
 
 (add-hook 'org-mode-hook 'my/org-prettify-symbols)
 
-;; org mode
-
-(setq org-default-notes-file (expand-file-name "capture.org" org-directory))
 ;; ================================
 ;; 在 org mode 里美化字符串
 ;; ================================
@@ -107,34 +163,6 @@
 			 ("RISK_ALL" . "Low Medium High")
 			 ("STYLE_ALL" . "habit")))
 
-;; 当状态从 DONE 改成其他状态时，移除 CLOSED: [timestamp]
-(setq org-closed-keep-when-no-todo t)
-;; DONE 时加上时间戳
-(setq org-log-done 'time)
-;; 重复执行时加上时间戳
-(setq org-log-repeat 'time)
-;; Deadline 修改时加上一条记录
-(setq org-log-redeadline 'note)
-;; Schedule 修改时加上一条记录
-(setq org-log-reschedule 'note)
-;; 以抽屉的方式记录
-(setq org-log-into-drawer t)
-;; 紧接着标题行或者计划/截止时间戳后加上记录抽屉
-(setq org-log-state-notes-insert-after-drawers nil)
-
-;; 自动对齐标签
-(setq org-auto-align-tags t)
-;; 标签不继承
-(setq org-use-tag-inheritance nil)
-;; 标签快速选择
-(setq org-use-fast-tag-selection t)
-;; 标签选择不需要回车确认
-(setq org-fast-tag-selection-single-key t)
-;; 定义了有序属性的标题行也加上 OREDERD 标签
-(setq org-track-ordered-property-with-tag t)
-;; 始终存在的的标签
-(setq org-tag-persistent-alist '(("@outdoors" . ?o)
-                                 ("INBOX" . ?i)))
 ;; 预定义好的标签
 (setq org-tag-alist '((:startgrouptag)
 		      ("Mcg"             . ?M)
@@ -172,16 +200,7 @@
                       ("phone"           . ?p)
                       (:endgrouptag)))
 
-;; Coding system for HTML export.
-;(setq org-html-coding-system 'utf-8)
-;(setq org-html-doctype "html5")
 
-;; Block
-;; 如何在 Source Block 中像在语言 mode 中一样的缩进
-;(setq org-src-tab-acts-natively t)
-;(setq org-src-preserve-indentation nil)
-;; code block 默认折叠展示
-(setq org-hide-block-startup t)
 ;; code block 折叠时显示为一个符号
 ;; learn from: https://github.com/Elilif/.elemacs
 (defun eli-hide-org-block-begin-line (orig from to flag spec)
@@ -195,19 +214,10 @@
     (funcall orig from to flag spec)))
 
 (advice-add 'org-flag-region :around #'eli-hide-org-block-begin-line)
+#+end_src
 
-;; 如何美化 quote 和 verse block
-(setq org-fontify-quote-and-verse-blocks t)
-
-;; 更改子 list 的显示符号
-(setq org-list-demote-modify-bullet
-      '(("+" . "-") ("-" . "+") ("*" . "+") ("1." . "a.")))
-
-;; 隐藏强调标记
-(setq org-hide-emphasis-markers t)
-
-;; 额外的行间距，0.1 表示 10%，1表示 1px
-(setq-default line-spacing 0.1)
+*** Org Modern
+#+begin_src emacs-lisp
 ;; tag 边框宽度，还可以设置为 `auto' 即自动计算
 (setq org-modern-label-border 1)
 ;; 设置表格竖线宽度，默认为 3
@@ -230,19 +240,19 @@
 (setq org-modern-block-name nil)
 ;; #+关键字美化，我们使用了 `prettify-symbols-mode'
 (setq org-modern-keyword nil)
-
+(setq org-modern-star ["☯" "☰" "☱" "☲" "☳" "☴" "☵" "☶" "☷"])
 ;(setq org-modern-star ["◉" "○" "✸" "✳" "◈" "◇" "✿" "❀" "✜"])
 ; Hexagrams "✡" "⎈" "✽" "✲" "✱" "✻" "✼" "✽" "✾" "✿" "❀" "❁" "❂" "❃" "❄" "❅" "❆" "❇"
 ; Poker Sybmols "♠" "♣" "♥" "♦" "♤" "♧" "♡" "♢"
 ; yinyang "☯" "☰" "☱" "☲" "☳" "☴" "☵" "☶" "☷"
 ; music  𝄞, ♩, ♪, ♫, ♬, ♭, ♮, ♯
 ;(setq org-modern-star ["◉" "☯" "○" "☯" "✸" "☯" "✿" "☯" "✜" "☯" "◆" "☯" "▶"])
-(setq org-modern-star ["✾" "✿" "❀" "❁" "❂" "❃" "⎈" "❄" "❅" "❆" "❇"])
+;(setq org-modern-star ["✾" "✿" "❀" "❁" "❂" "❃" "⎈" "❄" "❅" "❆" "❇"])
 ;(setq org-modern-star ["☯" "☰" "☱" "☲" "☳" "☴" "☵" "☶" "☷"])
-;; 使用"⤵" 指示隐藏内容
-(setq org-ellipsis "⤵")
+#+end_src
 
-
+*** Custom face
+#+begin_src emacs-lisp
 ;; custom face
 ;; 设置 org 标题 1-8 级的字体大小和颜色，颜色摘抄自 monokai。;希望 org-mode 标题的字体大小和正文一致，设成 1.0， 如果希望标题字体大一点可以设成 1.2
 (custom-set-faces
@@ -259,12 +269,6 @@
 
 (custom-set-faces
    '(region ((t (:foreground "green" :background "#464646")))))
-
-;; 关闭 indent
-;(custom-set-variables
-;   '(org-startup-indented nil))
-;; 标题缩进
-;;(setq org-startup-indented t)
 
 ;; 解决标记符号前后空格问题
 (setq org-emphasis-regexp-components '("-[:space:]('\"{[:nonascii:]"
