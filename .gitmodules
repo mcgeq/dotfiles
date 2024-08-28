@@ -163,9 +163,6 @@
 [submodule "emacs-org-download.git"]
 	path = mcge-emacs/site-lisp/extensions/org/org-download
 	url = git@github.com:abo-abo/org-download.git
-[submodule "emacs-org-modern"]
-	path = mcge-emacs/site-lisp/extensions/org/org-modern
-	url = git@github.com:minad/org-modern.git
 [submodule "emacs-org-roam"]
 	path = mcge-emacs/site-lisp/extensions/org/org-roam
 	url = git@github.com:org-roam/org-roam.git

@@ -16,7 +16,7 @@
 ;;; Require:
 (require 'org)
 (require 'init-const)
-(require 'org-modern)
+
 #+end_src
 
 ** Code
@@ -28,9 +28,6 @@
 (setq org-directory mcgemacs-org-dir)
 (setq org-default-notes-file (expand-file-name "capture.org" org-directory))
 
-;; 关闭 indent
-;(custom-set-variables
-;   '(org-startup-indented nil))
 ;; 标题缩进
 ;;(setq org-startup-indented t)
 
@@ -65,8 +62,11 @@
 
 ;; Block
 ;; 如何在 Source Block 中像在语言 mode 中一样的缩进
-;(setq org-src-tab-acts-natively t)
-;(setq org-src-preserve-indentation nil)
+(setq org-src-tab-acts-natively t)
+;; 控制原始缩进
+(setq org-src-preserve-indentation t)
+;; Set the major mode for editing source code
+(setq org-edit-src-content-indentation 0)
 ;; code block 默认折叠展示
 (setq org-hide-block-startup t)
 
@@ -85,9 +85,6 @@
 
 ;; 使用"⤵" 指示隐藏内容
 (setq org-ellipsis "⤵")
-
-(add-hook 'org-mode-hook #'(lambda () (setq org-modern-hide-stars 'leading)
-                               (global-org-modern-mode t)))
 
 (add-hook 'org-mode-hook 'my/org-prettify-symbols)
 
@@ -199,59 +196,10 @@
                       ("computer"        . ?c)
                       ("phone"           . ?p)
                       (:endgrouptag)))
-
-
-;; code block 折叠时显示为一个符号
-;; learn from: https://github.com/Elilif/.elemacs
-(defun eli-hide-org-block-begin-line (orig from to flag spec)
-  (if (eq spec 'org-hide-block)
-      (let* ((beg-of-line (save-excursion
-                            (beginning-of-line)
-                            (point)))
-             (lang (car (org-babel-get-src-block-info)))
-             (beg (+ beg-of-line 12 (length lang))))
-        (funcall orig beg to flag spec))
-    (funcall orig from to flag spec)))
-
-(advice-add 'org-flag-region :around #'eli-hide-org-block-begin-line)
-#+end_src
-
-*** Org Modern
-#+begin_src emacs-lisp
-;; tag 边框宽度，还可以设置为 `auto' 即自动计算
-(setq org-modern-label-border 1)
-;; 设置表格竖线宽度，默认为 3
-(setq org-modern-table-vertical 2)
-;; 设置表格横线为 0，默认为 0.1
-(setq org-modern-table-horizontal 0)
-;; 复选框美化
-(setq org-modern-checkbox
-      '((?X . #("▢✓" 0 2 (composition ((2)))))
-        (?- . #("▢–" 0 2 (composition ((2)))))
-        (?\s . #("▢" 0 1 (composition ((1)))))))
-;; 列表符号美化
-(setq org-modern-list
-      '((?- . "•")
-        (?+ . "◦")
-        (?* . "▹")))
-;; 代码块左边加上一条竖边线（需要 Org mode 顶头，如果启用了 `visual-fill-column-mode' 会很难看）
-(setq org-modern-block-fringe t)
-;; 代码块类型美化，我们使用了 `prettify-symbols-mode'
-(setq org-modern-block-name nil)
-;; #+关键字美化，我们使用了 `prettify-symbols-mode'
-(setq org-modern-keyword nil)
-(setq org-modern-star ["☯" "☰" "☱" "☲" "☳" "☴" "☵" "☶" "☷"])
-;(setq org-modern-star ["◉" "○" "✸" "✳" "◈" "◇" "✿" "❀" "✜"])
-; Hexagrams "✡" "⎈" "✽" "✲" "✱" "✻" "✼" "✽" "✾" "✿" "❀" "❁" "❂" "❃" "❄" "❅" "❆" "❇"
-; Poker Sybmols "♠" "♣" "♥" "♦" "♤" "♧" "♡" "♢"
-; yinyang "☯" "☰" "☱" "☲" "☳" "☴" "☵" "☶" "☷"
-; music  𝄞, ♩, ♪, ♫, ♬, ♭, ♮, ♯
-;(setq org-modern-star ["◉" "☯" "○" "☯" "✸" "☯" "✿" "☯" "✜" "☯" "◆" "☯" "▶"])
-;(setq org-modern-star ["✾" "✿" "❀" "❁" "❂" "❃" "⎈" "❄" "❅" "❆" "❇"])
-;(setq org-modern-star ["☯" "☰" "☱" "☲" "☳" "☴" "☵" "☶" "☷"])
 #+end_src
 
 *** Custom face
+
 #+begin_src emacs-lisp
 ;; custom face
 ;; 设置 org 标题 1-8 级的字体大小和颜色，颜色摘抄自 monokai。;希望 org-mode 标题的字体大小和正文一致，设成 1.0， 如果希望标题字体大一点可以设成 1.2
