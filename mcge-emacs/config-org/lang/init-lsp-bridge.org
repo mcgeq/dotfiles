@@ -25,6 +25,9 @@
 ** Config bridge
 
 #+begin_src emacs-lisp
+;; custom language server dir
+(setq lsp-bridge-user-langserver-dir mcgemacs-custom-lsp-bridge-langserver-dir)
+(setq lsp-bridge-user-multiserver-dir mcgemacs-custom-lsp-bridge-multiserver-dir)
 (setq lsp-bridge-enable-completion-in-minibuffer t)
 (setq lsp-bridge-signature-show-function 'lsp-bridge-signature-show-with-frame)
 (setq lsp-bridge-enable-with-tramp t)
@@ -33,7 +36,8 @@
 (setq acm-enable-quick-access t)
 (setq acm-backend-yas-match-by-trigger-keyword t)
 (setq acm-enable-tabnine nil)
-(setq lsp-bridge-python-lsp-server "pyright")
+(setq acm-candidate-match-function 'orderless-flex)
+(setq lsp-bridge-python-lsp-server "basedpyright")
 
 (global-lsp-bridge-mode)
 
