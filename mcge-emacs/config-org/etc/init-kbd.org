@@ -41,6 +41,9 @@
 ** 打开默认配置文件
 #+begin_src emacs-lisp
 (global-set-key (kbd "C-q") 'mcg/open-init-file)
+;; use C-x C-b call ibuffer command
+(global-unset-key (kbd "C-x C-b"))
+(global-set-key (kbd "C-x C-b") 'init-ibuffer-ibuffer)
 #+end_src
 
 ** 插入新行
@@ -72,9 +75,22 @@
                   (transpose-lines 1)
                   (forward-line -2)
                   (indent-according-to-mode)))
-;; flymake
-  (global-set-key (kbd "M-n")      'flymake-goto-next-error)
-  (global-set-key (kbd "M-p")      'flymake-goto-prev-error)
+#+end_src
+
+** quickrun
+#+begin_src emacs-lisp
+;; quickrun
+;;; c++
+(global-set-key (kbd "C-c q")     'quickrun)
+#+end_src
+
+** color-rg
+#+begin_src emacs-lisp
+(define-key isearch-mode-map (kbd "M-s M-s") 'isearch-toggle-color-rg)
+(global-set-key (kbd "M-g s i")             'color-rg-search-input)
+(global-set-key (kbd "M-g s p")             'color-rg-search-input-in-project)
+(global-set-key (kbd "M-g s f")             'color-rg-search-input-in-current-file)
+(global-set-key (kbd "M-g s t")             'color-rg-search-project-with-type)
 #+end_src
 
 ** lsp bridge
@@ -103,7 +119,7 @@
 (global-set-key (kbd "M-s o") 'sort-tab-close-other-tabs)
 #+end_src
 
-** kbd
+** tabspaces
 #+begin_src emacs-lisp
 ;; tabspaces
 (global-set-key (kbd "M-s l")    'tabspaces-switch-or-create-workspace)
@@ -117,7 +133,10 @@
 (global-set-key (kbd "M-s TAB")  'tab-bar-switch-to-recent-tab)
 (global-set-key (kbd "M-s r")    'tabspaces-remove-current-buffer)
 (global-set-key (kbd "M-s k")    'tabspaces-close-workspace)
+#+end_src
 
+** awesome-pair
+#+begin_src emacs-lisp
 ;; awesome-pair
 (let ((map awesome-pair-mode-map))
   (define-key map (kbd "(") 'awesome-pair-open-round)
@@ -142,7 +161,10 @@
   ;(define-key map (kbd "M-p") 'awesome-pair-jump-right)
   ;(define-key map (kbd "M-n") 'awesome-pair-jump-left)
   (define-key map (kbd "M-:") 'awesome-pair-jump-out-pair-and-newline))
+#+end_src
 
+** eshell
+#+begin_src emacs-lisp
 ;; eshell
 (global-set-key (kbd "C-c h") 'eshell)
 
@@ -151,19 +173,20 @@
   (define-key map (kbd "C-d")  'eshell-delchar-or-maybe-eof)
   (define-key map (kbd "C-r")  'consult-history)
   (define-key map (kbd "C-l")  'eshell/clear))
+#+end_src
 
-;; use C-x C-b call ibuffer command
-(global-unset-key (kbd "C-x C-b"))
-(global-set-key (kbd "C-x C-b") 'init-ibuffer-ibuffer)
-
-;;; init-vertico.rl
+** vertico
+#+begin_src emacs-lisp
 ;; vertico
 (define-key vertico-map (kbd "<tab>")      'vertico-insert)  ; Choose selected candidate
 (define-key vertico-map (kbd "<escape>")   'vertico-exit)    ; Close minibuffer
 (define-key vertico-map (kbd "DEL")        'vertico-directory-delete-char)
 (define-key vertico-map (kbd "C-M-n")      'vertico-next-group)
 (define-key vertico-map (kbd "C-M-p")      'vertico-previous-group)
+#+end_src
 
+** consult
+#+begin_src emacs-lisp
 ;; consult
 (global-set-key (kbd "C-x j")              'consult-mark)
 (global-set-key (kbd "C-c g")              'consult-ripgrep)
@@ -175,7 +198,10 @@
 (global-set-key (kbd "C-s")                  'consult-line)
 (define-key prog-mode-map (kbd "C-c C-j")    'consult-outline)
 (global-set-key (kbd "M-s i")                'consult-imenu)
+#+end_src
 
+** emabrk
+#+begin_src emacs-lisp
 ;; embark
 (global-set-key (kbd "C-.")                  'embark-act)
 (global-set-key (kbd "C-,")                  'embark-dwim)
@@ -183,17 +209,20 @@
 (global-set-key (kbd "C-h B")                'embark-bindings-at-point)
 (global-set-key (kbd "C-x n")                'embark-next-symbol)
 (global-set-key (kbd "C-x p")                'embark-previous-symbol)
+#+end_src
 
+** magit
+#+begin_src emacs-lisp
 ;;; init-magit.el
 ;; magit
 (global-set-key (kbd "C-x g")               'magit-status)
 (global-set-key (kbd "C-x M-g")             'magit-dispatch)
 (global-set-key (kbd "C-c M-g")             'magit-file-dispatch)
+#+end_src
 
-;; org-capture
-(global-set-key (kbd "C-c c")        'org-capture)
-(global-set-key (kbd "C-c l")        'org-store-link)
 
+** dirvish
+#+begin_src emacs-lisp
 ;; use C-c f dirvish-quick-access   init-dired.el
 (let ((map dirvish-mode-map))
   (define-key map (kbd "a")    'dirvish-quick-access)
@@ -214,7 +243,18 @@
   (define-key map (kbd "M-e")  'dirvish-emerge-menu)
   (define-key map (kbd "M-j")  'dirvish-fd-jump)
 )
+#+end_src
 
+** Org
+*** org capture
+#+begin_src emacs-lisp
+;; org-capture
+(global-set-key (kbd "C-c c")        'org-capture)
+(global-set-key (kbd "C-c l")        'org-store-link)
+#+end_src
+
+*** org agenda
+#+begin_src emacs-lisp
 ;; org-agenda
 (global-set-key (kbd "C-c a")   'org-agenda)
 (let ((map org-agenda-mode-map))
@@ -222,16 +262,25 @@
             (kbd "i") #'(lambda () (interactive) (org-capture nil "d")))
   (define-key map
             (kbd "J") 'consult-org-agenda))
+#+end_src
 
+*** org src
+#+begin_src emacs-lisp
 ;; org-src
 (global-set-key (kbd "C-c s") 'show-line-number-in-src-block)
 (let ((map org-src-mode-map))
   (define-key map (kbd "C-c C-c") 'org-edit-src-exit))
+#+end_src
 
+*** org download
+#+begin_src emacs-lisp
 ;; org-download
 (global-set-key (kbd "C-c v") (if *is-win32p* #'mcg/org-screenshot-on-windows
                                 'org-download-clipboard))
+#+end_src
 
+** elisp
+#+begin_src emacs-lisp
 ;; elisp-mode
 (let ((map emacs-lisp-mode-map))
   (define-key map (kbd "C-c C-b") 'eval-buffer)
@@ -240,10 +289,6 @@
   (define-key map (kbd "C-c C-c") 'eval-to-comment))
 (let ((map org-mode-map))
   (define-key map (kbd "C-c C-;") 'eval-to-comment))
-
-;; quickrun
-;;; c++
-(global-set-key (kbd "C-c q")     'quickrun)
 #+end_src
 
 ** Ends
