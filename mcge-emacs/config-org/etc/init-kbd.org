@@ -13,22 +13,37 @@
 
 ** Require
 #+begin_src emacs-lisp
-  ;;; Require:
-  (require 'init-function)
-  (require 'init-const)
-  (require 'vertico)
-  (require 'consult)
-  (require 'org-agenda)
-  (require 'org-src)
-  (require 'dirvish)
-  (require 'esh-mode)
-  (require 'awesome-pair)
-  (require 'tabspaces)
+;;; Require:
+(require 'init-function)
+(require 'init-const)
+(require 'vertico)
+(require 'consult)
+(require 'org-agenda)
+(require 'org-src)
+(require 'dirvish)
+(require 'esh-mode)
+(require 'awesome-pair)
+(require 'tabspaces)
+;;; Code:
+#+end_src
 
-  ;;; Code:
-  #+end_src
+** 删除不常用快捷键
+#+begin_src emacs-lisp
 
-** Flymake
+;; 解除不常用的快捷键定义
+(global-set-key (kbd "C-z") nil)
+(global-set-key (kbd "s-q") nil)
+(global-set-key (kbd "M-m") nil)
+;; replace-string
+(global-set-key (kbd "C-c r") 'replace-string)  
+#+end_src
+
+** 打开默认配置文件
+#+begin_src emacs-lisp
+(global-set-key (kbd "C-q") 'mcg/open-init-file)
+#+end_src
+
+** 插入新行
 #+begin_src emacs-lisp
 ;; insert newline
 (global-set-key (kbd "M-<down>")
@@ -91,159 +106,149 @@
 ** kbd
 #+begin_src emacs-lisp
 ;; tabspaces
-  (global-set-key (kbd "M-s l")    'tabspaces-switch-or-create-workspace)
-  (global-set-key (kbd "M-s L")    'tabspaces-restore-session)
-  (global-set-key (kbd "M-s p")    'tabspaces-open-or-create-project-and-workspace)
-  (global-set-key (kbd "M-s f")    'tabspaces-project-switch-project-open-file)
-  (global-set-key (kbd "M-s s")    'tabspaces-save-session)
-  (global-set-key (kbd "M-s B")    'tabspaces-switch-buffer-and-tab)
-  (global-set-key (kbd "M-s b")    'tabspaces-switch-to-buffer)
-  (global-set-key (kbd "M-s R")    'tab-rename)
-  (global-set-key (kbd "M-s TAB")  'tab-bar-switch-to-recent-tab)
-  (global-set-key (kbd "M-s r")    'tabspaces-remove-current-buffer)
-  (global-set-key (kbd "M-s k")    'tabspaces-close-workspace)
+(global-set-key (kbd "M-s l")    'tabspaces-switch-or-create-workspace)
+(global-set-key (kbd "M-s L")    'tabspaces-restore-session)
+(global-set-key (kbd "M-s p")    'tabspaces-open-or-create-project-and-workspace)
+(global-set-key (kbd "M-s f")    'tabspaces-project-switch-project-open-file)
+(global-set-key (kbd "M-s s")    'tabspaces-save-session)
+(global-set-key (kbd "M-s B")    'tabspaces-switch-buffer-and-tab)
+(global-set-key (kbd "M-s b")    'tabspaces-switch-to-buffer)
+(global-set-key (kbd "M-s R")    'tab-rename)
+(global-set-key (kbd "M-s TAB")  'tab-bar-switch-to-recent-tab)
+(global-set-key (kbd "M-s r")    'tabspaces-remove-current-buffer)
+(global-set-key (kbd "M-s k")    'tabspaces-close-workspace)
 
-  ;; awesome-pair
-  (let ((map awesome-pair-mode-map))
-    (define-key map (kbd "(") 'awesome-pair-open-round)
-    (define-key map (kbd "[") 'awesome-pair-open-bracket)
-    (define-key map (kbd "{") 'awesome-pair-open-curly)
-    (define-key map (kbd ")") 'awesome-pair-close-round)
-    (define-key map (kbd "]") 'awesome-pair-close-bracket)
-    (define-key map (kbd "}") 'awesome-pair-close-curly)
-    (define-key map (kbd "=") 'awesome-pair-equal)
-    (define-key map (kbd "%") 'awesome-pair-match-paren)
-    (define-key map (kbd "\"") 'awesome-pair-double-quote)
-    (define-key map (kbd "SPC") 'awesome-pair-space)
-    (define-key map (kbd "RET") 'awesome-pair-newline)
-    (define-key map (kbd "M-o") 'awesome-pair-backward-delete)
-    (define-key map (kbd "C-d") 'awesome-pair-forward-delete)
-    (define-key map (kbd "C-k") 'awesome-pair-kill)
-    (define-key map (kbd "M-\"") 'awesome-pair-wrap-double-quote)
-    (define-key map (kbd "M-[") 'awesome-pair-wrap-bracket)
-    (define-key map (kbd "M-{") 'awesome-pair-wrap-curly)
-    (define-key map (kbd "M-(") 'awesome-pair-wrap-round)
-    (define-key map (kbd "M-)") 'awesome-pair-unwrap)
-    ;(define-key map (kbd "M-p") 'awesome-pair-jump-right)
-    ;(define-key map (kbd "M-n") 'awesome-pair-jump-left)
-    (define-key map (kbd "M-:") 'awesome-pair-jump-out-pair-and-newline))
+;; awesome-pair
+(let ((map awesome-pair-mode-map))
+  (define-key map (kbd "(") 'awesome-pair-open-round)
+  (define-key map (kbd "[") 'awesome-pair-open-bracket)
+  (define-key map (kbd "{") 'awesome-pair-open-curly)
+  (define-key map (kbd ")") 'awesome-pair-close-round)
+  (define-key map (kbd "]") 'awesome-pair-close-bracket)
+  (define-key map (kbd "}") 'awesome-pair-close-curly)
+  (define-key map (kbd "=") 'awesome-pair-equal)
+  (define-key map (kbd "%") 'awesome-pair-match-paren)
+  (define-key map (kbd "\"") 'awesome-pair-double-quote)
+  (define-key map (kbd "SPC") 'awesome-pair-space)
+  (define-key map (kbd "RET") 'awesome-pair-newline)
+  (define-key map (kbd "M-o") 'awesome-pair-backward-delete)
+  (define-key map (kbd "C-d") 'awesome-pair-forward-delete)
+  (define-key map (kbd "C-k") 'awesome-pair-kill)
+  (define-key map (kbd "M-\"") 'awesome-pair-wrap-double-quote)
+  (define-key map (kbd "M-[") 'awesome-pair-wrap-bracket)
+  (define-key map (kbd "M-{") 'awesome-pair-wrap-curly)
+  (define-key map (kbd "M-(") 'awesome-pair-wrap-round)
+  (define-key map (kbd "M-)") 'awesome-pair-unwrap)
+  ;(define-key map (kbd "M-p") 'awesome-pair-jump-right)
+  ;(define-key map (kbd "M-n") 'awesome-pair-jump-left)
+  (define-key map (kbd "M-:") 'awesome-pair-jump-out-pair-and-newline))
 
-  ;; 解除不常用的快捷键定义
-  (global-set-key (kbd "C-z") nil)
-  (global-set-key (kbd "s-q") nil)
-  (global-set-key (kbd "M-m") nil)
-  ;; replace-string
-  (global-set-key (kbd "C-c r") 'replace-string)
+;; eshell
+(global-set-key (kbd "C-c h") 'eshell)
 
-  ;; eshell
-  (global-set-key (kbd "C-c h") 'eshell)
+;; `C-d' 更加智能
+(let ((map eshell-mode-map))
+  (define-key map (kbd "C-d")  'eshell-delchar-or-maybe-eof)
+  (define-key map (kbd "C-r")  'consult-history)
+  (define-key map (kbd "C-l")  'eshell/clear))
 
-  ;; `C-d' 更加智能
-  (let ((map eshell-mode-map))
-    (define-key map (kbd "C-d")  'eshell-delchar-or-maybe-eof)
-    (define-key map (kbd "C-r")  'consult-history)
-    (define-key map (kbd "C-l")  'eshell/clear))
+;; use C-x C-b call ibuffer command
+(global-unset-key (kbd "C-x C-b"))
+(global-set-key (kbd "C-x C-b") 'init-ibuffer-ibuffer)
 
-  (global-set-key (kbd "C-q") 'mcg/open-init-file)
+;;; init-vertico.rl
+;; vertico
+(define-key vertico-map (kbd "<tab>")      'vertico-insert)  ; Choose selected candidate
+(define-key vertico-map (kbd "<escape>")   'vertico-exit)    ; Close minibuffer
+(define-key vertico-map (kbd "DEL")        'vertico-directory-delete-char)
+(define-key vertico-map (kbd "C-M-n")      'vertico-next-group)
+(define-key vertico-map (kbd "C-M-p")      'vertico-previous-group)
 
+;; consult
+(global-set-key (kbd "C-x j")              'consult-mark)
+(global-set-key (kbd "C-c g")              'consult-ripgrep)
+(global-set-key (kbd "C-c f")              'consult-find)
+(global-set-key (kbd "C-c b")              'consult-buffer)
+(global-set-key (kbd "C-c n h")            'mcg/consult-find-org-headings)
+(define-key minibuffer-local-map (kbd "C-r") 'consult-history)
+;(define-key isearch-mode-map (kbd "C-s")     'consult-line)
+(global-set-key (kbd "C-s")                  'consult-line)
+(define-key prog-mode-map (kbd "C-c C-j")    'consult-outline)
+(global-set-key (kbd "M-s i")                'consult-imenu)
 
-  ;; use C-x C-b call ibuffer command
-  (global-unset-key (kbd "C-x C-b"))
-  (global-set-key (kbd "C-x C-b") 'init-ibuffer-ibuffer)
+;; embark
+(global-set-key (kbd "C-.")                  'embark-act)
+(global-set-key (kbd "C-,")                  'embark-dwim)
+(global-set-key (kbd "C-h b")                'embark-bindings)
+(global-set-key (kbd "C-h B")                'embark-bindings-at-point)
+(global-set-key (kbd "C-x n")                'embark-next-symbol)
+(global-set-key (kbd "C-x p")                'embark-previous-symbol)
 
-  ;;; init-vertico.rl
-  ;; vertico
-  (define-key vertico-map (kbd "<tab>")      'vertico-insert)  ; Choose selected candidate
-  (define-key vertico-map (kbd "<escape>")   'vertico-exit)    ; Close minibuffer
-  (define-key vertico-map (kbd "DEL")        'vertico-directory-delete-char)
-  (define-key vertico-map (kbd "C-M-n")      'vertico-next-group)
-  (define-key vertico-map (kbd "C-M-p")      'vertico-previous-group)
+;;; init-magit.el
+;; magit
+(global-set-key (kbd "C-x g")               'magit-status)
+(global-set-key (kbd "C-x M-g")             'magit-dispatch)
+(global-set-key (kbd "C-c M-g")             'magit-file-dispatch)
 
-  ;; consult
-  (global-set-key (kbd "C-x j")              'consult-mark)
-  (global-set-key (kbd "C-c g")              'consult-ripgrep)
-  (global-set-key (kbd "C-c f")              'consult-find)
-  (global-set-key (kbd "C-c b")              'consult-buffer)
-  (global-set-key (kbd "C-c n h")            'mcg/consult-find-org-headings)
-  (define-key minibuffer-local-map (kbd "C-r") 'consult-history)
-  ;(define-key isearch-mode-map (kbd "C-s")     'consult-line)
-  (global-set-key (kbd "C-s")                  'consult-line)
-  (define-key prog-mode-map (kbd "C-c C-j")    'consult-outline)
-  (global-set-key (kbd "M-s i")                'consult-imenu)
+;; org-capture
+(global-set-key (kbd "C-c c")        'org-capture)
+(global-set-key (kbd "C-c l")        'org-store-link)
 
-  ;; embark
-  (global-set-key (kbd "C-.")                  'embark-act)
-  (global-set-key (kbd "C-,")                  'embark-dwim)
-  (global-set-key (kbd "C-h b")                'embark-bindings)
-  (global-set-key (kbd "C-h B")                'embark-bindings-at-point)
-  (global-set-key (kbd "C-x n")                'embark-next-symbol)
-  (global-set-key (kbd "C-x p")                'embark-previous-symbol)
+;; use C-c f dirvish-quick-access   init-dired.el
+(let ((map dirvish-mode-map))
+  (define-key map (kbd "a")    'dirvish-quick-access)
+  (define-key map (kbd "f")    'dirvish-file-info-menu)
+  (define-key map (kbd "y")    'dirvish-yank-menu)
+  (define-key map (kbd "N")    'dirvish-narrow)
+  (define-key map (kbd "^")    'dirvish-history-last)
+  (define-key map (kbd "h")    'dirvish-history-jump) ; remapped `describe-mode'
+  (define-key map (kbd "s")    'dirvish-quicksort)    ; remapped `dired-sort-toggle-or-edit'
+  (define-key map (kbd "v")    'dirvish-vc-menu)      ; remapped `dired-view-file'
+  (define-key map (kbd "TAB")  'dirvish-subtree-toggle)
+  (define-key map (kbd "M-f")  'dirvish-history-go-forward)
+  (define-key map (kbd "M-b")  'dirvish-history-go-backward)
+  (define-key map (kbd "M-l")  'dirvish-ls-switches-menu)
+  (define-key map (kbd "M-m")  'dirvish-mark-menu)
+  (define-key map (kbd "M-t")  'dirvish-layout-toggle)
+  (define-key map (kbd "M-s")  'dirvish-setup-menu)
+  (define-key map (kbd "M-e")  'dirvish-emerge-menu)
+  (define-key map (kbd "M-j")  'dirvish-fd-jump)
+)
 
-  ;;; init-magit.el
-  ;; magit
-  (global-set-key (kbd "C-x g")               'magit-status)
-  (global-set-key (kbd "C-x M-g")             'magit-dispatch)
-  (global-set-key (kbd "C-c M-g")             'magit-file-dispatch)
+;; org-agenda
+(global-set-key (kbd "C-c a")   'org-agenda)
+(let ((map org-agenda-mode-map))
+  (define-key map
+            (kbd "i") #'(lambda () (interactive) (org-capture nil "d")))
+  (define-key map
+            (kbd "J") 'consult-org-agenda))
 
-  ;; org-capture
-  (global-set-key (kbd "C-c c")        'org-capture)
-  (global-set-key (kbd "C-c l")        'org-store-link)
+;; org-src
+(global-set-key (kbd "C-c s") 'show-line-number-in-src-block)
+(let ((map org-src-mode-map))
+  (define-key map (kbd "C-c C-c") 'org-edit-src-exit))
 
-  ;; use C-c f dirvish-quick-access   init-dired.el
-  (let ((map dirvish-mode-map))
-    (define-key map (kbd "a")    'dirvish-quick-access)
-    (define-key map (kbd "f")    'dirvish-file-info-menu)
-    (define-key map (kbd "y")    'dirvish-yank-menu)
-    (define-key map (kbd "N")    'dirvish-narrow)
-    (define-key map (kbd "^")    'dirvish-history-last)
-    (define-key map (kbd "h")    'dirvish-history-jump) ; remapped `describe-mode'
-    (define-key map (kbd "s")    'dirvish-quicksort)    ; remapped `dired-sort-toggle-or-edit'
-    (define-key map (kbd "v")    'dirvish-vc-menu)      ; remapped `dired-view-file'
-    (define-key map (kbd "TAB")  'dirvish-subtree-toggle)
-    (define-key map (kbd "M-f")  'dirvish-history-go-forward)
-    (define-key map (kbd "M-b")  'dirvish-history-go-backward)
-    (define-key map (kbd "M-l")  'dirvish-ls-switches-menu)
-    (define-key map (kbd "M-m")  'dirvish-mark-menu)
-    (define-key map (kbd "M-t")  'dirvish-layout-toggle)
-    (define-key map (kbd "M-s")  'dirvish-setup-menu)
-    (define-key map (kbd "M-e")  'dirvish-emerge-menu)
-    (define-key map (kbd "M-j")  'dirvish-fd-jump)
-  )
+;; org-download
+(global-set-key (kbd "C-c v") (if *is-win32p* #'mcg/org-screenshot-on-windows
+                                'org-download-clipboard))
 
-  ;; org-agenda
-  (global-set-key (kbd "C-c a")   'org-agenda)
-  (let ((map org-agenda-mode-map))
-    (define-key map
-              (kbd "i") #'(lambda () (interactive) (org-capture nil "d")))
-    (define-key map
-              (kbd "J") 'consult-org-agenda))
+;; elisp-mode
+(let ((map emacs-lisp-mode-map))
+  (define-key map (kbd "C-c C-b") 'eval-buffer)
+  (define-key map (kbd "C-c C-c") 'eval-to-comment))
+(let ((map lisp-interaction-mode-map))
+  (define-key map (kbd "C-c C-c") 'eval-to-comment))
+(let ((map org-mode-map))
+  (define-key map (kbd "C-c C-;") 'eval-to-comment))
 
-  ;; org-src
-  (global-set-key (kbd "C-c s") 'show-line-number-in-src-block)
-  (let ((map org-src-mode-map))
-    (define-key map (kbd "C-c C-c") 'org-edit-src-exit))
-
-  ;; org-download
-  (global-set-key (kbd "C-c v") (if *is-win32p* #'mcg/org-screenshot-on-windows
-                                  'org-download-clipboard))
-
-  ;; elisp-mode
-  (let ((map emacs-lisp-mode-map))
-    (define-key map (kbd "C-c C-b") 'eval-buffer)
-    (define-key map (kbd "C-c C-c") 'eval-to-comment))
-  (let ((map lisp-interaction-mode-map))
-    (define-key map (kbd "C-c C-c") 'eval-to-comment))
-  (let ((map org-mode-map))
-    (define-key map (kbd "C-c C-;") 'eval-to-comment))
-
-  ;; quickrun
-  ;;; c++
-  (global-set-key (kbd "C-c q")     'quickrun)
+;; quickrun
+;;; c++
+(global-set-key (kbd "C-c q")     'quickrun)
 #+end_src
 
 ** Ends
 #+begin_src emacs-lisp
-  (provide 'init-kbd)
-  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-  ;;; init-kbd.el ends here
-  #+end_src
+(provide 'init-kbd)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; init-kbd.el ends here
+#+end_src
