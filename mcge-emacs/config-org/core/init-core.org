@@ -44,13 +44,15 @@
   "Load language part file.  `run-with-idle-timer' 2."
   ;; lsp-bridge
   (require 'init-lsp-bridge)
+  (unless (display-graphic-p)
+      (require 'init-acm-terminal))
   ;; treesit-quto
   (require 'init-treesit-auto)
   ;; init-quickrun
   (require 'init-quickrun)
   ;; markdown
   (require 'init-markdown)
-)
+ )
 #+END_SRC
 
 ** Load function part file
