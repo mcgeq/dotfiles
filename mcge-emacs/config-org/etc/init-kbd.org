@@ -86,11 +86,25 @@
 
 ** color-rg
 #+begin_src emacs-lisp
+;; color-rg
 (define-key isearch-mode-map (kbd "M-s M-s") 'isearch-toggle-color-rg)
 (global-set-key (kbd "M-g s i")             'color-rg-search-input)
 (global-set-key (kbd "M-g s p")             'color-rg-search-input-in-project)
 (global-set-key (kbd "M-g s f")             'color-rg-search-input-in-current-file)
 (global-set-key (kbd "M-g s t")             'color-rg-search-project-with-type)
+#+end_src
+
+** aweshell
+#+begin_src emacs-lisp
+;; aweshell
+(global-set-key (kbd "M-g t t") 'aweshell-toggle)
+(global-set-key (kbd "M-g t c") 'aweshell-new)
+(global-set-key (kbd "M-g t n") 'aweshell-next)
+(global-set-key (kbd "M-g t p") 'aweshell-prev)
+(global-set-key (kbd "M-g t r") 'aweshell-clear-buffer)
+(global-set-key (kbd "M-g d t") 'aweshell-dedicated-toggle)
+(global-set-key (kbd "M-g d o") 'aweshell-dedicated-open)
+(global-set-key (kbd "M-g d c") 'aweshell-dedicated-close)
 #+end_src
 
 ** lsp bridge
