@@ -101,8 +101,6 @@
   (require 'init-org-capture)
   ;; ox-hugo
   (require 'init-ox-hugo)
-  ;; eshell
-  (require 'init-eshell)
   ;; tabspaces
   (require 'init-tabspaces)
   ;; org-popup-posframe
