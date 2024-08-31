@@ -9,7 +9,7 @@
 
 ;;; Commentary:
 
-  #+end_src
+#+end_src
 
 ** Require
 #+begin_src emacs-lisp
@@ -17,14 +17,23 @@
 (require 'diff-hl)
 
 ;;; Code:
-  #+end_src
+#+end_src
 
 ** Code
 #+begin_src emacs-lisp
-(global-diff-hl-mode t)
-(add-hook 'dired-mode-hooik      'diff-hl-dir-mode)
-(add-hook 'magit-pre-refresh     'diff-hl-magit-pre-refresh)
-(add-hook 'magit-post-refresh    'diff-hl-magit-post-refresh)
+;; 在编辑缓冲区时显示修改差异
+(global-diff-hl-mode)
+
+;; 当切换窗口时更新差异
+(add-hook 'dired-mode-hook         'diff-hl-dired-mode)
+(add-hook 'magit-pre-refresh-hook  'diff-hl-magit-pre-refresh)
+(add-hook 'magit-post-refresh-hook 'diff-hl-magit-post-refresh)
+
+(custom-set-faces
+ '(diff-hl-change ((t (:foreground "#3a81c3" :background "#3a81c3"))))  ;; 修改
+ '(diff-hl-delete ((t (:foreground "#ff6c6b" :background "#ff6c6b"))))  ;; 删除
+ '(diff-hl-insert ((t (:foreground "#98be65" :background "#98be65"))))) ;; 插入
+
 (unless (display-graphic-p)
   (diff-hl-margin-mode))
 #+end_src
@@ -34,4 +43,4 @@
 (provide 'init-diff-hl)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; init-diff-hl.el ends here
-  #+end_src
+#+end_src
