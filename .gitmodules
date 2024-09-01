@@ -52,9 +52,6 @@
 [submodule "emacs-doom-themes"]
 	path = mcge-emacs/site-lisp/extensions/themes/doom-themes
 	url = git@github.com:doomemacs/themes.git
-[submodule "emacs-ibuffer-vc"]
-	path = mcge-emacs/site-lisp/extensions/themes/ibuffer-vc
-	url = git@github.com:purcell/ibuffer-vc.git
 [submodule "emacs-nerd-icons"]
 	path = mcge-emacs/site-lisp/extensions/nerd-icons
 	url = git@github.com:rainstormstudio/nerd-icons.el.git

@@ -27,8 +27,6 @@
 (require 'init-dired)
 ;; yasnippet
 (require 'init-yasnippet)
-;; ibuffer
-(require 'init-ibuffer)
 ;; recentf
 (require 'init-recentf)
 ;; Key bindings
