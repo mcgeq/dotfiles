@@ -223,3 +223,6 @@
 [submodule "emacs-popon"]
 	path = mcge-emacs/site-lisp/extensions/popon
 	url = https://codeberg.org/akib/emacs-popon.git
+[submodule "emacs-transient"]
+	path = mcge-emacs/site-lisp/extensions/transient
+	url = git@github.com:magit/transient.git

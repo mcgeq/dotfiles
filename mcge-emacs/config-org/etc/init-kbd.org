@@ -24,6 +24,7 @@
 (require 'esh-mode)
 (require 'awesome-pair)
 (require 'tabspaces)
+(require 'transient)
 ;;; Code:
 #+end_src
 
@@ -229,9 +230,42 @@
 #+begin_src emacs-lisp
 ;;; init-magit.el
 ;; magit
-(global-set-key (kbd "C-x g")               'magit-status)
-(global-set-key (kbd "C-x M-g")             'magit-dispatch)
-(global-set-key (kbd "C-c M-g")             'magit-file-dispatch)
+(global-set-key (kbd "M-m s t")               'magit-status)
+(global-set-key (kbd "M-m s a")               'magit-submodule-add)
+(global-set-key (kbd "M-m s r")               'magit-submodule-remove)
+(global-set-key (kbd "M-m f r")               'magit-file-rename)
+(global-set-key (kbd "M-m b r")               'magit-branch-rename)
+(global-set-key (kbd "M-m b c")               'magit-branch-create)
+(global-set-key (kbd "M-m r r")               'magit-remote-rename)
+(global-set-key (kbd "M-m l")               'magit-log)
+(global-set-key (kbd "M-m d d")             'magit-dispatch)
+(global-set-key (kbd "M-m d f")             'magit-file-dispatch)
+(global-set-key (kbd "M-m m")               'mcge-magit-menu)
+;; 自定义magit菜单
+(transient-define-prefix mcge-magit-menu ()
+  "My custom Magit menu."
+  [[
+   ("t" "Status" magit-status)]
+   ["Log Operations"
+    ("l l" "Show Logs" magit-log)]
+   ["Submodules"
+    ("s a" "Add    Submodule" magit-submodule-add)
+    ("s r" "Remove Submodule" magit-submodule-remove)
+    ("s u" "Update Submodule" magit-submodule-update)]
+   ["Branch Operations"
+    ("b c" "Create       Branch" magit-branch-create)
+    ("b C" "Checkout     Branch" magit-branch-checkout)
+    ("b n" "New Checkout Branch" magit-branch-and-checkout)
+    ("b m" "Merge        Branch" magit-merge)
+    ("b d" "Delete       Branch" magit-branch-delete)
+    ("b r" "Rename       Branch" magit-branch-rename)
+    ("b R" "Reset        Branch" magit-branch-reset)]
+   ["File Operations"
+    ("f r" "Rename file" magit-file-rename)]
+   ["Remote Operations"
+    ("r a" "Add    Remote" magit-remote-add)
+    ("r r" "Rename Remote" magit-remote-rename)]
+   ])
 #+end_src
 
 
