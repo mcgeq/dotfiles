@@ -35,6 +35,7 @@
  '(diff-hl-insert ((t (:foreground "#98be65" :background "#98be65"))))) ;; 插入
 
 (unless (display-graphic-p)
+  (require 'diff-hl-margin)
   (diff-hl-margin-mode))
 #+end_src
 
