@@ -19,19 +19,48 @@
 
 # Extract the commit message from the commit message file
 commit_msg_file=$1
+
 commit_msg=$(cat $commit_msg_file)
+
+# 删除所有以 # 开头的注释及内容
+sed -i '/^#/,$d' "$commit_msg_file"
+
+commit_msg=$(cat "$commit_msg_file")
 
 # Ensure the commit message follows Angular commit message convention
 # Example pattern for Angular convention: "<type>(<scope>): <message>"
 
-msg_re="^(:.*:) (feat|fix|docs|style|refactor|perf|test|workflow|build|ci|chore|release|)(\(.+\))?: .{1,50}"
+gitmoji_angular_regex="^(:.*:) (feat|fix|docs|style|refactor|perf|test|workflow|build|ci|chore|release|config|dependencies)(\(.+\))?: .{1,50}"
 
-if [[ ! $commit_msg =~ $msg_re ]]; then
+if [[ ! $commit_msg =~ $gitmoji_angular_regex ]]; then
     echo $commit_msg
     echo "Invalid commit message! Please follow the Angular commit message convention:"
-    echo "<type>(<scope>): <message>"
+    echo "<emoji> <type>(<scope>): <message>"
+    echo "E.g: :sparkles: feat(code): Add new plugin"
     echo "Refer to the Angular commit message guidelines for more details."
     exit 1
+fi
+
+# get subject
+subject_line=$(echo "$commit_msg" | head -n 1)
+
+# 校验第一个单词的首字母是否大写
+# 提取第一个单词
+first_word=$(echo "$subject_line" | awk '{print $3}' | cut -d ':' -f 3 | xargs)
+first_char=$(echo "first_word" | cut -c1)
+
+# 使用正则表达式检查第一个字符是否为中文字符
+if [[ "$first_char" =~ [\p{Han}] ]]; then
+    exit 0
+fi
+
+capitalized_first_word=$(echo "${first_word^}")
+
+# 首字母不是大写，将自动转换为大写
+if [[ "$first_word" != "$capitalized_first_word" ]]; then
+    # 自动修复首字母大写
+    new_subject=$(echo "$subject_line" | sed -E "s/(: )$first_word/\1$capitalized_first_word/")
+    sed -i "1s/.*/$new_subject/" "$commit_msg_file"
 fi
 
 test "" = "$(grep '^Signed-off-by: ' "$1" |
