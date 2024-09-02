@@ -22,7 +22,6 @@
 (require 'org-src)
 (require 'dirvish)
 (require 'esh-mode)
-(require 'awesome-pair)
 (require 'tabspaces)
 (require 'transient)
 ;;; Code:
@@ -148,34 +147,6 @@
 (global-set-key (kbd "M-s TAB")  'tab-bar-switch-to-recent-tab)
 (global-set-key (kbd "M-s r")    'tabspaces-remove-current-buffer)
 (global-set-key (kbd "M-s k")    'tabspaces-close-workspace)
-#+end_src
-
-** awesome-pair
-#+begin_src emacs-lisp
-;; awesome-pair
-(let ((map awesome-pair-mode-map))
-  (define-key map (kbd "(") 'awesome-pair-open-round)
-  (define-key map (kbd "[") 'awesome-pair-open-bracket)
-  (define-key map (kbd "{") 'awesome-pair-open-curly)
-  (define-key map (kbd ")") 'awesome-pair-close-round)
-  (define-key map (kbd "]") 'awesome-pair-close-bracket)
-  (define-key map (kbd "}") 'awesome-pair-close-curly)
-  (define-key map (kbd "=") 'awesome-pair-equal)
-  (define-key map (kbd "%") 'awesome-pair-match-paren)
-  (define-key map (kbd "\"") 'awesome-pair-double-quote)
-  (define-key map (kbd "SPC") 'awesome-pair-space)
-  (define-key map (kbd "RET") 'awesome-pair-newline)
-  (define-key map (kbd "M-o") 'awesome-pair-backward-delete)
-  (define-key map (kbd "C-d") 'awesome-pair-forward-delete)
-  (define-key map (kbd "C-k") 'awesome-pair-kill)
-  (define-key map (kbd "M-\"") 'awesome-pair-wrap-double-quote)
-  (define-key map (kbd "M-[") 'awesome-pair-wrap-bracket)
-  (define-key map (kbd "M-{") 'awesome-pair-wrap-curly)
-  (define-key map (kbd "M-(") 'awesome-pair-wrap-round)
-  (define-key map (kbd "M-)") 'awesome-pair-unwrap)
-  ;(define-key map (kbd "M-p") 'awesome-pair-jump-right)
-  ;(define-key map (kbd "M-n") 'awesome-pair-jump-left)
-  (define-key map (kbd "M-:") 'awesome-pair-jump-out-pair-and-newline))
 #+end_src
 
 ** eshell
