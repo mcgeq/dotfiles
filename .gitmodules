@@ -136,9 +136,6 @@
 [submodule "emacs-nerd-icons-corfu"]
 	path = mcge-emacs/site-lisp/extensions/nerd-icons-corfu
 	url = git@github.com:LuigiPiucco/nerd-icons-corfu.git
-[submodule "emacs-awesome-pair"]
-	path = mcge-emacs/site-lisp/extensions/awesome-pair
-	url = git@github.com:manateelazycat/awesome-pair.git
 [submodule "emacs-emacs-async"]
 	path = mcge-emacs/site-lisp/extensions/org/emacs-async
 	url = git@github.com:jwiegley/emacs-async.git

@@ -67,8 +67,6 @@
 (defun load-other-part-file()
   "Load other part file.  `run-with-idle-timer' 3."
   (require 'init-color-rg)
-  ;; awesome-pair
-  (require 'init-awesome-pair)
   (if (version< emacs-version "31")
   ;; pangu-spacing
   (require 'init-pangu-spacing))
