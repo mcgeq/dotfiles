@@ -89,7 +89,9 @@
 ;; `auto-fill-mode'
 (setq-default auto-fill-function 'do-auto-fill)
 ;;(global-auto-fill-mode t)
-
+;; 括号匹配
+(setq electric-pair-inhibit-predicate 'electric-pair-conservative-inhibit)
+(electric-pair-mode 1)
 #+end_src
 ** Ends
 #+begin_src emacs-lisp
