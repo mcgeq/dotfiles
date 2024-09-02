@@ -25,7 +25,7 @@
 (global-diff-hl-mode)
 
 ;; 当切换窗口时更新差异
-(add-hook 'dired-mode-hook         'diff-hl-dired-mode)
+(add-hook 'dired-mode-hook         'diff-hl-dir-mode)
 (add-hook 'magit-pre-refresh-hook  'diff-hl-magit-pre-refresh)
 (add-hook 'magit-post-refresh-hook 'diff-hl-magit-post-refresh)
 
