@@ -237,10 +237,12 @@
 (global-set-key (kbd "M-m b r")               'magit-branch-rename)
 (global-set-key (kbd "M-m b c")               'magit-branch-create)
 (global-set-key (kbd "M-m r r")               'magit-remote-rename)
-(global-set-key (kbd "M-m l")               'magit-log)
-(global-set-key (kbd "M-m d d")             'magit-dispatch)
-(global-set-key (kbd "M-m d f")             'magit-file-dispatch)
-(global-set-key (kbd "M-m m")               'mcge-magit-menu)
+(global-set-key (kbd "M-m l")                 'magit-log)
+(global-set-key (kbd "M-m d d")               'magit-dispatch)
+(global-set-key (kbd "M-m d f")               'magit-file-dispatch)
+(global-set-key (kbd "M-m p f")               'magit-pull)
+(global-set-key (kbd "M-m p h")               'magit-push)
+(global-set-key (kbd "M-m m")                 'mcge-magit-menu)
 ;; 自定义magit菜单
 (transient-define-prefix mcge-magit-menu ()
   "My custom Magit menu."
