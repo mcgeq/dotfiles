@@ -220,6 +220,3 @@
 [submodule "emacs-popon"]
 	path = mcge-emacs/site-lisp/extensions/popon
 	url = https://codeberg.org/akib/emacs-popon.git
-[submodule "emacs-smartparens"]
-	path = mcge-emacs/site-lisp/extensions/smartparens
-	url = git@github.com:Fuco1/smartparens.git
