@@ -103,6 +103,7 @@
   (require 'init-tabspaces)
   ;; org-popup-posframe
   (require 'init-org-popup-posframe)
+  (require 'init-smartparens)
 )
 #+END_SRC
 
