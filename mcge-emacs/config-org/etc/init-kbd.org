@@ -136,7 +136,7 @@
 ** dogears
 #+begin_src emacs-lisp
 ;; dogears
-(global-set-key (kbd "M-g d") #'dogears-go)
+(global-set-key (kbd "M-g o") #'dogears-go)
 (global-set-key (kbd "M-g M-b") #'dogears-back)
 (global-set-key (kbd "M-g M-f") #'dogears-forward)
 (global-set-key (kbd "M-g M-d") #'dogears-list)

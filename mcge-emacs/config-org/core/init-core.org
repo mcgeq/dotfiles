@@ -34,6 +34,8 @@
 (require 'init-awesome-tray)
 ;; sort tab
 (require 'init-sort-tab)
+;; dogears
+(require 'init-dogears)
 #+END_SRC
 
 ** Load language part file
@@ -103,8 +105,6 @@
   (require 'init-tabspaces)
   ;; org-popup-posframe
   (require 'init-org-popup-posframe)
-  ;; dogears
-  (require 'init-dogears)
 )
 #+END_SRC
 
