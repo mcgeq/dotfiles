@@ -133,6 +133,16 @@
 (global-set-key (kbd "M-s o") 'sort-tab-close-other-tabs)
 #+end_src
 
+** dogears
+#+begin_src emacs-lisp
+;; dogears
+(global-set-key (kbd "M-g d") #'dogears-go)
+(global-set-key (kbd "M-g M-b") #'dogears-back)
+(global-set-key (kbd "M-g M-f") #'dogears-forward)
+(global-set-key (kbd "M-g M-d") #'dogears-list)
+(global-set-key (kbd "M-g M-D") #'dogears-sidebar)
+#+end_src
+
 ** tabspaces
 #+begin_src emacs-lisp
 ;; tabspaces

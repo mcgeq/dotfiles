@@ -1,0 +1,50 @@
+* init-dogears.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle (concat temporary-file-directory "init-dogears.el") :lexical t
+:END:
+
+** Headers
+#+begin_src emacs-lisp
+;;; init-dogears.el --- modeline config  -*- lexical-binding: t; -*-
+
+;;; Commentary:
+
+  #+end_src
+
+** Require
+#+begin_src emacs-lisp
+;;; Require:
+(require 'dogears)
+
+;;; Code:
+  #+end_src
+
+** Code
+#+begin_src emacs-lisp
+(add-hook 'after-init-hook #'dogears-mode)
+
+(setq dogears-idle 1
+      dogears-limit 200
+      dogears-position-delta 20)
+
+(setq dogears-functions '(find-file recenter-top-bottom
+                                    other-window switch-to-buffer
+                                    aw-select toggle-window-split
+                                    windmove-do-window-select
+                                    pager-page-down pager-page-up
+                                    tab-bar-select-tab
+                                    pop-to-mark-command
+                                    pop-global-mark
+                                    goto-last-change
+                                    xref-go-back
+                                    xref-find-definitions
+                                    xref-find-references))
+
+#+end_src
+
+** Ends
+#+begin_src emacs-lisp
+(provide 'init-dogears)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; init-dogears.el ends here
+  #+end_src

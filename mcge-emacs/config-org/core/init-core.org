@@ -103,6 +103,8 @@
   (require 'init-tabspaces)
   ;; org-popup-posframe
   (require 'init-org-popup-posframe)
+  ;; dogears
+  (require 'init-dogears)
 )
 #+END_SRC
 
