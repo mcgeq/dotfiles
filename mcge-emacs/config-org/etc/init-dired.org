@@ -25,7 +25,7 @@
 (require 'dirvish-quick-access)
 (require 'dirvish-narrow)
 ;(require 'dirvish-file-info-menu)
-(unless *is-win32p** 
+(unless *is-win32p* 
   (require 'dirvish-fd))
 ;;; Code:
   #+end_src
