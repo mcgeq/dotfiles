@@ -23,10 +23,10 @@
 (require 'dirvish-collapse)
 (require 'dirvish-history)
 (require 'dirvish-quick-access)
-;(require 'dirvish-fd)
 (require 'dirvish-narrow)
 ;(require 'dirvish-file-info-menu)
- 
+(unless *is-win32p** 
+  (require 'dirvish-fd))
 ;;; Code:
   #+end_src
 
@@ -46,7 +46,7 @@
 #+begin_src emacs-lisp
 ;; Dired
 (setq dired-dwim-target t)
-(setq dired-listing-switches "-l --almost-all --human-readable --group-directories-first --no-group"
+(setq dired-listing-switches "-l --almost-all --human-readable --no-group"
       dired-auto-revert-buffer t)
 (setq dired-recursive-copies 'always)
 (setq dired-kill-when-opening-new-dired-buffer t)
