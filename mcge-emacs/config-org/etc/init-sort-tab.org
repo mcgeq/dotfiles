@@ -22,6 +22,15 @@
 ** Code
 #+begin_src emacs-lisp
 (sort-tab-mode 1)
+
+(setq sort-tab-hide-function
+      (lambda (buf)
+        (with-current-buffer buf
+          (or (derived-mode-p 'dired-mode) ; 隐藏 dired-mode 缓冲区
+              (string-match-p "^\\*aweshell\\*" (buffer-name)) ; 隐藏 aweshell 缓冲区
+              (string-match-p "^\\*dirvish\\*" (buffer-name)) ; 隐藏 dirvish 缓冲区
+              ;; 可以添加更多条件来隐藏其他缓冲区
+              ))))
 #+end_src
 
 ** Ends

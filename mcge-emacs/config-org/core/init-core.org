@@ -105,6 +105,8 @@
   (require 'init-tabspaces)
   ;; org-popup-posframe
   (require 'init-org-popup-posframe)
+  ;; aweshell
+  (require 'init-aweshell)
 )
 #+END_SRC
 
