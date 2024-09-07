@@ -46,10 +46,25 @@
 ;; 光标彩虹插件
 
 (add-hook 'after-init-hook #'beacon-mode)
-(beacon-mode 1)
+
 (setq beacon-lighter "")
-(setq beacon-size    20)
-(setq beacon-blink-when-window-scrolls nil)
+;; 配置 beacon 相关的选项
+(setq beacon-blink-when-point-moves-vertically nil) ; default nil
+(setq beacon-blink-when-point-moves-horizontally nil) ; default nil
+(setq beacon-blink-when-buffer-changes t) ; default t
+(setq beacon-blink-when-window-scrolls t) ; default t
+(setq beacon-blink-when-window-changes t) ; default t
+(setq beacon-blink-when-focused nil) ; default nil
+
+(setq beacon-blink-duration 0.3) ; default 0.3
+(setq beacon-blink-delay 0.3) ; default 0.3
+(setq beacon-size 20) ; default 40
+;; (setq beacon-color "yellow") ; default 0.5
+(setq beacon-color 0.5) ; default 0.5
+
+;; 将 term-mode 添加到不需要闪烁的模式列表中
+(add-to-list 'beacon-dont-blink-major-modes 'term-mode)
+(beacon-mode 1)
 #+end_src
 
 ** Show line number
