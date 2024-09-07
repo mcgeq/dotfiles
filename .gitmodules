@@ -223,3 +223,6 @@
 [submodule "emacs-dogears"]
 	path = mcge-emacs/site-lisp/extensions/dogears
 	url = git@github.com:alphapapa/dogears.el.git
+[submodule "emacs-pyvenv"]
+	path = mcge-emacs/site-lisp/extensions/lsp/pyvenv
+	url = git@github.com:jorgenschaefer/pyvenv.git
