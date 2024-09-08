@@ -86,7 +86,7 @@
 
 ** Update file modify time
 #+begin_src emacs-lisp
-(defun mcge/update-last-modified ()
+(defun mcge/update-last-modified-time ()
   "Update the `Last Modified' timestamp in the current buffer."
   (interactive)
   (when (buffer-file-name)
