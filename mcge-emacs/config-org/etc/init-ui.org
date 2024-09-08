@@ -25,7 +25,9 @@
 (setq doom-themes-enable-bold t
       doom-themes-enable-italic t)
 
-(load-theme 'doom-city-lights t)
+(if (display-graphic-p)
+    (load-theme 'doom-city-lights t)
+  (load-theme 'doom-molokai))
 #+end_src
 
 ** change theme
