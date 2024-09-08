@@ -127,9 +127,6 @@
 [submodule "emacs-emacs-rime"]
 	path = mcge-emacs/site-lisp/extensions/emacs-rime
 	url = git@github.com:DogLooksGood/emacs-rime.git
-[submodule "emacs-posframe"]
-	path = mcge-emacs/site-lisp/extensions/posframe
-	url = git@github.com:tumashu/posframe.git
 [submodule "emacs-mini-frame"]
 	path = mcge-emacs/site-lisp/extensions/mini-frame
 	url = git@github.com:muffinmad/emacs-mini-frame.git
