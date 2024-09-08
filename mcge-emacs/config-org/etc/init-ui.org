@@ -24,8 +24,46 @@
 #+begin_src emacs-lisp
 (setq doom-themes-enable-bold t
       doom-themes-enable-italic t)
-(load-theme 'doom-dracula t)
 
+(load-theme 'doom-city-lights t)
+#+end_src
+
+** change theme
+
+#+begin_src emacs-lisp
+
+(defvar mcge/org-mode-theme 'doom-solarized-light
+  "Theme to use in org-mode.")
+
+(defvar mcge/default-theme 'doom-city-lights
+  "Default theme to use outside of org-mode.")
+
+(defun mcge/load-org-mode-theme ()
+  "Load theme for org-mode."
+  (when (eq major-mode 'org-mode)
+    (load-theme mcge/org-mode-theme t)))
+
+(defun mcge/load-default-theme ()
+  "Load the default theme."
+  (unless (eq major-mode 'org-mode)
+    (load-theme mcge/default-theme t)))
+
+(defun mcge/org-mode-hook ()
+  "Hook to run when entering org-mode."
+  (mcge/load-org-mode-theme))
+
+(defun mcge/global-mode-hook ()
+  "Hook to run when leaving org-mode."
+  (mcge/load-default-theme))
+
+;(add-hook 'org-mode-hook #'mcge/org-mode-hook)
+;(add-hook 'after-change-major-mode-hook #'mcge/global-mode-hook)
+#+end_src
+
+** nerd icons
+
+#+begin_src emacs-lisp
+;; nerd-icons
 (require 'nerd-icons)
 (setq nerd-icons-font-family (concat mcgemacs-custom-icon-font-family ""))
 

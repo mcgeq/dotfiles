@@ -33,7 +33,12 @@
 
 ;; 自定义编号格式
 ;; 设置自定义的编号格式，可以根据需要调整
-(setq org-num-face '(:foreground "#ff79c6" :weight bold)) ; 设置编号的字体样式
+;(setq org-num-face '(:foreground "#ffffff" :weight bold)) ; 设置编号的字体样式
+(with-eval-after-load 'org-num
+  (custom-set-faces
+   ;; 修改 org-num 生成的标题数字的颜色为白色，并设置字体粗细
+   '(org-num-face ((t (:foreground "#dadada" :weight bold))))))
+
 (setq org-num-format-function
       (lambda (numbers) 
         (concat (mapconcat #'number-to-string numbers ".") " "))) ; 格式为“1.1.1 ”形式
@@ -236,15 +241,15 @@
 ;; custom face
 ;; 设置 org 标题 1-8 级的字体大小和颜色，颜色摘抄自 monokai。;希望 org-mode 标题的字体大小和正文一致，设成 1.0， 如果希望标题字体大一点可以设成 1.2
 (custom-set-faces
-  '(org-document-title ((t (:height 1.75 :weight bold ))))
-  '(org-level-1 ((t (:inherit outline-1 :height 1.2  :foreground "#FD971F"))))
-  '(org-level-2 ((t (:inherit outline-2 :height 1.15  :foreground "#002EFF"))))
-  '(org-level-3 ((t (:inherit outline-3 :height 1.1  :foreground "#004EFF"))))
-  '(org-level-4 ((t (:inherit outline-4 :height 1.05  :foreground "#008EFF"))))
-  '(org-level-5 ((t (:inherit outline-5 :height 1.0  :foreground "#00AEFF"))))
-  '(org-level-6 ((t (:inherit outline-6 :height 1.0  :foreground "#00EEFF"))))
-  '(org-level-7 ((t (:inherit outline-7 :height 1.0  :foreground "#66EEFF"))))
-  '(org-level-8 ((t (:inherit outline-8 :height 1.0  :foreground "#66D9EF"))))
+ '(org-document-title ((t (:height 1.75 :weight bold))))
+ '(org-level-1 ((t (:inherit outline-1 :height 1.2 :foreground "#dadada" :weight bold))))
+ '(org-level-2 ((t (:inherit outline-2 :height 1.15 :foreground "#dadada" :weight bold))))
+ '(org-level-3 ((t (:inherit outline-3 :height 1.1 :foreground "#dadada" :weight bold))))
+ '(org-level-4 ((t (:inherit outline-4 :height 1.05 :foreground "#dadada" :weight bold))))
+ '(org-level-5 ((t (:inherit outline-5 :height 1.0 :foreground "#dadada" :weight bold))))
+ '(org-level-6 ((t (:inherit outline-6 :height 1.0 :foreground "#dadada" :weight bold))))
+ '(org-level-7 ((t (:inherit outline-7 :height 1.0 :foreground "#dadada" :weight bold))))
+ '(org-level-8 ((t (:inherit outline-8 :height 1.0 :foreground "#dadada" :weight bold))))
  )
 
 (custom-set-faces
