@@ -45,7 +45,7 @@
 ** Custom some directory
 #+BEGIN_SRC emacs-lisp
 ;; 定义 emacs 配置文件目录上级目录
-(defvar mcgemacs-custom-dir (if *is-win32p* (file-truename "D:/config/dotfiles")
+(defvar mcgemacs-custom-dir (if *is-win32p* (file-truename "D:/config")
                               (file-truename "~")))
 ;; 自定义博客目录
 (defvar mcgemacs-blog-dir      (if *is-win32p* (file-truename "D:/workspaces/blog/mcge-blog")
@@ -56,7 +56,7 @@
 (defvar mcgemacs-org-dir       (if *is-win32p* (file-truename "D:/org")
                                  (file-truename "~/org")))
 ;; 定义一些启动目录，方便下次迁移
-(defvar mcgemacs-root-dir      (concat mcgemacs-custom-dir "/mcge-emacs"))
+(defvar mcgemacs-root-dir      (concat mcgemacs-custom-dir "/dotfiles/mcge-emacs"))
 (defvar mcgemacs-config-dir    (concat mcgemacs-root-dir "/config-org"))
 (defvar mcgemacs-extension-dir (concat mcgemacs-root-dir "/extensions"))
 
