@@ -31,20 +31,17 @@
             (defun get-git-user-name ()
               "Get the Git configured user name."
               (interactive)
-              (replace-regexp-in-string "\n$" "" (shell-command-to-string "git config --get
-     user.name")))
+              (replace-regexp-in-string "\n$" "" (shell-command-to-string "git config --get user.name")))
 
             (defun get-git-user-email ()
               "Get the Git configured user email."
               (interactive)
-              (replace-regexp-in-string "\n$" "" (shell-command-to-string "git config --get
-     user.email")))
+              (replace-regexp-in-string "\n$" "" (shell-command-to-string "git config --get user.email")))
 
             ;; 添加多个自定义的片段目录
             (let ((custom-snippet-dirs
                    (list (concat mcgemacs-root-dir "/site-lisp/snippets")
-                         (concat mcgemacs-root-dir
-     "/site-lisp/extensions/snippets/yasnippet-snippet/snippets")
+                         (concat mcgemacs-root-dir "/site-lisp/extensions/snippets/yasnippet-snippet/snippets")
                          )))
               (dolist (dir custom-snippet-dirs)
                 (add-to-list 'yas-snippet-dirs dir)))
