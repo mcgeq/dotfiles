@@ -84,6 +84,18 @@
   )
 #+end_src
 
+** Update file modify time
+#+begin_src emacs-lisp
+(defun mcge/update-last-modified ()
+  "Update the `Last Modified' timestamp in the current buffer."
+  (interactive)
+  (when (buffer-file-name)
+    (save-excursion
+      (goto-char (point-min))
+      (when (re-search-forward "^# Last Modified:.*$" nil t)
+        (replace-match (concat "# Last Modified:  " (format-time-string "%Y-%m-%d %H:%M:%S")))))))
+#+end_src
+
 ** Ends
 #+begin_src emacs-lisp
 (provide 'init-function)

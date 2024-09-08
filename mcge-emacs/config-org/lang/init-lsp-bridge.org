@@ -63,6 +63,15 @@
 
 #+end_src
 
+** Update modify file time
+#+begin_src emacs-lisp
+;; save file update time
+;; 在编程模式下启用保存文件时自动更新 `Last Modified` 时间的功能
+(add-hook 'prog-mode-hook
+          (lambda ()
+            (add-hook 'before-save-hook 'mcge/update-last-modified nil t)))
+#+end_src
+
 ** End
 #+begin_src emacs-lisp
 (provide 'init-lsp-bridge)
