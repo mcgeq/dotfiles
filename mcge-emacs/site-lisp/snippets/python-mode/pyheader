@@ -10,5 +10,6 @@
 # Email:          <${3:`(get-git-user-email)`}>
 # File:           ${2:`(file-name-nondirectory (buffer-file-name))`}
 # Description:    ${4:}
-# Create Date:    `(format-time-string "%Y-%m-%d %H:%M:%S")`
+# Create   Date:  `(format-time-string "%Y-%m-%d %H:%M:%S")`
 # Last Modified:  `(format-time-string "%Y-%m-%d %H:%M:%S")`
+# Modified   By:  ${5:`(get-git-user-name)`} <${6:`(get-git-user-email)`}>

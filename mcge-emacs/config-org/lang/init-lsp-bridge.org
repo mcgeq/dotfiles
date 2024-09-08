@@ -69,7 +69,7 @@
 ;; 在编程模式下启用保存文件时自动更新 `Last Modified` 时间的功能
 (add-hook 'prog-mode-hook
           (lambda ()
-            (add-hook 'before-save-hook 'mcge/update-last-modified nil t)))
+            (add-hook 'before-save-hook 'mcge/update-file-headers nil t)))
 #+end_src
 
 ** End

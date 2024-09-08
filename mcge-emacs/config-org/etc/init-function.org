@@ -94,6 +94,23 @@
       (goto-char (point-min))
       (when (re-search-forward "^# Last Modified:.*$" nil t)
         (replace-match (concat "# Last Modified:  " (format-time-string "%Y-%m-%d %H:%M:%S")))))))
+
+;; Update modified By
+(defun mcge/update-last-modified-by ()
+  "Update the `Modified By' in the current buffer."
+  (interactive)
+  (when (buffer-file-name)
+    (save-excursion
+      (goto-char (point-min))
+      (when (re-search-forward "^# Modified   By:.*$" nil t)
+        (replace-match (concat "# Modified   By:  " (get-git-user-name)
+                               " <" (get-git-user-email) ">"))))))
+
+(defun mcge/update-file-headers ()
+  "Update the `Last Modified' and `Modified By' lines in the current buffer."
+  (interactive)
+  (mcge/update-last-modified-time)
+  (mcge/update-last-modified-by))
 #+end_src
 
 ** Ends
