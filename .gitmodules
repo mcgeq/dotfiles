@@ -160,9 +160,6 @@
 [submodule "emacs-org-roam"]
 	path = mcge-emacs/site-lisp/extensions/org/org-roam
 	url = git@github.com:org-roam/org-roam.git
-[submodule "emacs-org-popup-posframe"]
-	path = mcge-emacs/site-lisp/extensions/org/org-popup-posframe
-	url = git@github.com:A7R7/org-popup-posframe.git
 [submodule "emacs-ox-hugo"]
 	path = mcge-emacs/site-lisp/extensions/org/ox-hugo
 	url = git@github.com:kaushalmodi/ox-hugo.git
