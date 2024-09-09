@@ -126,6 +126,77 @@
       (move-beginning-of-line 1))))
 #+end_src
 
+** Python install packages
+#+begin_src emacs-lisp
+(defun install-python-packages ()
+  "Run a Python script to install Flask and Jieba if not already installed."
+  (interactive)
+  (let* ((python-exec (or (executable-find "python") (executable-find "python3")))
+         (python-script (concat mcgemacs-root-dir "/scripts/install_packages.py"))
+         (output-buffer "*Python Install Output*"))
+    (unless python-exec
+      (error "Python executable not found in PATH"))
+    (unless (file-exists-p python-script)
+      (error "Python script not found: %s" python-script))
+    ;; Run the Python script asynchronously and capture only errors
+    (with-current-buffer (get-buffer-create output-buffer)
+      (erase-buffer))  ;; Clear any previous output
+    (set-process-sentinel
+     (start-process "install-python-packages" output-buffer python-exec python-script)
+     (lambda (process event)
+       (when (and (string= event "finished\n")
+                  (= (process-exit-status process) 0))
+         ;; If the process finished successfully, hide the output buffer
+         (kill-buffer output-buffer))
+       (when (not (= (process-exit-status process) 0))
+         ;; If there's an error, display the output buffer
+         (message "Error occurred during package installation. See %s for details." output-buffer)
+         (pop-to-buffer output-buffer))))))
+#+end_src
+
+** Flask jieba Server
+
+#+begin_src emacs-lisp :tangle no
+(defun run-python-script-asynchronously (script-path)
+  "Run the Python script SCRIPT-PATH asynchronously."
+  (let ((command (format "python %s" (shell-quote-argument script-path))))
+    (async-shell-command command "*Python Script Output*")))
+#+end_src
+
+#+begin_src emacs-lisp :tangle no
+(defun run-python-script-asynchronously (script-path)
+  "Run the Python script SCRIPT-PATH asynchronously."
+  (let ((command (format "python %s" (shell-quote-argument script-path))))
+    (async-shell-command command "*Python Script Output*")))
+#+end_src
+
+#+begin_src emacs-lisp :tangle no
+(defun install-python-packages ()
+  "Run a Python script to install Flask and Jieba if not already installed."
+  (interactive)
+  (let* ((python-exec (or (executable-find "python") (executable-find "python3")))
+         (python-script (concat mcgemacs-root-dir "/scripts/install_packages.py")))
+    (unless python-exec
+      (error "Python executable not found in PATH"))
+    (unless (file-exists-p python-script)
+      (error "Python script not found: %s" python-script))
+    ;; Use async-shell-command to run the Python script asynchronously
+    (async-shell-command (format "%s %s" python-exec python-script))))
+#+end_src
+
+#+begin_src emacs-lisp :tangle no
+(defun install-python-packages ()
+  "Run a Python script to install Flask and Jieba if not already installed."
+  (interactive)
+  (let* ((python-exec (or (executable-find "python") (executable-find "python3")))
+         (python-script (concat mcgemacs-root-dir "/scripts/install_packages.py")))
+    (unless python-exec
+      (error "Python executable not found in PATH"))
+    (unless (file-exists-p python-script)
+      (error "Python script not found: %s" python-script))
+    (shell-command (format "%s %s" python-exec python-script))))
+#+end_src
+
 ** Ends
 #+begin_src emacs-lisp
 (provide 'init-function)

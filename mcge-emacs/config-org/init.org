@@ -59,6 +59,22 @@
 (require 'init-function)
 #+END_SRC
 
+** Python Install Packages
+
+#+begin_src emacs-lisp
+;; Add the function to the startup hook
+(add-hook 'emacs-startup-hook 'install-python-packages)
+#+end_src
+
+** Flask Start
+
+#+begin_src emacs-lisp :tangle no
+;; 在 Emacs 启动后异步执行 Python 脚本
+(add-hook 'emacs-startup-hook
+          (lambda ()
+            (run-python-script-asynchronously (concat mcgemacs-root-dir "/scripts/segment.py"))))
+#+end_src
+
 ** Ends
 #+BEGIN_SRC emacs-lisp
 (provide 'init)

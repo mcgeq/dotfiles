@@ -52,6 +52,8 @@
   (require 'init-quickrun)
   ;; markdown
   (require 'init-markdown)
+  ;; jieba
+  (require 'init-jieba)
  )
 #+END_SRC
 
