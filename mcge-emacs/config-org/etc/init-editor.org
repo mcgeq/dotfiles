@@ -18,7 +18,7 @@
 (require 'beacon)
 (require 'htmlize)
 (require 'display-line-numbers)
-
+(require 'init-auto-space)
 ;;; Code:
   #+end_src
 
@@ -79,6 +79,11 @@
 (add-hook 'prog-mode-hook     'hs-minor-mode)   ;代码折叠
 ;; line number align right
 (setq display-line-numbers-width-start t)
+#+end_src
+
+** 中英文空格
+#+begin_src emacs-lisp
+(auto-space-mode t)
 #+end_src
 
 ** Ends
