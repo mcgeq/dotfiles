@@ -45,6 +45,15 @@
 (global-set-key (kbd "C-x C-b") 'init-ibuffer-ibuffer)
 #+end_src
 
+** Custom C-a
+
+#+begin_src emacs-lisp
+;; C-a
+;; 将新函数绑定到 Ctrl+A
+(global-set-key (kbd "C-a") 'mcge-smart-move-beginning-of-line)
+
+#+end_src
+
 ** 插入新行
 #+begin_src emacs-lisp
 ;; insert newline

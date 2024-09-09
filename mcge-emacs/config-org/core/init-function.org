@@ -113,6 +113,19 @@
   (mcge/update-last-modified-by))
 #+end_src
 
+
+** Custom C-a
+
+#+begin_src emacs-lisp
+(defun mcge-smart-move-beginning-of-line ()
+  "Move point to the first non-whitespace character, or to the beginning of the line."
+  (interactive)  ;; This makes the function callable as a command
+  (let ((current-point (point)))
+    (back-to-indentation)  ;; Move to the first non-whitespace character
+    (when (eq current-point (point))  ;; If point was already there, move to beginning of line
+      (move-beginning-of-line 1))))
+#+end_src
+
 ** Ends
 #+begin_src emacs-lisp
 (provide 'init-function)
