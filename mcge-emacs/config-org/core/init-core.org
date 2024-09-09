@@ -55,15 +55,6 @@
  )
 #+END_SRC
 
-** Load function part file
-#+BEGIN_SRC emacs-lisp
-(defun load-function-part-file()
-  "Load function part file.  `run-with-idle-timer' 2."
-  ;; Self function
-  (require 'init-function)
-)
-#+END_SRC
-
 ** Load other part file
 #+BEGIN_SRC emacs-lisp
 (defun load-other-part-file()
@@ -111,7 +102,6 @@
 ** Run with idle timer
 #+BEGIN_SRC emacs-lisp
 (run-with-idle-timer 2 nil #'load-language-part-file)
-(run-with-idle-timer 2 nil #'load-function-part-file)
 (run-with-idle-timer 3 nil #'load-other-part-file)
 #+END_SRC
 

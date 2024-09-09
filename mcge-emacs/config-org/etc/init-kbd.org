@@ -14,7 +14,6 @@
 ** Require
 #+begin_src emacs-lisp
 ;;; Require:
-(require 'init-function)
 (require 'init-const)
 (require 'vertico)
 (require 'consult)

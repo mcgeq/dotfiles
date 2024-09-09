@@ -56,6 +56,7 @@
 #+BEGIN_SRC emacs-lisp
 (require 'init-generic)
 (require 'init-core)
+(require 'init-function)
 #+END_SRC
 
 ** Ends
