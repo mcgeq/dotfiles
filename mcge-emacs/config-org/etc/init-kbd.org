@@ -322,6 +322,11 @@
   (define-key map (kbd "C-c C-;") 'eval-to-comment))
 #+end_src
 
+
+** yasnippets
+#+begin_src emacs-lisp
+(global-set-key (kbd "C-c C-n") 'yas-new-snippet)
+#+end_src
 ** Ends
 #+begin_src emacs-lisp
 (provide 'init-kbd)
