@@ -17,21 +17,156 @@
 (require 'dired)
 (require 'diredfl)
 (require 'dirvish)
-(require 'dirvish-side)
 (require 'dirvish-emerge)
-(require 'dirvish-ls)
-(require 'dirvish-collapse)
 (require 'dirvish-history)
-(require 'dirvish-quick-access)
+(require 'dirvish-ls)
 (require 'dirvish-narrow)
-;(require 'dirvish-file-info-menu)
-(unless *is-win32p* 
-  (require 'dirvish-fd))
+(require 'dirvish-extras)
+(require 'dirvish-peek)
+(require 'dirvish-yank)
+(require 'dirvish-vc)
+(require 'dirvish-side)
+(require 'dirvish-subtree)
+(require 'dirvish-icons)
+(require 'dirvish-fd)
+(require 'dirvish-quick-access)
 ;;; Code:
   #+end_src
 
 ** Code
+
+*** Dired
+
 #+begin_src emacs-lisp
+;; 启用被禁用的 dired 命令
+(put 'dired-find-alternate-file 'disabled nil)
+
+;; 自定义 dired 配置
+(setq delete-by-moving-to-trash t
+      dired-dwim-target t
+      dired-bind-vm nil
+      dired-bind-man nil
+      dired-bind-info nil
+      dired-auto-revert-buffer t
+      dired-hide-details-hide-symlink-targets nil
+      dired-kill-when-opening-new-dired-buffer t
+      dired-listing-switches "-AFhlv"
+      dired-recursive-copies 'always
+      dired-isearch-filenames 'dwim
+      dired-create-destination-dirs 'ask
+      dired-vc-rename-file t
+      dired-omit-verbose nil
+      dired-omit-files (rx string-start
+                           (or ".DS_Store" ".cache" ".vscode" ".ccls-cache" ".clangd")
+                           string-end)
+      dired-clean-confirm-killing-deleted-buffers nil)
+
+
+;; 自定义 dired-guess-shell-alist-user
+(setq dired-guess-shell-alist-user
+      `((,(rx "." (or "mp4" "avi" "mkv" "flv" "ogv" "ogg" "mov" "wav" "mp3" "flac" "jpg" "jpeg" "png" "gif" "xpm" "svg" "bmp" "pdf" "md" "djvu" "ps" "eps" "doc" "docx" "xls" "xlsx" "ppt" "pptx") string-end)
+         ,(cond ((eq system-type 'gnu/linux) "xdg-open")
+                ((eq system-type 'darwin) "open")
+                ((eq system-type 'windows-nt) "start")
+                (t "")))))
+
+#+end_src
+
+*** Keymap
+
+#+begin_src emacs-lisp
+;; 绑定快捷键
+(define-key dired-mode-map (kbd "C-<return>") 'xah-open-in-external-app)
+(define-key dired-mode-map (kbd "W") 'dired-copy-path)
+(define-key dired-mode-map (kbd "C-c +") 'dired-create-empty-file)
+(with-eval-after-load 'dired
+  (define-key dired-mode-map [remap dired-sort-toggle-or-edit] 'dirvish-quicksort)
+  (define-key dired-mode-map [remap dired-do-redisplay] 'dirvish-ls-switches-menu)
+  (define-key dired-mode-map [remap dired-summary] 'dirvish-dispatch)
+  (define-key dired-mode-map [remap dired-do-copy] 'dirvish-yank-menu)
+  (define-key dired-mode-map [remap mode-line-other-buffer] 'dirvish-other-buffer))
+#+end_src
+
+*** Customize the function for opening the file
+
+#+begin_src emacs-lisp
+;; 自定义打开文件的函数
+(defun xdg-open (filename)
+  (interactive "fFilename: ")
+  (let ((process-connection-type))
+    (start-process "" nil (cond ((eq system-type 'gnu/linux) "xdg-open")
+                                ((eq system-type 'darwin) "open")
+                                ((eq system-type 'windows-nt) "start")
+                                (t "")) (expand-file-name filename))))
+
+(defun find-file-auto (orig-fun &rest args)
+  (let ((filename (car args)))
+    (if (cl-find-if
+         (lambda (regexp) (string-match regexp filename))
+         '("\\.xlsx?\\'" "\\.pptx?\\'" "\\.docx?\\'" "\\.mp4\\'" "\\.app\\'"))
+        (xdg-open filename)
+      (apply orig-fun args))))
+
+(advice-add 'find-file :around 'find-file-auto)
+
+(defun dired-copy-path ()
+  "在 dired 中复制文件路径到 kill-buffer。第二次复制当前目录路径到 kill-buffer。"
+  (interactive)
+  (let (path)
+    (setq path (dired-file-name-at-point))
+    (if (string= path (current-kill 0 1)) (setq path (dired-current-directory)))
+    (message path)
+    (kill-new path)))
+
+(defun xah-open-in-external-app (&optional @fname)
+  "在外部应用程序中打开当前文件或 dired 标记的文件。"
+  (interactive)
+  (let* ((file-list
+          (if @fname
+              (list @fname)
+            (if (or (string-equal major-mode "dired-mode")
+                    (string-equal major-mode "dirvish-mode"))
+                (dired-get-marked-files)
+              (list (buffer-file-name)))))
+         (do-it-p (if (<= (length file-list) 5)
+                      t
+                    (y-or-n-p "打开超过 5 个文件？ "))))
+    (when do-it-p
+      (cond
+       ((string-equal system-type "windows-nt")
+        (mapc
+         (lambda (fpath)
+           (w32-shell-execute "open" fpath)) file-list))
+       ((string-equal system-type "darwin")
+        (mapc
+         (lambda (fpath)
+           (shell-command
+            (concat "open " (shell-quote-argument fpath)))) file-list))
+       ((string-equal system-type "gnu/linux")
+        (mapc
+         (lambda (fpath) (let ((process-connection-type nil))
+                           (start-process "" nil "xdg-open" fpath))) file-list))))))
+
+;; 自定义 dired-do-print 函数
+(defun dired-do-print (&optional _)
+  "显示/隐藏 dotfiles。"
+  (interactive)
+  (if (or (not (boundp 'dired-dotfiles-show-p)) dired-dotfiles-show-p)
+      (progn
+        (setq-local dired-dotfiles-show-p nil)
+        (dired-mark-files-regexp "^\\.")
+        (dired-do-kill-lines))
+    (revert-buffer)
+    (setq-local dired-dotfiles-show-p t)))
+#+end_src
+
+** Dirvish
+#+begin_src emacs-lisp
+;; 启用 dired-omit-mode
+(add-hook 'dired-mode-hook 'dired-omit-mode)
+;; 在 dired-mode 启动时启用 diredfl-mode
+(add-hook 'dired-mode-hook 'diredfl-mode)
+;; 设置 dirvish
 (add-hook 'dired-mode-hook #'diredfl-mode)
 (add-hook 'dirvish-directory-view-mode #'diredfl-mode)
 (set-face-attribute 'diredfl-dir-name nil :bold t)
@@ -40,16 +175,7 @@
 (dirvish-override-dired-mode)
 (dirvish-side-follow-mode)
 (setq delete-by-moving-to-trash t)
-#+end_src
 
-** Dired
-#+begin_src emacs-lisp
-;; Dired
-(setq dired-dwim-target t)
-(setq dired-listing-switches "-l --almost-all --human-readable --no-group"
-      dired-auto-revert-buffer t)
-(setq dired-recursive-copies 'always)
-(setq dired-kill-when-opening-new-dired-buffer t)
 #+end_src
 
 ** Current directory
@@ -84,26 +210,52 @@
 
 ** Settings
 #+begin_src emacs-lisp
-(setq dirvish-mode-line-format '(:left (sort file-time " " file-size symlink) :right (omit yank index)))
+(defun my-dirvish-setup ()
+  "Configure dirvish."
+  (dirvish-peek-mode)
+  (setq dirvish-hide-details t)
+  
+  ;; 设置打开特定文件类型的程序
+  (add-to-list 'mailcap-mime-extensions '(".mp4" . "video/mp4"))
+  (add-to-list 'dirvish-open-with-programs '(
+                                              (("html") . ("open" "%f"))
+                                              (("xlsx") . ("open" "%f"))
+                                              (("pptx") . ("open" "%f"))
+                                              (("docx") . ("open" "%f"))
+                                              (("md") . ("open" "%f"))
+                                              )))
+;; 自定义 dirvish 菜单书签
+(setq dirvish-menu-bookmarks
+      '(("h" "~/" "Home")
+        ("d" "~/Downloads/" "Downloads")
+        ("e" mcgemacs-custom-dir "Emacs")
+        ("o" "~/org/" "org")
+        ("i" "~/iCloud/" "iCloud")))
+
+;; 自定义 mode-line 格式
+(setq dirvish-mode-line-format
+      '(:left
+        (sort file-time " " file-size symlink)
+        :right
+        (omit yank index)))
+
 ;(setq dirvish-header-line-height '(25 . 35))
 ;(setq dirvish-side-width 38)
-(setq dirvish-header-line-format '(:left (path) :right (free-space)))
-
-;; pdf 预览使用 pdf-preface
-(setq dirvish-preview-dispatchers
-      (cl-substitute 'pdf-preface 'pdf dirvish-preview-dispatchers))
-
-;; 使用 exa 进行预览
-(dirvish-define-preview exa (file)
-  "Use `exa' to generate directory preview."
-  :require ("exa")
-  (when (file-directory-p file)
-    `(shell . ("exa" "-al" "--color=always" "--icons"
-               "--group-directories-first" ,file))))
-(add-to-list 'dirvish-preview-dispatchers 'exa)
+(setq dirvish-header-line-format
+      '(:left
+        (path)
+        :right
+        (free-space)))
 
 ;; dirvish-side 模式下关闭行号显示
 (add-hook 'dirvish-side-follow-mode-hook (lambda () (display-line-numbers-mode -1)))
+;; 在 Emacs 启动后设置 dirvish
+(add-hook 'after-init-hook 'my-dirvish-setup)
+#+end_src
+
+** Custom Transient
+
+#+begin_src emacs-lisp
 
 ;; 快捷菜单
 (transient-define-prefix dirvish-dispatch ()
@@ -120,10 +272,13 @@
    ("f" "Setup fd-find switches"     dirvish-fd-switches-menu
     :if (lambda () (dirvish-prop :fd-arglist)))
    ("m" "Manage marks"               dirvish-mark-menu)
-   ("e" "Manage emerged groups"      dirvish-emerge-menu)
    ("r" "Rename files"               dirvish-renaming-menu)
+   ("v" "Version control system"     dirvish-vc-menu)
+   ("y" "Yank marked files"          dirvish-yank-menu)
+   ("e" "Manage emerged groups"      dirvish-emerge-menu)
    ("i" "Get file information"       dirvish-file-info-menu)
    "" "Actions | Essential commands"
+   ("@" "Find all dirs by fd"        dirvish-fd-jump)
    ("n" "Live narrowing"             dirvish-narrow)
    ("u" "User interface setup"       dirvish-setup-menu)
    ("c" "Dired cheatsheet"           dirvish-dired-cheatsheet)])
