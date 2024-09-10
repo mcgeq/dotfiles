@@ -63,16 +63,18 @@
 
 #+begin_src emacs-lisp
 ;; Add the function to the startup hook
-(add-hook 'emacs-startup-hook 'install-python-packages)
+(add-hook 'emacs-startup-hook
+          (lambda ()
+            (install-python-packages)))
 #+end_src
 
 ** Flask Start
 
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp
 ;; 在 Emacs 启动后异步执行 Python 脚本
-(add-hook 'emacs-startup-hook
-          (lambda ()
-            (run-python-script-asynchronously (concat mcgemacs-root-dir "/scripts/segment.py"))))
+;;(add-hook 'emacs-startup-hook
+;;          (lambda ()
+;;            (run-python-script-asynchronously (concat mcgemacs-root-dir "/scripts/segment.py"))))
 #+end_src
 
 ** Ends

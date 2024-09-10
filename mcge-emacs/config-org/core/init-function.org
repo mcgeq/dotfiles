@@ -89,7 +89,8 @@
 (defun mcge/update-last-modified-time ()
   "Update the `Last Modified' timestamp in the current buffer."
   (interactive)
-  (when (buffer-file-name)
+  (when (and (buffer-file-name)
+             (not (string-match-p "init-function" (buffer-name))))
     (save-excursion
       (goto-char (point-min))
       (when (re-search-forward "Last Modified:.*$" nil t)
@@ -99,7 +100,8 @@
 (defun mcge/update-last-modified-by ()
   "Update the `Modified By' in the current buffer."
   (interactive)
-  (when (buffer-file-name)
+  (when (and (buffer-file-name)
+             (not (string-match-p "init-function" (buffer-name))))
     (save-excursion
       (goto-char (point-min))
       (when (re-search-forward "Modified   By:.*$" nil t)
@@ -127,7 +129,38 @@
 #+end_src
 
 ** Python install packages
+
 #+begin_src emacs-lisp
+(defun install-python-packages ()
+  "Run a Python script to install Flask and Jieba if not already installed."
+  (interactive)
+  (let* ((python-exec (or (executable-find "python") (executable-find "python3")))
+         (python-script (concat mcgemacs-root-dir "/scripts/install_packages.py"))
+         (output-buffer "*Python Install Output*"))
+    (unless python-exec
+      (error "Python executable not found in PATH"))
+    (unless (file-exists-p python-script)
+      (error "Python script not found: %s" python-script))
+    ;; Run the Python script asynchronously and capture only errors
+    (with-current-buffer (get-buffer-create output-buffer)
+      (erase-buffer))  ;; Clear any previous output
+    (set-process-sentinel
+     (start-process "install-python-packages" output-buffer python-exec python-script)
+     (lambda (process event)
+       (if (and (string= event "finished\n")
+                (= (process-exit-status process) 0))
+           (progn
+             ;; If the process finished successfully, hide the output buffer
+             (kill-buffer output-buffer)
+             ;; Run the next Python script asynchronously
+             (run-python-script-asynchronously (concat mcgemacs-root-dir "/scripts/segment.py")))
+         ;; If there's an error, display the output buffer
+         (progn
+           (message "Error occurred during package installation. See %s for details." output-buffer)
+           (pop-to-buffer output-buffer)))))))
+#+end_src
+
+#+begin_src emacs-lisp :tangle no
 (defun install-python-packages ()
   "Run a Python script to install Flask and Jieba if not already installed."
   (interactive)
@@ -156,18 +189,35 @@
 
 ** Flask jieba Server
 
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp
 (defun run-python-script-asynchronously (script-path)
-  "Run the Python script SCRIPT-PATH asynchronously."
-  (let ((command (format "python %s" (shell-quote-argument script-path))))
-    (async-shell-command command "*Python Script Output*")))
+  "Run the Python script SCRIPT-PATH asynchronously in the background."
+  (make-process
+   :name "chinese-participle-process"
+   :command (list "python" (expand-file-name script-path))
+   :noquery t
+   :buffer "*chinese-participle*"
+   :stderr "*chinese-participle*")
+  ;; 控制输出缓冲区的行为，使其不自动弹出
+  (with-current-buffer "*chinese-participle*"
+    (let ((display-buffer-alist
+           '(("\\*chinese-participle\\*"
+              (display-buffer-no-window)))))
+      (bury-buffer))))
 #+end_src
 
 #+begin_src emacs-lisp :tangle no
 (defun run-python-script-asynchronously (script-path)
   "Run the Python script SCRIPT-PATH asynchronously."
   (let ((command (format "python %s" (shell-quote-argument script-path))))
-    (async-shell-command command "*Python Script Output*")))
+    (async-shell-command command "*chinese-participle*")))
+#+end_src
+
+#+begin_src emacs-lisp :tangle no
+(defun run-python-script-asynchronously (script-path)
+  "Run the Python script SCRIPT-PATH asynchronously."
+  (let ((command (format "python %s" (shell-quote-argument script-path))))
+    (async-shell-command command "*chinese-participle*")))
 #+end_src
 
 #+begin_src emacs-lisp :tangle no

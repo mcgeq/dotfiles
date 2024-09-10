@@ -23,7 +23,7 @@
 (defun call-jieba-segment (text)
   "调用 RESTful API 使用 jieba 分词 TEXT。"
   (let ((response (request
-                    "http://127.0.0.1:94281/segment"
+                    "http://127.0.0.1:20193/segment"
                     :type "POST"
                     :data (json-encode `(("text" . ,text)))
                     :headers '(("Content-Type" . "application/json"))

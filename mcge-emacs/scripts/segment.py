@@ -7,7 +7,7 @@
 # File:           segment.py
 # Description:    分词
 # Create   Date:  2024-09-09 23:40:43
-# Last Modified:  2024-09-09 23:42:35
+# Last Modified:  2024-09-10 21:00:10
 # Modified   By:  mcge <mcgeq@outlook.com>
 
 from flask import Flask, request, jsonify
@@ -27,4 +27,4 @@ def segment_text():
     return jsonify(words)
 
 if __name__ == '__main__':
-    app.run(host='127.0.0.1', port=94281)
+    app.run(host='127.0.0.1', port=20193)
