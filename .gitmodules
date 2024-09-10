@@ -226,3 +226,6 @@
 [submodule "emacs-request"]
 	path = mcge-emacs/site-lisp/extensions/emacs-request
 	url = git@github.com:tkf/emacs-request.git
+[submodule "emacs-blink-search"]
+	path = mcge-emacs/site-lisp/extensions/blink-search
+	url = git@github.com:manateelazycat/blink-search.git

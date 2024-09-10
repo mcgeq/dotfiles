@@ -59,46 +59,48 @@
 
 ** Load other part file
 #+BEGIN_SRC emacs-lisp
-(defun load-other-part-file()
-  "Load other part file.  `run-with-idle-timer' 3."
-  (require 'init-color-rg)
-  (if (version< emacs-version "31")
-  ;; pangu-spacing
-  (require 'init-pangu-spacing))
-  ;; magit
-  ;(require 'init-vc)
-  (require 'init-diff-hl)
-  (require 'init-magit)
-  (require 'init-rainbow-delimiters)
-  ;; emacs-rime
-  (require 'init-rime)
-  ;; newcomment
-  (require 'init-newcomment)
-  ;; valign
-  (require 'init-valign)
-  ;; cal-china-x
-  (require 'init-cal-china-x)
-  ;; calendar
-  (require 'init-calendar)
-  ;; org
-  (require 'init-org)
-  ;; org-src
-  (require 'init-org-src)
-  ;; org-appear
-  (require 'init-org-appear)
-  ;; org-download
-  (require 'init-org-download)
-  ;; org-agenda
-  (require 'init-org-agenda)
-  ;; org-capture
-  (require 'init-org-capture)
-  ;; ox-hugo
-  (require 'init-ox-hugo)
-  ;; tabspaces
-  (require 'init-tabspaces)
-  ;; aweshell
-  (require 'init-aweshell)
-)
+  (defun load-other-part-file()
+    "Load other part file.  `run-with-idle-timer' 3."
+    (require 'init-color-rg)
+    (if (version< emacs-version "31")
+    ;; pangu-spacing
+    (require 'init-pangu-spacing))
+    ;; magit
+    ;(require 'init-vc)
+    (require 'init-diff-hl)
+    (require 'init-magit)
+    (require 'init-rainbow-delimiters)
+    ;; emacs-rime
+    (require 'init-rime)
+    ;; newcomment
+    (require 'init-newcomment)
+    ;; valign
+    (require 'init-valign)
+    ;; cal-china-x
+    (require 'init-cal-china-x)
+    ;; calendar
+    (require 'init-calendar)
+    ;; org
+    (require 'init-org)
+    ;; org-src
+    (require 'init-org-src)
+    ;; org-appear
+    (require 'init-org-appear)
+    ;; org-download
+    (require 'init-org-download)
+    ;; org-agenda
+    (require 'init-org-agenda)
+    ;; org-capture
+    (require 'init-org-capture)
+    ;; ox-hugo
+    (require 'init-ox-hugo)
+    ;; tabspaces
+    (require 'init-tabspaces)
+    ;; aweshell
+    (require 'init-aweshell)
+    ;; blink-search
+    (require 'init-blink-search)
+  )
 #+END_SRC
 
 ** Run with idle timer
