@@ -229,3 +229,6 @@
 [submodule "emacs-blink-search"]
 	path = mcge-emacs/site-lisp/extensions/blink-search
 	url = git@github.com:manateelazycat/blink-search.git
+[submodule "emacs-emsg-blame"]
+	path = mcge-emacs/site-lisp/extensions/emsg-blame
+	url = git@github.com:ISouthRain/emsg-blame.git

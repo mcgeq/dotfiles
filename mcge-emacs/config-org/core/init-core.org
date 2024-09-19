@@ -100,6 +100,8 @@
     (require 'init-aweshell)
     ;; blink-search
     (require 'init-blink-search)
+    ;; emsg-blame
+    (require 'init-emsg-blame)
   )
 #+END_SRC
 
