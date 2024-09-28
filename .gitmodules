@@ -232,3 +232,6 @@
 [submodule "emacs-emsg-blame"]
 	path = mcge-emacs/site-lisp/extensions/emsg-blame
 	url = git@github.com:ISouthRain/emsg-blame.git
+[submodule "emacs-posframe"]
+	path = mcge-emacs/site-lisp/extensions/posframe
+	url = git@github.com:tumashu/posframe.git
