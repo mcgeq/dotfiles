@@ -34,7 +34,9 @@
 (global-set-key (kbd "s-q") nil)
 (global-set-key (kbd "M-m") nil)
 ;; replace-string
-(global-set-key (kbd "C-c r") 'replace-string)  
+(global-set-key (kbd "C-c r") 'replace-string)
+;; make-directory
+(global-set-key (kbd "C-c d") 'make-directory)
 #+end_src
 
 ** 打开默认配置文件
