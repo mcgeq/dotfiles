@@ -36,6 +36,9 @@
 #+end_src
 
 #+begin_src emacs-lisp
+(setq emsg-blame-background t)
+(global-emsg-blame-mode)
+
 (defun mcge--emsg-blame-display ()
   (posframe-show "*emgs-blame-posframe*"
                  :string (format " 🔑 %s\n 👤 %s\n 🕒 %s\n 🗨 %s"
@@ -44,13 +47,13 @@
                                  emsg-blame--commit-date
                                  emsg-blame--commit-summary)
                  :timeout 5
-                 :max-width 30
+                 :max-width 40
                  :left-fringe 5
                  :right-fringe 5
                  :position (point)
                  :poshandler #'posframe-poshandler-frame-top-right-corner
                  :border-width 2;; 外边框大小
-                 :border-color "#ed98cc" ;; 边框颜色
+                 :border-color "#838383" ;; 边框颜色
                  )
   )
 (setq emsg-blame-display #'mcge--emsg-blame-display)
