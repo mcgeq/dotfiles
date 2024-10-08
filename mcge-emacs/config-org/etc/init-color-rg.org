@@ -15,7 +15,6 @@
 #+begin_src emacs-lisp
 ;;; Require:
 (require 'color-rg)
-(require 'init-const)
 
 ;;; Code:
   #+end_src

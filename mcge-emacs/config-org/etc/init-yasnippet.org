@@ -16,7 +16,6 @@
 ;;; Require:
 (require 'yasnippet)
 (require 'yasnippet-snippets)
-(require 'init-const)
 
 ;;; Code:
 

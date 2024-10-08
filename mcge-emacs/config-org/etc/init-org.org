@@ -15,7 +15,6 @@
 #+begin_src emacs-lisp
 ;;; Require:
 (require 'org)
-(require 'init-const)
 (require 'org-num)
 #+end_src
 

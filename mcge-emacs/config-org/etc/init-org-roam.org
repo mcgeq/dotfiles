@@ -15,7 +15,6 @@
 #+begin_src emacs-lisp
 ;;; Require:
 (require 'org-roam)
-(require 'init-const)
 
 ;;; Code:
 

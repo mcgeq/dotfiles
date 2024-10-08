@@ -17,7 +17,6 @@
 (require 'ox)
 (require 'ox-hugo)
 (require 'org-capture)
-(require 'init-const)
 
 ;;; Code:
 

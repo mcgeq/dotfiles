@@ -14,8 +14,7 @@
 ** Require
 #+begin_src emacs-lisp
 ;;; Require:
-  (require 'cl-lib)
-  (require 'init-const)
+(require 'cl-lib)
 
 ;;; Code:
   #+end_src
