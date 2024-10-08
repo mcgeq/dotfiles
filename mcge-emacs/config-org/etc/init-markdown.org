@@ -15,7 +15,7 @@
 #+begin_src emacs-lisp
 ;;; Require:
 (require 'markdown-mode)
-(require 'eglot)
+;;(require 'eglot)
 
 ;;; Code:
 
@@ -23,8 +23,8 @@
 
 ** Code
 #+begin_src emacs-lisp
-(add-to-list 'eglot-server-programs '(markdown-mode . ("marksman")))
-(add-hook 'markdown-mode-hook #'eglot-ensure)
+;;(add-to-list 'eglot-server-programs '(markdown-mode . ("marksman")))
+;;(add-hook 'markdown-mode-hook #'eglot-ensure)
 
 #+end_src
 
