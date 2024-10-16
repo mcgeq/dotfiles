@@ -235,3 +235,6 @@
 [submodule "emacs-posframe"]
 	path = mcge-emacs/site-lisp/extensions/posframe
 	url = git@github.com:tumashu/posframe.git
+[submodule "emacs-corfu"]
+	path = mcge-emacs/site-lisp/extensions/corfu
+	url = git@github.com:minad/corfu.git

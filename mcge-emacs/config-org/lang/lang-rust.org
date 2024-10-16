@@ -35,33 +35,89 @@
             (derived-mode-p 'rust-ts-mode))
     ;; 确保加载 eglot
     (require 'eglot)
-    (eglot-ensure)
+    (eglot-ensure) ;; 确保 eglot 被启用
     (add-to-list 'eglot-server-programs `(rust-mode . ("rust-analyzer"
-                                                       :initializationOptions (:cargo (:features "all")))))))  ;; 确保 eglot 被启用
+                                                       :initializationOptions (:cargo (:features "all")))))
+    ))  
 
+(defun setup-eglot-for-rust-with-corfu ()
+  "Start Eglot if the current major mode is rust-mode or rust-ts-mode with corfu completion."
+  (require 'corfu)
+  (require 'nerd-icons-corfu)
+  
+  (add-hook 'rust-mode-hook 'corfu-mode)
+  (add-hook 'rust-ts-mode-hook 'corfu-mode)
+    
+  (setq-local corfu-cycle t)
+  (setq-local tab-always-indent 'complete)
+  (setq-local completion-cycle-threshold nil)
+  (setq corfu-auto t)
+  (setq-local corfu-auto-prefix 1)
+  (setq-local corfu-auto-delay 0.2)
+  (setq-local corfu-min-width 80)
+  (setq-local corfu-max-width corfu-min-width)
+  (setq-local corfu-count 14)
+  (setq-local corfu-scroll-margin 4)
+  (setq-local corfu-quit-at-boundary nil)
+  (setq-local corfu-separator ?\s)
+  (setq-local corfu-quit-no-match 'separator)
+  (setq-local corfu-preview-current 'insert)
+  (setq-local corfu-preselect-first t)
+  (setq-local corfu-echo-documentation nil)
+
+  ;; local key
+  (define-key corfu-map (kbd "M-n")  #'corfu-next)
+  (define-key corfu-map (kbd "M-p") #'corfu-previous)
+  (define-key corfu-map (kbd "<escape>") #'corfu-quit)
+  (define-key corfu-map (kbd "<return>") #'corfu-insert)
+  (define-key corfu-map (kbd "H-SPC") #'corfu-insert-separator)
+  (define-key corfu-map (kbd "C-g") #'corfu-quit)
+
+  (with-eval-after-load 'corfu
+    ;; 添加图标格式化器
+    (add-to-list 'corfu-margin-formatters #'nerd-icons-corfu-formatter)
+
+    ;; Optionally: 设置 Nerd Icons 的映射
+    (setq nerd-icons-corfu-mapping
+          '((array :style "cod" :icon "symbol_array" :face font-lock-type-face)
+            (boolean :style "cod" :icon "symbol_boolean" :face font-lock-builtin-face)
+            ;; 其他类型的映射
+            (t :style "cod" :icon "code" :face font-lock-warning-face)))
+    ;; 可以通过 Custom 界面进一步调整这些设置
+    )
+  )
 
 ;; 定义在 rust-mode 或 rust-ts-mode 下的快捷键
 (defun mcge-rust-mode-keybindings ()
   (local-set-key (kbd "M-g d f")  'xref-find-definitions)
   (local-set-key (kbd "M-g d o")  'xref-find-definitions-other-window)
+  ;;(local-set-key (kbd "M-g d c")  #'corfu-info-documentation)
   (local-set-key (kbd "M-g d c")  'eldoc)
   ;;(local-set-key (kbd "M-g D")    'xref-find-references)
   (local-set-key (kbd "M-g l c")  'eglot-find-implementation)
+  ;;(local-set-key (kbd "M-g l l")  #'corfu-popupinfo-location)
   ;;(local-set-key (kbd "M-g l o")  'lsp-bridge-find-impl-other-window)
   (local-set-key (kbd "M-g r")    'xref-find-references)
   (local-set-key (kbd "M-g n")    'eglot-rename)
   ;;(local-set-key (kbd "M-g j n")  'lsp-bridge-diagnostic-jump-next)
   ;;(local-set-key (kbd "M-g j p")  'lsp-bridge-diagnostic-jump-prev)
-  ;;(local-set-key (kbd "M-g <up>") 'lsp-bridge-popup-documentation-scroll-up)
-  ;;(local-set-key (kbd "M-g <down>") 'lsp-bridge-popup-documentation-scroll-down)
+  ;;(local-set-key (kbd "M-g <up>")   #'corfu-popupinfo-scroll-up)
+  ;;(local-set-key (kbd "M-g <down>") #'corfu-popupinfo-scroll-down)
   )
 
-;; 在 rust-mode 和 rust-ts-mode 中添加 hook
-(add-hook 'rust-mode-hook 'setup-eglot-for-rust)
-(add-hook 'rust-ts-mode-hook 'setup-eglot-for-rust)
-;; 在 rust-mode 和 rust-ts-mode 激活时调用上述函数
-(add-hook 'rust-mode-hook 'mcge-rust-mode-keybindings)
-(add-hook 'rust-ts-mode-hook 'mcge-rust-mode-keybindings)
+;; 定义一个函数来设置 rust-mode 和 rust-ts-mode 的钩子
+(defun mcge-rust-mode-setup ()
+  "Setup hooks and keybindings for Rust modes."
+  (setup-eglot-for-rust)                  ;; 设置 Eglot
+  (mcge-rust-mode-keybindings)            ;; 设置自定义键绑定
+  (setup-eglot-for-rust-with-corfu)      ;; 设置 Corfu
+  )
+
+
+;; 在 rust-mode 和 rust-ts-mode 中添加钩子
+(add-hook 'rust-mode-hook 'mcge-rust-mode-setup)
+(add-hook 'rust-ts-mode-hook 'mcge-rust-mode-setup)
+
 #+end_src
 
 ** Ends
