@@ -40,7 +40,7 @@
 (setq acm-enable-tabnine nil)
 (setq acm-candidate-match-function 'orderless-flex)
 
-(global-lsp-bridge-mode)
+;;(global-lsp-bridge-mode)
 
 
 (setq lsp-bridge-get-multi-lang-server-by-project
@@ -70,6 +70,23 @@
 (add-hook 'prog-mode-hook
           (lambda ()
             (add-hook 'before-save-hook 'mcge/update-file-headers nil t)))
+#+end_src
+
+
+** Rust with eglot
+
+#+begin_src emacs-lisp
+;; rust 使用 eglot
+(defun enable-lsp-bridge-if-not-rust ()
+  "Enable lsp-bridge-mode if the current major mode is not rust-ts-mode or rust-mode."
+  (unless (or (derived-mode-p 'rust-mode)
+              (derived-mode-p 'rust-ts-mode))
+    (lsp-bridge-mode 1)))  ;; 启用 lsp-bridge-mode
+
+;; 将该函数添加到 after-change-major-mode-hook
+(add-hook 'after-change-major-mode-hook 'enable-lsp-bridge-if-not-rust)
+
+
 #+end_src
 
 ** End

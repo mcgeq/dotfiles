@@ -23,6 +23,47 @@
 (add-to-list 'auto-mode-alist '("\\.rs\\'" .  rust-ts-mode))
 #+end_src
 
+
+
+** Rust with Eglot
+
+#+begin_src emacs-lisp
+
+(defun setup-eglot-for-rust ()
+  "Start Eglot if the current major mode is rust-mode or rust-ts-mode."
+  (when (or (derived-mode-p 'rust-mode)
+            (derived-mode-p 'rust-ts-mode))
+    ;; 确保加载 eglot
+    (require 'eglot)
+    (eglot-ensure)
+    (add-to-list 'eglot-server-programs `(rust-mode . ("rust-analyzer"
+                                                       :initializationOptions (:cargo (:features "all")))))))  ;; 确保 eglot 被启用
+
+
+;; 定义在 rust-mode 或 rust-ts-mode 下的快捷键
+(defun mcge-rust-mode-keybindings ()
+  (local-set-key (kbd "M-g d f")  'xref-find-definitions)
+  (local-set-key (kbd "M-g d o")  'xref-find-definitions-other-window)
+  (local-set-key (kbd "M-g d c")  'eldoc)
+  ;;(local-set-key (kbd "M-g D")    'xref-find-references)
+  (local-set-key (kbd "M-g l c")  'eglot-find-implementation)
+  ;;(local-set-key (kbd "M-g l o")  'lsp-bridge-find-impl-other-window)
+  (local-set-key (kbd "M-g r")    'xref-find-references)
+  (local-set-key (kbd "M-g n")    'eglot-rename)
+  ;;(local-set-key (kbd "M-g j n")  'lsp-bridge-diagnostic-jump-next)
+  ;;(local-set-key (kbd "M-g j p")  'lsp-bridge-diagnostic-jump-prev)
+  ;;(local-set-key (kbd "M-g <up>") 'lsp-bridge-popup-documentation-scroll-up)
+  ;;(local-set-key (kbd "M-g <down>") 'lsp-bridge-popup-documentation-scroll-down)
+  )
+
+;; 在 rust-mode 和 rust-ts-mode 中添加 hook
+(add-hook 'rust-mode-hook 'setup-eglot-for-rust)
+(add-hook 'rust-ts-mode-hook 'setup-eglot-for-rust)
+;; 在 rust-mode 和 rust-ts-mode 激活时调用上述函数
+(add-hook 'rust-mode-hook 'mcge-rust-mode-keybindings)
+(add-hook 'rust-ts-mode-hook 'mcge-rust-mode-keybindings)
+#+end_src
+
 ** Ends
 #+begin_src emacs-lisp
 (provide 'lang-rust)
