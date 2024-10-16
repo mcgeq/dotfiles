@@ -35,8 +35,8 @@ gitmoji_angular_regex="^(feat|fix|docs|style|refactor|perf|test|workflow|build|c
 if [[ ! $commit_msg =~ $gitmoji_angular_regex ]]; then
     echo $commit_msg
     echo "Invalid commit message! Please follow the Angular commit message convention:"
-    echo "<emoji> <type>(<scope>): <message>"
-    echo "E.g: :sparkles: feat(code): Add new plugin"
+    echo "<type>(<scope>): <emoji> <message>"
+    echo "E.g: feat(code): :sparkles: Add new plugin"
     echo "Refer to the Angular commit message guidelines for more details."
     exit 1
 fi
