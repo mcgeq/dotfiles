@@ -238,3 +238,12 @@
 [submodule "emacs-corfu"]
 	path = mcge-emacs/site-lisp/extensions/corfu
 	url = git@github.com:minad/corfu.git
+[submodule "emacs-cloel"]
+	path = mcge-emacs\\site-lisp\\extensions\\cloel
+	url = git@github.com:manateelazycat/cloel.git
+[submodule "emacs-parseedn"]
+	path = mcge-emacs\\site-lisp\\extensions\\parseedn
+	url = git@github.com:clojure-emacs/parseedn.git
+[submodule "emacs-parseclj"]
+	path = mcge-emacs\\site-lisp\\extensions\\parseclj
+	url = git@github.com:clojure-emacs/parseclj.git
