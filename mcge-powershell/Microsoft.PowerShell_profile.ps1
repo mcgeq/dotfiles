@@ -8,18 +8,27 @@
 # 引入 ps-read-line
 Import-Module -Name PSReadLine
 
+# terminal-icons
+Import-Module -Name Terminal-Icons
+
 #设置PowerShell主题
 
 # Set-PoshPrompt -Theme JanDeDobbeleer
 Invoke-Expression (&starship init powershell)
 fnm env --use-on-cd | Out-String | Invoke-Expression
 
+# scoop-search
+Invoke-Expression (&scoop-search --hook)
+
+# 删除现有的 rm 别名
+Remove-Item Alias:rm -ErrorAction SilentlyContinue
+
 # alias
 New-Alias -Name gad -Value gitAdd
 New-Alias -Name gst -Value gitStatus
 New-Alias -Name gph -Value gitPush
 New-Alias -Name gpl -Value gitPull
-New-Alias -Name gcz -Value gitCommit
+New-Alias -Name gcz -Value gitCz
 New-Alias -Name gcn -Value gitNewCheckout
 New-Alias -Name gch -Value gitCheckout
 New-Alias -Name gbr -Value gitBranch
@@ -31,6 +40,9 @@ New-Alias -Name gpha -Value GitPushAllBranch
 New-Alias -Name ppm -Value pnpm
 
 New-Alias -Name pru -Value PdmRunPython
+New-Alias -Name uvr -Value UvRunPython
+New-Alias -Name rm  -Value rmDirOrFiles
+
 function gitAdd() {
 	git add .
 }
@@ -70,12 +82,11 @@ function gitMerge {
 }
 
 function gitCz() {
-	git cz
+	pnpm run commit
 }
 
 function gitCommit {
-#	git commit
-    pnpm run commit
+	git commit
 }
 # git pull all branch
 
@@ -113,13 +124,6 @@ function PullAllBranches  {
 	Write-Host "All branches pulled successfully."
 }
 
-function PdmRunPython {
-	param (
-		[string[]]$branchs
-	)
-	pdm run python $($branchs -join ' ')
-}
-
 function GitSubmoduleUpdate {
 	git submodule update --init --recursive
 }
@@ -127,6 +131,48 @@ function GitSubmoduleUpdate {
 function GitPushAllBranch {
 	git push --all origin -u
 }
+
+function PdmRunPython {
+	param (
+		[string[]]$branchs
+	)
+	pdm run python $($branchs -join ' ')
+}
+
+function UvRunPython {
+	param (
+		[string[]]$argvs
+	)
+	uv run python $($argvs -join ' ')
+}
+
+# 定义设置本地代理的函数
+function Set-LocalProxy {
+    param (
+        [string]$ProxyUrl = "http://localhost:7897"
+    )
+
+    $proxy = New-Object System.Net.WebProxy($ProxyUrl)
+    [System.Net.WebRequest]::DefaultWebProxy = $proxy
+
+    # 可选：为 WebClient 设置代理
+    $webclient = New-Object System.Net.WebClient
+    $webclient.Proxy = $proxy
+
+    Write-Host "Local proxy set to $ProxyUrl"
+}
+
+# 取消设置的代理
+function Remove-LocalProxy {
+    [System.Net.WebRequest]::DefaultWebProxy = $null
+    Write-Host "Local proxy has been removed."
+}
+
+# Remove-LocalProxy
+
+# 调用函数
+# Set-LocalProxy -ProxyUrl "http://localhost:7897"
+
 
 #------------------------------------------  Import Modules END  ------------------------------------------
 
@@ -178,7 +224,84 @@ function Update-Packages {
 }
 #-------------------------------    Functions END     -------------------------------
 
+# custom fun
 
+function rmDirOrFiles {
+    param (
+        [string]$Path,
+        [string[]]$Args  # 允许不定数量的参数
+    )
+
+    # 确认删除
+    if (Test-Path $Path) {
+        # 输出确认信息
+        # Write-Host "Preparing to delete: '$Path' with arguments: $($Args -join ', ')"
+        
+        # 解析传入的参数
+        foreach ($arg in $Args) {
+            # Write-Host "Processing argument: $arg"
+            switch ($arg) {
+                '-f' { 
+                    # Write-Host "Deleting with -Force..."
+                    Remove-Item -Force -Path $Path
+                    Write-Host "Deleted '$Path' with -Force"
+                    return
+                }
+                '-r' {
+                    # Write-Host "Deleting with -Recurse..."
+                    Remove-Item -Recurse -Path $Path
+                    Write-Host "Deleted '$Path' with -Recurse"
+                    return
+                }
+                '-rf' { 
+                    # Write-Host "Deleting with -Force and -Recurse..."
+                    Remove-Item -Force -Recurse -Path $Path
+                    Write-Host "Deleted '$Path' with -Force and -Recurse"
+                    return
+                }
+                default { 
+                    Write-Host "Unknown argument: $arg"
+                    return
+                }
+            }
+        }
+    } else {
+        Write-Host "Path '$Path' does not exist."
+    }
+}
+
+
+
+
+
+# 封装 cd 命令
+function cd {
+    param (
+        [string]$path
+    )
+    Set-Location -Path $path
+}
+
+# 封装 mk 命令
+function mk {
+    param (
+        [string]$path
+    )
+    New-Item -ItemType Directory -Path $path -Force
+}
+
+# 封装 touch 命令
+function touch {
+    param (
+        [string]$path
+    )
+    # 如果文件不存在，则创建文件；如果存在，则更新其时间戳
+    if (-not (Test-Path $path)) {
+        New-Item -ItemType File -Path $path -Force
+    } else {
+        (Get-Item $path).LastWriteTime = Get-Date
+    }
+}
 
 #-------------------------------   Set Alias BEGIN    -------------------------------
 # 1. 编译函数 make
