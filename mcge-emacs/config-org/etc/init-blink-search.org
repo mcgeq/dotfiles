@@ -22,7 +22,8 @@
 ;;; Code:
 
 (setq blink-search-common-directory '(("MODULE" (concat mcgemacs-root-dir "/site-lisp/extensions/"))
-                                      ("EMACS" (concat mcgemacs-root-dir "/config-org/"))))
+                                      ("EMACS" (concat mcgemacs-root-dir "/config-org/"))
+                                      ("CONFIG" (concat mcgemacs-root-dir "/site-lisp/config/"))))
 #+end_src
 
 ** Ends

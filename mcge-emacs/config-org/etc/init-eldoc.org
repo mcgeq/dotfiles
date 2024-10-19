@@ -1,0 +1,49 @@
+* init-eldoc.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle (concat temporary-file-directory "init-eldoc.el") :lexical t
+:END:
+
+** Headers
+#+begin_src emacs-lisp
+;;; init-eldoc.el ---   -*- lexical-binding: t; -*-
+
+;;; Commentary:
+
+  #+end_src
+
+** Require
+#+begin_src emacs-lisp
+;;; Require:
+
+;;; Code:
+  #+end_src
+
+** Code
+#+begin_src emacs-lisp
+
+(dolist (hook (list
+               'ielm-mode-hook
+               'emacs-lisp-mode-hook
+               'lisp-interaction-mode-hook
+               'message-mode-hook
+               'Info-mode-hook
+               'erc-mode-hook
+               'org-mode-hook
+               ))
+  (add-hook hook #'(lambda ()
+                     (require 'eldoc)
+                     (require 'eldoc-extension)
+                     (setq eldoc-idle-delay 0.05) ;显示一定的延迟， 避免快速移动时minibuffer频繁闪烁
+                     (setq eldoc-argument-case 'eldoc-argument-list) ;高亮函数参数
+                     (turn-on-eldoc-mode)
+                     )))
+
+
+#+end_src
+
+** Ends
+#+begin_src emacs-lisp
+(provide 'init-eldoc)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; init-eldoc.el ends here
+  #+end_src

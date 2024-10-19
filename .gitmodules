@@ -245,7 +245,7 @@
 	path = mcge-emacs/site-lisp/extensions/lsp/clojure/parseedn
 	url = git@github.com:clojure-emacs/parseedn.git
 [submodule "emacs-parseclj"]
-	path = mcge-emacs/site-lisp/extensions/parseclj
+	path = mcge-emacs/site-lisp/extensions/lsp/clojure/parseclj
 	url = git@github.com:clojure-emacs/parseclj.git
 [submodule "emacs-citre"]
 	path = mcge-emacs/site-lisp/extensions/citre
@@ -280,3 +280,21 @@
 [submodule "emacs-multiple-cursors"]
 	path = mcge-emacs/site-lisp/extensions/lsp/clojure/multiple-cursors
 	url = git@github.com:magnars/multiple-cursors.el.git
+[submodule "emacs-queue"]
+	path = mcge-emacs/site-lisp/extensions/lsp/clojure/queue
+	url = git@github.com:emacs-straight/queue.git
+[submodule "emacs-fingertip"]
+	path = mcge-emacs/site-lisp/extensions/fingertip
+	url = git@github.com:manateelazycat/fingertip.git
+[submodule "emacs-instant-rename-tag"]
+	path = mcge-emacs/site-lisp/extensions/instant-rename-tag
+	url = git@github.com:manateelazycat/instant-rename-tag.git
+[submodule "emacs-highlight-matching-tag"]
+	path = mcge-emacs/site-lisp/extensions/highlight-matching-tag
+	url = git@github.com:manateelazycat/highlight-matching-tag.git
+[submodule "emacs-eldoc-extension"]
+	path = mcge-emacs/site-lisp/extensions/eldoc-extension
+	url = git@github.com:emacsmirror/eldoc-extension.git
+[submodule "emacs-json-mode"]
+	path = mcge-emacs/site-lisp/extensions/json-mode
+	url = git@github.com:json-emacs/json-mode.git

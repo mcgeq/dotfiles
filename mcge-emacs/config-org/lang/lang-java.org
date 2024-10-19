@@ -9,18 +9,18 @@
 
 ;;; Commentary:
 
-  #+end_src
+#+end_src
 
 ** Require
 #+begin_src emacs-lisp
 ;;; Require:
 
 ;;; Code:
-  #+end_src
+#+end_src
 
 ** Ends
 #+begin_src emacs-lisp
 (provide 'lang-java)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; lang-java.el ends here
-  #+end_src
+#+end_src

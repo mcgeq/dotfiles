@@ -1,0 +1,35 @@
+* lang-css-mode.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle (concat temporary-file-directory "lang-css-mode.el") :lexical t
+:END:
+
+** Headers
+#+begin_src emacs-lisp
+;;; lang-css-mode.el ---   -*- lexical-binding: t; -*-
+
+;;; Commentary:
+
+  #+end_src
+
+** Require
+#+begin_src emacs-lisp
+;;; Require:
+(require 'css-mode)
+;;; Code:
+#+end_src
+
+** Code
+#+begin_src emacs-lisp
+(dolist (hook (list
+               'css-mode-hook))
+  (add-hook hook #'(lambda ()
+                     (require 'rainbow-mode)
+                     (rainbow-mode))))
+#+end_src
+
+** Ends
+#+begin_src emacs-lisp
+(provide 'lang-css-mode)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; lang-css-mode.el ends here
+  #+end_src

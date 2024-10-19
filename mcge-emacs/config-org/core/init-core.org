@@ -36,6 +36,12 @@
 (require 'init-sort-tab)
 ;; dogears
 (require 'init-dogears)
+;; mode
+(require 'init-mode)
+;; fingertip
+(require 'init-fingertip)
+;; indent
+(require 'init-indent)
 #+END_SRC
 
 ** Load language part file
@@ -50,10 +56,12 @@
   (require 'init-treesit-auto)
   ;; init-quickrun
   (require 'init-quickrun)
-  ;; markdown
+  ;; init-markdown
   (require 'init-markdown)
   ;; jieba
   (require 'init-jieba)
+  ;; eldoc
+  (require 'init-eldoc)
  )
 #+END_SRC
 
