@@ -242,7 +242,7 @@
 	path = mcge-emacs/site-lisp/extensions/cloel
 	url = git@github.com:manateelazycat/cloel.git
 [submodule "emacs-parseedn"]
-	path = mcge-emacs/site-lisp/extensions/parseedn
+	path = mcge-emacs/site-lisp/extensions/lsp/clojure/parseedn
 	url = git@github.com:clojure-emacs/parseedn.git
 [submodule "emacs-parseclj"]
 	path = mcge-emacs/site-lisp/extensions/parseclj
@@ -250,3 +250,33 @@
 [submodule "emacs-citre"]
 	path = mcge-emacs/site-lisp/extensions/citre
 	url = git@github.com:universal-ctags/citre.git
+[submodule "emacs-cider"]
+	path = mcge-emacs/site-lisp/extensions/lsp/clojure/cider
+	url = git@github.com:clojure-emacs/cider.git
+[submodule "emacs-spinner"]
+	path = mcge-emacs/site-lisp/extensions/lsp/clojure/spinner
+	url = git@github.com:Malabarba/spinner.el.git
+[submodule "emacs-sesman"]
+	path = mcge-emacs/site-lisp/extensions/lsp/clojure/sesman
+	url = git@github.com:vspinu/sesman.git
+[submodule "emacs-clojure-ts-mode"]
+	path = mcge-emacs/site-lisp/extensions/lsp/clojure/clojure-ts-mode
+	url = git@github.com:clojure-emacs/clojure-ts-mode.git
+[submodule "emacs-clojure-mode"]
+	path = mcge-emacs/site-lisp/extensions/lsp/clojure/clojure-mode
+	url = git@github.com:clojure-emacs/clojure-mode.git
+[submodule "emacs-clj-refactor"]
+	path = mcge-emacs/site-lisp/extensions/lsp/clojure/clj-refactor
+	url = git@github.com:clojure-emacs/clj-refactor.el.git
+[submodule "emacs-hydra"]
+	path = mcge-emacs/site-lisp/extensions/lsp/clojure/hydra
+	url = git@github.com:abo-abo/hydra.git
+[submodule "emacs-paredit"]
+	path = mcge-emacs/site-lisp/extensions/lsp/clojure/paredit
+	url = git@github.com:emacsmirror/paredit.git
+[submodule "emacs-jump"]
+	path = mcge-emacs/site-lisp/extensions/lsp/clojure/jump
+	url = git@github.com:eschulte/jump.el.git
+[submodule "emacs-multiple-cursors"]
+	path = mcge-emacs/site-lisp/extensions/lsp/clojure/multiple-cursors
+	url = git@github.com:magnars/multiple-cursors.el.git
