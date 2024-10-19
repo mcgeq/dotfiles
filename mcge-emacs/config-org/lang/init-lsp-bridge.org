@@ -23,6 +23,7 @@
 (require 'lang-rust)
 (require 'lang-css-mode)
 (require 'lang-web-mode)
+(require 'lang-clojure)
 ;;; Code:
 #+end_src
 

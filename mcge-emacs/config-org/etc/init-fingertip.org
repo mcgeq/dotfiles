@@ -9,7 +9,7 @@
 
 ;;; Commentary:
 
-  #+end_src
+#+end_src
 
 ** Require
 #+begin_src emacs-lisp
@@ -17,7 +17,7 @@
 (require 'fingertip)
 
 ;;; Code:
-  #+end_src
+#+end_src
 
 ** Code
 #+begin_src emacs-lisp
@@ -87,4 +87,4 @@
 (provide 'init-fingertip)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; init-fingertip.el ends here
-  #+end_src
+#+end_src
