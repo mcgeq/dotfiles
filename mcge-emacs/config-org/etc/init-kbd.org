@@ -342,6 +342,21 @@
 
 #+begin_src emacs-lisp
 (global-set-key (kbd "M-s s")  'blink-search)
+
+#+end_src
+
+** vundo
+
+#+begin_src emacs-lisp
+
+;;; ### vundo ###
+;;; --- 可视化撤销插件
+(lazy-load-global-keys
+ '(
+   ("C-/" . undo)
+   ("C-?" . vundo)
+   )
+ "init-vundo")
 #+end_src
 
 ** Ends

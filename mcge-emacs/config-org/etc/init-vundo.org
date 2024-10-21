@@ -1,0 +1,49 @@
+* init-vundo.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle (concat temporary-file-directory "init-vundo.el") :lexical t
+:END:
+
+** Headers
+#+begin_src emacs-lisp
+;;; init-vundo.el --- modeline config  -*- lexical-binding: t; -*-
+
+;;; Commentary:
+
+  #+end_src
+
+** Require
+#+begin_src emacs-lisp
+;;; Require:
+(require 'vundo)
+
+;;; Code:
+  #+end_src
+
+** Code
+#+begin_src emacs-lisp
+(lazy-load-set-keys
+ '(
+   ("l" . vundo-forward)
+   ("h" . vundo-backward)
+   ("n" . vundo-next)
+   ("p" . vundo-previous)
+   ("j" . vundo-stem-root)
+   ("k" . vundo-stem-end)
+   ("," . vundo-goto-last-saved)
+   ("q" . vundo-quit)
+   ("C-g" . vundo-quit)
+   ("f" . vundo-confirm)
+   ("C-m" . vundo-confirm)
+   ("i" . vundo--inspect)
+   ("d" . vundo--debug)
+   )
+ vundo-mode-map)
+
+#+end_src
+
+** Ends
+#+begin_src emacs-lisp
+(provide 'init-vundo)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; init-vundo.el ends here
+#+end_src

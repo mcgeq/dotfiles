@@ -260,7 +260,7 @@
 	path = mcge-emacs/site-lisp/extensions/lsp/clojure/clj-refactor
 	url = git@github.com:clojure-emacs/clj-refactor.el.git
 [submodule "emacs-hydra"]
-	path = mcge-emacs/site-lisp/extensions/lsp/clojure/hydra
+	path = mcge-emacs/site-lisp/extensions/hydra
 	url = git@github.com:abo-abo/hydra.git
 [submodule "emacs-paredit"]
 	path = mcge-emacs/site-lisp/extensions/lsp/clojure/paredit
@@ -289,3 +289,12 @@
 [submodule "emacs-json-mode"]
 	path = mcge-emacs/site-lisp/extensions/json-mode
 	url = git@github.com:json-emacs/json-mode.git
+[submodule "emacs-lazy-load"]
+	path = mcge-emacs/site-lisp/extensions/lazy-load
+	url = git@github.com:manateelazycat/lazy-load.git
+[submodule "emacs-symbol-overlay"]
+	path = mcge-emacs/site-lisp/extensions/symbol-overlay
+	url = git@github.com:wolray/symbol-overlay.git
+[submodule "emacs-vundo"]
+	path = mcge-emacs/site-lisp/extensions/vundo
+	url = git@github.com:casouri/vundo.git
