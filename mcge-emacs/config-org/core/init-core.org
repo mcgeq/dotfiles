@@ -13,7 +13,6 @@
 
 ** Edit Mode
 #+BEGIN_SRC emacs-lisp
-(require 'lazy-load)
 (require 'init-editor)
 (require 'init-line-number)
 (require 'init-marginalia)
