@@ -18,6 +18,10 @@ def gad [file = "."] {
     git add $file
 }
 
+def gcm [commit_msg: string] {
+    git commit -m $commit_msg
+}
+
 def gpl [] {
     git pull
 }
