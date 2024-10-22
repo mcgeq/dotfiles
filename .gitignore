@@ -4,7 +4,8 @@ mcge-vimrc/pack/mcge/start/ultisnips/tags
 
 mcge-emacs/site-lisp/config/*
 
-mcge-nushell/history.txt
+# nushell
+mcge-nushell/history.*
 mcge-scoop/config.json
 # Logs
 logs
