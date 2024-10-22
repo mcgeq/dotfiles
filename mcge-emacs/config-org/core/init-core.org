@@ -13,6 +13,7 @@
 
 ** Edit Mode
 #+BEGIN_SRC emacs-lisp
+(require 'hydra)
 (require 'init-editor)
 (require 'init-line-number)
 (require 'init-marginalia)
@@ -42,6 +43,8 @@
 (require 'init-fingertip)
 ;; indent
 (require 'init-indent)
+
+
 #+END_SRC
 
 ** Load language part file
@@ -56,8 +59,6 @@
   (require 'init-treesit-auto)
   ;; init-quickrun
   (require 'init-quickrun)
-  ;; init-markdown
-  (require 'init-markdown)
   ;; jieba
   (require 'init-jieba)
   ;; eldoc

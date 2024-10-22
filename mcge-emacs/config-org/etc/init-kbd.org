@@ -43,9 +43,7 @@
 ** 打开默认配置文件
 #+begin_src emacs-lisp
 (global-set-key (kbd "C-q") 'mcg/open-init-file)
-;; use C-x C-b call ibuffer command
-(global-unset-key (kbd "C-x C-b"))
-(global-set-key (kbd "C-x C-b") 'init-ibuffer-ibuffer)
+
 #+end_src
 
 ** Custom C-a
@@ -366,10 +364,44 @@
 ;;;
 (lazy-load-global-keys
  '(
-   ("M-o" . symbol-overlay-put)         ;懒惰搜索
+   ("M-o" . symbol-overlay-put)
    )
  "init-symbol-overlay")
 
+#+end_src
+
+** Ibuffer
+
+#+begin_src emacs-lisp
+
+;;; Ibuffer
+(lazy-load-global-keys
+ '(
+   ("C-x C-b" . ibuffer)
+   )
+ "init-ibuffer")
+
+#+end_src
+
+** Multiple Cursors
+#+begin_src emacs-lisp
+;; Multiple Cursors
+(lazy-load-global-keys
+ '(
+   ("M-m s s" . mc/edit-lines)
+   )
+ "init-multiple-cursors")
+
+#+end_src
+
+** Markdown
+#+begin_src emacs-lisp
+(lazy-load-global-keys
+ '(
+   ("<f9>" . dh-hydra-markdown-mode/body)
+   )
+ "init-markdown")
+;(global-set-key [f9] 'dh-hydra-markdown-mode/body)
 #+end_src
 
 ** Ends
