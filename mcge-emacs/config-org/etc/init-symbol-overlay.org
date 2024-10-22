@@ -1,0 +1,56 @@
+* init-symbol-overlay.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle (concat temporary-file-directory "init-symbol-overlay.el") :lexical t
+:END:
+
+** Headers
+#+begin_src emacs-lisp
+;;; init-symbol-overlay.el --- Emacs set symbol-overlay  -*- lexical-binding: t; -*-
+
+;;; Commentary:
+
+#+end_src
+
+** Require
+#+begin_src emacs-lisp
+;;; Require:
+(require 'symbol-overlay)
+
+;;; Code:
+#+end_src
+
+** Code
+#+begin_src emacs-lisp
+(defhydra hydra-symbol-overlay (:color pink :hint nil)
+  "
+  _P_ put          _n_ext   _w_ save symbol     _t_oggle
+  _R_ replace      _p_rev   _e_cho mark         _>_ jump last
+  _Q_ remove all   _r_name  _d_efinition        _<_ jump first
+  _S_ isearch
+  "
+  ("P" symbol-overlay-put)
+  ("n" symbol-overlay-jump-next)
+  ("p" symbol-overlay-jump-prev)
+  ("w" symbol-overlay-save-symbol)
+  ("t" symbol-overlay-toggle-in-scope)
+  ("e" symbol-overlay-echo-mark)
+  ("d" symbol-overlay-jump-to-definition)
+  ("S" symbol-overlay-isearch-literally)
+  ("r" symbol-overlay-rename)
+  ("R" symbol-overlay-query-replace)
+  ("Q" symbol-overlay-remove-all)
+  ("<" symbol-overlay-jump-first)
+  (">" symbol-overlay-jump-last)
+  ("q" nil)
+  ("." nil :color blue)
+  )
+(define-key symbol-overlay-map "." 'hydra-symbol-overlay/body)
+
+#+end_src
+
+** Ends
+#+begin_src emacs-lisp
+(provide 'init-symbol-overlay)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; init-symbol-overlay.el ends here
+#+end_src

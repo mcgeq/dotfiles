@@ -9,7 +9,7 @@
 
 ;;; Commentary:
 
-  #+end_src
+#+end_src
 
 ** Require
 #+begin_src emacs-lisp
@@ -17,28 +17,36 @@
 (require 'vundo)
 
 ;;; Code:
-  #+end_src
+#+end_src
 
 ** Code
 #+begin_src emacs-lisp
-(lazy-load-set-keys
- '(
-   ("l" . vundo-forward)
-   ("h" . vundo-backward)
-   ("n" . vundo-next)
-   ("p" . vundo-previous)
-   ("j" . vundo-stem-root)
-   ("k" . vundo-stem-end)
-   ("," . vundo-goto-last-saved)
-   ("q" . vundo-quit)
-   ("C-g" . vundo-quit)
-   ("f" . vundo-confirm)
-   ("C-m" . vundo-confirm)
-   ("i" . vundo--inspect)
-   ("d" . vundo--debug)
-   )
- vundo-mode-map)
 
+(defhydra hydra-vundo (:color pink :hint nil)
+  "
+  _l_ forward       _n_ext       _f_ confirm
+  _h_ backward      _p_revious   _i_ inspect
+  _j_ stem root     _d_ debug    _Q_ quit
+  _k_ stem end      _,_ goto last saved
+  "
+  ("l"  vundo-forward)
+  ("h"  vundo-backward)
+  ("n"  vundo-next)
+  ("p"  vundo-previous)
+  ("j"  vundo-stem-root)
+  ("k"  vundo-stem-end)
+  (","  vundo-goto-last-saved)
+  ("Q"  vundo-quit)
+  ;("C-g"  vundo-quit)
+  ("f"  vundo-confirm)
+  ;("C-m"  vundo-confirm)
+  ("i"  vundo--inspect)
+  ("d"  vundo--debug)
+  ("q" nil)
+  ("." nil :color blue)
+  )
+
+(define-key vundo-mode-map "." 'hydra-vundo/body)
 #+end_src
 
 ** Ends

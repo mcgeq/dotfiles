@@ -360,6 +360,18 @@
  "init-vundo")
 #+end_src
 
+** Symbol Overlay
+#+begin_src emacs-lisp
+;;; ### symbol-overlay ###
+;;;
+(lazy-load-global-keys
+ '(
+   ("M-o" . symbol-overlay-put)         ;懒惰搜索
+   )
+ "init-symbol-overlay")
+
+#+end_src
+
 ** Ends
 #+begin_src emacs-lisp
 (provide 'init-kbd)
