@@ -21,7 +21,7 @@
 
 ;;; Code:
 
-  #+end_src
+#+end_src
 
 ** Code
 #+begin_src emacs-lisp
@@ -336,6 +336,17 @@ context.  When called with an argument, unconditionally call
 (advice-add 'org-meta-return :override #'modi/org-meta-return)
 #+end_src
 
+** Binding Keymap
+
+#+begin_src emacs-lisp :tangle yes
+;; (let ((map org-src-mode-map))
+;;   (define-key map (kbd "C-c C-c") 'org-edit-src-exit))
+(lazy-load-set-keys
+ '(
+   ("C-c C-c" . org-edit-src-exit)
+   )
+ org-src-mode-map)
+#+end_src
 
 ** Ends
 #+begin_src emacs-lisp
@@ -343,4 +354,4 @@ context.  When called with an argument, unconditionally call
 (provide 'init-org-src)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; init-org-src.el ends here
-  #+end_src
+#+end_src

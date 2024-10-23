@@ -22,6 +22,18 @@
 ** Code
 #+begin_src emacs-lisp
 
+;; `C-d' 更加智能
+;; (let ((map eshell-mode-map))
+;;   (define-key map (kbd "C-d")  'eshell-delchar-or-maybe-eof)
+;;   (define-key map (kbd "C-r")  'consult-history)
+;;   (define-key map (kbd "C-l")  'eshell/clear))
+(lazy-load-set-keys
+ '(
+   ("C-d" . eshell-delchar-or-maybe-eof)
+   ("C-r" . consult-history)
+   ("C-l" . eshell/clear)
+   )
+ eshell-mode-map)
 #+end_src
 
 ** Ends

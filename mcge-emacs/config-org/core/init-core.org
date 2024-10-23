@@ -6,9 +6,11 @@
 加载各配置模块
 ** Headers
 #+BEGIN_SRC emacs-lisp
-;;; init-core.el -- import config -*- lexical-binding: t -*-
+;;; init-core.el -- import config -*- lexical-binding: t; -*-
 ;;; Commentary:
-;;; Code:
+
+;;; Require:
+
 #+END_SRC
 
 ** Edit Mode
@@ -18,16 +20,16 @@
 (require 'init-line-number)
 (require 'init-marginalia)
 (require 'init-orderless)
-(require 'init-embark)
-(require 'init-consult)
+;(require 'init-embark)
+;(require 'init-consult)
 (require 'init-vertico)
 (require 'init-savehist)
 (require 'init-saveplace)
 (require 'init-ui)
 (require 'init-modeline)
-(require 'init-dired)
+;(require 'init-dired)
 ;; yasnippet
-(require 'init-yasnippet)
+;(require 'init-yasnippet)
 ;; recentf
 (require 'init-recentf)
 ;; Key bindings
@@ -49,6 +51,8 @@
 
 ** Load language part file
 #+BEGIN_SRC emacs-lisp
+;;; Code:
+
 (defun load-language-part-file()
   "Load language part file.  `run-with-idle-timer' 2."
   ;; lsp-bridge
@@ -58,7 +62,7 @@
   ;; treesit-quto
   (require 'init-treesit-auto)
   ;; init-quickrun
-  (require 'init-quickrun)
+  ;(require 'init-quickrun)
   ;; jieba
   (require 'init-jieba)
   ;; eldoc
@@ -74,10 +78,8 @@
     (if (version< emacs-version "31")
     ;; pangu-spacing
     (require 'init-pangu-spacing))
-    ;; magit
     ;(require 'init-vc)
     (require 'init-diff-hl)
-    (require 'init-magit)
     (require 'init-rainbow-delimiters)
     ;; emacs-rime
     (require 'init-rime)
@@ -96,19 +98,19 @@
     ;; org-appear
     (require 'init-org-appear)
     ;; org-download
-    (require 'init-org-download)
+    ;;(require 'init-org-download)
     ;; org-agenda
     (require 'init-org-agenda)
     ;; org-capture
-    (require 'init-org-capture)
+    ;(require 'init-org-capture)
     ;; ox-hugo
     (require 'init-ox-hugo)
     ;; tabspaces
     (require 'init-tabspaces)
     ;; aweshell
-    (require 'init-aweshell)
+    ;(require 'init-aweshell)
     ;; blink-search
-    (require 'init-blink-search)
+    ;(require 'init-blink-search)
     ;; emsg-blame
     (require 'init-emsg-blame)
   )

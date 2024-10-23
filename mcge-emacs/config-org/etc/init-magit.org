@@ -9,7 +9,7 @@
 
 ;;; Commentary:
 
-  #+end_src
+#+end_src
 
 ** Require
 #+begin_src emacs-lisp
@@ -18,13 +18,45 @@
 
 ;;; Code:
 
-  #+end_src
+#+end_src
 
 ** Code
 #+begin_src emacs-lisp
 (add-hook 'git-commit-mode-hook #'flyspell-mode)
 (setq magit-diff-refine-hunk t)
 (setq magit-ediff-dwim-show-on-hunks t)
+
+#+end_src
+
+** Binding Keymap
+
+#+begin_src emacs-lisp :tangle yes
+
+;; 自定义magit菜单
+(transient-define-prefix mcge-magit-menu ()
+  "My custom Magit menu."
+  [[
+   ("t" "Status" magit-status)]
+   ["Log Operations"
+    ("l l" "Show Logs" magit-log)]
+   ["Submodules"
+    ("s a" "Add    Submodule" magit-submodule-add)
+    ("s r" "Remove Submodule" magit-submodule-remove)
+    ("s u" "Update Submodule" magit-submodule-update)]
+   ["Branch Operations"
+    ("b c" "Create       Branch" magit-branch-create)
+    ("b C" "Checkout     Branch" magit-branch-checkout)
+    ("b n" "New Checkout Branch" magit-branch-and-checkout)
+    ("b m" "Merge        Branch" magit-merge)
+    ("b d" "Delete       Branch" magit-branch-delete)
+    ("b r" "Rename       Branch" magit-branch-rename)
+    ("b R" "Reset        Branch" magit-branch-reset)]
+   ["File Operations"
+    ("f r" "Rename file" magit-file-rename)]
+   ["Remote Operations"
+    ("r a" "Add    Remote" magit-remote-add)
+    ("r r" "Rename Remote" magit-remote-rename)]
+   ])
 #+end_src
 
 ** Ends
@@ -32,4 +64,4 @@
 (provide 'init-magit)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; init-magit.el ends here
-  #+end_src
+#+end_src

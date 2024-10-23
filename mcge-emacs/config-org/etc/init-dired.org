@@ -9,7 +9,7 @@
 
 ;;; Commentary:
 
-  #+end_src
+#+end_src
 
 ** Require
 #+begin_src emacs-lisp
@@ -31,7 +31,7 @@
 (require 'dirvish-fd)
 (require 'dirvish-quick-access)
 ;;; Code:
-  #+end_src
+#+end_src
 
 ** Code
 
@@ -256,6 +256,27 @@
 ** Custom Transient
 
 #+begin_src emacs-lisp
+;; (lazy-load-set-keys
+;;  '(
+;;   ("a"   . dirvish-quick-access)
+;;   ("f"   . dirvish-file-info-menu)
+;;   ("y"   . dirvish-yank-menu)
+;;   ("N"   . dirvish-narrow)
+;;   ("^"   . dirvish-history-last)
+;;   ("h"   . dirvish-history-jump) ; remapped `describe-mode'
+;;   ("s"   . dirvish-quicksort)    ; remapped `dired-sort-toggle-or-edit'
+;;   ("v"   . dirvish-vc-menu)      ; remapped `dired-view-file'
+;;   ("TAB" . dirvish-subtree-toggle)
+;;   ("M-f" . dirvish-history-go-forward)
+;;   ("M-b" . dirvish-history-go-backward)
+;;   ("M-l" . dirvish-ls-switches-menu)
+;;   ("M-m" . dirvish-mark-menu)
+;;   ("M-t" . dirvish-layout-toggle)
+;;   ("M-s" . dirvish-setup-menu)
+;;   ("M-e" . dirvish-emerge-menu)
+;;   ("M-j" . dirvish-fd-jump) 
+;;    )
+;;  dirvish-mode-map)
 
 ;; 快捷菜单
 (transient-define-prefix dirvish-dispatch ()

@@ -50,9 +50,28 @@
   (consult-line (thing-at-point 'symbol)))
 #+end_src
 
+** Binding Keymap
+
+#+begin_src emacs-lisp
+;;(define-key minibuffer-local-map (kbd "C-r") 'consult-history)
+;;(define-key prog-mode-map (kbd "C-c C-j")    'consult-outline)
+(lazy-load-set-keys
+ '(
+   ("C-c C-j" . consult-outline)
+   )
+ prog-mode-map)
+
+
+(lazy-load-set-keys
+ '(
+   ("C-r" . consult-history)
+   )
+ minibuffer-local-map)
+#+end_src
+
 ** Ends
 #+begin_src emacs-lisp
 (provide 'init-consult)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; init-consult.el ends here
-  #+end_src
+#+end_src

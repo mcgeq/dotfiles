@@ -9,7 +9,7 @@
 
 ;;; Commentary:
 
-  #+end_src
+#+end_src
 
 ** Require
 #+begin_src emacs-lisp
@@ -17,12 +17,19 @@
 (require 'color-rg)
 
 ;;; Code:
-  #+end_src
+#+end_src
 
 ** Color-rg
 #+begin_src emacs-lisp
 (when *is-win32p*
   (setq color-rg-search-ignore-rules nil))
+
+;;(define-key isearch-mode-map (kbd "M-s M-s") 'isearch-toggle-color-rg)
+(lazy-load-set-keys
+ '(
+   ("M-s M-s" . isearch-toggle-color-rg)
+   )
+ isearch-mode-map)
 #+end_src
 
 ** Ends

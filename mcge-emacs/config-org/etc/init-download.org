@@ -18,7 +18,7 @@
 
 ;;; Code:
 
-  #+end_src
+#+end_src
 
 ** Code
 #+begin_src emacs-lisp
@@ -40,10 +40,20 @@
 (add-hook 'dired-mode-hook 'org-download-enable)
 #+end_src
 
+** Paste image
+
+#+begin_src emacs-lisp
+(defun mcge-paste-img ()
+  "Paste Image."
+  (if *is-win32p* #'mcg/org-screenshot-on-windows
+    'org-download-clipboard)
+  )
+#+end_src
+
 ** Ends
 #+begin_src emacs-lisp
 
 (provide 'init-org-download)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; init-org-download.el ends here
-  #+end_src
+#+end_src

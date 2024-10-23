@@ -5,11 +5,11 @@
 
 ** Headers
 #+begin_src emacs-lisp
-  ;;; init-kbd.el --- bind keyboard  -*- lexical-binding: t; -*-
+;;; init-kbd.el --- bind keyboard  -*- lexical-binding: t; -*-
 
-  ;;; Commentary:
+;;; Commentary:
 
-  #+end_src
+#+end_src
 
 ** Require
 #+begin_src emacs-lisp
@@ -90,30 +90,57 @@
 #+begin_src emacs-lisp
 ;; quickrun
 ;;; c++
-(global-set-key (kbd "C-c q")     'quickrun)
+;(global-set-key (kbd "C-c q")     'quickrun)
+(lazy-load-global-keys
+ '(
+   ("C-c q" . quickrun)
+   )
+ "init-quickrun")
 #+end_src
 
 ** color-rg
 #+begin_src emacs-lisp
 ;; color-rg
-(define-key isearch-mode-map (kbd "M-s M-s") 'isearch-toggle-color-rg)
-(global-set-key (kbd "M-g s i")             'color-rg-search-input)
-(global-set-key (kbd "M-g s p")             'color-rg-search-input-in-project)
-(global-set-key (kbd "M-g s f")             'color-rg-search-input-in-current-file)
-(global-set-key (kbd "M-g s t")             'color-rg-search-project-with-type)
+;; (define-key isearch-mode-map (kbd "M-s M-s") 'isearch-toggle-color-rg)
+;; (global-set-key (kbd "M-g s i")             'color-rg-search-input)
+;; (global-set-key (kbd "M-g s p")             'color-rg-search-input-in-project)
+;; (global-set-key (kbd "M-g s f")             'color-rg-search-input-in-current-file)
+;; (global-set-key (kbd "M-g s t")             'color-rg-search-project-with-type)
+(lazy-load-global-keys
+ '(
+   ("M-g s i" . color-rg-search-input)
+   ("M-g s p" . color-rg-search-input-in-project)
+   ("M-g s f" . color-rg-search-input-in-current-file)
+   ("M-g s t" . color-rg-search-project-with-type)
+   )
+ "init-color-rg")
 #+end_src
 
 ** aweshell
 #+begin_src emacs-lisp
 ;; aweshell
-(global-set-key (kbd "M-g t t") 'aweshell-toggle)
-(global-set-key (kbd "M-g t c") 'aweshell-new)
-(global-set-key (kbd "M-g t n") 'aweshell-next)
-(global-set-key (kbd "M-g t p") 'aweshell-prev)
-(global-set-key (kbd "M-g t r") 'aweshell-clear-buffer)
-(global-set-key (kbd "M-g d t") 'aweshell-dedicated-toggle)
-(global-set-key (kbd "M-g d o") 'aweshell-dedicated-open)
-(global-set-key (kbd "M-g d c") 'aweshell-dedicated-close)
+;; (global-set-key (kbd "C-c h") 'eshell)
+;; (global-set-key (kbd "M-g t t") 'aweshell-toggle)
+;; (global-set-key (kbd "M-g t c") 'aweshell-new)
+;; (global-set-key (kbd "M-g t n") 'aweshell-next)
+;; (global-set-key (kbd "M-g t p") 'aweshell-prev)
+;; (global-set-key (kbd "M-g t r") 'aweshell-clear-buffer)
+;; (global-set-key (kbd "M-g d t") 'aweshell-dedicated-toggle)
+;; (global-set-key (kbd "M-g d o") 'aweshell-dedicated-open)
+;; (global-set-key (kbd "M-g d c") 'aweshell-dedicated-close)
+(lazy-load-global-keys
+ '(
+   ("C-c h"   . eshell)
+   ("M-g t t" . aweshell-toggle)
+   ("M-g t c" . aweshell-new)
+   ("M-g t n" . aweshell-next)
+   ("M-g t p" . aweshell-prev)
+   ("M-g t r" . aweshell-clear-buffer)
+   ("M-g d t" . aweshell-dedicated-toggle)
+   ("M-g d o" . aweshell-dedicated-open)
+   ("M-g d c" . aweshell-dedicated-close)
+   )
+ "init-aweshell")
 #+end_src
 
 ** lsp bridge
@@ -168,129 +195,114 @@
 (global-set-key (kbd "M-s k")    'tabspaces-close-workspace)
 #+end_src
 
-** eshell
-#+begin_src emacs-lisp
-;; eshell
-(global-set-key (kbd "C-c h") 'eshell)
-
-;; `C-d' 更加智能
-(let ((map eshell-mode-map))
-  (define-key map (kbd "C-d")  'eshell-delchar-or-maybe-eof)
-  (define-key map (kbd "C-r")  'consult-history)
-  (define-key map (kbd "C-l")  'eshell/clear))
-#+end_src
-
 ** vertico
 #+begin_src emacs-lisp
 ;; vertico
-(define-key vertico-map (kbd "<tab>")      'vertico-insert)  ; Choose selected candidate
-(define-key vertico-map (kbd "<escape>")   'vertico-exit)    ; Close minibuffer
-(define-key vertico-map (kbd "DEL")        'vertico-directory-delete-char)
-(define-key vertico-map (kbd "C-M-n")      'vertico-next-group)
-(define-key vertico-map (kbd "C-M-p")      'vertico-previous-group)
+(lazy-load-set-keys
+ '(
+   ("<tab>"    .   vertico-insert)  ; Choose selected candidate
+   ("<escape>" .   vertico-exit)    ; Close minibuffer
+   ("DEL"      .   vertico-directory-delete-char)
+   ("C-M-n"    .   vertico-next-group)
+   ("C-M-p"    .   vertico-previous-group)
+   )
+ vertico-map)
+
 #+end_src
 
 ** consult
 #+begin_src emacs-lisp
 ;; consult
-(global-set-key (kbd "C-x j")              'consult-mark)
-(global-set-key (kbd "C-c g")              'consult-ripgrep)
-(global-set-key (kbd "C-c f")              'consult-find)
-(global-set-key (kbd "C-c b")              'consult-buffer)
-(global-set-key (kbd "C-c n h")            'mcg/consult-find-org-headings)
-(define-key minibuffer-local-map (kbd "C-r") 'consult-history)
-;(define-key isearch-mode-map (kbd "C-s")     'consult-line)
-(global-set-key (kbd "C-s")                  'consult-line)
-(define-key prog-mode-map (kbd "C-c C-j")    'consult-outline)
-(global-set-key (kbd "M-s i")                'consult-imenu)
+;; (global-set-key (kbd "C-x j")              'consult-mark)
+;; (global-set-key (kbd "C-c g")              'consult-ripgrep)
+;; (global-set-key (kbd "C-c f")              'consult-find)
+;; (global-set-key (kbd "C-c b")              'consult-buffer)
+;; (global-set-key (kbd "C-c n h")            'mcg/consult-find-org-headings)
+;; (define-key minibuffer-local-map (kbd "C-r") 'consult-history)
+;; ;(define-key isearch-mode-map (kbd "C-s")     'consult-line)
+;; (global-set-key (kbd "C-s")                  'consult-line)
+;; (define-key prog-mode-map (kbd "C-c C-j")    'consult-outline)
+;; (global-set-key (kbd "M-s i")                'consult-imenu)
+(lazy-load-global-keys
+ '(
+   ("C-x j"   . consult-mark)
+   ("C-c g"   . consult-ripgrep)
+   ("C-c f"   . consult-find)
+   ("C-c b"   . consult-buffer)
+   ("C-c n h" . mcg/consult-find-org-headings)
+   ("C-s"     . consult-line)
+   ("M-s i"   . consult-imenu)
+   )
+ "init-consult")
 #+end_src
 
 ** emabrk
 #+begin_src emacs-lisp
 ;; embark
-(global-set-key (kbd "C-.")                  'embark-act)
-(global-set-key (kbd "C-,")                  'embark-dwim)
-(global-set-key (kbd "C-h b")                'embark-bindings)
-(global-set-key (kbd "C-h B")                'embark-bindings-at-point)
-(global-set-key (kbd "C-x n")                'embark-next-symbol)
-(global-set-key (kbd "C-x p")                'embark-previous-symbol)
+;; (global-set-key (kbd "C-.")                  'embark-act)
+;; (global-set-key (kbd "C-,")                  'embark-dwim)
+;; (global-set-key (kbd "C-h b")                'embark-bindings)
+;; (global-set-key (kbd "C-h B")                'embark-bindings-at-point)
+;; (global-set-key (kbd "C-x n")                'embark-next-symbol)
+;; (global-set-key (kbd "C-x p")                'embark-previous-symbol)
+(lazy-load-global-keys
+ '(
+   ("C-."   . embark-act)
+   ("C-,"   . embark-dwim)
+   ("C-h b" . embark-bindings)
+   ("C-h B" . embark-bindings-at-point)
+   ("C-x n" . embark-next-symbol)
+   ("C-x p" . embark-previous-symbol)
+   )
+ "init-embark")
 #+end_src
 
 ** magit
 #+begin_src emacs-lisp
 ;;; init-magit.el
 ;; magit
-(global-set-key (kbd "M-m s t")               'magit-status)
-(global-set-key (kbd "M-m s a")               'magit-submodule-add)
-(global-set-key (kbd "M-m s r")               'magit-submodule-remove)
-(global-set-key (kbd "M-m f r")               'magit-file-rename)
-(global-set-key (kbd "M-m b r")               'magit-branch-rename)
-(global-set-key (kbd "M-m b c")               'magit-branch-create)
-(global-set-key (kbd "M-m r r")               'magit-remote-rename)
-(global-set-key (kbd "M-m l")                 'magit-log)
-(global-set-key (kbd "M-m d d")               'magit-dispatch)
-(global-set-key (kbd "M-m d f")               'magit-file-dispatch)
-(global-set-key (kbd "M-m p f")               'magit-pull)
-(global-set-key (kbd "M-m p h")               'magit-push)
-(global-set-key (kbd "M-m m")                 'mcge-magit-menu)
-;; 自定义magit菜单
-(transient-define-prefix mcge-magit-menu ()
-  "My custom Magit menu."
-  [[
-   ("t" "Status" magit-status)]
-   ["Log Operations"
-    ("l l" "Show Logs" magit-log)]
-   ["Submodules"
-    ("s a" "Add    Submodule" magit-submodule-add)
-    ("s r" "Remove Submodule" magit-submodule-remove)
-    ("s u" "Update Submodule" magit-submodule-update)]
-   ["Branch Operations"
-    ("b c" "Create       Branch" magit-branch-create)
-    ("b C" "Checkout     Branch" magit-branch-checkout)
-    ("b n" "New Checkout Branch" magit-branch-and-checkout)
-    ("b m" "Merge        Branch" magit-merge)
-    ("b d" "Delete       Branch" magit-branch-delete)
-    ("b r" "Rename       Branch" magit-branch-rename)
-    ("b R" "Reset        Branch" magit-branch-reset)]
-   ["File Operations"
-    ("f r" "Rename file" magit-file-rename)]
-   ["Remote Operations"
-    ("r a" "Add    Remote" magit-remote-add)
-    ("r r" "Rename Remote" magit-remote-rename)]
-   ])
+(lazy-load-global-keys
+ '(
+   ("M-m s t" . magit-status)
+   ("M-m s a" . magit-submodule-add)
+   ("M-m s r" . magit-submodule-remove)
+   ("M-m f r" . magit-file-rename)
+   ("M-m b r" . magit-branch-rename)
+   ("M-m b c" . magit-branch-create)
+   ("M-m r r" . magit-remote-rename)
+   ("M-m l"   . magit-log)
+   ("M-m d d" . magit-dispatch)
+   ("M-m d f" . magit-file-dispatch)
+   ("M-m p f" . magit-pull)
+   ("M-m p h" . magit-push)
+   ("M-m m"   . mcge-magit-menu)
+   )
+ "init-magit")
 #+end_src
 
 
 ** dirvish
 #+begin_src emacs-lisp
 ;; use C-c f dirvish-quick-access   init-dired.el
-(let ((map dirvish-mode-map))
-  (define-key map (kbd "a")    'dirvish-quick-access)
-  (define-key map (kbd "f")    'dirvish-file-info-menu)
-  (define-key map (kbd "y")    'dirvish-yank-menu)
-  (define-key map (kbd "N")    'dirvish-narrow)
-  (define-key map (kbd "^")    'dirvish-history-last)
-  (define-key map (kbd "h")    'dirvish-history-jump) ; remapped `describe-mode'
-  (define-key map (kbd "s")    'dirvish-quicksort)    ; remapped `dired-sort-toggle-or-edit'
-  (define-key map (kbd "v")    'dirvish-vc-menu)      ; remapped `dired-view-file'
-  (define-key map (kbd "TAB")  'dirvish-subtree-toggle)
-  (define-key map (kbd "M-f")  'dirvish-history-go-forward)
-  (define-key map (kbd "M-b")  'dirvish-history-go-backward)
-  (define-key map (kbd "M-l")  'dirvish-ls-switches-menu)
-  (define-key map (kbd "M-m")  'dirvish-mark-menu)
-  (define-key map (kbd "M-t")  'dirvish-layout-toggle)
-  (define-key map (kbd "M-s")  'dirvish-setup-menu)
-  (define-key map (kbd "M-e")  'dirvish-emerge-menu)
-  (define-key map (kbd "M-j")  'dirvish-fd-jump)
-)
+(lazy-load-global-keys
+ '(
+   ("C-x M-f" . dirvish)
+   )
+ "init-dired")
 #+end_src
 
 ** Org
 *** org capture
 #+begin_src emacs-lisp
 ;; org-capture
-(global-set-key (kbd "C-c c")        'org-capture)
-(global-set-key (kbd "C-c l")        'org-store-link)
+;;(global-set-key (kbd "C-c c")        'org-capture)
+;;(global-set-key (kbd "C-c l")        'org-store-link)
+(lazy-load-global-keys
+ '(
+   ("C-c c" . org-capture)
+   ("C-c l" . org-store-link)
+   )
+ "init-org-capture")
 #+end_src
 
 *** org agenda
@@ -308,15 +320,18 @@
 #+begin_src emacs-lisp
 ;; org-src
 (global-set-key (kbd "C-c s") 'show-line-number-in-src-block)
-(let ((map org-src-mode-map))
-  (define-key map (kbd "C-c C-c") 'org-edit-src-exit))
 #+end_src
 
 *** org download
 #+begin_src emacs-lisp
 ;; org-download
-(global-set-key (kbd "C-c v") (if *is-win32p* #'mcg/org-screenshot-on-windows
-                                'org-download-clipboard))
+;;(global-set-key (kbd "C-c v") (if *is-win32p* #'mcg/org-screenshot-on-windows
+;;                                'org-download-clipboard))
+(lazy-load-global-keys
+ '(
+   ("C-c v" . mcge-paste-img)
+   )
+ "init-download")
 #+end_src
 
 ** elisp
@@ -334,14 +349,23 @@
 
 ** yasnippets
 #+begin_src emacs-lisp
-(global-set-key (kbd "C-c C-n") 'yas-new-snippet)
+;(global-set-key (kbd "C-c C-n") 'yas-new-snippet)
+(lazy-load-global-keys
+ '(
+   ("C-c C-n" . yas-new-snippet)
+   )
+ "init-yasnippet")
 #+end_src
 
 ** Blink search
 
 #+begin_src emacs-lisp
-(global-set-key (kbd "M-s s")  'blink-search)
-
+;(global-set-key (kbd "M-s s")  'blink-search)
+(lazy-load-global-keys
+ '(
+   ("M-s s" . blink-search)
+   )
+ "init-blink-search")
 #+end_src
 
 ** vundo
