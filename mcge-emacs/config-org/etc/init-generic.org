@@ -9,20 +9,25 @@
 
 ;;; Commentary:
 
-  #+end_src
+#+end_src
 
 ** Require
 #+begin_src emacs-lisp
 ;;; Require:
 
 ;;; Code:
-  #+end_src
+#+end_src
 
 ** Code
 #+begin_src emacs-lisp
-;; 修改默认一行显示字符数
-(setq-default fill-column 80)
+;; Hide tools menu vertical-scroll
+(push '(menu-bar-lines   . 0) default-frame-alist)
+(push '(tool-bar-lines    . 0) default-frame-alist)
+(push '(vertical-scroll-bars) default-frame-alist)
+
 ;; Coding System UTF-8
+(unless *is-win32p*
+  (set-selection-coding-system 'utf-8))
 (prefer-coding-system                   'utf-8)
 (set-default-coding-systems             'utf-8)
 (set-terminal-coding-system             'utf-8)
@@ -98,4 +103,4 @@
 (provide 'init-generic)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; init-generic.el ends here
-  #+end_src
+#+end_src
