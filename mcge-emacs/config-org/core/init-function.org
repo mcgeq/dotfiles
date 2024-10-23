@@ -9,15 +9,14 @@
 
 ;;; Commentary:
 
-  #+end_src
+#+end_src
 
 ** Require
 #+begin_src emacs-lisp
 ;;; Require:
-(require 'org)
 
 ;;; Code:
-  #+end_src
+#+end_src
 
 ** Code
 #+begin_src emacs-lisp
@@ -251,4 +250,4 @@
 (provide 'init-function)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; init-function.el ends here
-  #+end_src
+#+end_src

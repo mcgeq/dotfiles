@@ -298,3 +298,6 @@
 [submodule "emacs-vundo"]
 	path = mcge-emacs/site-lisp/extensions/vundo
 	url = git@github.com:casouri/vundo.git
+[submodule "emacs-benchmark-init"]
+	path = mcge-emacs/site-lisp/extensions/benchmark-init-el
+	url = git@github.com:dholm/benchmark-init-el.git
