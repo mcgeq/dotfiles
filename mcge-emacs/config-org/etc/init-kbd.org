@@ -14,7 +14,6 @@
 ** Require
 #+begin_src emacs-lisp
 ;;; Require:
-(require 'lazy-load)
 (require 'vertico)
 (require 'consult)
 (require 'org-agenda)

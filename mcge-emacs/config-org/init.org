@@ -14,6 +14,7 @@
 ;;; Require:
 (require 'init-const)
 (require 'init-font)
+(require 'lazy-load)
 
 ;;; Code:
 #+END_SRC
