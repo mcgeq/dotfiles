@@ -90,7 +90,6 @@
 #+begin_src emacs-lisp
 ;; quickrun
 ;;; c++
-;(global-set-key (kbd "C-c q")     'quickrun)
 (lazy-load-global-keys
  '(
    ("C-c q" . quickrun)
@@ -101,11 +100,7 @@
 ** color-rg
 #+begin_src emacs-lisp
 ;; color-rg
-;; (define-key isearch-mode-map (kbd "M-s M-s") 'isearch-toggle-color-rg)
-;; (global-set-key (kbd "M-g s i")             'color-rg-search-input)
-;; (global-set-key (kbd "M-g s p")             'color-rg-search-input-in-project)
-;; (global-set-key (kbd "M-g s f")             'color-rg-search-input-in-current-file)
-;; (global-set-key (kbd "M-g s t")             'color-rg-search-project-with-type)
+
 (lazy-load-global-keys
  '(
    ("M-g s i" . color-rg-search-input)
@@ -119,15 +114,7 @@
 ** aweshell
 #+begin_src emacs-lisp
 ;; aweshell
-;; (global-set-key (kbd "C-c h") 'eshell)
-;; (global-set-key (kbd "M-g t t") 'aweshell-toggle)
-;; (global-set-key (kbd "M-g t c") 'aweshell-new)
-;; (global-set-key (kbd "M-g t n") 'aweshell-next)
-;; (global-set-key (kbd "M-g t p") 'aweshell-prev)
-;; (global-set-key (kbd "M-g t r") 'aweshell-clear-buffer)
-;; (global-set-key (kbd "M-g d t") 'aweshell-dedicated-toggle)
-;; (global-set-key (kbd "M-g d o") 'aweshell-dedicated-open)
-;; (global-set-key (kbd "M-g d c") 'aweshell-dedicated-close)
+
 (lazy-load-global-keys
  '(
    ("C-c h"   . eshell)
@@ -213,16 +200,7 @@
 ** consult
 #+begin_src emacs-lisp
 ;; consult
-;; (global-set-key (kbd "C-x j")              'consult-mark)
-;; (global-set-key (kbd "C-c g")              'consult-ripgrep)
-;; (global-set-key (kbd "C-c f")              'consult-find)
-;; (global-set-key (kbd "C-c b")              'consult-buffer)
-;; (global-set-key (kbd "C-c n h")            'mcg/consult-find-org-headings)
-;; (define-key minibuffer-local-map (kbd "C-r") 'consult-history)
-;; ;(define-key isearch-mode-map (kbd "C-s")     'consult-line)
-;; (global-set-key (kbd "C-s")                  'consult-line)
-;; (define-key prog-mode-map (kbd "C-c C-j")    'consult-outline)
-;; (global-set-key (kbd "M-s i")                'consult-imenu)
+
 (lazy-load-global-keys
  '(
    ("C-x j"   . consult-mark)
@@ -239,12 +217,7 @@
 ** emabrk
 #+begin_src emacs-lisp
 ;; embark
-;; (global-set-key (kbd "C-.")                  'embark-act)
-;; (global-set-key (kbd "C-,")                  'embark-dwim)
-;; (global-set-key (kbd "C-h b")                'embark-bindings)
-;; (global-set-key (kbd "C-h B")                'embark-bindings-at-point)
-;; (global-set-key (kbd "C-x n")                'embark-next-symbol)
-;; (global-set-key (kbd "C-x p")                'embark-previous-symbol)
+
 (lazy-load-global-keys
  '(
    ("C-."   . embark-act)
@@ -295,8 +268,7 @@
 *** org capture
 #+begin_src emacs-lisp
 ;; org-capture
-;;(global-set-key (kbd "C-c c")        'org-capture)
-;;(global-set-key (kbd "C-c l")        'org-store-link)
+
 (lazy-load-global-keys
  '(
    ("C-c c" . org-capture)
@@ -325,8 +297,7 @@
 *** org download
 #+begin_src emacs-lisp
 ;; org-download
-;;(global-set-key (kbd "C-c v") (if *is-win32p* #'mcg/org-screenshot-on-windows
-;;                                'org-download-clipboard))
+
 (lazy-load-global-keys
  '(
    ("C-c v" . mcge-paste-img)
@@ -349,7 +320,7 @@
 
 ** yasnippets
 #+begin_src emacs-lisp
-;(global-set-key (kbd "C-c C-n") 'yas-new-snippet)
+
 (lazy-load-global-keys
  '(
    ("C-c C-n" . yas-new-snippet)
@@ -360,7 +331,7 @@
 ** Blink search
 
 #+begin_src emacs-lisp
-;(global-set-key (kbd "M-s s")  'blink-search)
+
 (lazy-load-global-keys
  '(
    ("M-s s" . blink-search)
@@ -425,7 +396,7 @@
    ("<f9>" . dh-hydra-markdown-mode/body)
    )
  "init-markdown")
-;(global-set-key [f9] 'dh-hydra-markdown-mode/body)
+
 #+end_src
 
 ** Ends
