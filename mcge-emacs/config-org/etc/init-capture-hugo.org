@@ -135,7 +135,7 @@
 
 (add-to-list 'org-capture-templates '("h" "Hugo Post"))
 (add-to-list 'org-capture-templates
-             '("hd"
+             '("hl"
                "About Development Language"
                entry
                (file+headline org-development-blog "Rust")
@@ -156,7 +156,7 @@
                (file+olp org-prattle-blog "Prattle")
                (function org-hugo-new-subtree-post-capture-template)))
 (add-to-list 'org-capture-templates
-             '("ht"
+             '("hT"
                "About Tools"
                entry
                (file+olp org-tools-blog "Tools")
