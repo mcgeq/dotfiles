@@ -1,26 +1,31 @@
-* init-org-capture.el
+* init-capture-hugo.el
 :PROPERTIES:
-:HEADER-ARGS: :tangle (concat temporary-file-directory "init-org-capture.el") :lexical t
+:HEADER-ARGS: :tangle (concat temporary-file-directory "init-capture-hugo.el") :lexical t
 :END:
 
 ** Headers
 #+begin_src emacs-lisp
-;;; init-org-capture.el --- org-capture config  -*- lexical-binding: t; -*-
+;;; init-capture-hugo.el ---  capture-hugo config  -*- lexical-binding: t; -*-
 
 ;;; Commentary:
 
-  #+end_src
+#+end_src
 
 ** Require
 #+begin_src emacs-lisp
 ;;; Require:
+(require 'ox)
+(require 'ox-hugo)
+(require 'easy-hugo)
 (require 'org-capture)
 
 ;;; Code:
 
-  #+end_src
+#+end_src
 
 ** Code
+
+*** Org Capture
 #+begin_src emacs-lisp
 (add-hook 'org-capture-mode-hook #'(lambda() (setq-local
                                               org-complete-tags-always-offer-all-agenda-tags t)))
@@ -105,35 +110,87 @@
     (org-end-of-subtree)))
 #+end_src
 
-** unless
-#+begin_src emacs-lisp :tangle no
-  (setq org-capture-templates `(("t" "Tasks" entry (file+headline "tasks.org" "Reminders")
-                                 "* TODO %i%?"
-                                 :empty-lines-after 1
-                                 :prepend t)
-                                ("n" "Notes" entry (file+headline "capture.org" "Notes")
-                                 "* %? %^\n%i\n"
-                                 :empty-lines-after 1)
-                                ("b" "Bookmarks" entry (file+headline "capture.org" "Bookmarks")
-                                 "* %:description\n\n%a%?"
-                                 :empty-lines 1
-                                 :immediate-finish t)
-                                ("d" "Diary")
-                                ("dt" "Today's TODO list" entry (file+olp+datetree "diary.org")
-                                 "* Today's TODO list [/]\n%T\n\n** TODO %?"
-                                 :empty-lines 1
-                                 :jump-to-captured t)
-                                ("do" "Other stuff" entry (file+olp+datetree "diary.org")
-                                 "* %?\nT\n\n%i"
-                                 :empty-lines 1
-                                 :jump-to-captured t)
-                                ))
+**** Ox Hugo
+#+begin_src emacs-lisp
+;; Populates only the EXPORT_FILE_NAME property in the inserted heading.
+(with-eval-after-load 'org-capture
+  (defun org-hugo-new-subtree-post-capture-template ()
+    "Returns `org-capture' template string for new Hugo post.
+  See `org-capture-templates' for more information."
+    (let* (
+           (date (format-time-string (org-time-stamp-format :long :inactive) (org-current-time)))
+           (title (read-from-minibuffer "Post Title: ")) ;Prompt to enter the post title
+           (fname (org-hugo-slug title)))
+      (mapconcat #'identity
+                 `(
+                   ,(concat "* TODO " title)
+                   ":PROPERTIES:"
+                   ,(concat ":EXPORT_FILE_NAME: " fname)                  
+                   ;;,(concat ":EXPORT_FILE_NAME: " "index")
+                   ,(concat ":EXPORT_DATE: " date)
+                   ":END:"
+                   "%?\n")          ;Place the cursor here finally
+                 "\n")))
+
+
+(add-to-list 'org-capture-templates '("h" "Hugo Post"))
+(add-to-list 'org-capture-templates
+             '("hd"
+               "About Development Language"
+               entry
+               (file+headline org-development-blog "Rust")
+               (function org-hugo-new-subtree-post-capture-template)))
+(add-to-list 'org-capture-templates
+             '("he"                ;`org-capture' binding + h
+               "About Emacs"
+               entry
+               ;; It is assumed that below file is present in `org-directory'
+               ;; and that it has a "Blog Ideas" heading. It can even be a
+               ;; symlink pointing to the actual location of all-posts.org!
+               (file+olp org-emacs-blog "Emacs")
+               (function org-hugo-new-subtree-post-capture-template)))
+(add-to-list 'org-capture-templates
+             '("hp"
+               "About Prattle"
+               entry
+               (file+olp org-prattle-blog "Prattle")
+               (function org-hugo-new-subtree-post-capture-template)))
+(add-to-list 'org-capture-templates
+             '("ht"
+               "About Tools"
+               entry
+               (file+olp org-tools-blog "Tools")
+               (function org-hugo-new-subtree-post-capture-template)))
+ )
+
+(with-eval-after-load 'easy-hugo
+  (setq easy-hugo-postdir "content-org")
+  (setq easy-hugo-default-ext ".org")
+  (setq easy-hugo-url "https://www.gemc.club")
+  (setq easy-hugo-basedir (concat mcgemacs-blog-dir "/")))
+
+
+(defun choice-series ()
+  "Prompt the user for a choice series and return the input."
+  (let ((input (read-from-minibuffer "Choice Series: ")))  ;; 读取输入
+    input))  ;; 返回输入
+
+#+end_src
+
+*** Easy Hugo
+
+#+begin_src emacs-lisp
+(with-eval-after-load 'easy-hugo
+  (setq easy-hugo-postdir "content-org")
+  (setq easy-hugo-default-ext ".org")
+  (setq easy-hugo-url "https://www.gemc.club")
+  (setq easy-hugo-basedir (concat mcgemacs-blog-dir "/")))
 #+end_src
 
 ** Ends
 #+begin_src emacs-lisp
 
-(provide 'init-org-capture)
+(provide 'init-capture-hugo)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; init-org-capture.el ends here
-  #+end_src
+;;; init-capture-hugo.el ends here
+#+end_src

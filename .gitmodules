@@ -301,3 +301,6 @@
 [submodule "emacs-benchmark-init"]
 	path = mcge-emacs/site-lisp/extensions/benchmark-init-el
 	url = git@github.com:dholm/benchmark-init-el.git
+[submodule "emacs-easy-hugo"]
+	path = mcge-emacs/site-lisp/extensions/easy-hugo
+	url = git@github.com:masasam/emacs-easy-hugo.git

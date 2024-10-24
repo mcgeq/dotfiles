@@ -104,7 +104,7 @@
     ;; org-capture
     ;(require 'init-org-capture)
     ;; ox-hugo
-    (require 'init-ox-hugo)
+    ;(require 'init-ox-hugo)
     ;; tabspaces
     (require 'init-tabspaces)
     ;; aweshell

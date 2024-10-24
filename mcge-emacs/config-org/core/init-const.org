@@ -75,6 +75,11 @@
 (defvar org-file-billing  (expand-file-name "billing.org"  (concat mcgemacs-org-dir "/billing")))
 (defvar org-file-password (expand-file-name "passwords.org.cpt" (concat mcgemacs-org-dir "/private")))
 (defvar org-file-blog   (expand-file-name "all-posts.org" mcgemacs-blog-org-dir))
+;; custom
+(defvar org-emacs-blog   (expand-file-name "all-about-emacs.org" mcgemacs-blog-org-dir))
+(defvar org-prattle-blog   (expand-file-name "all-about-prattle.org" mcgemacs-blog-org-dir))
+(defvar org-tools-blog   (expand-file-name "all-about-tools.org" mcgemacs-blog-org-dir))
+(defvar org-development-blog   (expand-file-name "all-about-development.org" mcgemacs-blog-org-dir))
 #+END_SRC
 
 ** Set image size

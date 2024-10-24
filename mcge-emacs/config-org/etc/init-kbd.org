@@ -273,7 +273,7 @@
    ("C-c c" . org-capture)
    ("C-c l" . org-store-link)
    )
- "init-org-capture")
+ "init-capture-hugo")
 #+end_src
 
 *** org agenda
