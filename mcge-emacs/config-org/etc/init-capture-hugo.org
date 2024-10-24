@@ -27,6 +27,7 @@
 
 *** Org Capture
 #+begin_src emacs-lisp
+(setq org-hugo-base-dir (concat mcgemacs-blog-dir "/"))
 (add-hook 'org-capture-mode-hook #'(lambda() (setq-local
                                               org-complete-tags-always-offer-all-agenda-tags t)))
 (add-hook 'org-capture-mode-hook 'delete-other-windows)
