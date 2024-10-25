@@ -280,8 +280,8 @@
 (lazy-load-set-keys
  '(
    ("M-m c" . org-edit-src-code)
-   org-mode-map)
- )
+   )
+ org-mode-map)
 #+end_src
 
 
