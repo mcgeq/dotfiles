@@ -24,7 +24,7 @@
 (push '(menu-bar-lines   . 0) default-frame-alist)
 (push '(tool-bar-lines    . 0) default-frame-alist)
 (push '(vertical-scroll-bars) default-frame-alist)
-
+(if *is-win32p* (setq system-time-locale "C"))
 ;; Coding System UTF-8
 (unless *is-win32p*
   (set-selection-coding-system 'utf-8))
