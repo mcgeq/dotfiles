@@ -44,7 +44,7 @@
 
 (add-to-list 'org-capture-templates '("d" "Diary"))
 (add-to-list 'org-capture-templates '("dt" "Today's TODO List" entry (file+olp+datetree org-file-diary)
-                                      "Today's TODO List [/]\n%T\n\n** TODO %?"
+                                      "* Today's TODO List [/]\n%T\n\n** TODO %?"
                                       :empty-lines 1
                                       :jump-to-captured t))
 (add-to-list 'org-capture-templates '("do" "Other stuff" entry (file+olp+datetree org-file-diary)
