@@ -53,12 +53,12 @@
 (setq use-dialog-box                             nil)                                   ;不弹出对话框
 (setq inhibit-startup-screen                     t)                                     ;禁止启动屏幕
 (setq initial-scratch-message                   (concat ";; Happy hacking, "
-  				                        (capitalize user-login-name) " - Emacs ❤ you!\n\n"))
+  				                        (capitalize user-login-name) " - Emacs ❤  you!\n\n"))
 (setq-default comment-style                     'indent)                                ;设定自动缩进的注释风格
 (setq ring-bell-function                        'ignore)                                ;关闭出错时的提示声
 (setq-default major-mode                        'text-mode)                             ;设置默认的主模式为 TEXT 模式
 (setq mouse-yank-at-point                       t)                                      ;粘贴于光标处，而不是鼠标指针处
-;(setq x-select-enable-clipboard                 t)                                      ;支持 emacs 和外部程序的粘贴
+(setq x-select-enable-clipboard                 t)                                      ;支持 emacs 和外部程序的粘贴
 (setq select-enable-clipboard                   t)
 (setq split-width-threshold                     nil)                                    ;分屏的时候使用上下分屏
 (setq inhibit-compacting-font-caches            t)                                      ;使用字体缓存，避免卡顿

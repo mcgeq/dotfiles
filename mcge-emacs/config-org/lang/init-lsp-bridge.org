@@ -16,7 +16,6 @@
 (require 'lsp-bridge)
 (require 'lsp-bridge-jdtls)
 (require 'flymake-bridge)
-(require 'lang-eglot)
 (require 'lang-cpp)
 (require 'lang-java)
 (require 'lang-typescript)
@@ -49,7 +48,7 @@
 (setq acm-enable-codeium nil)
 (setq acm-enable-lsp-workspace-symbol t)
 
-;;(global-lsp-bridge-mode)
+(global-lsp-bridge-mode)
 
 (add-to-list 'lsp-bridge-multi-lang-server-extension-list '(("html") . "html_tailwindcss"))
 (add-to-list 'lsp-bridge-multi-lang-server-extension-list '(("css") . "css_tailwindcss"))
@@ -86,7 +85,7 @@
 
 ** Rust with eglot
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 ;; rust 使用 eglot
 (defun enable-lsp-bridge-if-not-rust ()
   "Enable lsp-bridge-mode if the current major mode is not rust-ts-mode or rust-mode."

@@ -21,7 +21,7 @@
 
 ** Rust with Eglot
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 (when (or (derived-mode-p 'rust-mode)
             (derived-mode-p 'rust-ts-mode))
     (add-to-list 'eglot-server-programs `(rust-mode . ("rust-analyzer"

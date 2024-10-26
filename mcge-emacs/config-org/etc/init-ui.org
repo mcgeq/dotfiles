@@ -9,30 +9,39 @@
 
 ;;; Commentary:
 
-  #+end_src
+#+end_src
 
 ** Require
 #+begin_src emacs-lisp
 ;;; Require:
 (require 'doom-themes)
+(require 'doom-themes-ext-org)
+(require 'doom-themes-ext-visual-bell)
 
 ;;; Code:
 
-  #+end_src
+#+end_src
 
 ** Code
 #+begin_src emacs-lisp
 (setq doom-themes-enable-bold t
       doom-themes-enable-italic t)
 
+(doom-themes-visual-bell-config)
+(doom-themes-org-config)
+
 (if (display-graphic-p)
     (load-theme 'doom-city-lights t)
-  (load-theme 'doom-molokai))
+  (load-theme 'doom-molokai t))
+
+(doom-themes-visual-bell-config)
+(doom-themes-org-config)
+
 #+end_src
 
 ** change theme
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 
 (defvar mcge/org-mode-theme 'doom-solarized-light
   "Theme to use in org-mode.")
@@ -84,4 +93,4 @@
 (provide 'init-ui)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; init-ui.el ends here
-  #+end_src
+#+end_src
