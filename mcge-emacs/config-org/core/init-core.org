@@ -33,6 +33,10 @@
 ;; recentf
 (require 'init-recentf)
 ;; Key bindings
+;; treesit-tree
+(require 'init-treesit)
+;; fingertip
+(require 'init-fingertip)
 (require 'init-kbd)
 (require 'init-awesome-tray)
 ;; sort tab
@@ -41,8 +45,6 @@
 (require 'init-dogears)
 ;; mode
 (require 'init-mode)
-;; fingertip
-(require 'init-fingertip)
 ;; indent
 (require 'init-indent)
 
@@ -59,8 +61,6 @@
   (require 'init-lsp-bridge)
   (unless (display-graphic-p)
       (require 'init-acm-terminal))
-  ;; treesit-quto
-  (require 'init-treesit-auto)
   ;; init-quickrun
   ;(require 'init-quickrun)
   ;; jieba

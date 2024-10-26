@@ -30,9 +30,8 @@
 #+begin_src emacs-lisp
 
 ;; 解除不常用的快捷键定义
-(global-set-key (kbd "C-z") nil)
-(global-set-key (kbd "s-q") nil)
-(global-set-key (kbd "M-m") nil)
+(lazy-load-unset-keys
+ '("C-z" "s-q" "M-m"))
 ;; replace-string
 (global-set-key (kbd "C-c r") 'replace-string)
 ;; make-directory
@@ -57,19 +56,19 @@
 ** 插入新行
 #+begin_src emacs-lisp
 ;; insert newline
-(global-set-key (kbd "M-<down>")
+(global-set-key (kbd "C-c <down>")
                 (lambda ()
                   (interactive)
                   (end-of-line)
                   (newline-and-indent)))
-(global-set-key (kbd "M-<up>")
+(global-set-key (kbd "C-c <up>")
                 (lambda ()
                   (interactive)
                   (beginning-of-line)
                   (newline)
                   (forward-line -1)
                   (indent-according-to-mode)))
-(global-set-key (kbd "C-M-<down>")
+(global-set-key (kbd "M-m p n")
                 (lambda ()
                   (interactive)
                   (forward-line 1)
@@ -77,12 +76,13 @@
                   (forward-line -1)
                   (indent-according-to-mode)))
 ;; move current line to prev or next line
-(global-set-key (kbd "C-M-<up>")
+(global-set-key (kbd "M-m p p")
                 (lambda ()
                   (interactive)
                   (transpose-lines 1)
                   (forward-line -2)
                   (indent-according-to-mode)))
+
 #+end_src
 
 ** quickrun
@@ -364,7 +364,7 @@
 (lazy-load-global-keys
  '(
    ("C-/" . undo)
-   ("C-?" . vundo)
+   ("M-]" . vundo)
    )
  "init-vundo")
 #+end_src
@@ -412,6 +412,59 @@
    ("<f9>" . dh-hydra-markdown-mode/body)
    )
  "init-markdown")
+
+#+end_src
+
+** Fingertip
+#+begin_src emacs-lisp
+;;; `https://github.com/manateelazycat/lazycat-emacs/blob/master/site-lisp/config/init-key.el'
+;;; ### Fingertip ###
+;;; --- 结构化编程
+(lazy-load-unset-keys
+ '("M-J" "M-r" "M-s" "M-;" "C-M-f" "C-M-b" "M-)")
+ fingertip-mode-map)                    ;卸载按键
+(defvar fingertip-key-alist nil)
+(setq fingertip-key-alist
+      '(
+        ;; 移动
+        ("M-n" . fingertip-jump-left)
+        ("M-p" . fingertip-jump-right)
+        ;; 符号插入
+        ("%" . fingertip-match-paren)            ;括号跳转
+        ("(" . fingertip-open-round)             ;智能 (
+        ("[" . fingertip-open-bracket)           ;智能 [
+        ("{" . fingertip-open-curly)             ;智能 {
+        (")" . fingertip-close-round)            ;智能 )
+        ("]" . fingertip-close-bracket)          ;智能 ]
+        ("}" . fingertip-close-curly)            ;智能 }
+        ("（" . fingertip-open-chinese-round)    ;智能 （
+        ("「" . fingertip-open-chinese-bracket)  ;智能 「
+        ("【" . fingertip-open-chinese-curly)    ;智能 【
+        ("）" . fingertip-close-chinese-round)   ;智能 ）
+        ("」" . fingertip-close-chinese-bracket) ;智能 」
+        ("】" . fingertip-close-chinese-curly)   ;智能 】
+        ("\"" . fingertip-double-quote)          ;智能 "
+        ("'" . fingertip-single-quote)           ;智能 '
+        ("=" . fingertip-equal)                  ;智能 =
+        ("SPC" . fingertip-space)                ;智能 space
+        ("RET" . fingertip-newline)              ;智能 newline
+        ;; 删除
+        ("M-o" . fingertip-backward-delete) ;向后删除
+        ("C-d" . fingertip-forward-delete)  ;向前删除
+        ("C-k" . fingertip-kill)            ;向前kill
+        ;; 包围
+        ("M-\"" . fingertip-wrap-double-quote) ;用 " " 包围对象, 或跳出字符串
+        ("M-'" . fingertip-wrap-single-quote) ;用 ' ' 包围对象, 或跳出字符串
+        ("M-[" . fingertip-wrap-bracket)      ;用 [ ] 包围对象
+        ("M-{" . fingertip-wrap-curly)        ;用 { } 包围对象
+        ("M-(" . fingertip-wrap-round)        ;用 ( ) 包围对象
+        ("M-)" . fingertip-unwrap)            ;去掉包围对象
+        ;; 跳出并换行缩进
+        ("M-:" . fingertip-jump-out-pair-and-newline) ;跳出括号并换行
+        ;; 向父节点跳动
+        ("C-j" . fingertip-jump-up)
+        ))
+(lazy-load-set-keys fingertip-key-alist fingertip-mode-map)
 
 #+end_src
 
