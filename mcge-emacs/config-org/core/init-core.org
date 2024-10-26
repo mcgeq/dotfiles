@@ -29,7 +29,7 @@
 (require 'init-modeline)
 ;(require 'init-dired)
 ;; yasnippet
-;(require 'init-yasnippet)
+(require 'init-yasnippet)
 ;; recentf
 (require 'init-recentf)
 ;; Key bindings
