@@ -307,3 +307,6 @@
 [submodule "emacs-org-roam-ui"]
 	path = mcge-emacs/site-lisp/extensions/org/org-roam-ui
 	url = git@github.com:org-roam/org-roam-ui.git
+[submodule "emacs-corfu-terminal"]
+	path = mcge-emacs/site-lisp/extensions/lsp/emacs-corfu-terminal
+	url = https://codeberg.org/akib/emacs-corfu-terminal.git
