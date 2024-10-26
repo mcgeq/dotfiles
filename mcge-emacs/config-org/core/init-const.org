@@ -89,6 +89,14 @@
     "Image scale factor.")
 #+END_SRC
 
+** Rime
+#+begin_src emacs-lisp
+;; emacs-rime user data
+(defvar mcgemacs-rime-user-data-dir (if *is-linux* (expand-file-name "~/.config/fcitx/rime")
+                                      (expand-file-name (concat mcgemacs-custom-dir "/rime"))))
+
+#+end_src
+
 ** Custom C# paths
 #+BEGIN_SRC emacs-lisp :tangle no
 (defvar mcgemacs-eglot-csharp-dir (if *is-win32p* (file-truename "D:/lsp/csharp")
