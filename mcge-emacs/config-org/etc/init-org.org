@@ -156,10 +156,11 @@
 					("#+language:"      . 128441)       ; 🖹
 					("#+begin_quote"    . 187)          ; »
 					("#+end_quote"      . 171)          ; «
-                                        ("#+begin_results"  . 8943)         ; ⋯
-                                        ("#+end_results"    . 8943)         ; ⋯
-                                        ("#+property:"      . "☸")
-                                        (":PROPERTIES:"     . "⚙")
+                    ("#+begin_results"  . 8943)         ; ⋯
+                    ("#+end_results"    . 8943)         ; ⋯
+                    ("#+property:"      . "☸")
+                    (":PROPERTIES:"     . "⚙")
+                    (":END:"            . "✡")
 					)))
     (setq prettify-symbols-unprettify-at-point t)
     (prettify-symbols-mode 1))
@@ -274,7 +275,7 @@
 (org-element-update-syntax)
 #+end_src
 
-** Org Mode Keymap
+** Binding Keymap
 #+begin_src emacs-lisp
 (lazy-load-set-keys
  '(
@@ -283,10 +284,11 @@
  org-mode-map)
 #+end_src
 
+
 ** Ends
 #+begin_src emacs-lisp
 
 (provide 'init-org)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; init-org.el ends here
-#+end_src
+  #+end_src
