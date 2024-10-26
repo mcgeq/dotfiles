@@ -9,25 +9,50 @@
 
 ;;; Commentary:
 
-  #+end_src
+#+end_src
 
 ** Require
 #+begin_src emacs-lisp
 ;;; Require:
 (require 'org-roam)
-
+(require 'org-roam-dailies)
+(require 'org-roam-ui)
 ;;; Code:
 
-  #+end_src
+#+end_src
 
 ** Code
+
+*** Roam
 #+begin_src emacs-lisp
 (setq org-roam-directory (concat mcgemacs-org-dir "/roam"))
-(add-hook 'after-init-hook 'org-roam-mode)
-
+(setq org-roam-dailies-directory "daily/")
+(setq org-roam-db-gc-threshold most-positive-fixnum) ;; 提高性能
+;; 启动时自动同步数据库
+(org-roam-db-autosync-mode)
 ;; org-roam-ui
 ;(setq org-roam-ui-sync-theme t)
 #+end_src
+
+*** Roam UI
+#+begin_src emacs-lisp
+
+;; 设置 org-roam-ui 的自定义选项
+(setq org-roam-ui-sync-theme t) ;; 同步 Emacs 主题
+(setq org-roam-ui-follow t) ;; 笔记节点跟随
+(setq org-roam-ui-update-on-save t)
+#+end_src
+
+
+** Keymap
+#+begin_src emacs-lisp
+(lazy-load-set-keys
+ '(
+   ("C-c n d" . org-roam-dailies-map)
+   )
+ org-roam-dailies-map)
+#+end_src
+
 
 ** Ends
 #+begin_src emacs-lisp
@@ -35,4 +60,4 @@
 (provide 'init-org-roam)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; init-org-roam.el ends here
-  #+end_src
+#+end_src

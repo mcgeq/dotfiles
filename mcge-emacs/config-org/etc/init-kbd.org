@@ -304,6 +304,19 @@
  "init-download")
 #+end_src
 
+*** Org roam
+#+begin_src emacs-lisp
+(lazy-load-global-keys
+ '(
+   ("C-c n f" . org-roam-node-find)
+   ("C-c n i" . org-roam-node-insert)
+   ("C-c n c" . org-roam-capture)
+   ("C-c n l" . org-roam-buffer-toggle)
+   ("C-c n u" . org-roam-ui-mode)
+   )
+ "init-org-roam")
+#+end_src
+
 ** elisp
 #+begin_src emacs-lisp
 ;; elisp-mode
