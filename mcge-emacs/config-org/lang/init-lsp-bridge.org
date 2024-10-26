@@ -15,7 +15,6 @@
 #+begin_src emacs-lisp
 (require 'lsp-bridge)
 (require 'lsp-bridge-jdtls)
-(require 'flymake-bridge)
 (require 'lang-cpp)
 (require 'lang-java)
 (require 'lang-typescript)
@@ -67,7 +66,7 @@
 #+end_src
 
 ** flymake bridge
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 ;; flymake-bridge
 (add-hook 'lsp-bridge-mode-hook #'flymake-bridge-setup)
 

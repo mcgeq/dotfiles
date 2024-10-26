@@ -220,9 +220,6 @@
 [submodule "emacs-pyvenv"]
 	path = mcge-emacs/site-lisp/extensions/lsp/pyvenv
 	url = git@github.com:jorgenschaefer/pyvenv.git
-[submodule "emacs-flymake-bridge"]
-	path = mcge-emacs/site-lisp/extensions/flymake-bridge
-	url = git@github.com:liuyinz/flymake-bridge.git
 [submodule "emacs-request"]
 	path = mcge-emacs/site-lisp/extensions/emacs-request
 	url = git@github.com:tkf/emacs-request.git
