@@ -24,9 +24,8 @@
 #+begin_src emacs-lisp
 
 (if *is-win32p*
-    (
-     (setq rime-emacs-module-header-root mcgemacs-rime-emacs-module-header-root)
-     (setq rime-librime-root mcgemacs-rime-librime-root)))
+     (setq rime-emacs-module-header-root mcgemacs-rime-emacs-module-header-root
+           rime-librime-root mcgemacs-rime-librime-root))
 
 (setq rime-user-data-dir mcgemacs-rime-user-data-dir)
 
