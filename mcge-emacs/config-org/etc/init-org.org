@@ -274,10 +274,19 @@
 (org-element-update-syntax)
 #+end_src
 
+** Org Mode Keymap
+#+begin_src emacs-lisp
+(lazy-load-set-keys
+ '(
+   ("M-m c" . org-edit-src-code)
+   )
+ org-mode-map)
+#+end_src
+
 ** Ends
 #+begin_src emacs-lisp
 
 (provide 'init-org)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; init-org.el ends here
-  #+end_src
+#+end_src

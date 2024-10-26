@@ -9,7 +9,7 @@
 
 ;;; Commentary:
 
-  #+end_src
+#+end_src
 
 ** Require
 #+begin_src emacs-lisp
@@ -18,11 +18,17 @@
 
 ;;; Code:
 
-  #+end_src
+#+end_src
 
 ** Code
 #+begin_src emacs-lisp
-(setq rime-user-data-dir (expand-file-name "~/.config/fcitx/rime"))
+
+(if *is-win32p*
+    (
+     (setq rime-emacs-module-header-root mcgemacs-rime-emacs-module-header-root)
+     (setq rime-librime-root mcgemacs-rime-librime-root)))
+
+(setq rime-user-data-dir mcgemacs-rime-user-data-dir)
 
 (setq rime-posframe-properties
       (list :background-color "#333333"
@@ -40,4 +46,4 @@
 (provide 'init-rime)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; init-rime.el ends here
-  #+end_src
+#+end_src
