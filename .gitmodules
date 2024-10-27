@@ -298,3 +298,6 @@
 [submodule "emacs-org-roam-ui"]
 	path = mcge-emacs/site-lisp/extensions/org/org-roam-ui
 	url = git@github.com:org-roam/org-roam-ui.git
+[submodule "emacs-json-snatcher"]
+	path = mcge-emacs/site-lisp/extensions/lsp/json-snatcher
+	url = git@github.com:Sterlingg/json-snatcher.git
