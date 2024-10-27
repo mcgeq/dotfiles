@@ -57,6 +57,7 @@
 
 (defun load-language-part-file()
   "Load language part file.  `run-with-idle-timer' 2."
+  (require 'init-markdown)
   ;; lsp-bridge
   (require 'init-lsp-bridge)
   (unless (display-graphic-p)

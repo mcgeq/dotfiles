@@ -66,6 +66,8 @@
                'web-mode-hook
                'js-mode-hook
                'typescript-mode-hook
+               'typescript-ts-mode-hook
+               'tsx-ts-mode-hook
                ))
   (add-hook hook #'(lambda ()
                      (setq indent-tabs-mode nil)

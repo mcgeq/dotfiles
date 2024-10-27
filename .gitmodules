@@ -301,3 +301,9 @@
 [submodule "emacs-json-snatcher"]
 	path = mcge-emacs/site-lisp/extensions/lsp/json-snatcher
 	url = git@github.com:Sterlingg/json-snatcher.git
+[submodule "emacs-rainbow-mode"]
+	path = mcge-emacs/site-lisp/extensions/lsp/rainbow-mode
+	url = git@github.com:emacsmirror/rainbow-mode.git
+[submodule "emacs-markdown-ts-mode"]
+	path = mcge-emacs/site-lisp/extensions/lsp/markdown-ts-mode
+	url = git@github.com:LionyxML/markdown-ts-mode.git

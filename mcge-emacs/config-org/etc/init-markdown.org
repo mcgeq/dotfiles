@@ -15,7 +15,7 @@
 #+begin_src emacs-lisp
 ;;; Require:
 (require 'markdown-mode)
-
+(require 'markdown-ts-mode)
 ;;; Code:
 
 #+end_src
