@@ -307,3 +307,6 @@
 [submodule "emacs-markdown-ts-mode"]
 	path = mcge-emacs/site-lisp/extensions/lsp/markdown-ts-mode
 	url = git@github.com:LionyxML/markdown-ts-mode.git
+[submodule "emacs-js2-mode"]
+	path = mcge-emacs/site-lisp/extensions/lsp/js2-mode
+	url = git@github.com:mooz/js2-mode.git
