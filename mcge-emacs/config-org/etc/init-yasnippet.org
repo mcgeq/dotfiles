@@ -14,18 +14,20 @@
 ** Require
 #+begin_src emacs-lisp
 ;;; Require:
+(require 'js2-mode)
 (require 'yasnippet)
-(require 'yasnippet-snippets)
-
 ;;; Code:
 
   #+end_src
 
 ** Code
 #+begin_src emacs-lisp
+;; 全局启用 yasnippet
+(yas-global-mode 1)
+
+
 (add-hook 'prog-mode-hook
-          (lambda ()
-            (require 'yasnippet)
+          #'(lambda ()
             ;; 定义从 Git 配置中获取用户名和电子邮件的函数
             (defun get-git-user-name ()
               "Get the Git configured user name."
@@ -44,10 +46,9 @@
                          )))
               (dolist (dir custom-snippet-dirs)
                 (add-to-list 'yas-snippet-dirs dir)))
-
-            ;; 全局启用 yasnippet
-            (yas-global-mode 1)
-
+            (yas-reload-all)
+            (yas-minor-mode 1)
+            
             ;; 禁用某些模式下的 yasnippet
             (dolist (hook '(term-mode-hook))
               (add-hook hook (lambda () (yas-minor-mode -1))))
