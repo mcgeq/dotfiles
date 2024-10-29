@@ -172,9 +172,6 @@
 [submodule "emacs-tabspaces"]
 	path = mcge-emacs/site-lisp/extensions/tabspaces
 	url = git@github.com:mclear-tools/tabspaces.git
-[submodule "emacs-treemacs"]
-	path = mcge-emacs/site-lisp/extensions/treemacs
-	url = git@github.com:Alexander-Miller/treemacs.git
 [submodule "emacs-tomelr"]
 	path = mcge-emacs/site-lisp/extensions/org/tomelr
 	url = git@github.com:kaushalmodi/tomelr.git
