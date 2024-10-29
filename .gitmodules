@@ -124,9 +124,6 @@
 [submodule "emacs-emacs-rime"]
 	path = mcge-emacs/site-lisp/extensions/emacs-rime
 	url = git@github.com:DogLooksGood/emacs-rime.git
-[submodule "emacs-mini-frame"]
-	path = mcge-emacs/site-lisp/extensions/mini-frame
-	url = git@github.com:muffinmad/emacs-mini-frame.git
 [submodule "emacs-nerd-icons-corfu"]
 	path = mcge-emacs/site-lisp/extensions/nerd-icons-corfu
 	url = git@github.com:LuigiPiucco/nerd-icons-corfu.git
