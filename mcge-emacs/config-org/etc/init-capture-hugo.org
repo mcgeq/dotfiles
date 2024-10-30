@@ -134,34 +134,60 @@
                  "\n")))
 
 
-(add-to-list 'org-capture-templates '("h" "Hugo Post"))
-(add-to-list 'org-capture-templates
-             '("hl"
-               "About Development Language"
-               entry
-               (file+headline org-development-blog "Rust")
-               (function org-hugo-new-subtree-post-capture-template)))
-(add-to-list 'org-capture-templates
-             '("he"                ;`org-capture' binding + h
-               "About Emacs"
-               entry
-               ;; It is assumed that below file is present in `org-directory'
-               ;; and that it has a "Blog Ideas" heading. It can even be a
-               ;; symlink pointing to the actual location of all-posts.org!
-               (file+olp org-emacs-blog "Emacs")
-               (function org-hugo-new-subtree-post-capture-template)))
-(add-to-list 'org-capture-templates
-             '("hp"
-               "About Prattle"
-               entry
-               (file+olp org-prattle-blog "Prattle")
-               (function org-hugo-new-subtree-post-capture-template)))
-(add-to-list 'org-capture-templates
-             '("hT"
-               "About Tools"
-               entry
-               (file+olp org-tools-blog "Tools")
-               (function org-hugo-new-subtree-post-capture-template)))
+  (add-to-list 'org-capture-templates '("h" "Hugo Post"))
+  (add-to-list 'org-capture-templates '("hl" "About Development Language"))
+  (add-to-list 'org-capture-templates
+               '("hla"
+                 "About ArkTS"
+                 entry
+                 (file+headline org-development-blog "ArkTS")
+                 (function org-hugo-new-subtree-post-capture-template)))
+  (add-to-list 'org-capture-templates
+               '("hle"
+                 "About React"
+                 entry
+                 (file+headline org-development-blog "React")
+                 (function org-hugo-new-subtree-post-capture-template)))
+  (add-to-list 'org-capture-templates
+               '("hlm"
+                 "About Assembly"
+                 entry
+                 (file+headline org-development-blog "Assembly")
+                 (function org-hugo-new-subtree-post-capture-template)))
+  (add-to-list 'org-capture-templates
+               '("hlr"
+                 "About Rust"
+                 entry
+                 (file+headline org-development-blog "Rust")
+                 (function org-hugo-new-subtree-post-capture-template)))
+  (add-to-list 'org-capture-templates
+               '("hlv"
+                 "About Vue"
+                 entry
+                 (file+headline org-development-blog "Vue")
+                 (function org-hugo-new-subtree-post-capture-template)))
+
+  (add-to-list 'org-capture-templates
+               '("he"                ;`org-capture' binding + h
+                 "About Emacs"
+                 entry
+                 ;; It is assumed that below file is present in `org-directory'
+                 ;; and that it has a "Blog Ideas" heading. It can even be a
+                 ;; symlink pointing to the actual location of all-posts.org!
+                 (file+olp org-emacs-blog "Emacs")
+                 (function org-hugo-new-subtree-post-capture-template)))
+  (add-to-list 'org-capture-templates
+               '("hp"
+                 "About Prattle"
+                 entry
+                 (file+olp org-prattle-blog "Prattle")
+                 (function org-hugo-new-subtree-post-capture-template)))
+  (add-to-list 'org-capture-templates
+               '("hT"
+                 "About Tools"
+                 entry
+                 (file+olp org-tools-blog "Tools")
+                 (function org-hugo-new-subtree-post-capture-template)))
  )
 
 (with-eval-after-load 'easy-hugo
