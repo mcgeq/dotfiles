@@ -154,9 +154,6 @@
 [submodule "emacs-ox-hugo"]
 	path = mcge-emacs/site-lisp/extensions/org/ox-hugo
 	url = git@github.com:kaushalmodi/ox-hugo.git
-[submodule "emacs-quickrun"]
-	path = mcge-emacs/site-lisp/extensions/quickrun
-	url = git@github.com:emacsorphanage/quickrun.git
 [submodule "emacs-svg-lib"]
 	path = mcge-emacs/site-lisp/extensions/org/svg-lib
 	url = git@github.com:rougier/svg-lib.git

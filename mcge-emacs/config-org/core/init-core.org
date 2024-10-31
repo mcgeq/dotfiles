@@ -62,8 +62,6 @@
   (require 'init-lsp-bridge)
   (unless (display-graphic-p)
       (require 'init-acm-terminal))
-  ;; init-quickrun
-  ;(require 'init-quickrun)
   ;; jieba
   (require 'init-jieba)
   ;; eldoc

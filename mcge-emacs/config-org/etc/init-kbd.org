@@ -85,16 +85,6 @@
 
 #+end_src
 
-** quickrun
-#+begin_src emacs-lisp
-;; quickrun
-;;; c++
-(lazy-load-global-keys
- '(
-   ("C-c q" . quickrun)
-   )
- "init-quickrun")
-#+end_src
 
 ** color-rg
 #+begin_src emacs-lisp
