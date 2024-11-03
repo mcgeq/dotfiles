@@ -65,6 +65,16 @@
                     (return "deno")))))))))
 #+end_src
 
+** Keymap
+#+begin_src emacs-lisp
+(lazy-load-set-keys
+ '(
+   ("C-c C-u d l" .  lsp-bridge-diagnostic-list)
+   ("C-c C-u d w" .  lsp-bridge-workspace-diagnostic-list)
+   )
+ lsp-bridge-mode-map)
+#+end_src
+
 ** flymake bridge
 #+begin_src emacs-lisp :tangle no
 ;; flymake-bridge
