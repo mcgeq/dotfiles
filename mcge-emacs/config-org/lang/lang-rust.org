@@ -18,6 +18,20 @@
 ;;; Code:
 #+end_src
 
+** Keymap
+#+begin_src emacs-lisp
+(with-eval-after-load 'rust-ts-mode
+  (lazy-load-set-keys
+   '(
+     ("C-c C-u C-k" . rust-check)
+     ("C-c C-u C-l" . rust-run-clippy)
+     ("C-c C-u C-r" . rust-run)
+     ("C-c C-u C-u" . rust-compile)
+     ("C-c C-u C-t" . rust-test)
+     )
+   rust-ts-mode-map)
+  )
+#+end_src
 
 ** Rust with Eglot
 
