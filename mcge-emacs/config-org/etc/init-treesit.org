@@ -67,8 +67,9 @@
 *** Major Mode
 #+begin_src emacs-lisp
 (setq major-mode-remap-alist
-      '((c-mode          . c-ts-mode)
-        (c++-mode        . c++-ts-mode)
+      '(
+        ;;(c-mode          . c-ts-mode)
+        ;;(c++-mode        . c++-ts-mode)
         (cmake-mode      . cmake-ts-mode)
         (conf-toml-mode  . toml-ts-mode)
         (css-mode        . css-ts-mode)
