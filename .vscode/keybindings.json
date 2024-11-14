@@ -1,0 +1,13 @@
+[
+    {
+        "key": "ctrl+s",
+        "command": "workbench.action.files.save",  // 保存文件
+        "when": "editorTextFocus"
+    },
+    {
+        "key": "ctrl+s",
+        "command": "workbench.action.tasks.runTask",  // 运行指定任务
+        "args": "Update Last edited time",  // 任务名称
+        "when": "editorTextFocus"
+    }
+]
