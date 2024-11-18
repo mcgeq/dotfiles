@@ -161,6 +161,12 @@
                  (file+headline org-development-blog "Rust")
                  (function org-hugo-new-subtree-post-capture-template)))
   (add-to-list 'org-capture-templates
+               '("hlc"
+                 "About C#"
+                 entry
+                 (file+headline org-development-blog "CSharp")
+                 (function org-hugo-new-subtree-post-capture-template)))
+  (add-to-list 'org-capture-templates
                '("hlv"
                  "About Vue"
                  entry
