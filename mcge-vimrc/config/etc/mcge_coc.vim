@@ -25,7 +25,6 @@ g:coc_global_extensions = [
     "coc-markdownlint",
     "coc-markdown-preview-enhanced",
     "coc-pairs",
-    "coc-pyright",
     "coc-prettier",
     "coc-rust-analyzer",
     "@yaegassy/coc-ruff",

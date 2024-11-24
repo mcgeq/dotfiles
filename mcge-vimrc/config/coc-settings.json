@@ -7,9 +7,15 @@
     }
   },
   "workspace.rootPatterns": [".git", ".hg", ".projections.json"],
-  "eslint.autoFixOnSave": true,
   "rust-analyzer.enable": true,
   "rust-analyzer.checkOnSave": true,
+  "ruff.enable": true,
+  "ruff.autoFixOnSave": true,
+  "ruff.organizeImports": true,
+  "ruff.lint.enable": true,
+  "ruff.enableExperimentalFormatter": true,
+  "ruff.client.codeAction.showDocumantaion.enable": true,
+  "ruff.codeAction.fixViolation.enable": true,
   "suggest.enablePreselect": true,
   "suggest.autoTrigger": "always",
   "suggest.timeout": 5000,
@@ -41,13 +47,6 @@
     "typeParameter": "\uf728",
     "default": " "
   },
-  "python.linting.pylintEnabled": true,
-  "python.linting.pylintArgs": [
-    "--disable=too-few-public-methods",
-    "--disable=too-many-instance-attributes",
-    "--disable=invalid-name",
-    "--disable=unused-argument"
-  ],
   "diagnostic.errorSign": "\uf467",
   "diagnostic.warningSign": "\uf071",
   "diagnostic.infoSign": "\uf129",
