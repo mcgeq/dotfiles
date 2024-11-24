@@ -10,5 +10,8 @@ set guioptions-=b               # 隐藏底部滚动条
 set cmdheight=2
 
 # set background=light
-g:gruvbox_italic = 1
-colorscheme gruvbox
+#  g:gruvbox_italic = 1
+# colorscheme gruvbox
+
+g:molokai_original = 1
+colorscheme molokai

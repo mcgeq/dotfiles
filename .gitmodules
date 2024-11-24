@@ -304,3 +304,6 @@
 [submodule "emacs-modern-cpp-font-lock"]
 	path = mcge-emacs/site-lisp/extensions/lsp/modern-cpp-font-lock
 	url = git@github.com:ludwigpacifici/modern-cpp-font-lock.git
+[submodule "vim-molokai"]
+	path = mcge-vimrc/pack/mcge/start/molokai
+	url = git@github.com:tomasr/molokai.git
