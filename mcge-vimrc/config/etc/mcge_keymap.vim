@@ -39,8 +39,13 @@ cnoremap <C-l> <End>
 nnoremap <M-q> <esc>:bdelete<cr>
 
 # 切换buffer
-nnoremap <M-p> <esc>:bprevious<cr>
-nnoremap <M-n> <esc>:bnext<cr>
+nnoremap <C-p> :bprevious<CR>
+inoremap <C-p> <Esc>:bprevious<CR>
+vnoremap <C-p> <Esc>:bprevious<CR>
+
+nnoremap <C-n> :bnext<CR>
+inoremap <C-n> <Esc>:bnext<CR>
+vnoremap <C-n> <Esc>:bnext<CR>
 # -------------------- buffer end --------------------
 
 # -------------------- 宏 start --------------------
@@ -177,26 +182,28 @@ nnoremap <silent><nowait> <space>p  :<C-u>CocListResume<CR>
 # -------------------- coc end --------------------
 
 # -------------------- git start --------------------
-nnoremap <silent><nowait> <M-g>g  :G<CR>
+nnoremap <silent><nowait> <leader>gg  :G<CR>
 # q 关闭窗口
 # A 调整大小至作者
 # C 调整大小至提交列
 # D 调整大小至日期/时间列
-nnoremap <silent><nowait> <M-g>b  :<c-u>Gblame<CR>
-nnoremap <silent><nowait> <M-g>d  :<c-u>Gdiffsplit<CR>
-nnoremap <silent><nowait> <M-g>w  :<c-u>Gwrite<CR>
-nnoremap <silent><nowait> <M-g>r  :<c-u>Gread<CR>
-nnoremap <silent><nowait> <M-g>c  :<c-u>Gclog<CR>
-nnoremap <silent><nowait> <M-g>o  :<c-u>copen<CR>
-nnoremap <silent><nowait> <M-g>q  :<c-u>cclose<CR>
-nnoremap <silent><nowait> <M-g>n  :<c-u>cnext<CR>
-nnoremap <silent><nowait> <M-g>p  :<c-u>cprevious<CR>
-inoremap <silent><nowait> <M-g>g  <esc>:<c-u>G<CR>
-inoremap <silent><nowait> <M-g>b  <Esc>:<c-u>Gblame<CR>
-inoremap <silent><nowait> <M-g>d  <Esc>:<c-u>Gdiffsplit<CR>
-inoremap <silent><nowait> <M-g>w  <Esc>:<c-u>Gwrite<CR>
-inoremap <silent><nowait> <M-g>r  <Esc>:<c-u>Gread<CR>
-inoremap <silent><nowait> <M-g>c  <Esc>:<c-u>Gclog<CR>
+nnoremap <silent><nowait> <leader>gb  :<c-u>Git blame<CR>
+nnoremap <silent><nowait> <leader>gd  :<c-u>Gdiffsplit<CR>
+nnoremap <silent><nowait> <leader>gw  :<c-u>Gwrite<CR>
+nnoremap <silent><nowait> <leader>gr  :<c-u>Gread<CR>
+nnoremap <silent><nowait> <leader>gm  :<c-u>Git commit<CR>
+nnoremap <silent><nowait> <leader>gc  :<c-u>Gclog<CR>
+nnoremap <silent><nowait> <leader>go  :<c-u>copen<CR>
+nnoremap <silent><nowait> <leader>gq  :<c-u>cclose<CR>
+nnoremap <silent><nowait> <leader>gn  :<c-u>cnext<CR>
+nnoremap <silent><nowait> <leader>gp  :<c-u>cprevious<CR>
+inoremap <silent><nowait> <leader>gg  <esc>:<c-u>G<CR>
+inoremap <silent><nowait> <leader>gb  <Esc>:<c-u>Git blame<CR>
+inoremap <silent><nowait> <leader>gd  <Esc>:<c-u>Gdiffsplit<CR>
+inoremap <silent><nowait> <leader>gw  <Esc>:<c-u>Gwrite<CR>
+inoremap <silent><nowait> <leader>gr  <Esc>:<c-u>Gread<CR>
+inoremap <silent><nowait> <leader>gm  <Esc>:<c-u>Git commit<CR>
+inoremap <silent><nowait> <leader>gc  <Esc>:<c-u>Gclog<CR>
 # -------------------- git end --------------------
 
 # -------------------- vim-clap start --------------------
