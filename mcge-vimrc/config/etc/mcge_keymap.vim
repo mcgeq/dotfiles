@@ -3,10 +3,10 @@ vim9script
 import autoload "mcge_utils.vim"
 
 # -------------------- 保存退出 start --------------------
-# 保存
-nnoremap <C-s> :w<CR>
-inoremap <C-s> <Esc>:w<CR>
-vnoremap <C-s> <Esc>:w<CR>
+# 保存文件
+nnoremap <C-x><C-s> :w<CR>
+inoremap <C-x><C-s> <Esc>:w<CR>
+vnoremap <C-x><C-s> <Esc>:w<CR>
 
 # 退出
 
