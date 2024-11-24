@@ -3,7 +3,7 @@ vim9script
 # augroup MCGE_AUTO
 #     autocmd!
 #     autocmd BufWritePre,FileWritePre *.c,*.h,*.cpp,*.py,*.rs,*.ts,*.js,*.cs execute "normal ma"
-#     autocmd BufWritePre,FileWritePre *.c,*.h,*.cpp,*.py,*.rs,*.ts,*.js,*.cs exe $":1,12g/Last modified:.*/s/Last Modified:.*/Last Modified:  {strftime('%Y-%m-%d %H:%M:%S')}"
+#     autocmd BufWritePre,FileWritePre *.c,*.h,*.cpp,*.py,*.rs,*.ts,*.js,*.cs exe $":1,12g/Last modified:.*/s/Last Modified:.*/Last Modified:  2024-11-24 16:27:51
 # autocmd BufWritePre,FileWritePre *.c,*.h,*.cpp,*.py,*.rs,*.ts,*.js,*.cs exe $":1,12g/Modify Counts:.*/s/Modify Counts:.*/Modify Counts:  {(str2nr(submatch(1)) + 1)}"
 #     autocmd BufWritePost,FileWritePost *.c,*.h,*.cpp,*.py,*.rs,*.ts,*.js,*.cs execute "normal `a"
 # augroup END
@@ -31,7 +31,7 @@ g:mcge_custom_shell = "pwsh"
 g:mcge_customvimrcdir = "D:/config/dotfiles/mcge-vimrc"
 
 if has("unix")
-    g:mcge_customvimrcdir = "~/mcge-vimrc"
+    g:mcge_customvimrcdir = "~/dotfiles/mcge-vimrc"
     g:mcge_custom_project = "~/projects"
     g:mcge_custom_workspace = "~/workspace"
     g:mcge_custom_fzf_dir = "~/.fzf"
