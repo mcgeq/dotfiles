@@ -36,6 +36,7 @@ New-Alias -Name gme -Value gitMerge
 New-Alias -Name gab -Value PullAllBranches
 New-Alias -Name gsu -Value GitSubmoduleUpdate
 New-Alias -Name gpha -Value GitPushAllBranch
+New-Alias -Name gsub -Value gitSubmoduleResetHard
 
 New-Alias -Name ppm -Value pnpm
 
@@ -89,6 +90,10 @@ function gitCommit {
 	git commit
 }
 # git pull all branch
+
+function gitSubmoduleResetHard() {
+    git submodule foreach 'git reset --hard origin/$(git rev-parse --abbrev-ref HEAD)'
+}
 
 function PullAllBranches  {
 	param(
