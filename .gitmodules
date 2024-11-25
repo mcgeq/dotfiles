@@ -307,3 +307,6 @@
 [submodule "vim-molokai"]
 	path = mcge-vimrc/pack/mcge/start/molokai
 	url = git@github.com:tomasr/molokai.git
+[submodule "fzf"]
+	path = mcge-vimrc/pack/mcge/start/fzf
+	url = git@github.com:junegunn/fzf.git
