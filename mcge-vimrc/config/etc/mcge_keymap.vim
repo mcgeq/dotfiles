@@ -29,6 +29,10 @@ tnoremap <c-l> <c-\><c-n><c-w>l
 # 关闭窗口
 nnoremap <silent> q <esc>:close<cr>
 vnoremap <silent> q <esc>:close<cr>
+
+nnoremap <silent> <C-q> :bdelete<cr>
+inoremap <silent> <C-q> <esc>:bdelete<cr>
+vnoremap <silent> <C-q> <esc>:bdelete<cr>
 # -------------------- 窗口 end --------------------
 
 # -------------------- 行     start --------------------
