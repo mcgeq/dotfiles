@@ -42,13 +42,8 @@ enddef
 
 export def g:AutoUpdateLastUpdateInfo()
     var origin_pos = getpos('.')
-    var lu = search('Last Modified: ')
-    if lu != 0
-        var oln = getline(lu)
-        var update_str = substitute(oln, '\(Last Modified:\s*\)\zs.*$', strftime('%Y-%m-%d %H:%M:%S'), '')
-        call setline(lu, update_str)
+    if search('Last Modified: ', 'n') 
+        call setline('.', substitute(getline('.'), '\(Last Modified:\s*\)\zs.*$', strftime('%Y-%m-%d %H:%M:%S'), '')
         call setpos(".", origin_pos)
     endif
-    # var cur_time = strftime('%Y-%m-%d %H:%M:%S')
-    # execute ':s/\(Last Modified:\s\+\)\d\{4}-\d\{2}-\d\{2} \d\{2}:\d\{2}:\d\{2}\(.*\)/\1' .. cur_time .. '\2/'
 enddef
