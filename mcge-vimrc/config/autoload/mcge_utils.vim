@@ -42,13 +42,11 @@ enddef
 
 export def g:AutoUpdateLastUpdateInfo()
     var origin_pos = getpos('.')
-    var regexp = " Last Modified:  "
-    var lu = searchpos(regexp)
-    if lu[0] != 0
-        var oln = getline(lu[0])
-        var str_len = lu[1] + strlen(regexp)
-        var nline = oln[ : str_len - 2]
-        call setline(lu[0], nline .. strftime('%Y-%m-%d %H:%M:%S'))
+    var lu = search('Last Modified: ')
+    if lu != 0
+        var oln = getline(lu)
+        var update_str = substitute(oln, '\(Last Modified:\s*\)\zs.*$', strftime('%Y-%m-%d %H:%M:%S'), '')
+        call setline(lu, update_str)
         call setpos(".", origin_pos)
     endif
     # var cur_time = strftime('%Y-%m-%d %H:%M:%S')
