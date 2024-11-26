@@ -9,6 +9,9 @@ inoremap <C-x><C-s> <Esc>:w<CR>
 vnoremap <C-x><C-s> <Esc>:w<CR>
 
 # 退出
+nnoremap <silent> <C-x><C-q> :wq<CR>
+inoremap <silent> <C-x><C-q> <Esc>:wq<CR>
+vnoremap <silent> <C-x><C-q> <Esc>:wq<CR>
 
 # -------------------- 保存退出 end   --------------------
 
@@ -27,6 +30,19 @@ tnoremap <c-l> <c-\><c-n><c-w>l
 nnoremap <silent> q <esc>:close<cr>
 vnoremap <silent> q <esc>:close<cr>
 # -------------------- 窗口 end --------------------
+
+# -------------------- 行     start --------------------
+# 行首
+nnoremap <silent> <C-a> 0
+inoremap <silent> <C-a> <Esc>0
+vnoremap <silent> <C-a> <Esc>0
+
+# 行尾
+nnoremap <silent> <C-e> $
+inoremap <silent> <C-e> <Esc>$
+vnoremap <silent> <C-e> <Esc>$
+
+# -------------------- 行       end --------------------
 
 # -------------------- 命令行 start --------------------
 # 命令行移动
@@ -228,7 +244,6 @@ nnoremap <silent><nowait> <leader>v :<c-u>Vista<CR>             # 打开Vista窗
 nnoremap <silent><nowait> <leader>vb :<c-u>Vista!!<CR>          # 更新Vista窗口
 nnoremap <silent><nowait> <leader>vc :<c-u>Vista focus<CR>      # 聚焦Vista窗口
 nnoremap <silent><nowait> <leader>ve :<c-u>Vista finder<CR>     # 在Vista窗口中搜索
-nnoremap <silent><nowait> <leader>vg :<c-u>Vista!! toggle<CR>   # 切换Vista窗口的可见性
 nnoremap <silent><nowait> <leader>vr :<c-u>Vista refresh<CR>    # 刷新Vista窗口
 nnoremap <silent><nowait> <leader>vt :<c-u>Vista kind<CR>       # 选择Vista窗口显示的符号类型
 # -------------------- vista   end --------------------
