@@ -4,9 +4,9 @@ import autoload "mcge_utils.vim"
 
 # -------------------- 保存退出 start --------------------
 # 保存文件
-nnoremap <C-x><C-s> :w<CR>
-inoremap <C-x><C-s> <Esc>:w<CR>
-vnoremap <C-x><C-s> <Esc>:w<CR>
+nnoremap <silent> <C-x><C-s> :w<CR>
+inoremap <silent> <C-x><C-s> <Esc>:w<CR>
+vnoremap <silent> <C-x><C-s> <Esc>:w<CR>
 
 # 退出
 nnoremap <silent> <C-x><C-q> :wq<CR>

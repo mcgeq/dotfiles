@@ -40,3 +40,17 @@ export def ShowDocumentation()
   endif
 enddef
 
+export def g:AutoUpdateLastUpdateInfo()
+    var origin_pos = getpos('.')
+    var regexp = " Last Modified:  "
+    var lu = searchpos(regexp)
+    if lu[0] != 0
+        var oln = getline(lu[0])
+        var str_len = lu[1] + strlen(regexp)
+        var nline = oln[ : str_len - 2]
+        call setline(lu[0], nline .. strftime('%Y-%m-%d %H:%M:%S'))
+        call setpos(".", origin_pos)
+    endif
+    # var cur_time = strftime('%Y-%m-%d %H:%M:%S')
+    # execute ':s/\(Last Modified:\s\+\)\d\{4}-\d\{2}-\d\{2} \d\{2}:\d\{2}:\d\{2}\(.*\)/\1' .. cur_time .. '\2/'
+enddef

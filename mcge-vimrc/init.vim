@@ -24,3 +24,7 @@ var etc_files =  mcge_utils.GetAllVimFilesInDirectory(g:mcge_customvimrcdir .. "
 for v in etc_files
     execute $"source {v}"
 endfor
+
+# 保存文件时自动更新日期时间
+autocmd BufWritePost *.{rs,c,cpp,py,ts,cs} mcge_utils.AutoUpdateLastUpdateInfo() 
+
