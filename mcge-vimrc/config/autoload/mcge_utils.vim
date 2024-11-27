@@ -32,18 +32,20 @@ export def CheckBackspace(): bool
   return !col || getline('.')[col - 1]  =~# '\s'
 enddef
 
-export def ShowDocumentation()
-  if CocAction('hasProvider', 'hover')
-    call CocActionAsync('doHover')
-  else
-    call feedkeys('K', 'in')
-  endif
-enddef
 
 export def g:AutoUpdateLastUpdateInfo()
     var origin_pos = getpos('.')
-    if search('Last Modified: ', 'n') 
-        call setline('.', substitute(getline('.'), '\(Last Modified:\s*\)\zs.*$', strftime('%Y-%m-%d %H:%M:%S'), '')
+    var regexp = " Last Modified:  "
+    var lu = searchpos(regexp)
+    if lu[0] != 0
+        var oln = getline(lu[0])
+        var str_len = lu[1] + strlen(regexp)
+        var nline = oln[ : str_len - 2]
+        call setline(lu[0], nline .. strftime('%Y-%m-%d %H:%M:%S'))
         call setpos(".", origin_pos)
     endif
+    # if search('Last Modified: ', 'n') != 0
+        # call setline('.', substitute(getline('.'), '\(Last Modified:\s*\)\zs.*$', strftime('%Y-%m-%d %H:%M:%S'), ''))
+        # call setpos('.', origin_pos)
+    # endif
 enddef
