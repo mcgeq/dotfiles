@@ -1,6 +1,7 @@
 mcge-vimrc/coc-data/*
-!mcge-vimrc/coc-data/ultisnips/*
 mcge-vimrc/pack/mcge/start/ultisnips/tags
+!mcge-vimrc/coc-data/ultisnips/
+!mcge-vimrc/coc-data/ultisnips/*
 
 mcge-emacs/site-lisp/config/*
 
