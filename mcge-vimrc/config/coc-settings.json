@@ -12,6 +12,8 @@
   "python.linting.ruffEnabled": true,
   "python.formatting.provider": "ruff",
   "pyright.organizeimports.provider": "ruff",
+  "typescript.suggest.autoImports": true,
+  "typescript.updateImportsOnFileMove.enabled": "always",
   "suggest.enablePreselect": true,
   "suggest.autoTrigger": "always",
   "suggest.timeout": 5000,
