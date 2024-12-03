@@ -127,7 +127,7 @@ nmap <silent> gi <Plug>(coc-implementation)
 nmap <silent> gr <Plug>(coc-references)
 
 # Use K to show documentation in preview window
-nnoremap <silent> <C-k> :call CocActionAsync('doHover')<CR>
+nnoremap <silent> K :call CocActionAsync('doHover')<CR>
 inoremap <silent> <C-k> <Esc>:call CocActionAsync('doHover')<CR>
 
 # Highlight the symbol and its references when holding the cursor
@@ -246,6 +246,15 @@ nnoremap <silent><nowait> <leader>os :<c-u>Clap colors<CR>
 nnoremap <silent><nowait> <leader>og :<c-u>Clap igrep<CR>
 nnoremap <silent><nowait> <leader>or :<c-u>Clap recent_files<CR>
 # -------------------- vim-clap   end --------------------
+
+# --------------------  fzf     start --------------------
+nnoremap <silent><nowait> <C-l> :<c-u>Lines<CR>
+inoremap <silent><nowait> <C-l> <Esc>:<c-u>Lines<CR>
+vnoremap <silent><nowait> <C-l> :<c-u>Lines<CR>
+nnoremap <silent><nowait> <C-s> :<c-u>BLines<CR>
+inoremap <silent><nowait> <C-s> <Esc>:<c-u>BLines<CR>
+vnoremap <silent><nowait> <C-s> :<c-u>BLines<CR>
+# --------------------      fzf   end --------------------
 
 # -------------------- vista start --------------------
 nnoremap <silent><nowait> <leader>v :<c-u>Vista<CR>             # 打开Vista窗口
