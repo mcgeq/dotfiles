@@ -173,7 +173,7 @@
                  (file+headline org-development-blog "Vue")
                  (function org-hugo-new-subtree-post-capture-template)))
   (add-to-list 'org-capture-templates
-               '("hlm"
+               '("hlu"
                  "About MCU"
                  entry
                  (file+headline org-development-blog "MCU")
