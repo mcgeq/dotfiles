@@ -80,6 +80,7 @@
 (defvar org-prattle-blog   (expand-file-name "all-about-prattle.org" mcgemacs-blog-org-dir))
 (defvar org-tools-blog   (expand-file-name "all-about-tools.org" mcgemacs-blog-org-dir))
 (defvar org-development-blog   (expand-file-name "all-about-development.org" mcgemacs-blog-org-dir))
+(defvar org-mcu-blog     (expand-file-name "all-about-mcu-blog.org" mcgemacs-blog-org-dir))
 #+END_SRC
 
 ** Set image size
