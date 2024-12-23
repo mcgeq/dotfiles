@@ -30,7 +30,7 @@
 (doom-themes-visual-bell-config)
 (doom-themes-org-config)
 
-(load-theme 'doom-oceanic-next t)
+(load-theme 'doom-molokai t)
 
 (doom-themes-visual-bell-config)
 (doom-themes-org-config)
