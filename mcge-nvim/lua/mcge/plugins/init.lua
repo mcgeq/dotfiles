@@ -1,6 +1,14 @@
 return {
   --------------------- colorschemes ------------------------------------------
-  
+ 
+  -- molokai
+  { 
+    "tanvirtin/monokai.nvim",
+    config = function()
+      require("mcge.plugins.monokai")
+    end,
+  },
+
   -- tokyonight
   {
     "folke/tokyonight.nvim",

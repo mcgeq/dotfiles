@@ -1,5 +1,5 @@
 ---@class UserConfig
----@field colorscheme? "molokai" | "tokyonight" | "nord" | "onedark" | "gruvbox" | "nightfox" | "nordfox" | "duskfox" | "dracula" builtin colorscheme
+---@field colorscheme? "monokai" | "tokyonight" | "nord" | "onedark" | "gruvbox" | "nightfox" | "nordfox" | "duskfox" | "dracula" builtin colorscheme
 ---@field max_highlight_line_count? number disable code hightlight on big file for performance default 10000
 ---@field enable_imselect? boolean auto switch your input method, default false  ---@see https://github.com/daipeihust/im-select
 ---@field enable_very_magic_search? boolean enable regexp very magic mode ---@see https://www.youtube.com/watch?v=VjOcINs6QWs
@@ -41,7 +41,7 @@
 
 local UserConfig = {
 
-  colorscheme = "molokai",
+  colorscheme = "monokai",
   max_highlight_line_count = 5000,
   enable_imselect = false,
   enable_very_magic_search = false,

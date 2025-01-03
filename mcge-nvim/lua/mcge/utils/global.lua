@@ -6,7 +6,7 @@ function _G.pRequire(name)
     -- vim.notify(" Can't find: " .. name)
     return nil
   end
-    return plugin
+  return plugin
 end
 
 

@@ -25,8 +25,8 @@ M.setup = function()
     vim.notify("require lazy.nvim")
     return
   end
-  -- local plugins = require("mcge.plugins")
-  -- lazy.setup(plugins)
+  local plugins = require("mcge.plugins")
+  lazy.setup(plugins)
 end
 
 return M
