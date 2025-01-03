@@ -9,6 +9,7 @@ function M.setup(user_config)
   require("mcge.options")
   -- user config override
   M.config = vim.tbl_deep_extend("force", M.config, user_config)
+  require("mcge.env").init(M.config)
   require("mcge.keymaps")
   local pluginManager = require("mcge.lazy")
   if not pluginManager.avaliable() then
@@ -17,5 +18,14 @@ function M.setup(user_config)
   pluginManager.setup()
   require("mcge.colorscheme").reset()
   require("mcge.autocmds")
+  require("mcge.lsp")
+  require("mcge.cmp")
+  require("mcge.format")
+  require("mcge.dap")
+  require("mcge.utils.color-preview")
+  if M.config.fix_windows_clipboard then
+    require("utils.fix-yank")
+  end
 end
+
 return M

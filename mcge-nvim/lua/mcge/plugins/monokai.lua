@@ -1,4 +1,4 @@
-local molokai = pRequire("monokai")
-if molokai then
-  molokai.setup({})
+local monokai = pRequire("monokai")
+if monokai then
+  monokai.setup({})
 end
