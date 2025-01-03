@@ -19,7 +19,7 @@ return function(config)
 
     getLSPConfigMap = function()
       return {
-        jsonls = require("insis.lsp.config.json"),
+        jsonls = require("mcge.lsp.config.json"),
       }
     end,
 

@@ -23,7 +23,7 @@ return function(config)
     getLSPConfigMap = function()
       if config.lsp == "pylsp" then
         return {
-          pylsp = require("insis.lsp.config.pylsp"),
+          pylsp = require("mcge.lsp.config.pylsp"),
         }
       end
       return {}

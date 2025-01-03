@@ -19,7 +19,7 @@ return function(config)
 
     getLSPConfigMap = function()
       return {
-        yamlls = require("insis.lsp.config.yamlls"),
+        yamlls = require("mcge.lsp.config.yamlls"),
       }
     end,
 

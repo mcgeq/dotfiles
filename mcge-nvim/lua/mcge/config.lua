@@ -110,7 +110,7 @@ local UserConfig = {
 
   ---@class STabConfig
   s_tab = {
-    enable = false,
+    enable = true,
     keys = {
       split = "ts",
       prev = "th",
@@ -389,7 +389,7 @@ local UserConfig = {
 
   ---@class ClangdConfig
   clangd = {
-    enable = false,
+    enable = true,
     lsp = "clangd",
     -- linter = "clangd-tidy",
     formatter = "clang-format",
@@ -418,7 +418,7 @@ local UserConfig = {
 
   ---@class RustConfig
   rust = {
-    enable = false,
+    enable = true,
     lsp = "rust_analyzer",
     -- rustup component add rustfmt
     formatter = "rustfmt",
@@ -438,7 +438,7 @@ local UserConfig = {
 
   ---@class PythonConfig
   python = {
-    enable = false,
+    enable = true,
     -- can be pylsp or pyright
     lsp = "pylsp",
     -- pip install black
@@ -460,7 +460,7 @@ local UserConfig = {
 
   ---@class JsonConfig
   json = {
-    enable = false,
+    enable = true,
     lsp = "jsonls",
     ---@type "jsonls" | "prettier"
     formatter = "jsonls",
@@ -470,7 +470,7 @@ local UserConfig = {
 
   ---@class MarkdownConfig
   markdown = {
-    enable = false,
+    enable = true,
     mkdnflow = {
       next_link = "gn",
       prev_link = "gp",
@@ -489,14 +489,14 @@ local UserConfig = {
 
   ---@class TomlConfig
   toml = {
-    enable = false,
+    enable = true,
     lsp = "taplo",
     indent = 2,
   },
 
   ---@class YamlConfig
   yaml = {
-    enable = false,
+    enable = true,
     lsp = "yamlls",
     ---@type "prettier" | false
     formatter = "prettier",

@@ -18,7 +18,7 @@ return function(config)
 
     getLSPConfigMap = function()
       return {
-        clangd = require("insis.lsp.config.clangd"),
+        clangd = require("mcge.lsp.config.clangd"),
       }
     end,
 
