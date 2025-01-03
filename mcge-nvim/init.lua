@@ -1,1 +1,1 @@
-require("mcge").setup({})
+
