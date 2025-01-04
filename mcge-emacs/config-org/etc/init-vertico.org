@@ -59,10 +59,34 @@
   (require 'vertico-directory)
   (require 'orderless)
   (require 'pinyinlib)
-
+  (require 'savehist)
+  (require 'saveplace)
 #+end_src
 
 ** Code
+
+*** savehist
+
+#+begin_src emacs-lisp
+
+;; savehist
+(add-hook 'after-init-hook 'savehist-mode)
+
+(setq enable-recursive-minibuffers t)
+(setq history-length 1000)
+(setq savehist-additional-variables '(mark-ring
+                                      global-mark-ring
+                                      search-ring
+                                      regexp-search-ring
+                                      extended-command-history))
+(setq savehist-autosave-interval 300)
+#+end_src
+
+*** Save place mode
+#+begin_src emacs-lisp
+  (add-hook 'after-init-hook 'save-place-mode)
+#+end_src
+
 
 *** Orderless
 

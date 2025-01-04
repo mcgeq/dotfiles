@@ -78,6 +78,7 @@
     (require 'init-keymaps)
     (require 'init-yasnippet)
     (require 'init-lsp-bridge)
+    (require 'init-recentf)
     )
 #+END_SRC
 

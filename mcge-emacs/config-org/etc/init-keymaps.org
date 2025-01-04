@@ -113,7 +113,8 @@
                   (transpose-lines 1)
                   (forward-line -2)
                   (indent-according-to-mode)))
-
+;; recentf
+(global-set-key (kbd "C-c C-r")   'recentf)
 #+end_src
 
 ** magit
