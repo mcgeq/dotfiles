@@ -4,6 +4,7 @@
 :END:
 
 ** Headers
+
 #+BEGIN_SRC emacs-lisp
   ;;; init.el -- Config for Emacs Start -*- lexical-binding: t; -*-
 
@@ -75,6 +76,7 @@
     (require 'init-marginalia)
     (require 'init-vertico)
     (require 'init-keymaps)
+    (require 'init-yasnippet)
     )
 #+END_SRC
 

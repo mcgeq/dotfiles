@@ -103,3 +103,12 @@
 [submodule "emacs-pinyinlib"]
 	path = mcge-emacs/site-lisp/extensions/pinyinlib
 	url = https://github.com/cute-jumper/pinyinlib.el.git
+[submodule "emacs-yasnippet"]
+	path = mcge-emacs/site-lisp/extensions/snippets/yasnippet
+	url = https://github.com/joaotavora/yasnippet.git
+[submodule "emacs-yasnippet-snippets"]
+	path = mcge-emacs/site-lisp/extensions/snippets/yasnippet-snippet
+	url = https://github.com/AndreaCrotti/yasnippet-snippets.git
+[submodule "emacs-js2-mode"]
+	path = mcge-emacs/site-lisp/extensions/js2-mode
+	url = https://github.com/mooz/js2-mode.git

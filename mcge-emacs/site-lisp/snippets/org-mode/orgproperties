@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: org-properties-template
+# key: prop
+# --
+:PROPERTIES:
+:EXPORT_FILE_NAME: ${1:标题名称}
+:EXPORT_DATE: `(format-time-string "<%Y-%m-%d %A %H:%M>" (current-time))`
+:END:
