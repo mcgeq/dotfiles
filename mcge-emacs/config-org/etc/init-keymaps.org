@@ -55,19 +55,18 @@
   ;;; Require:
   (require 'transient)
 
-  ;;; Code:
 #+end_src
 
 ** 删除不常用快捷键
 #+begin_src emacs-lisp
-
-    ;; 解除不常用的快捷键定义
-    (lazy-load-unset-keys
-     '("C-z" "s-q" "M-m"))
-    ;; replace-string
-    (global-set-key (kbd "C-c r") 'replace-string)
-    ;; make-directory
-    (global-set-key (kbd "C-c d") 'make-directory)
+  ;;; Code:
+  ;; 解除不常用的快捷键定义
+   (lazy-load-unset-keys
+    '("C-z" "s-q" "M-m"))
+     ;; replace-string
+     (global-set-key (kbd "C-c r") 'replace-string)
+     ;; make-directory
+     (global-set-key (kbd "C-c d") 'make-directory)
 #+end_src
 
 ** 打开默认配置文件
@@ -143,12 +142,35 @@
 ** Sort-tab
 #+begin_src emacs-lisp
 ;; sort-tab
-(global-set-key (kbd "M-s <left>") 'sort-tab-select-prev-tab)
-(global-set-key (kbd "M-s <right>") 'sort-tab-select-next-tab)
+(global-set-key (kbd "M-s p") 'sort-tab-select-prev-tab)
+(global-set-key (kbd "M-s n") 'sort-tab-select-next-tab)
 (global-set-key (kbd "M-s q") 'sort-tab-close-current-tab)
 (global-set-key (kbd "M-s o") 'sort-tab-close-other-tabs)
 #+end_src
 
+** Embark
+
+#+begin_src emacs-lisp
+  ;; embark
+
+  (lazy-load-global-keys
+   '(
+     ("C-."     . embark-act)
+     ("C-,"     . embark-dwim)
+     ("C-h b"   . embark-bindings)
+     ("C-h B"   . embark-bindings-at-point)
+     ("C-x n"   . embark-next-symbol)
+     ("C-x p"   . embark-previous-symbol)
+     ("C-x j"   . consult-mark)
+     ("C-c g"   . consult-ripgrep)
+     ("C-c f"   . consult-find)
+     ("C-c b"   . consult-buffer)
+     ("C-c n h" . mcg/consult-find-org-headings)
+     ("C-s"     . consult-line)
+     ("M-s i"   . consult-imenu)
+       )
+    "init-embark")
+#+END_SRC
 
 ** Ends
 #+begin_src emacs-lisp

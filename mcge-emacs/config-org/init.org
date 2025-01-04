@@ -72,6 +72,8 @@
     (require 'init-generic)
     (require 'init-sort-tab)
     (require 'init-awesome-tray)
+    (require 'init-marginalia)
+    (require 'init-vertico)
     (require 'init-keymaps)
     )
 #+END_SRC

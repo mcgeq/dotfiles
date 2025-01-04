@@ -85,3 +85,21 @@
 [submodule "emacs-awesome-tray"]
 	path = mcge-emacs/site-lisp/extensions/awesome-tray
 	url = https://github.com/manateelazycat/awesome-tray.git
+[submodule "emacs-consult"]
+	path = mcge-emacs/site-lisp/extensions/consult
+	url = https://github.com/minad/consult.git
+[submodule "emacs-marginalia"]
+	path = mcge-emacs/site-lisp/extensions/marginalia
+	url = https://github.com/minad/marginalia.git
+[submodule "emacs-vertico"]
+	path = mcge-emacs/site-lisp/extensions/vertico
+	url = https://github.com/minad/vertico.git
+[submodule "emacs-orderless"]
+	path = mcge-emacs/site-lisp/extensions/orderless
+	url = https://github.com/oantolin/orderless.git
+[submodule "emacs-embark"]
+	path = mcge-emacs/site-lisp/extensions/embark
+	url = https://github.com/oantolin/embark.git
+[submodule "emacs-pinyinlib"]
+	path = mcge-emacs/site-lisp/extensions/pinyinlib
+	url = https://github.com/cute-jumper/pinyinlib.el.git
