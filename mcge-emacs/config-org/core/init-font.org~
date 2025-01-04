@@ -17,7 +17,7 @@
 (require 'cl-lib)
 
 ;;; Code:
-  #+end_src
+#+end_src
 
 ** Code
 #+begin_src emacs-lisp
@@ -55,4 +55,4 @@
 (provide 'init-font)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; init-font.el ends here
-  #+end_src
+#+end_src

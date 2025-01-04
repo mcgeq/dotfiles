@@ -1,55 +1,7 @@
 #+title: My Emacs Configuration
 #+author: mcg
 * Welcome
-这是我的 Emacs 配置
-** Download Source Code
-1. Download emacs source code
-   #+begin_src shell
-     git clone https://github.com/purseu/mcgemacs.git
-   #+end_src
-2. Fetch all submodules
-   #+begin_src shell
-    git submodule update --init --recursive
-    git submodule foreach git reset --hard
-    git submodule foreach git checkout $(git remote show origin | awk '/HEAD 分支|HEAD branch/ {split($0, a, "："); print a[2]}')
-   #+end_src
-** Add config
-Add config in ~/.emacs
-#+begin_src emacs-lisp :tangle no
-(defun add-subdirs-to-load-path (dir)
-  "Recursive add directories to `load-path'."
-  (let ((default-directory (file-name-as-directory dir)))
-    (add-to-list 'load-path dir)
-    (normal-top-level-add-subdirs-to-load-path)))
-(add-subdirs-to-load-path "~/mcge-emacs/site-lisp/")
 
-(setq ispell-alternate-dictionary "")
+2025年01月04日
 
-(require 'init)
-#+end_src
-*** Set the parent directory of the emacs configuration director
-所有配置已移入 `init-const' 文件中.
-#+begin_src emacs-lisp :tangle no
-;; 定义 emacs 配置文件目录上级目录
-(if (memq system-type '(cygwin windows-nt ms-dos)) (defvar mcgemacs-custom-dir (file-truename "D:/config"))
-                                 (defvar mcgemacs-custom-dir (file-truename "~")))
-;; 自定义博客目录
-(defvar mcgemacs-blog-dir      "~/workspaces/blog/mcge-blog")
-;; 自定义 org 目录
-(defvar mcgemacs-org-dir       (file-truename "~/org"))
-#+end_src
-*** Set the window position and size
- *This step is not required.*
-#+begin_src emacs-lisp :tangle no
-;; 设置窗口大小，仅仅在图形界面需要设置
-(when (display-graphic-p)
-  (let ((top    0)                                     ; 顶不留空
-        (height (round (* 0.8                          ; 窗体高度为 0.8 倍的显示高度
-                          (/ (x-display-pixel-height)
-                             (frame-char-height))))))
-    (let ((width  (round (* 2 height))))
-      (setq default-frame-alist nil)
-      (add-to-list 'default-frame-alist (cons 'top top))
-      (add-to-list 'default-frame-alist (cons 'height height))
-      (add-to-list 'default-frame-alist (cons 'width width)))))
-#+end_src
+Reconfigure Emacs to use as many built-in features as possible and use fewer unnecessary plugins.

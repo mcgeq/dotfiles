@@ -5,65 +5,75 @@
 
 ** Headers
 #+BEGIN_SRC emacs-lisp
-;;; init.el -- Emacs initialization config -*- lexical-binding: t; -*-
-;;; Commentary:
+  ;;; init.el -- Config for Emacs Start -*- lexical-binding: t; -*-
+
+  ;; Filename: init.el
+  ;; Description: Config for Emacs Start
+  ;; Author: mcge <mcgeq@outlook.com>
+  ;; Copyright (C) 2024, mcge, all rights reserved.
+  ;; Create   Date: 2025-01-04 15:00:00
+  ;; Version: 0.1
+  ;; Modified   By: 2025-01-04 15:46:46
+  ;; Keywords:
+  ;; Compatibility: GNU Emacs 31.0.50
+
+  ;;; Commentary:
+  ;;
+  ;; Config for Emacs Start
+  ;;
+
+  ;;; Installation:
+  ;;
+  ;; Put init-aider.el to your load-path.
+  ;; The load-path is usually ~/elisp/.
+  ;; It's set in your ~/.emacs like this:
+  ;; (add-to-list 'load-path (expand-file-name "~/elisp"))
+  ;;
+  ;; And the following to your ~/.emacs startup file.
+  ;;
+  ;; (require 'init)
+  ;;
+  ;; No need more.
+
+  ;;; Customize:
+  ;;
+  ;;
+  ;;
+  ;; All of the above can customize by:
+  ;;      M-x customize-group RET init-aider RET
+  ;;
+
+  ;;; Change log:
+  ;;
+  
 #+END_SRC
 
 ** Require
-#+BEGIN_SRC emacs-lisp
-;;; Require:
-(require 'init-const)
-(require 'init-font)
-(require 'lazy-load)
 
+*** Custom const variable and function
+
+#+BEGIN_SRC emacs-lisp
+  ;;; Require:
+  (require 'init-const)
+  (require 'init-font)
+  (require 'init-function)
+  
+#+END_SRC
+
+*** Emacs base config
+#+BEGIN_SRC emacs-lisp
+  
+  (require 'init-generic)
+  
+#+END_SRC
+
+** Code
+#+BEGIN_SRC emacs-lisp
+    
 ;;; Code:
+  
 #+END_SRC
 
-
-** Set `gc-cons-threshold'
-#+BEGIN_SRC emacs-lisp
-(let (
-    ;; 加载的时候临时增大`gc-cons-threshold'以加速启动速度
-    (gc-cons-threshold most-positive-fixnum)
-    (gc-cons-percentage 0.6)
-    ;; 清空避免加载远程文件的时候分析文件
-    (file-name-handler-alist nil))
-;; 让窗口启动更平滑
-(setq frame-inhibit-implied-resize t)
-(setq-default inhibit-redisplay t
-              inhibit-message t)
-(add-hook 'window-setup-hook
-	  (lambda ()
-            (setq-default inhibit-redisplay nil
-		          inhibit-message nil)
-            (redisplay)))
-)
-#+END_SRC
-
-** require core config
-#+BEGIN_SRC emacs-lisp
-(require 'init-generic)
-(require 'init-core)
-(require 'init-function)
-#+END_SRC
-
-** Python Install Packages
-
-#+begin_src emacs-lisp
-;; Add the function to the startup hook
-(add-hook 'emacs-startup-hook
-          (lambda ()
-            (install-python-packages)))
-#+end_src
-
-** Flask Start
-
-#+begin_src emacs-lisp
-;; 在 Emacs 启动后异步执行 Python 脚本
-;;(add-hook 'emacs-startup-hook
-;;          (lambda ()
-;;            (run-python-script-asynchronously (concat mcgemacs-root-dir "/scripts/segment.py"))))
-#+end_src
 
 ** Ends
 #+BEGIN_SRC emacs-lisp
@@ -71,4 +81,3 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; init.el ends here
 #+END_SRC
-

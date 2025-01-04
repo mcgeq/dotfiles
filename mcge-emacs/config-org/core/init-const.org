@@ -3,6 +3,52 @@
 :HEADER-ARGS: :tangle (concat temporary-file-directory "init-const.el") :lexical t
 :END:
 
+** Headers
+#+BEGIN_SRC emacs-lisp
+  ;;; init-const.el -- Config for Const -*- lexical-binding: t; -*-
+
+  ;; Filename: init.el
+  ;; Description: Config for Const
+  ;; Author: mcge <mcgeq@outlook.com>
+  ;; Copyright (C) 2024, mcge, all rights reserved.
+  ;; Create   Date: 2025-01-04 15:00:00
+  ;; Version: 0.1
+  ;; Modified   By: 2025-01-04 15:46:46
+  ;; Keywords:
+  ;; Compatibility: GNU Emacs 31.0.50
+
+  ;;; Commentary:
+  ;;
+  ;; Config for Const
+  ;;
+
+  ;;; Installation:
+  ;;
+  ;; Put init-aider.el to your load-path.
+  ;; The load-path is usually ~/elisp/.
+  ;; It's set in your ~/.emacs like this:
+  ;; (add-to-list 'load-path (expand-file-name "~/elisp"))
+  ;;
+  ;; And the following to your ~/.emacs startup file.
+  ;;
+  ;; (require 'init-const)
+  ;;
+  ;; No need more.
+
+  ;;; Customize:
+  ;;
+  ;;
+  ;;
+  ;; All of the above can customize by:
+  ;;      M-x customize-group RET init-aider RET
+  ;;
+
+  ;;; Change log:
+  ;;
+  
+#+END_SRC
+
+
 ** Judge Operation System
 #+BEGIN_SRC emacs-lisp
 (defconst *is-win32p*
@@ -110,4 +156,3 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; init-const.el ends here
 #+END_SRC
-
