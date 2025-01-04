@@ -172,6 +172,25 @@
     "init-embark")
 #+END_SRC
 
+** Lsp-Bridge
+
+#+begin_src emacs-lisp
+  
+  ;; lsp-bridge
+  (global-set-key (kbd "M-g d f")  'lsp-bridge-find-def)
+  (global-set-key (kbd "M-g d o")  'lsp-bridge-find-def-other-window)
+  (global-set-key (kbd "M-g d c")  'lsp-bridge-popup-documentation)
+  (global-set-key (kbd "M-g D")    'lsp-bridge-find-def-return)
+  (global-set-key (kbd "M-g l c")  'lsp-bridge-find-impl)
+  (global-set-key (kbd "M-g l o")  'lsp-bridge-find-impl-other-window)
+  (global-set-key (kbd "M-g r")    'lsp-bridge-find-references)
+  (global-set-key (kbd "M-g n")    'lsp-bridge-rename)
+  (global-set-key (kbd "M-g j n")  'lsp-bridge-diagnostic-jump-next)
+  (global-set-key (kbd "M-g j p")  'lsp-bridge-diagnostic-jump-prev)
+  (global-set-key (kbd "M-g <up>") 'lsp-bridge-popup-documentation-scroll-up)
+  (global-set-key (kbd "M-g <down>") 'lsp-bridge-popup-documentation-scroll-down)
+#+end_src
+
 ** Ends
 #+begin_src emacs-lisp
 (provide 'init-keymaps)
