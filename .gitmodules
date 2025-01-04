@@ -58,3 +58,15 @@
 [submodule "fzf"]
 	path = mcge-vimrc/pack/mcge/start/fzf
 	url = git@github.com:junegunn/fzf.git
+[submodule "emacs-magit"]
+	path = mcge-emacs/site-lisp/extensions/magit
+	url = https://github.com/magit/magit.git
+[submodule "emacs-dash"]
+	path = mcge-emacs/site-lisp/extensions/dash
+	url = https://github.com/magnars/dash.el.git
+[submodule "emacs-magit-with-editor"]
+	path = mcge-emacs/site-lisp/extensions/with-editor
+	url = https://github.com/magit/with-editor.git
+[submodule "emacs-lazy-load"]
+	path = mcge-emacs/site-lisp/extensions/lazy-load
+	url = https://github.com/manateelazycat/lazy-load.git

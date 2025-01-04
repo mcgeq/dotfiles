@@ -1,0 +1,148 @@
+* init-keymaps.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle (concat temporary-file-directory "init-keymaps.el") :lexical t
+:END:
+
+** Headers
+#+BEGIN_SRC emacs-lisp
+  ;;; init-keymaps.el -- Config for Keymaps -*- lexical-binding: t; -*-
+
+  ;; Filename: init-keymaps.el
+  ;; Description: Config for Emacs Start
+  ;; Author: mcge <mcgeq@outlook.com>
+  ;; Copyright (C) 2024, mcge, all rights reserved.
+  ;; Create   Date: 2025-01-04 15:00:00
+  ;; Version: 0.1
+  ;; Modified   By: 2025-01-04 15:46:46
+  ;; Keywords:
+  ;; Compatibility: GNU Emacs 31.0.50
+
+  ;;; Commentary:
+  ;;
+  ;; Config for Keymaps
+  ;;
+
+  ;;; Installation:
+  ;;
+  ;; Put init-aider.el to your load-path.
+  ;; The load-path is usually ~/elisp/.
+  ;; It's set in your ~/.emacs like this:
+  ;; (add-to-list 'load-path (expand-file-name "~/elisp"))
+  ;;
+  ;; And the following to your ~/.emacs startup file.
+  ;;
+  ;; (require 'init-keymaps)
+  ;;
+  ;; No need more.
+
+  ;;; Customize:
+  ;;
+  ;;
+  ;;
+  ;; All of the above can customize by:
+  ;;      M-x customize-group RET init-aider RET
+  ;;
+
+  ;;; Change log:
+  ;;
+  
+#+END_SRC
+
+
+
+** Require
+#+begin_src emacs-lisp
+  ;;; Require:
+  (require 'transient)
+
+  ;;; Code:
+#+end_src
+
+** 删除不常用快捷键
+#+begin_src emacs-lisp
+
+    ;; 解除不常用的快捷键定义
+    (lazy-load-unset-keys
+     '("C-z" "s-q" "M-m"))
+    ;; replace-string
+    (global-set-key (kbd "C-c r") 'replace-string)
+    ;; make-directory
+    (global-set-key (kbd "C-c d") 'make-directory)
+#+end_src
+
+** 打开默认配置文件
+#+begin_src emacs-lisp
+(global-set-key (kbd "C-q") 'mcg/open-init-file)
+
+#+end_src
+
+** Custom C-a
+
+#+begin_src emacs-lisp
+;; C-a
+;; 将新函数绑定到 Ctrl+A
+(global-set-key (kbd "C-a") 'mcge-smart-move-beginning-of-line)
+
+#+end_src
+
+** 插入新行
+#+begin_src emacs-lisp
+;; insert newline
+(global-set-key (kbd "C-c <down>")
+                (lambda ()
+                  (interactive)
+                  (end-of-line)
+                  (newline-and-indent)))
+(global-set-key (kbd "C-c <up>")
+                (lambda ()
+                  (interactive)
+                  (beginning-of-line)
+                  (newline)
+                  (forward-line -1)
+                  (indent-according-to-mode)))
+(global-set-key (kbd "M-m p n")
+                (lambda ()
+                  (interactive)
+                  (forward-line 1)
+                  (transpose-lines 1)
+                  (forward-line -1)
+                  (indent-according-to-mode)))
+;; move current line to prev or next line
+(global-set-key (kbd "M-m p p")
+                (lambda ()
+                  (interactive)
+                  (transpose-lines 1)
+                  (forward-line -2)
+                  (indent-according-to-mode)))
+
+#+end_src
+
+** magit
+#+begin_src emacs-lisp
+;;; init-magit.el
+;; magit
+(lazy-load-global-keys
+ '(
+   ("M-m s t" . magit-status)
+   ("M-m s a" . magit-submodule-add)
+   ("M-m s r" . magit-submodule-remove)
+   ("M-m f r" . magit-file-rename)
+   ("M-m b r" . magit-branch-rename)
+   ("M-m b c" . magit-branch-create)
+   ("M-m r r" . magit-remote-rename)
+   ("M-m l"   . magit-log)
+   ("M-m d d" . magit-dispatch)
+   ("M-m d f" . magit-file-dispatch)
+   ("M-m p f" . magit-pull)
+   ("M-m p h" . magit-push)
+   ("M-m m"   . mcge-magit-menu)
+   )
+ "init-magit")
+#+end_src
+
+** Ends
+#+begin_src emacs-lisp
+(provide 'init-keymaps)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; init-keymaps.el ends here
+#+end_src
