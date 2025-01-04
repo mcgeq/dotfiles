@@ -79,3 +79,9 @@
 [submodule "emacs-nerd-icons-completion"]
 	path = mcge-emacs/site-lisp/extensions/themes/nerd-icons-completion
 	url = https://github.com/rainstormstudio/nerd-icons-completion.git
+[submodule "emacs-sort-tab"]
+	path = mcge-emacs/site-lisp/extensions/sort-tab
+	url = https://github.com/manateelazycat/sort-tab.git
+[submodule "emacs-awesome-tray"]
+	path = mcge-emacs/site-lisp/extensions/awesome-tray
+	url = https://github.com/manateelazycat/awesome-tray.git

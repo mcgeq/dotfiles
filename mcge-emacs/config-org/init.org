@@ -24,7 +24,7 @@
 
   ;;; Installation:
   ;;
-  ;; Put init-aider.el to your load-path.
+  ;; Put init.el to your load-path.
   ;; The load-path is usually ~/elisp/.
   ;; It's set in your ~/.emacs like this:
   ;; (add-to-list 'load-path (expand-file-name "~/elisp"))
@@ -70,6 +70,8 @@
             (file-name-handler-alist nil))
         
     (require 'init-generic)
+    (require 'init-sort-tab)
+    (require 'init-awesome-tray)
     (require 'init-keymaps)
     )
 #+END_SRC

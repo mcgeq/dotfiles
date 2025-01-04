@@ -1,0 +1,79 @@
+* init-sort-tab.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle (concat temporary-file-directory "init-sort-tab.el") :lexical t
+:END:
+
+** Headers
+#+BEGIN_SRC emacs-lisp
+  ;;; init-sort-tab.el -- Config for Tab -*- lexical-binding: t; -*-
+
+  ;; Filename: init.el
+  ;; Description: Config for Tab
+  ;; Author: mcge <mcgeq@outlook.com>
+  ;; Copyright (C) 2024, mcge, all rights reserved.
+  ;; Create   Date: 2025-01-04 15:00:00
+  ;; Version: 0.1
+  ;; Modified   By: 2025-01-04 15:46:46
+  ;; Keywords:
+  ;; Compatibility: GNU Emacs 31.0.50
+
+  ;;; Commentary:
+  ;;
+  ;; Config for Tab
+  ;;
+
+  ;;; Installation:
+  ;;
+  ;; Put init-sort-tab.el to your load-path.
+  ;; The load-path is usually ~/elisp/.
+  ;; It's set in your ~/.emacs like this:
+  ;; (add-to-list 'load-path (expand-file-name "~/elisp"))
+  ;;
+  ;; And the following to your ~/.emacs startup file.
+  ;;
+  ;; (require 'init-sort-tab)
+  ;;
+  ;; No need more.
+
+  ;;; Customize:
+  ;;
+  ;;
+  ;;
+  ;; All of the above can customize by:
+  ;;      M-x customize-group RET init-aider RET
+  ;;
+
+  ;;; Change log:
+  ;;
+  
+#+END_SRC
+
+
+** Require
+#+begin_src emacs-lisp
+;;; Require:
+(require 'sort-tab)
+
+#+end_src
+
+** Code
+#+begin_src emacs-lisp
+  ;;; Code:
+  
+  (sort-tab-mode 1)
+
+  (setq sort-tab-hide-function
+        (lambda (buf)
+          (with-current-buffer buf
+            (or (derived-mode-p 'dired-mode) ; 隐藏 dired-mode 缓冲区
+                (derived-mode-p 'eshell-mode) ; 隐藏 aweshell 缓冲区
+                ;; 可以添加更多条件来隐藏其他缓冲区
+                ))))
+#+end_src
+
+** Ends
+#+begin_src emacs-lisp
+(provide 'init-sort-tab)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; init-sort-tab.el ends here
+#+end_src
