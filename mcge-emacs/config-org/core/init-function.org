@@ -7,7 +7,7 @@
 #+BEGIN_SRC emacs-lisp
   ;;; init-function.el -- Config for Functions -*- lexical-binding: t; -*-
 
-  ;; Filename: init.el
+  ;; Filename: init-function.el
   ;; Description: Config for Functions
   ;; Author: mcge <mcgeq@outlook.com>
   ;; Copyright (C) 2024, mcge, all rights reserved.

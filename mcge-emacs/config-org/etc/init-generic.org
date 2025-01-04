@@ -7,7 +7,7 @@
 #+BEGIN_SRC emacs-lisp
   ;;; init-generic.el -- Config for Emacs Base Options -*- lexical-binding: t; -*-
 
-  ;; Filename: init.el
+  ;; Filename: init-generic.el
   ;; Description: Config for Emacs Base Options
   ;; Author: mcge <mcgeq@outlook.com>
   ;; Copyright (C) 2024, mcge, all rights reserved.

@@ -7,7 +7,7 @@
 #+BEGIN_SRC emacs-lisp
   ;;; init-const.el -- Config for Const -*- lexical-binding: t; -*-
 
-  ;; Filename: init.el
+  ;; Filename: init-const.el
   ;; Description: Config for Const
   ;; Author: mcge <mcgeq@outlook.com>
   ;; Copyright (C) 2024, mcge, all rights reserved.

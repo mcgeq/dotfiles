@@ -7,7 +7,7 @@
 #+BEGIN_SRC emacs-lisp
   ;;; init-font.el -- Config for Emacs Font -*- lexical-binding: t; -*-
 
-  ;; Filename: init.el
+  ;; Filename: init-font.el
   ;; Description: Config for Emacs Font
   ;; Author: mcge <mcgeq@outlook.com>
   ;; Copyright (C) 2024, mcge, all rights reserved.
