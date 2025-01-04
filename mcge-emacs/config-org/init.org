@@ -58,6 +58,7 @@
   (require 'init-font)
   (require 'init-function)
   (require 'lazy-load)
+  (require 'init-ui)
   
 #+END_SRC
 

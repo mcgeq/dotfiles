@@ -70,3 +70,12 @@
 [submodule "emacs-lazy-load"]
 	path = mcge-emacs/site-lisp/extensions/lazy-load
 	url = https://github.com/manateelazycat/lazy-load.git
+[submodule "emacs-doom-theme"]
+	path = mcge-emacs/site-lisp/extensions/themes/doom-themes
+	url = https://github.com/doomemacs/themes.git
+[submodule "emacs-nerd-icons"]
+	path = mcge-emacs/site-lisp/extensions/themes/nerd-icons
+	url = https://github.com/rainstormstudio/nerd-icons.el.git
+[submodule "emacs-nerd-icons-completion"]
+	path = mcge-emacs/site-lisp/extensions/themes/nerd-icons-completion
+	url = https://github.com/rainstormstudio/nerd-icons-completion.git
