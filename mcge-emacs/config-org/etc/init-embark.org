@@ -48,24 +48,17 @@
   
 #+END_SRC
 
+** Require
 
-*** Orderless
+#+begin_src emacs-lisp
+  ;;; Require:
+  
+  (require 'dired)
+  (require 'embark)
+  (require 'embark-consult)
 
-#+BEGIN_SRC emacs-lisp
-;; pinyinlib
-;; orderless
-;; Fuzzy find orders
-(setq completion-styles '(orderless partial-completion basic)
-      orderless-component-separator "[ &]" ;; Company
-      completion-category-defaults nil
-      completion-category-overrides '((file (styles partial-completion))))
+#+end_src
 
-;; make completion support pinyin
-;; refer to https://emacs-china.org/t/vertico/17913/2
-(defun completion-regex-pinyin (str)
-  (orderless-regexp (pinyinlib-build-regexp-string str)))
-(add-to-list 'orderless-matching-styles 'completion-regex-pinyin)
-#+END_SRC
 
 *** Consult
 
