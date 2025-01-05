@@ -72,6 +72,7 @@
             (file-name-handler-alist nil))
     (require 'init-line-number)
     (require 'init-generic)
+    (require 'init-editor)
     (require 'init-sort-tab)
     (require 'init-awesome-tray)
     (require 'init-marginalia)

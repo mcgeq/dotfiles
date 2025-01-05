@@ -148,3 +148,9 @@
 [submodule "emacs-fingertip"]
 	path = mcge-emacs/site-lisp/extensions/fingertip
 	url = https://github.com/manateelazycat/fingertip.git
+[submodule "emacs-beacon"]
+	path = mcge-emacs/site-lisp/extensions/beacon
+	url = https://github.com/Malabarba/beacon.git
+[submodule "emacs-htmlize"]
+	path = mcge-emacs/site-lisp/extensions/emacs-htmlize
+	url = https://github.com/hniksic/emacs-htmlize.git
