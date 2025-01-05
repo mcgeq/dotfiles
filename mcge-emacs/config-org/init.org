@@ -82,6 +82,8 @@
     (require 'init-recentf)
     (require 'init-markmacro)
     (require 'init-wraplish)
+    (require 'init-fingertip)
+    (require 'init-treesit)
     )
 #+END_SRC
 

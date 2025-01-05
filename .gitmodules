@@ -145,3 +145,6 @@
 [submodule "emacs-wraplish"]
 	path = mcge-emacs/site-lisp/extensions/wraplish
 	url = https://github.com/manateelazycat/wraplish.git
+[submodule "emacs-fingertip"]
+	path = mcge-emacs/site-lisp/extensions/fingertip
+	url = https://github.com/manateelazycat/fingertip.git
