@@ -1,0 +1,85 @@
+* init-markmacro.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle (concat temporary-file-directory "init-markmacro.el") :lexical t
+:END:
+
+** Headers
+
+#+BEGIN_SRC emacs-lisp
+  ;;; init-markmacro.el -- Config for Emacs Start -*- lexical-binding: t; -*-
+
+  ;; Filename: init-markmacro.el
+  ;; Description: Config for Emacs Start
+  ;; Author: mcge <mcgeq@outlook.com>
+  ;; Copyright (C) 2024, mcge, all rights reserved.
+  ;; Create   Date: 2025-01-04 15:00:00
+  ;; Version: 0.1
+  ;; Modified   By: 2025-01-04 15:46:46
+  ;; Keywords:
+  ;; Compatibility: GNU Emacs 31.0.50
+
+  ;;; Commentary:
+  ;;
+  ;; Config for Emacs Start
+  ;;
+
+  ;;; Installation:
+  ;;
+  ;; Put init-markmacro.el to your load-path.
+  ;; The load-path is usually ~/elisp/.
+  ;; It's set in your ~/.emacs like this:
+  ;; (add-to-list 'load-path (expand-file-name "~/elisp"))
+  ;;
+  ;; And the following to your ~/.emacs startup file.
+  ;;
+  ;; (require 'init)
+  ;;
+  ;; No need more.
+
+  ;;; Customize:
+  ;;
+  ;;
+  ;;
+  ;; All of the above can customize by:
+  ;;      M-x customize-group RET init-aider RET
+  ;;
+
+  ;;; Change log:
+  ;;
+  
+#+END_SRC
+
+** Require
+
+#+begin_src emacs-lisp
+  (require 'markmacro)
+#+end_src
+
+
+** Code
+#+BEGIN_SRC emacs-lisp
+    
+;;; Code:
+
+(global-set-key (kbd "s-/") 'markmacro-mark-words)
+(global-set-key (kbd "s-?") 'markmacro-mark-lines)
+(global-set-key (kbd "s-:") 'markmacro-mark-chars)
+(global-set-key (kbd "s-L") 'markmacro-mark-imenus)
+(global-set-key (kbd "s-<") 'markmacro-apply-all)
+(global-set-key (kbd "s->") 'markmacro-apply-all-except-first)
+(global-set-key (kbd "s-M") 'markmacro-rect-set)
+(global-set-key (kbd "s-D") 'markmacro-rect-delete)
+(global-set-key (kbd "s-F") 'markmacro-rect-replace)
+(global-set-key (kbd "s-I") 'markmacro-rect-insert)
+(global-set-key (kbd "s-C") 'markmacro-rect-mark-columns)
+(global-set-key (kbd "s-S") 'markmacro-rect-mark-symbols)
+
+#+END_SRC
+
+
+** Ends
+#+BEGIN_SRC emacs-lisp
+(provide 'init-markmacro)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; init-markmacro.el ends here
+#+END_SRC

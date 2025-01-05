@@ -54,7 +54,7 @@
 #+begin_src emacs-lisp
   ;;; Require:
   (require 'transient)
-
+  (require 'markmacro)
 #+end_src
 
 ** 删除不常用快捷键

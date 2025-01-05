@@ -139,3 +139,6 @@
 [submodule "emacs-hydra"]
 	path = mcge-emacs/site-lisp/extensions/hydra
 	url = https://github.com/abo-abo/hydra.git
+[submodule "emacs-markmacro"]
+	path = mcge-emacs/site-lisp/extensions/markmacro
+	url = https://github.com/manateelazycat/markmacro.git

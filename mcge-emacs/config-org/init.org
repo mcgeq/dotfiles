@@ -80,6 +80,7 @@
     (require 'init-yasnippet)
     (require 'init-lsp-bridge)
     (require 'init-recentf)
+    (require 'init-markmacro)
     )
 #+END_SRC
 
