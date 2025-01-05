@@ -133,3 +133,6 @@
 [submodule "emacs-request"]
 	path = mcge-emacs/site-lisp/extensions/org/emacs-request
 	url = https://github.com/tkf/emacs-request.git
+[submodule "emacs-vundo"]
+	path = mcge-emacs/site-lisp/extensions/vundo
+	url = https://github.com/casouri/vundo.git

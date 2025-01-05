@@ -149,6 +149,38 @@
 (global-set-key (kbd "M-s o") 'sort-tab-close-other-tabs)
 #+end_src
 
+** yasnippets
+#+begin_src emacs-lisp
+(global-set-key (kbd "C-c C-n") 'yas-new-snippet)
+#+end_src
+
+** elisp
+
+#+begin_src emacs-lisp
+;; elisp-mode
+(let ((map emacs-lisp-mode-map))
+  (define-key map (kbd "C-c C-b") 'eval-buffer)
+  (define-key map (kbd "C-c C-c") 'eval-to-comment))
+(let ((map lisp-interaction-mode-map))
+  (define-key map (kbd "C-c C-c") 'eval-to-comment))
+;;(let ((map org-mode-map))
+;;  (define-key map (kbd "C-c C-;") 'eval-to-comment))
+#+end_src
+
+** vundo
+
+#+begin_src emacs-lisp
+
+;;; ### vundo ###
+;;; --- 可视化撤销插件
+(lazy-load-global-keys
+ '(
+   ("C-/" . undo)
+   ("M-]" . vundo)
+   )
+ "init-vundo")
+#+end_src
+
 ** Org
 
 *** org capture
