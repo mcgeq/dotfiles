@@ -149,6 +149,21 @@
 (global-set-key (kbd "M-s o") 'sort-tab-close-other-tabs)
 #+end_src
 
+** Org
+
+*** org capture
+
+#+begin_src emacs-lisp
+;; org-capture
+
+(lazy-load-global-keys
+ '(
+   ("C-c c" . org-capture)
+   ("C-c l" . org-store-link)
+   )
+ "init-capture-hugo")
+#+end_src
+
 ** Embark
 
 #+begin_src emacs-lisp
