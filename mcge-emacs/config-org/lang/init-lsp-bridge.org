@@ -52,21 +52,25 @@
   
 ** Require
 #+begin_src emacs-lisp
-(require 'lsp-bridge)
-;;(require 'lsp-bridge-jdtls)
-;;(require 'lang-cpp)
-;;(require 'lang-java)
-;;(require 'lang-typescript)
-(require 'lang-rust)
-;;(require 'lang-css-mode)
-;;(require 'lang-web-mode)
-;;(require 'lang-clojure)
-;;; Code:
+  (require 'lsp-bridge)
+  ;;(require 'lsp-bridge-jdtls)
+  ;;(require 'lang-cpp)
+  ;;(require 'lang-java)
+  ;;(require 'lang-typescript)
+  (require 'lang-rust)
+  ;;(require 'lang-css-mode)
+  ;;(require 'lang-web-mode)
+  ;;(require 'lang-clojure)
+
+  (unless (display-graphic-p)
+    (require 'acm-terminal))
+
 #+end_src
 
 ** Config bridge
 
 #+begin_src emacs-lisp
+;;; Code:
 ;; custom language server dir
 (setq lsp-bridge-user-langserver-dir mcgemacs-custom-lsp-bridge-langserver-dir)
 (setq lsp-bridge-user-multiserver-dir mcgemacs-custom-lsp-bridge-multiserver-dir)

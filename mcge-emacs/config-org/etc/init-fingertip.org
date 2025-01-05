@@ -123,7 +123,7 @@
 
 ** Keymap
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 ;;; `https://github.com/manateelazycat/lazycat-emacs/blob/master/site-lisp/config/init-key.el'
 ;;; ### Fingertip ###
 ;;; --- 结构化编程
