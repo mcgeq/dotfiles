@@ -239,6 +239,7 @@
   (global-set-key (kbd "M-g <down>") 'lsp-bridge-popup-documentation-scroll-down)
 #+end_src
 
+
 ** Ends
 #+begin_src emacs-lisp
 (provide 'init-keymaps)
