@@ -81,6 +81,7 @@
     (require 'init-lsp-bridge)
     (require 'init-recentf)
     (require 'init-markmacro)
+    (require 'init-wraplish)
     )
 #+END_SRC
 

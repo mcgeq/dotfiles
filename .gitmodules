@@ -142,3 +142,6 @@
 [submodule "emacs-markmacro"]
 	path = mcge-emacs/site-lisp/extensions/markmacro
 	url = https://github.com/manateelazycat/markmacro.git
+[submodule "emacs-wraplish"]
+	path = mcge-emacs/site-lisp/extensions/wraplish
+	url = https://github.com/manateelazycat/wraplish.git
