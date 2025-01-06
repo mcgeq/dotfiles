@@ -123,7 +123,7 @@
 
 ** Keymap
 
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp
 ;;; `https://github.com/manateelazycat/lazycat-emacs/blob/master/site-lisp/config/init-key.el'
 ;;; ### Fingertip ###
 ;;; --- 结构化编程
@@ -162,7 +162,7 @@
         ;; 包围
         ("M-\"" . fingertip-wrap-double-quote) ;用 " " 包围对象, 或跳出字符串
         ("M-'" . fingertip-wrap-single-quote) ;用 ' ' 包围对象, 或跳出字符串
-        ("M-[" . fingertip-wrap-bracket)      ;用 [ ] 包围对象
+        ;;("M-[" . fingertip-wrap-bracket)      ;用 [ ] 包围对象
         ("M-{" . fingertip-wrap-curly)        ;用 { } 包围对象
         ("M-(" . fingertip-wrap-round)        ;用 ( ) 包围对象
         ("M-)" . fingertip-unwrap)            ;去掉包围对象
