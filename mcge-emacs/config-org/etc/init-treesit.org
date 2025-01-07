@@ -108,8 +108,8 @@
 #+begin_src emacs-lisp
 (setq major-mode-remap-alist
       '(
-        ;;(c-mode          . c-ts-mode)
-        ;;(c++-mode        . c++-ts-mode)
+        (c-mode          . c-ts-mode)
+        (c++-mode        . c++-ts-mode)
         (cmake-mode      . cmake-ts-mode)
         (conf-toml-mode  . toml-ts-mode)
         (css-mode        . css-ts-mode)
@@ -156,6 +156,7 @@
 (add-hook 'haskell-mode-hook #'(lambda () (treesit-parser-create 'haskell)))
 (add-hook 'kotlin-mode-hook #'(lambda () (treesit-parser-create 'kotlin)))
 (add-hook 'lua-mode-hook #'(lambda () (treesit-parser-create 'lua)))
+(add-hook 'C++-mode-hook #'(lambda () (treesit-parser-create 'cpp)))
 
 #+end_src
 
