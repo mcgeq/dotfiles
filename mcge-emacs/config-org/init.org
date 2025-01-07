@@ -94,6 +94,7 @@
     (require 'init-markmacro)
     (require 'init-wraplish)
     (require 'init-fingertip)
+    (require 'init-mode)
     (require 'init-treesit)
     )
 #+END_SRC
