@@ -61,6 +61,7 @@
   ;;(require 'lang-css-mode)
   ;;(require 'lang-web-mode)
   ;;(require 'lang-clojure)
+  (require 'lang-lua)
 
   (unless (display-graphic-p)
     (require 'acm-terminal))
@@ -80,6 +81,8 @@
 (setq lsp-bridge-enable-org-babel t)
 (setq lsp-bridge-enable-inlay-hint t)
 (setq lsp-bridge-semantic-tokens t)
+;; formatter
+(setq lsp-bridge-enable-auto-format-code t)
 (setq-default lsp-bridge-semantic-tokens-ignore-modifier-limit-types ["variable"])
 
 (setq acm-enable-capf t)

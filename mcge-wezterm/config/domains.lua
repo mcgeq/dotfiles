@@ -10,8 +10,8 @@ return {
       {
          name = 'WSL:Arch',
          distribution = 'Arch',
-         username = 'mcge',
-         default_cwd = '/home/mcge',
+         username = 'mcgeq',
+         default_cwd = '/home/mcgeq',
          default_prog = { 'fish' },
       },
    },
