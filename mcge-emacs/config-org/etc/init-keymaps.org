@@ -55,6 +55,7 @@
   ;;; Require:
   (require 'transient)
   (require 'markmacro)
+  (require 'org)
 #+end_src
 
 ** 删除不常用快捷键
@@ -78,9 +79,9 @@
 ** Custom C-a
 
 #+begin_src emacs-lisp
-;; C-a
-;; 将新函数绑定到 Ctrl+A
-(global-set-key (kbd "C-a") 'mcge-smart-move-beginning-of-line)
+  ;; C-a
+  ;; 将新函数绑定到 Ctrl+a
+  (global-set-key (kbd "C-a") 'mcge-smart-move-beginning-of-line)
 
 #+end_src
 
@@ -194,6 +195,15 @@
    ("C-c l" . org-store-link)
    )
  "init-capture-hugo")
+#+end_src
+
+*** Org Src Edit
+#+begin_src emacs-lisp
+  (lazy-load-set-keys
+   '(("C-c e" . org-edit-src-code)
+     )
+   org-mode-map
+   )
 #+end_src
 
 ** Embark
