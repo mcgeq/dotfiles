@@ -40,5 +40,3 @@ au('BufEnter', {
     require('mcgeq.keymap')
   end,
 })
-
-
