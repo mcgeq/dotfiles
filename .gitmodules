@@ -1,63 +1,63 @@
 [submodule "vim-airline"]
 	path = mcge-vimrc/pack/mcge/start/vim-airline
-	url = git@github.com:vim-airline/vim-airline.git
+	url = https://github.com/vim-airline/vim-airline.git
 [submodule "vim-which-key"]
 	path = mcge-vimrc/pack/mcge/start/vim-which-key
-	url = git@github.com:liuchengxu/vim-which-key.git
+	url = https://github.com/liuchengxu/vim-which-key.git
 [submodule "vim-ale"]
 	path = mcge-vimrc/pack/mcge/start/ale
-	url = git@github.com:dense-analysis/ale.git
+	url = https://github.com/dense-analysis/ale.git
 [submodule "vim-startify"]
 	path = mcge-vimrc/pack/mcge/start/vim-startify
-	url = git@github.com:mhinz/vim-startify.git
+	url = https://github.com/mhinz/vim-startify.git
 [submodule "vim-devicons"]
 	path = mcge-vimrc/pack/mcge/start/vim-devicons
-	url = git@github.com:ryanoasis/vim-devicons.git
+	url = https://github.com/ryanoasis/vim-devicons.git
 [submodule "vim-coc.nvim"]
 	path = mcge-vimrc/pack/mcge/start/coc.nvim
-	url = git@github.com:neoclide/coc.nvim.git
+	url = https://github.com/neoclide/coc.nvim.git
 [submodule "vim-surround"]
 	path = mcge-vimrc/pack/mcge/start/vim-surround
-	url = git@github.com:tpope/vim-surround.git
+	url = https://github.com/tpope/vim-surround.git
 [submodule "vim-fugitive"]
 	path = mcge-vimrc/pack/mcge/start/fugitive
-	url = git@github.com:tpope/vim-fugitive.git
+	url = https://github.com/tpope/vim-fugitive.git
 [submodule "vim-nerdcommenter"]
 	path = mcge-vimrc/pack/mcge/start/nerdcommenter
-	url = git@github.com:preservim/nerdcommenter.git
+	url = https://github.com/preservim/nerdcommenter.git
 [submodule "vim-snippets"]
 	path = mcge-vimrc/pack/mcge/start/vim-snippets
-	url = git@github.com:honza/vim-snippets.git
+	url = https://github.com/honza/vim-snippets.git
 [submodule "vim-ultisnips"]
 	path = mcge-vimrc/pack/mcge/start/ultisnips
-	url = git@github.com:SirVer/ultisnips.git
+	url = https://github.com/SirVer/ultisnips.git
 [submodule "vim-vista.vim"]
 	path = mcge-vimrc/pack/mcge/start/vista.vim
-	url = git@github.com:liuchengxu/vista.vim.git
+	url = https://github.com/liuchengxu/vista.vim.git
 [submodule "vim-clap"]
 	path = mcge-vimrc/pack/mcge/start/vim-clap
-	url = git@github.com:liuchengxu/vim-clap.git
+	url = https://github.com/liuchengxu/vim-clap.git
 [submodule "vim-css-color"]
 	path = mcge-vimrc/pack/mcge/start/vim-css-color
-	url = git@github.com:ap/vim-css-color.git
+	url = https://github.com/ap/vim-css-color.git
 [submodule "vim-gruvbox"]
 	path = mcge-vimrc/pack/mcge/start/vim-gruvbox
-	url = git@github.com:morhetz/gruvbox.git
+	url = https://github.com/morhetz/gruvbox.git
 [submodule "vim-airline-themes"]
 	path = mcge-vimrc/pack/mcge/start/vim-airline-themes
-	url = git@github.com:vim-airline/vim-airline-themes.git
+	url = https://github.com/vim-airline/vim-airline-themes.git
 [submodule "vim-floaterm"]
 	path = mcge-vimrc/pack/mcge/start/vim-floaterm
-	url = git@github.com:voldikss/vim-floaterm.git
+	url = https://github.com/voldikss/vim-floaterm.git
 [submodule "vim-fzf"]
 	path = mcge-vimrc/pack/mcge/start/fzf.vim
-	url = git@github.com:junegunn/fzf.vim.git
+	url = https://github.com/junegunn/fzf.vim.git
 [submodule "vim-molokai"]
 	path = mcge-vimrc/pack/mcge/start/molokai
-	url = git@github.com:tomasr/molokai.git
+	url = https://github.com/tomasr/molokai.git
 [submodule "fzf"]
 	path = mcge-vimrc/pack/mcge/start/fzf
-	url = git@github.com:junegunn/fzf.git
+	url = https://github.com/junegunn/fzf.git
 [submodule "emacs-magit"]
 	path = mcge-emacs/site-lisp/extensions/magit
 	url = https://github.com/magit/magit.git
