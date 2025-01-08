@@ -166,3 +166,6 @@
 [submodule "emacs-modern-cpp-font"]
 	path = mcge-emacs/site-lisp/extensions/lsp/modern-cpp-font-lock
 	url = https://github.com/ludwigpacifici/modern-cpp-font-lock.git
+[submodule "emacs-treesit-auto"]
+	path = mcge-emacs/site-lisp/extensions/lsp/treesit-auto
+	url = https://github.com/renzmann/treesit-auto.git
