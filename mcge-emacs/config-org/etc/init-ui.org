@@ -45,16 +45,14 @@
 
   ;;; Change log:
   ;;
-  
+
 #+END_SRC
 
 
 ** Require
 #+begin_src emacs-lisp
 ;;; Require:
-(require 'doom-themes)
-(require 'doom-themes-ext-org)
-(require 'doom-themes-ext-visual-bell)
+(require 'ef-themes)
 
 #+end_src
 
@@ -62,17 +60,11 @@
 #+begin_src emacs-lisp
   ;;; Code:
 
-  (setq doom-themes-enable-bold t
-        doom-themes-enable-italic t)
+;; 自动切换主题
+(if (>= (string-to-number (format-time-string "%H")) 18)
+    (load-theme 'ef-bio t)
+  (load-theme 'ef-summer t))
 
-  (doom-themes-visual-bell-config)
-  (doom-themes-org-config)
-
-  ;(load-theme 'doom-molokai t)
-  (load-theme 'doom-tokyo-night t)
-
-  (doom-themes-visual-bell-config)
-  (doom-themes-org-config)
 
 #+end_src
 

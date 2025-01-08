@@ -70,9 +70,6 @@
 [submodule "emacs-lazy-load"]
 	path = mcge-emacs/site-lisp/extensions/lazy-load
 	url = https://github.com/manateelazycat/lazy-load.git
-[submodule "emacs-doom-theme"]
-	path = mcge-emacs/site-lisp/extensions/themes/doom-themes
-	url = https://github.com/doomemacs/themes.git
 [submodule "emacs-nerd-icons"]
 	path = mcge-emacs/site-lisp/extensions/themes/nerd-icons
 	url = https://github.com/rainstormstudio/nerd-icons.el.git
@@ -163,3 +160,6 @@
 [submodule "emacs-lua-mode"]
 	path = mcge-emacs/site-lisp/extensions/lsp/lua-mode
 	url = https://github.com/immerrr/lua-mode.git
+[submodule "emacs-ef-themes"]
+	path = mcge-emacs/site-lisp/extensions/themes/ef-themes
+	url = https://github.com/protesilaos/ef-themes.git
