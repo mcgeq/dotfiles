@@ -30,7 +30,7 @@ local keys = {
   -- tabs: spawn+close
   { key = "t", mods = mod.SUPER, action = act.SpawnTab("DefaultDomain") },
   { key = "t", mods = mod.SUPER_REV, action = act.SpawnTab({ DomainName = "WSL:Arch" }) },
-  { key = "w", mods = mod.SUPER_REV, action = act.CloseCurrentTab({ confirm = false }) },
+  { key = "q", mods = mod.SUPER_REV, action = act.CloseCurrentTab({ confirm = false }) },
 
   -- tabs: navigation
   { key = "[", mods = mod.SUPER, action = act.ActivateTabRelative(-1) },
@@ -62,7 +62,7 @@ local keys = {
 
   -- panes: zoom+close pane
   { key = "z", mods = mod.SUPER_REV, action = act.TogglePaneZoomState },
-  { key = "w", mods = mod.SUPER, action = act.CloseCurrentPane({ confirm = false }) },
+  { key = "q", mods = mod.SUPER, action = act.CloseCurrentPane({ confirm = false }) },
 
   -- panes: navigation
   { key = "k", mods = mod.SUPER_REV, action = act.ActivatePaneDirection("Up") },
