@@ -106,57 +106,87 @@
 
 *** Major Mode
 #+begin_src emacs-lisp
-(setq major-mode-remap-alist
-      '(
-        (c-mode          . c-ts-mode)
-        (c++-mode        . c++-ts-mode)
-        (cmake-mode      . cmake-ts-mode)
-        (conf-toml-mode  . toml-ts-mode)
-        (css-mode        . css-ts-mode)
-        (js-mode         . js-ts-mode)
-        (js-json-mode    . json-ts-mode)
-        (python-mode     . python-ts-mode)
-        (sh-mode         . bash-ts-mode)
-        (typescript-mode . typescript-ts-mode)
-        (rust-mode       . rust-ts-mode)
-        (java-mode       . java-ts-mode)
-        (clojure-mode    . clojure-ts-mode)
-        (markdown-mode   . markdown-ts-mode)
-        ))
+  (setq major-mode-remap-alist
+        '(
+          (c-mode          . c-ts-mode)
+          (c++-mode        . c++-ts-mode)
+          (cmake-mode      . cmake-ts-mode)
+          (conf-toml-mode  . toml-ts-mode)
+          (css-mode        . css-ts-mode)
+          (js-mode         . js-ts-mode)
+          (js-json-mode    . json-ts-mode)
+          (python-mode     . python-ts-mode)
+          (sh-mode         . bash-ts-mode)
+          (typescript-mode . typescript-ts-mode)
+          (rust-mode       . rust-ts-mode)
+          (java-mode       . java-ts-mode)
+          (clojure-mode    . clojure-ts-mode)
+          (markdown-mode   . markdown-ts-mode)
+          ))
 
 #+end_src
 
 *** Hook
 #+begin_src emacs-lisp
-(add-hook 'web-mode-hook #'(lambda ()
-                             (let ((file-name (buffer-file-name)))
-                               (when file-name
-                                 (treesit-parser-create
-                                  (pcase (file-name-extension file-name)
-                                    ("vue" 'vue)
-                                    ("html" 'html)
-                                    ("php" 'php))))
-                               )))
+  (add-hook 'web-mode-hook #'(lambda ()
+                               (let ((file-name (buffer-file-name)))
+                                 (when file-name
+                                   (treesit-parser-create
+                                    (pcase (file-name-extension file-name)
+                                      ("vue" 'vue)
+                                      ("html" 'html)
+                                      ("php" 'php))))
+                                 )))
 
-(add-hook 'markdown-ts-mode-hook #'(lambda () (treesit-parser-create 'markdown)))
-(add-hook 'zig-mode-hook #'(lambda () (treesit-parser-create 'zig)))
-(add-hook 'mojo-mode-hook #'(lambda () (treesit-parser-create 'mojo)))
-(add-hook 'emacs-lisp-mode-hook #'(lambda () (treesit-parser-create 'elisp)))
-(add-hook 'ielm-mode-hook #'(lambda () (treesit-parser-create 'elisp)))
-(add-hook 'json-mode-hook #'(lambda () (treesit-parser-create 'json)))
-(add-hook 'go-mode-hook #'(lambda () (treesit-parser-create 'go)))
-(add-hook 'java-mode-hook #'(lambda () (treesit-parser-create 'java)))
-(add-hook 'java-ts-mode-hook #'(lambda () (treesit-parser-create 'java)))
-(add-hook 'clojure-mode-hook #'(lambda () (treesit-parser-create 'clojure)))
-(add-hook 'clojure-ts-mode-hook #'(lambda () (treesit-parser-create 'clojure)))
-(add-hook 'cider-repl-mode-hook #'(lambda () (treesit-parser-create 'clojure)))
-(add-hook 'php-mode-hook #'(lambda () (treesit-parser-create 'php)))
-(add-hook 'php-ts-mode-hook #'(lambda () (treesit-parser-create 'php)))
-(add-hook 'java-ts-mode-hook #'(lambda () (treesit-parser-create 'java)))
-(add-hook 'haskell-mode-hook #'(lambda () (treesit-parser-create 'haskell)))
-(add-hook 'kotlin-mode-hook #'(lambda () (treesit-parser-create 'kotlin)))
-(add-hook 'lua-mode-hook #'(lambda () (treesit-parser-create 'lua)))
-(add-hook 'C++-mode-hook #'(lambda () (treesit-parser-create 'cpp)))
+(defun add-treesit-parser-hooks (pairs)
+"根据给定的 PAIRS 为多个模式添加 treesit-parse.
+Pairs 是一个包含模式和语言对的列表"
+(dolist (pair pairs)
+  (add-hook (car pair) #'(lambda () (treesit-parser-create (cadr pair)))))
+)
+
+(setq treesit-parser-pairs
+      '((markdown-ts-mode-hook markdown)
+        (zig-mode-hook zig)
+        (mojo-mode-hook mojo)
+        (emacs-lisp-mode-hook elisp)
+        (ielm-mode-hook elisp)
+        (json-mode-hook json)
+        (go-mode-hook go)
+        (java-mode-hook java)
+        (java-ts-mode-hook java)
+        (clojure-mode-hook clojure)
+        (clojure-ts-mode-hook clojure)
+        (cider-repl-mode-hook clojure)
+        (php-mode-hook php)
+        (php-ts-mode-hook php)
+        (haskell-mode-hook haskell)
+        (kotlin-mode-hook kotlin)
+        (lua-mode-hook lua)
+        (C++-mode-hook cpp)))
+
+;; 批量添加所有钩子
+(add-treesit-parser-hooks treesit-parser-pairs)
+
+  ;; (add-hook 'markdown-ts-mode-hook #'(lambda () (treesit-parser-create 'markdown)))
+  ;; (add-hook 'zig-mode-hook #'(lambda () (treesit-parser-create 'zig)))
+  ;; (add-hook 'mojo-mode-hook #'(lambda () (treesit-parser-create 'mojo)))
+  ;; (add-hook 'emacs-lisp-mode-hook #'(lambda () (treesit-parser-create 'elisp)))
+  ;; (add-hook 'ielm-mode-hook #'(lambda () (treesit-parser-create 'elisp)))
+  ;; (add-hook 'json-mode-hook #'(lambda () (treesit-parser-create 'json)))
+  ;; (add-hook 'go-mode-hook #'(lambda () (treesit-parser-create 'go)))
+  ;; (add-hook 'java-mode-hook #'(lambda () (treesit-parser-create 'java)))
+  ;; (add-hook 'java-ts-mode-hook #'(lambda () (treesit-parser-create 'java)))
+  ;; (add-hook 'clojure-mode-hook #'(lambda () (treesit-parser-create 'clojure)))
+  ;; (add-hook 'clojure-ts-mode-hook #'(lambda () (treesit-parser-create 'clojure)))
+  ;; (add-hook 'cider-repl-mode-hook #'(lambda () (treesit-parser-create 'clojure)))
+  ;; (add-hook 'php-mode-hook #'(lambda () (treesit-parser-create 'php)))
+  ;; (add-hook 'php-ts-mode-hook #'(lambda () (treesit-parser-create 'php)))
+  ;; (add-hook 'java-ts-mode-hook #'(lambda () (treesit-parser-create 'java)))
+  ;; (add-hook 'haskell-mode-hook #'(lambda () (treesit-parser-create 'haskell)))
+  ;; (add-hook 'kotlin-mode-hook #'(lambda () (treesit-parser-create 'kotlin)))
+  ;; (add-hook 'lua-mode-hook #'(lambda () (treesit-parser-create 'lua)))
+  ;; (add-hook 'C++-mode-hook #'(lambda () (treesit-parser-create 'cpp)))
 
 #+end_src
 
