@@ -108,8 +108,8 @@
 #+begin_src emacs-lisp
   (setq major-mode-remap-alist
         '(
-          ;; (c-mode          . c-ts-mode)
-          ;; (c++-mode        . c++-ts-mode)
+          (c-mode          . c-ts-mode)
+          (c++-mode        . c++-ts-mode)
           (cmake-mode      . cmake-ts-mode)
           (conf-toml-mode  . toml-ts-mode)
           (css-mode        . css-ts-mode)
@@ -163,8 +163,7 @@
           (haskell-mode-hook haskell)
           (kotlin-mode-hook kotlin)
           (lua-mode-hook lua)
-          (c++-mode-hook cpp)
-          (c-mode-hook c)))
+          ))
 
   ;; 批量添加所有钩子
   (add-treesit-parser-hooks treesit-parser-pairs)
@@ -340,7 +339,7 @@ The test for presence of the car of ELT-CONS is done with `equal'."
 (autoload 'mojo-mode "mojo")
 (autoload 'fsharp-mode "fsharp-mode")
 (autoload 'lua-mode "lua-ts-mode")
-(autoload 'c++-mode "c++-ts-mode")
+
 #+end_src
 
 

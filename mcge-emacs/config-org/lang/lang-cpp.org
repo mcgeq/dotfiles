@@ -64,8 +64,6 @@
                'c-mode-hook
                'c++-mode-hook
                'c-mode-common-hook
-               'c-ts-mode-hook
-               'c++-ts-mode-hook
                ))
   (add-hook hook #'(lambda ()
                      (require 'cc-mode)
