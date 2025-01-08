@@ -53,8 +53,8 @@
 ** Require
 #+begin_src emacs-lisp
   (require 'lsp-bridge)
-  ;;(require 'lsp-bridge-jdtls)
-  ;;(require 'lang-cpp)
+  (require 'lsp-bridge-jdtls)
+  (require 'lang-cpp)
   ;;(require 'lang-java)
   ;;(require 'lang-typescript)
   (require 'lang-rust)

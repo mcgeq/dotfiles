@@ -163,3 +163,6 @@
 [submodule "emacs-ef-themes"]
 	path = mcge-emacs/site-lisp/extensions/themes/ef-themes
 	url = https://github.com/protesilaos/ef-themes.git
+[submodule "emacs-modern-cpp-font"]
+	path = mcge-emacs/site-lisp/extensions/lsp/modern-cpp-font-lock
+	url = https://github.com/ludwigpacifici/modern-cpp-font-lock.git
