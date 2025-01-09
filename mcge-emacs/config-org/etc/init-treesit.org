@@ -14,7 +14,7 @@
   ;; Copyright (C) 2024, mcge, all rights reserved.
   ;; Create   Date: 2025-01-04 15:00:00
   ;; Version: 0.1
-  ;; Modified   By: 2025-01-04 15:46:46
+  ;; Modified   By: <2025-01-09 Thu 18:08>
   ;; Keywords:
   ;; Compatibility: GNU Emacs 31.0.50
 
@@ -338,7 +338,7 @@ The test for presence of the car of ELT-CONS is done with `equal'."
 (autoload 'kotlin-mode "kotlin-mode")
 (autoload 'mojo-mode "mojo")
 (autoload 'fsharp-mode "fsharp-mode")
-(autoload 'lua-mode "lua-ts-mode")
+(autoload 'lua-mode "lang-lua")
 
 #+end_src
 
