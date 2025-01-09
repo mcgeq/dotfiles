@@ -4,6 +4,7 @@
 :END:
 
 ** Headers
+
 #+BEGIN_SRC emacs-lisp
   ;;; init-font.el -- Config for Emacs Font -*- lexical-binding: t; -*-
 
@@ -13,7 +14,7 @@
   ;; Copyright (C) 2024, mcge, all rights reserved.
   ;; Create   Date: 2025-01-04 15:00:00
   ;; Version: 0.1
-  ;; Modified   By: 2025-01-04 15:46:46
+  ;; Modified   By: <2025-01-09 Thu 18:54>
   ;; Keywords:
   ;; Compatibility: GNU Emacs 31.0.50
 
@@ -45,7 +46,7 @@
 
   ;;; Change log:
   ;;
-  
+
 #+END_SRC
 
 
@@ -60,34 +61,33 @@
 #+begin_src emacs-lisp
 
   ;;; Code:
-    
-    (defun mcg/font-setup-common(character font-list &optional scale-factor)
-      "Set fonts for multi CHARACTER from FONT-LIST and modify style with SCALE-FACTOR."
-      (cl-loop for font in font-list
-    	   when (find-font (font-spec :name font))
-    	   return (if (not character)
-    		      (set-face-attribute 'default nil
-    					  :family font
-    					  :height (cond (*is-mac* 150)
-    							(*is-win32p* 130)
-    		 					(*is-linux* 130)))
-     		    (when scale-factor (setq face-font-rescale-alist `((,font . ,scale-factor))))
-      		    (set-fontset-font t character (font-spec :family font) nil 'prepend))))
+  (defun mcg/font-setup-common(character font-list &optional scale-factor)
+    "Set fonts for multi CHARACTER from FONT-LIST and modify style with SCALE-FACTOR."
+    (cl-loop for font in font-list
+             when (find-font (font-spec :name font))
+             return (if (not character)
+                        (set-face-attribute 'default nil
+                                            :family font
+                                            :height (cond (*is-mac* 150)
+                                                          (*is-win32p* 130)
+                                                          (*is-linux* 130)))
+                      (when scale-factor (setq face-font-rescale-alist `((,font . ,scale-factor))))
+                      (set-fontset-font t character (font-spec :family font) nil 'prepend))))
 
-    (defun mcg/font-setup (&optional default-fonts unicode-fonts emoji-fonts cjk-fonts)
-      "Font setup, with optional DEFAULT-FONTS, UNICODE-FONTS, EMOJI-FONTS, CJK-FONTS."
-      (interactive)
-      (when (display-graphic-p)
-        (mcg/font-setup-common nil      (if default-fonts default-fonts mcg--fonts-default))
-        (mcg/font-setup-common 'unicode (if unicode-fonts unicode-fonts mcg--fonts-unicode))
-        (mcg/font-setup-common 'emoji   (if emoji-fonts emoji-fonts mcg--fonts-emoji))
-        (dolist (charset '(kana han bopomofo cjk-misc))
-          (mcg/font-setup-common charset (if cjk-fonts cjk-fonts mcg--fonts-cjk) 1.2))))
+  (defun mcg/font-setup (&optional default-fonts unicode-fonts emoji-fonts cjk-fonts)
+    "Font setup, with optional DEFAULT-FONTS, UNICODE-FONTS, EMOJI-FONTS, CJK-FONTS."
+    (interactive)
+    (when (display-graphic-p)
+      (mcg/font-setup-common nil      (if default-fonts default-fonts mcg--fonts-default))
+      (mcg/font-setup-common 'unicode (if unicode-fonts unicode-fonts mcg--fonts-unicode))
+      (mcg/font-setup-common 'emoji   (if emoji-fonts emoji-fonts mcg--fonts-emoji))
+      (dolist (charset '(kana han bopomofo cjk-misc))
+        (mcg/font-setup-common charset (if cjk-fonts cjk-fonts mcg--fonts-cjk) 1.2))))
 
-    ;; Get the font set
-    (mcg/font-setup)
-    (add-hook 'window-setup-hook #'mcg/font-setup)
-    (add-hook 'server-after-make-frame-hook #'mcg/font-setup)
+  ;; Get the font set
+  (mcg/font-setup)
+  (add-hook 'window-setup-hook #'mcg/font-setup)
+  (add-hook 'server-after-make-frame-hook #'mcg/font-setup)
 #+end_src
 
 ** Ends
