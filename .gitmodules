@@ -175,3 +175,6 @@
 [submodule "emacs-color-rg"]
 	path = mcge-emacs/site-lisp/extensions/color-rg
 	url = https://github.com/manateelazycat/color-rg.git
+[submodule "emacs-org-modern"]
+	path = mcge-emacs/site-lisp/extensions/org/org-modern
+	url = https://github.com/minad/org-modern.git

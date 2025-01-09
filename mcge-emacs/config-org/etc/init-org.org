@@ -1,0 +1,94 @@
+* init-org.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle (concat temporary-file-directory "init-org.el") :lexical t
+:END:
+
+** Headers
+
+#+BEGIN_SRC emacs-lisp
+  ;;; init-org.el -- Config for Emacs Font -*- lexical-binding: t; -*-
+
+  ;; Filename: init-org.el
+  ;; Description: Config for Emacs Font
+  ;; Author: mcge <mcgeq@outlook.com>
+  ;; Copyright (C) 2024, mcge, all rights reserved.
+  ;; Create   Date: 2025-01-04 15:00:00
+  ;; Version: 0.1
+  ;; Modified   By: <2025-01-09 Thu 18:54>
+  ;; Keywords:
+  ;; Compatibility: GNU Emacs 31.0.50
+
+  ;;; Commentary:
+  ;;
+  ;; Config for Font
+  ;;
+
+  ;;; Installation:
+  ;;
+  ;; Put init-org.el to your load-path.
+  ;; The load-path is usually ~/elisp/.
+  ;; It's set in your ~/.emacs like this:
+  ;; (add-to-list 'load-path (expand-file-name "~/elisp"))
+  ;;
+  ;; And the following to your ~/.emacs startup file.
+  ;;
+  ;; (require 'init-org)
+  ;;
+  ;; No need more.
+
+  ;;; Customize:
+  ;;
+  ;;
+  ;;
+  ;; All of the above can customize by:
+  ;;      M-x customize-group RET init-aider RET
+  ;;
+
+  ;;; Change log:
+  ;;
+
+#+END_SRC
+
+** Require
+
+#+begin_src emacs-lisp
+;;; Require:
+
+
+#+end_src
+
+** Code
+
+#+begin_src emacs-lisp
+  ;;; Code:
+
+  ;; 缩进
+  (setq org-startup-indented t
+        org-src-tab-acts-natively t)
+
+  ;; 不要显示强调标记
+  ;; 如果标题被标记为 DONE，则更改标题的外观
+  ;; 隐藏标题前的星星
+  ;; 使用 UTF8 字符显示实体。
+  ;; 只使用奇数级别
+  (setq org-hide-emphasis-markers t
+        org-fontify-done-headline t
+        org-hide-leading-stars    t
+        org-pretty-entities       t
+        org-odd-levels-only       t)
+
+  (font-lock-add-keywords 'org-mode
+                          '(("^ *\([-]\) "
+                             (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
+  (font-lock-add-keywords 'org-mode
+                          '(("^ *\([+]\) "
+                             (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "◦"))))))
+#+end_src
+
+** Ends
+
+#+begin_src emacs-lisp
+(provide 'init-org)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; init-org.el ends here
+#+end_src

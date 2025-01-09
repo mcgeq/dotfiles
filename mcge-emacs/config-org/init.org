@@ -94,6 +94,7 @@
     (require 'init-wraplish)
     (require 'init-fingertip)
     (require 'init-treesit)
+    (require 'init-org)
     )
 #+END_SRC
 
