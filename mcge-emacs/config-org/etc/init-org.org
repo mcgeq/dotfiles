@@ -14,7 +14,8 @@
   ;; Copyright (C) 2024, mcge, all rights reserved.
   ;; Create   Date: 2025-01-04 15:00:00
   ;; Version: 0.1
-  ;; Modified   By: <2025-01-09 Thu 18:54>
+  ;; Modified   By:  mcge <mcgeq@outlook.com>
+  ;; Last Modified:  <2025-01-09 Thu 22:45>
   ;; Keywords:
   ;; Compatibility: GNU Emacs 31.0.50
 
@@ -53,7 +54,10 @@
 
 #+begin_src emacs-lisp
 ;;; Require:
-
+(require 'visual-fill-column)
+(require 'mixed-pitch)
+(require 'org-superstar)
+(require 'org-appear)
 
 #+end_src
 
@@ -62,27 +66,82 @@
 #+begin_src emacs-lisp
   ;;; Code:
 
-  ;; 缩进
-  (setq org-startup-indented t
-        org-src-tab-acts-natively t)
+  (setq org-ellipsis " ⭍"
+        org-tags-column 0
+        org-log-into-drawer t
+        org-pretty-entities t
+        org-startup-indented t
+        org-hide-leading-stars nil
+        org-hide-emphasis-markers t
+        org-image-actual-width '(800)
+        org-startup-with-inline-images t
+        org-indent-mode-turns-on-hiding-stars nil)
 
-  ;; 不要显示强调标记
-  ;; 如果标题被标记为 DONE，则更改标题的外观
-  ;; 隐藏标题前的星星
-  ;; 使用 UTF8 字符显示实体。
-  ;; 只使用奇数级别
-  (setq org-hide-emphasis-markers t
-        org-fontify-done-headline t
-        org-hide-leading-stars    t
-        org-pretty-entities       t
-        org-odd-levels-only       t)
+
+  (custom-set-faces
+   '(org-level-1 ((t (:height 1.15))))
+   '(org-level-2 ((t (:height 1.13))))
+   '(org-level-3 ((t (:height 1.11))))
+   '(org-level-4 ((t (:height 1.09))))
+   '(org-level-5 ((t (:height 1.07))))
+   '(org-level-6 ((t (:height 1.05))))
+   '(org-level-7 ((t (:height 1.03))))
+   '(org-level-8 ((t (:height 1.01))))
+   '(org-tag ((t (:inherit 'fixed-pitch))))
+   '(org-date ((t (:inherit 'fixed-pitch))))
+   '(org-todo ((t (:inherit 'fixed-pitch))))
+   '(org-done ((t (:inherit 'fixed-pitch))))
+   '(org-drawer ((t (:inherit 'fixed-pitch))))
+   '(org-ellipsis ((t (:inherit 'fixed-pitch))))
+   '(org-property-value ((t (:inherit 'fixed-pitch))))
+   '(org-special-keyword ((t (:inherit 'fixed-pitch))))
+   '(org-headline-done ((t (:inherit 'variable-pitch)))))
+
+  ;; visual-fill-column
+  (setq visual-fill-column-width 88)
+
+  ;; mixed-pitch
+  (custom-set-faces
+   '(default ((t (:font "FiraCode Nerd Font Mono"))))
+   '(fixed-pitch ((t (:font "FiraCode Nerd Font Mono" :height 1.0))))
+   '(variable-pitch ((t (:font "Noto Serif" :height 1.0)))))
+
+  ;; org-superstar
+  (setq org-superstar-leading-bullet ?\s
+        org-superstar-special-todo-items t
+        org-superstar-item-bullet-alist '((43 . "⬧") (45 . "⬨"))
+        org-superstar-headline-bullets-list '("☰" "☱" "☲" "☳" "☴" "☵" "☶" "☷"))
+
+  (custom-set-faces
+   '(org-superstar-item ((t (:inherit 'fixed-pitch))))
+   '(org-superstar-header-bullet ((t (:height 232 :inherit 'fixed-pitch)))))
+
+  (add-hook 'org-mode-hook
+            (lambda ()
+              (setq-local line-spacing 2)
+              (visual-line-mode)
+              (visual-fill-column-mode)
+              (mixed-pitch-mode)
+              (org-superstar-mode)
+              (org-appear-mode)))
+
+  (defun mg/org-font-lock-drawer (limit)
+    (when (or (re-search-forward "SCHEDULED:\\(\\(.\\|\n\\)+:\s*\n\\)" limit t)
+              (re-search-forward ".+?:\s+\\(.+\\)$" limit t))
+      (let ((beg (match-beginning 1))
+            (end (match-end 1)))
+        (put-text-property beg end 'face 'fixed-pitch)
+        (put-text-property (match-beginning 0) (match-end 0) 'font-lock-multiline 't)
+        (goto-char end))))
 
   (font-lock-add-keywords 'org-mode
-                          '(("^ *\([-]\) "
-                             (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
+                          '(mg/org-font-lock-drawer))
+
   (font-lock-add-keywords 'org-mode
-                          '(("^ *\([+]\) "
-                             (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "◦"))))))
+                          '(("\\cc\\( \\)[/+*_=~][^a-zA-Z0-9/+*_=~\n]+?[/+*_=~]\\( \\)?\\cc?"
+                             (1 (prog1 () (compose-region (match-beginning 1) (match-end 1) ""))))))
+
+
 #+end_src
 
 ** Ends

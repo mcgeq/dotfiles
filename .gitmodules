@@ -178,3 +178,18 @@
 [submodule "emacs-org-modern"]
 	path = mcge-emacs/site-lisp/extensions/org/org-modern
 	url = https://github.com/minad/org-modern.git
+[submodule "emacs-visual-fill-column"]
+	path = mcge-emacs/site-lisp/extensions/org/visual-fill-column
+	url = https://codeberg.org/joostkremers/visual-fill-column.git
+[submodule "emacs-mixed-pitch"]
+	path = mcge-emacs/site-lisp/extensions/org/mixed-pitch
+	url = https://gitlab.com/jabranham/mixed-pitch.git
+[submodule "emacs-org-appear"]
+	path = mcge-emacs/site-lisp/extensions/org/org-appear
+	url = https://github.com/awth13/org-appear.git
+[submodule "emacs-org-superstar-mode"]
+	path = mcge-emacs/site-lisp/extensions/org/org-superstar-mode
+	url = https://github.com/integral-dw/org-superstar-mode.git
+[submodule "emacs-org-supertag"]
+	path = mcge-emacs/site-lisp/extensions/org/org-supertag
+	url = https://github.com/yibie/org-supertag.git
