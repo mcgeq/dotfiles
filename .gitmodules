@@ -169,3 +169,9 @@
 [submodule "emacs-treesit-auto"]
 	path = mcge-emacs/site-lisp/extensions/lsp/treesit-auto
 	url = https://github.com/renzmann/treesit-auto.git
+[submodule "emacs-blink-search"]
+	path = mcge-emacs/site-lisp/extensions/blink-search
+	url = https://github.com/manateelazycat/blink-search.git
+[submodule "emacs-color-rg"]
+	path = mcge-emacs/site-lisp/extensions/color-rg
+	url = https://github.com/manateelazycat/color-rg.git

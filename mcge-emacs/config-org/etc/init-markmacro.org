@@ -46,7 +46,7 @@
 
   ;;; Change log:
   ;;
-  
+
 #+END_SRC
 
 ** Require
@@ -58,7 +58,7 @@
 
 ** Code
 #+BEGIN_SRC emacs-lisp
-    
+
 ;;; Code:
 
 (global-set-key (kbd "s-/") 'markmacro-mark-words)

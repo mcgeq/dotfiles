@@ -143,11 +143,19 @@
 
 ** Sort-tab
 #+begin_src emacs-lisp
-;; sort-tab
-(global-set-key (kbd "M-s p") 'sort-tab-select-prev-tab)
-(global-set-key (kbd "M-s n") 'sort-tab-select-next-tab)
-(global-set-key (kbd "M-s q") 'sort-tab-close-current-tab)
-(global-set-key (kbd "M-s o") 'sort-tab-close-other-tabs)
+  ;;; ### Sort-Tab ### from lazycat
+  ;;; --- 多标签浏览
+  (lazy-load-global-keys
+   '(
+     ("M-7" . sort-tab-select-prev-tab)    ;选择前一个标签
+     ("M-8" . sort-tab-select-next-tab)    ;选择后一个标签
+     ("M-s 7" . sort-tab-select-first-tab) ;选择第一个标签
+     ("M-s 8" . sort-tab-select-last-tab)  ;选择最后一个标签
+     ("C-;" . sort-tab-close-current-tab)  ;关闭当前标签
+     ("M-s q" . sort-tab-close-other-tabs)   ;关闭后台标签
+     ("M-s Q" . sort-tab-close-all-tabs)     ;关闭所有标签
+     )
+   "sort-tab")
 #+end_src
 
 ** yasnippets
@@ -158,14 +166,16 @@
 ** elisp
 
 #+begin_src emacs-lisp
-;; elisp-mode
-(let ((map emacs-lisp-mode-map))
-  (define-key map (kbd "C-c C-b") 'eval-buffer)
-  (define-key map (kbd "C-c C-c") 'eval-to-comment))
-(let ((map lisp-interaction-mode-map))
-  (define-key map (kbd "C-c C-c") 'eval-to-comment))
-;;(let ((map org-mode-map))
-;;  (define-key map (kbd "C-c C-;") 'eval-to-comment))
+  ;; elisp-mode
+  ;;; Elisp
+  ;;; --- Elisp 编程设置
+  (let ((map emacs-lisp-mode-map))
+    (define-key map (kbd "C-c C-b") 'eval-buffer)
+    (define-key map (kbd "C-c C-c") 'eval-to-comment))
+  (let ((map lisp-interaction-mode-map))
+    (define-key map (kbd "C-c C-c") 'eval-to-comment))
+  ;;(let ((map org-mode-map))
+  ;;  (define-key map (kbd "C-c C-;") 'eval-to-comment))
 #+end_src
 
 ** vundo
@@ -248,6 +258,52 @@
 
 #+end_src
 
+** Blink Search
+#+begin_src emacs-lisp
+  ;; ### Blink Search ###
+  ;;; --- 最快的搜索框架
+  (lazy-load-global-keys
+   '(
+     ("C-S-y" . blink-search)
+     )
+   "init-blink-search")
+#+end_src
+
+** Markmacro
+
+#+begin_src emacs-lisp
+  ;;; ### Markmacro ###
+  ;;; --- 标记对象的键盘宏操作
+  (lazy-load-global-keys
+   '(
+     ("M-m c s" . markmacro-rect-set)          ;记录矩形编辑开始的位置
+     ("M-m c d" . markmacro-rect-delete)       ;删除矩形区域
+     ("M-m c r" . markmacro-rect-replace)      ;替换矩形区域的内容
+     ("M-m c i" . markmacro-rect-insert)       ;在矩形区域前插入字符串
+     ("M-m c m" . markmacro-rect-mark-columns) ;转换矩形列为标记对象
+     ("M-m c S" . markmacro-rect-mark-symbols) ;转换矩形列对应的符号为标记对象
+     ("M-m c a" . markmacro-apply-all)         ;应用键盘宏到所有标记对象
+     ("M-m c e" . markmacro-apply-all-except-first) ;应用键盘宏到所有标记对象, 除了第一个， 比如下划线转换的时候
+     )
+   "init-markmacro")
+#+end_src
+
+** Color-rg
+
+#+begin_src emacs-lisp
+  ;;; ### Color-Rg ###
+  ;;; --- 搜索重构
+  (lazy-load-global-keys
+   '(
+     ("M-m g g" . color-rg-search-symbol)
+     ("M-m g h" . color-rg-search-input)
+     ("M-m g j" . color-rg-search-symbol-in-project)
+     ("M-m g k" . color-rg-search-input-in-project)
+     ("M-m g ," . color-rg-search-symbol-in-current-file)
+     ("M-m g ." . color-rg-search-input-in-current-file)
+     )
+   "color-rg")
+#+end_src
 
 ** Ends
 #+begin_src emacs-lisp
