@@ -46,19 +46,19 @@
 
   ;;; Change log:
   ;;
-  
+
 #+END_SRC
 
 
 ** Require
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 ;;; Require:
 (require 'rust-mode)
 ;;; Code:
-#+end_src
+#+END_SRC
 
 ** Keymap
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (with-eval-after-load 'rust-ts-mode
   (lazy-load-set-keys
    '(
@@ -70,12 +70,12 @@
      )
    rust-ts-mode-map)
   )
-#+end_src
+#+END_SRC
 
 
 ** Ends
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (provide 'lang-rust)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; lang-rust.el ends here
-#+end_src
+#+END_SRC

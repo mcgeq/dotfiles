@@ -13,7 +13,8 @@
   ;; Copyright (C) 2024, mcge, all rights reserved.
   ;; Create   Date: 2025-01-04 15:00:00
   ;; Version: 0.1
-  ;; Modified   By: 2025-01-04 15:46:46
+  ;; Modified   By:  mcge <mcgeq@outlook.com>
+  ;; Last Modified:  <2025-01-10 Fri 10:04>
   ;; Keywords:
   ;; Compatibility: GNU Emacs 31.0.50
 
@@ -51,15 +52,15 @@
 
 
 ** Require
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   ;;; Require:
   (require 'transient)
   (require 'markmacro)
   (require 'org)
-#+end_src
+#+END_SRC
 
 ** 删除不常用快捷键
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   ;;; Code:
   ;; 解除不常用的快捷键定义
    (lazy-load-unset-keys
@@ -68,25 +69,25 @@
      (global-set-key (kbd "C-c r") 'replace-string)
      ;; make-directory
      (global-set-key (kbd "C-c d") 'make-directory)
-#+end_src
+#+END_SRC
 
 ** 打开默认配置文件
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (global-set-key (kbd "C-q") 'mcg/open-init-file)
 
-#+end_src
+#+END_SRC
 
 ** Custom C-a
 
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   ;; C-a
   ;; 将新函数绑定到 Ctrl+a
   (global-set-key (kbd "C-a") 'mcge-smart-move-beginning-of-line)
 
-#+end_src
+#+END_SRC
 
 ** 插入新行
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 ;; insert newline
 (global-set-key (kbd "C-c <down>")
                 (lambda ()
@@ -116,10 +117,10 @@
                   (indent-according-to-mode)))
 ;; recentf
 (global-set-key (kbd "C-c C-r")   'recentf)
-#+end_src
+#+END_SRC
 
 ** magit
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 ;;; init-magit.el
 ;; magit
 (lazy-load-global-keys
@@ -139,10 +140,10 @@
    ("M-m m"   . mcge-magit-menu)
    )
  "init-magit")
-#+end_src
+#+END_SRC
 
 ** Sort-tab
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   ;;; ### Sort-Tab ### from lazycat
   ;;; --- 多标签浏览
   (lazy-load-global-keys
@@ -156,16 +157,16 @@
      ("M-s Q" . sort-tab-close-all-tabs)     ;关闭所有标签
      )
    "sort-tab")
-#+end_src
+#+END_SRC
 
 ** yasnippets
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (global-set-key (kbd "C-c C-n") 'yas-new-snippet)
-#+end_src
+#+END_SRC
 
 ** elisp
 
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   ;; elisp-mode
   ;;; Elisp
   ;;; --- Elisp 编程设置
@@ -176,11 +177,11 @@
     (define-key map (kbd "C-c C-c") 'eval-to-comment))
   ;;(let ((map org-mode-map))
   ;;  (define-key map (kbd "C-c C-;") 'eval-to-comment))
-#+end_src
+#+END_SRC
 
 ** vundo
 
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 
 ;;; ### vundo ###
 ;;; --- 可视化撤销插件
@@ -190,13 +191,13 @@
    ("M-]" . vundo)
    )
  "init-vundo")
-#+end_src
+#+END_SRC
 
 ** Org
 
 *** org capture
 
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 ;; org-capture
 
 (lazy-load-global-keys
@@ -205,20 +206,20 @@
    ("C-c l" . org-store-link)
    )
  "init-capture-hugo")
-#+end_src
+#+END_SRC
 
 *** Org Src Edit
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (lazy-load-set-keys
    '(("C-c e" . org-edit-src-code)
      )
    org-mode-map
    )
-#+end_src
+#+END_SRC
 
 ** Embark
 
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   ;; embark
 
   (lazy-load-global-keys
@@ -242,7 +243,7 @@
 
 ** Lsp-Bridge
 
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   ;;; --- 代码语法补全
 (global-set-key (kbd "M-g d")  'lsp-bridge-find-def)
 (global-set-key (kbd "M-g o")  'lsp-bridge-find-def-other-window)
@@ -256,10 +257,10 @@
 (global-set-key (kbd "M-g <up>") 'lsp-bridge-popup-documentation-scroll-up)
 (global-set-key (kbd "M-g <down>") 'lsp-bridge-popup-documentation-scroll-down)
 
-#+end_src
+#+END_SRC
 
 ** Blink Search
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   ;; ### Blink Search ###
   ;;; --- 最快的搜索框架
   (lazy-load-global-keys
@@ -267,11 +268,11 @@
      ("C-S-y" . blink-search)
      )
    "init-blink-search")
-#+end_src
+#+END_SRC
 
 ** Markmacro
 
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   ;;; ### Markmacro ###
   ;;; --- 标记对象的键盘宏操作
   (lazy-load-global-keys
@@ -286,11 +287,11 @@
      ("M-m c e" . markmacro-apply-all-except-first) ;应用键盘宏到所有标记对象, 除了第一个， 比如下划线转换的时候
      )
    "init-markmacro")
-#+end_src
+#+END_SRC
 
 ** Color-rg
 
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   ;;; ### Color-Rg ###
   ;;; --- 搜索重构
   (lazy-load-global-keys
@@ -303,11 +304,11 @@
      ("M-m g ." . color-rg-search-input-in-current-file)
      )
    "color-rg")
-#+end_src
+#+END_SRC
 
 ** Ends
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (provide 'init-keymaps)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; init-keymaps.el ends here
-#+end_src
+#+END_SRC

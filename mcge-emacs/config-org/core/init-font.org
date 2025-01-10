@@ -51,14 +51,14 @@
 
 
 ** Require
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 ;;; Require:
 (require 'cl-lib)
 
-#+end_src
+#+END_SRC
 
 ** Code
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 
   ;;; Code:
   (defun mcg/font-setup-common(character font-list &optional scale-factor)
@@ -88,11 +88,11 @@
   (mcg/font-setup)
   (add-hook 'window-setup-hook #'mcg/font-setup)
   (add-hook 'server-after-make-frame-hook #'mcg/font-setup)
-#+end_src
+#+END_SRC
 
 ** Ends
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (provide 'init-font)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; init-font.el ends here
-#+end_src
+#+END_SRC

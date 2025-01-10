@@ -51,7 +51,7 @@
 
 
 ** Require
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (require 'lsp-bridge)
   (require 'lsp-bridge-jdtls)
   (require 'lang-cpp)
@@ -66,11 +66,11 @@
   (unless (display-graphic-p)
     (require 'acm-terminal))
 
-#+end_src
+#+END_SRC
 
 ** Config bridge
 
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 ;;; Code:
 ;; custom language server dir
 (setq lsp-bridge-user-langserver-dir mcgemacs-custom-lsp-bridge-langserver-dir)
@@ -109,38 +109,38 @@
                   (goto-char (point-min))
                   (when (search-backward-regexp (regexp-quote "from \"https://deno.land") nil t)
                     (return "deno")))))))))
-#+end_src
+#+END_SRC
 
 ** Keymap
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (lazy-load-set-keys
  '(
    ("C-c C-u d l" .  lsp-bridge-diagnostic-list)
    ("C-c C-u d w" .  lsp-bridge-workspace-diagnostic-list)
    )
  lsp-bridge-mode-map)
-#+end_src
+#+END_SRC
 
 ** flymake bridge
-#+begin_src emacs-lisp :tangle no
+#+BEGIN_SRC emacs-lisp :tangle no
 ;; flymake-bridge
 (add-hook 'lsp-bridge-mode-hook #'flymake-bridge-setup)
 
-#+end_src
+#+END_SRC
 
 ** Update modify file time
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 ;; save file update time
 ;; 在编程模式下启用保存文件时自动更新 `Last Modified` 时间的功能
 (add-hook 'prog-mode-hook
           (lambda ()
             (add-hook 'before-save-hook 'mcge/update-file-headers nil t)))
-#+end_src
+#+END_SRC
 
 
 ** Rust with eglot
 
-#+begin_src emacs-lisp :tangle no
+#+BEGIN_SRC emacs-lisp :tangle no
 ;; rust 使用 eglot
 (defun enable-lsp-bridge-if-not-rust ()
   "Enable lsp-bridge-mode if the current major mode is not rust-ts-mode or rust-mode."
@@ -152,11 +152,11 @@
 (add-hook 'after-change-major-mode-hook 'enable-lsp-bridge-if-not-rust)
 
 
-#+end_src
+#+END_SRC
 
 ** End
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (provide 'init-lsp-bridge)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; init-lsp-bridge.el ends here
-#+end_src
+#+END_SRC

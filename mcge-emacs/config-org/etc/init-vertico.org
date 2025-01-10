@@ -14,7 +14,8 @@
   ;; Copyright (C) 2024, mcge, all rights reserved.
   ;; Create   Date: 2025-01-04 15:00:00
   ;; Version: 0.1
-  ;; Modified   By: 2025-01-04 15:46:46
+  ;; Modified   By:  mcge <mcgeq@outlook.com>
+  ;; Last Modified:  <2025-01-10 Fri 10:24>
   ;; Keywords:
   ;; Compatibility: GNU Emacs 31.0.50
 
@@ -46,12 +47,11 @@
 
   ;;; Change log:
   ;;
-  
+
 #+END_SRC
 
-  
 ** Require
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   ;;; Require:
 
   (require 'crm)
@@ -61,13 +61,13 @@
   (require 'pinyinlib)
   (require 'savehist)
   (require 'saveplace)
-#+end_src
+#+END_SRC
 
 ** Code
 
 *** savehist
 
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 
 ;; savehist
 (add-hook 'after-init-hook 'savehist-mode)
@@ -80,12 +80,12 @@
                                       regexp-search-ring
                                       extended-command-history))
 (setq savehist-autosave-interval 300)
-#+end_src
+#+END_SRC
 
 *** Save place mode
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (add-hook 'after-init-hook 'save-place-mode)
-#+end_src
+#+END_SRC
 
 
 *** Orderless
@@ -109,7 +109,7 @@
 
 *** Vertico
 
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   ;; vertico
   (add-hook 'after-init-hook #'vertico-mode)
   (setq vertico-count 15)                       ;; Number of candidates to display
@@ -138,12 +138,12 @@
 
   ;; Enable recursive minibuffers
   (setq enable-recursive-minibuffers t)
-#+end_src
+#+END_SRC
 
 **** Vertico Keymap
 
-#+begin_src emacs-lisp
-  
+#+BEGIN_SRC emacs-lisp
+
   ;; vertico
   (lazy-load-set-keys
    '(
@@ -154,13 +154,13 @@
      ("C-M-p"    .   vertico-previous-group)
      )
    vertico-map)
-#+end_src
+#+END_SRC
 
 
 ** Ends
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 
 (provide 'init-vertico)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; init-vertico.el ends here
-#+end_src
+#+END_SRC

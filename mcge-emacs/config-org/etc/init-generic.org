@@ -4,6 +4,7 @@
 :END:
 
 ** Headers
+
 #+BEGIN_SRC emacs-lisp
   ;;; init-generic.el -- Config for Emacs Base Options -*- lexical-binding: t; -*-
 
@@ -13,7 +14,8 @@
   ;; Copyright (C) 2024, mcge, all rights reserved.
   ;; Create   Date: 2025-01-04 15:00:00
   ;; Version: 0.1
-  ;; Modified   By: 2025-01-04 15:46:46
+  ;; Modified   By:  mcge <mcgeq@outlook.com>
+  ;; Last Modified:  <2025-01-10 Fri 10:12>
   ;; Keywords:
   ;; Compatibility: GNU Emacs 31.0.50
 
@@ -50,14 +52,14 @@
 
 
 ** Require
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 ;;; Require:
 
 ;;; Code:
-#+end_src
+#+END_SRC
 
 ** Code
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (if *is-win32p* (setq system-time-locale "C"))
   ;; Coding System UTF-8
   (unless (memq system-type '(cygwin windows-nt ms-dos))
@@ -135,32 +137,32 @@
         scroll-conservatively                     10000)
   ;;设置光标
   (setq-default cursor-type '(bar . 5))
-#+end_src
+#+END_SRC
 
 ** 自动换行
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 ;; 启用`visual-line-mode'
 (global-visual-line-mode t)
-#+end_src
+#+END_SRC
 
 ** 单行最长字符
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 ;; set `fill-column'
 (setq-default fill-column 100)
-#+end_src
+#+END_SRC
 
 ** 全局启用自动换行
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 ;; `auto-fill-mode'
 (setq-default auto-fill-function 'do-auto-fill)
 ;;(global-auto-fill-mode t)
 ;; 括号匹配
 (setq electric-pair-inhibit-predicate 'electric-pair-conservative-inhibit)
 (electric-pair-mode 1)
-#+end_src
+#+END_SRC
 ** Ends
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (provide 'init-generic)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; init-generic.el ends here
-#+end_src
+#+END_SRC

@@ -13,7 +13,8 @@
   ;; Copyright (C) 2024, mcge, all rights reserved.
   ;; Create   Date: 2025-01-04 15:00:00
   ;; Version: 0.1
-  ;; Modified   By: 2025-01-04 15:46:46
+  ;; Modified   By:  mcge <mcgeq@outlook.com>
+  ;; Last Modified:  <2025-01-10 Fri 10:21>
   ;; Keywords:
   ;; Compatibility: GNU Emacs 31.0.50
 
@@ -45,19 +46,19 @@
 
   ;;; Change log:
   ;;
-  
+
 #+END_SRC
 
 ** Require
 
-#+begin_src emacs-lisp
+
+#+BEGIN_SRC emacs-lisp
   ;;; Require:
-  
   (require 'dired)
   (require 'embark)
   (require 'embark-consult)
 
-#+end_src
+#+END_SRC
 
 
 *** Consult
@@ -77,7 +78,7 @@
 
 **** Custom function
 #+BEGIN_SRC emacs-lisp
-  
+
   ;; custom function
   (defun mcg/consult-find-org-headings (&optional match)
     "MATCH find headngs in all org files."
@@ -93,7 +94,7 @@
 
 **** Keymap
 
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 ;; keymap
 (lazy-load-set-keys
  '(
@@ -107,12 +108,12 @@
    ("C-r" . consult-history)
    )
  minibuffer-local-map)
-#+end_src
+#+END_SRC
 
 *** Embark
 
 #+BEGIN_SRC emacs-lisp
-  
+
   ;; embark
 
   (setq embark-quit-after-action nil)
@@ -142,8 +143,8 @@
 
 
 ** Ends
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (provide 'init-embark)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; init-embark.el ends here
-#+end_src
+#+END_SRC

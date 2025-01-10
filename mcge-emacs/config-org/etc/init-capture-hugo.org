@@ -14,7 +14,8 @@
   ;; Copyright (C) 2024, mcge, all rights reserved.
   ;; Create   Date: 2025-01-04 15:00:00
   ;; Version: 0.1
-  ;; Modified   By: 2025-01-04 15:46:46
+  ;; Modified   By:  mcge <mcgeq@outlook.com>
+  ;; Last Modified:  <2025-01-10 Fri 10:39>
   ;; Keywords:
   ;; Compatibility: GNU Emacs 31.0.50
 
@@ -46,24 +47,24 @@
 
   ;;; Change log:
   ;;
-  
+
 #+END_SRC
 
 
 ** Require
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 ;;; Require:
 (require 'ox)
 (require 'ox-hugo)
 (require 'easy-hugo)
 (require 'org-capture)
 
-#+end_src
+#+END_SRC
 
 ** Code
 
 *** Org Capture
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 ;;; Code:
 (setq org-hugo-base-dir (concat mcgemacs-blog-dir "/"))
 (add-hook 'org-capture-mode-hook #'(lambda() (setq-local
@@ -147,10 +148,10 @@
       (setq level (1+ level))
       (setq end (save-excursion (org-end-of-subtree t t))))
     (org-end-of-subtree)))
-#+end_src
+#+END_SRC
 
 **** Ox Hugo
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 ;; Populates only the EXPORT_FILE_NAME property in the inserted heading.
 (with-eval-after-load 'org-capture
   (defun org-hugo-new-subtree-post-capture-template ()
@@ -164,7 +165,7 @@
                  `(
                    ,(concat "* TODO " title)
                    ":PROPERTIES:"
-                   ,(concat ":EXPORT_FILE_NAME: " fname)                  
+                   ,(concat ":EXPORT_FILE_NAME: " fname)
                    ;;,(concat ":EXPORT_FILE_NAME: " "index")
                    ,(concat ":EXPORT_DATE: " date)
                    ":END:"
@@ -252,22 +253,22 @@
   (let ((input (read-from-minibuffer "Choice Series: ")))  ;; 读取输入
     input))  ;; 返回输入
 
-#+end_src
+#+END_SRC
 
 *** Easy Hugo
 
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (with-eval-after-load 'easy-hugo
   (setq easy-hugo-postdir "content-org")
   (setq easy-hugo-default-ext ".org")
   (setq easy-hugo-url "https://www.gemc.club")
   (setq easy-hugo-basedir (concat mcgemacs-blog-dir "/")))
-#+end_src
+#+END_SRC
 
 ** Ends
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 
 (provide 'init-capture-hugo)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; init-capture-hugo.el ends here
-#+end_src
+#+END_SRC

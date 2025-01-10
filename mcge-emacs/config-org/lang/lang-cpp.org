@@ -52,14 +52,14 @@
 
 
 ** Require
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 ;;; Require:
 
 ;;; Code:
-#+end_src
+#+END_SRC
 
 ** Code
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (dolist (hook (list
                'c-mode-hook
                'c++-mode-hook
@@ -101,11 +101,11 @@
                                                  '(("\\<Q[A-Z][A-Za-z]\\>" . 'qt-keywords-face)))
                          ))
                      (c-mode-style-setup))))
-#+end_src
+#+END_SRC
 
 ** Ends
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (provide 'lang-cpp)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; lang-cpp.el ends here
-#+end_src
+#+END_SRC

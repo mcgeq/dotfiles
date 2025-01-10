@@ -51,15 +51,15 @@
 
 
 ** Require
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (require 'treesit)
 
-#+end_src
+#+END_SRC
 
 ** Code
 
 *** Treesit
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 
 ;;; Code:
 ;; M-x `treesit-install-language-grammar` to install language grammar.
@@ -102,10 +102,10 @@
         (clojure . ("https://github.com/sogaiu/tree-sitter-clojure"))
         (mojo . ("https://github.com/HerringtonDarkholme/tree-sitter-mojo"))))
 
-#+end_src
+#+END_SRC
 
 *** Major Mode
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (setq major-mode-remap-alist
         '(
           (c-mode          . c-ts-mode)
@@ -124,10 +124,10 @@
           (markdown-mode   . markdown-ts-mode)
           ))
 
-#+end_src
+#+END_SRC
 
 *** Hook
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
     (add-hook 'web-mode-hook #'(lambda ()
                                  (let ((file-name (buffer-file-name)))
                                    (when file-name
@@ -188,10 +188,10 @@
     ;; (add-hook 'lua-mode-hook #'(lambda () (treesit-parser-create 'lua)))
     ;; (add-hook 'C++-mode-hook #'(lambda () (treesit-parser-create 'cpp)))
 
-#+end_src
+#+END_SRC
 
 ** Code
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 ;;; Code:
 
 ;;; ### auto-mode-alist ###
@@ -307,12 +307,12 @@ The test for presence of the car of ELT-CONS is done with `equal'."
                ))
   (add-hook hook #'(lambda () (auto-fill-mode 1))))
 
-#+end_src
+#+END_SRC
 
 
 ** Lazy load
 
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 ;;; Mode load.
 (autoload 'cmake-mode "cmake-mode")
 (autoload 'qml-mode "qml-mode")
@@ -340,12 +340,12 @@ The test for presence of the car of ELT-CONS is done with `equal'."
 (autoload 'fsharp-mode "fsharp-mode")
 (autoload 'lua-mode "lang-lua")
 
-#+end_src
+#+END_SRC
 
 
 ** Ends
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (provide 'init-treesit)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; init-treesit.el ends here
-#+end_src
+#+END_SRC

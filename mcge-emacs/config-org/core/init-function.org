@@ -50,13 +50,13 @@
 
 
 ** Require
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 ;;; Require:
 
-#+end_src
+#+END_SRC
 
 ** Code
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   
   ;;; Code:
 
@@ -112,18 +112,18 @@
       (insert (concat "[[file:" filename "]]")))
     (org-display-inline-images)
     )
-#+end_src
+#+END_SRC
 
 ** 指定代码目录
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (defun mcg/open-source-code-dir ()
   "Open source coding directory."
   (interactive)
   )
-#+end_src
+#+END_SRC
 
 ** Update file modify time
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (defun mcge/update-last-modified-time ()
   "Update the `Last Modified' timestamp in the current buffer."
   (interactive)
@@ -151,12 +151,12 @@
   (interactive)
   (mcge/update-last-modified-time)
   (mcge/update-last-modified-by))
-#+end_src
+#+END_SRC
 
 
 ** Custom C-a
 
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (defun mcge-smart-move-beginning-of-line ()
   "Move point to the first non-whitespace character, or to the beginning of the line."
   (interactive)  ;; This makes the function callable as a command
@@ -164,11 +164,11 @@
     (back-to-indentation)  ;; Move to the first non-whitespace character
     (when (eq current-point (point))  ;; If point was already there, move to beginning of line
       (move-beginning-of-line 1))))
-#+end_src
+#+END_SRC
 
 ** Ends
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (provide 'init-function)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; init-function.el ends here
-#+end_src
+#+END_SRC

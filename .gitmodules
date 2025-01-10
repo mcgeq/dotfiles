@@ -193,3 +193,6 @@
 [submodule "emacs-org-supertag"]
 	path = mcge-emacs/site-lisp/extensions/org/org-supertag
 	url = https://github.com/yibie/org-supertag.git
+[submodule "emacs-ht"]
+	path = mcge-emacs/site-lisp/extensions/org/ht
+	url = https://github.com/Wilfred/ht.el.git

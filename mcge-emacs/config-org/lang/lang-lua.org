@@ -46,25 +46,25 @@
 
   ;;; Change log:
   ;;
-  
+
 #+END_SRC
 
 ** Require
 
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   ;;; Require:
 
   (require 'lua-mode)
 
-#+end_src
+#+END_SRC
 
 ** Code
 
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 
   ;;; Code:
 
-#+end_src
+#+END_SRC
 
 ** Ends
 #+BEGIN_SRC emacs-lisp

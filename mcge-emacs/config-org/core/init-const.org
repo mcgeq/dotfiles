@@ -45,7 +45,7 @@
 
   ;;; Change log:
   ;;
-  
+
 #+END_SRC
 
 
@@ -137,12 +137,12 @@
 #+END_SRC
 
 ** Rime
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 ;; emacs-rime user data
 (defvar mcgemacs-rime-user-data-dir (if *is-linux* (expand-file-name "~/.config/fcitx/rime")
                                       (expand-file-name (concat mcgemacs-custom-dir "/rime"))))
 
-#+end_src
+#+END_SRC
 
 ** Custom C# paths
 #+BEGIN_SRC emacs-lisp :tangle no

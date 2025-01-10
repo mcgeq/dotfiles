@@ -15,7 +15,7 @@
   ;; Create   Date: 2025-01-04 15:00:00
   ;; Version: 0.1
   ;; Modified   By:  mcge <mcgeq@outlook.com>
-  ;; Last Modified:  <2025-01-09 Thu 22:45>
+  ;; Last Modified:  <2025-01-10 Fri 10:02>
   ;; Keywords:
   ;; Compatibility: GNU Emacs 31.0.50
 
@@ -52,18 +52,18 @@
 
 ** Require
 
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 ;;; Require:
 (require 'visual-fill-column)
 (require 'mixed-pitch)
 (require 'org-superstar)
 (require 'org-appear)
 
-#+end_src
+#+END_SRC
 
 ** Code
 
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   ;;; Code:
 
   (setq org-ellipsis " ⭍"
@@ -142,12 +142,12 @@
                              (1 (prog1 () (compose-region (match-beginning 1) (match-end 1) ""))))))
 
 
-#+end_src
+#+END_SRC
 
 ** Ends
 
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (provide 'init-org)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; init-org.el ends here
-#+end_src
+#+END_SRC

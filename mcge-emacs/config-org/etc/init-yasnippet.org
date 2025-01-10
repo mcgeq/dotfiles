@@ -13,7 +13,8 @@
   ;; Copyright (C) 2024, mcge, all rights reserved.
   ;; Create   Date: 2025-01-04 15:00:00
   ;; Version: 0.1
-  ;; Modified   By: 2025-01-04 15:46:46
+  ;; Modified   By:  mcge <mcgeq@outlook.com>
+  ;; Last Modified:  <2025-01-10 Fri 10:36>
   ;; Keywords:
   ;; Compatibility: GNU Emacs 31.0.50
 
@@ -50,17 +51,18 @@
 
 
 ** Require
-#+begin_src emacs-lisp
+
+#+BEGIN_SRC emacs-lisp
 ;;; Require:
 (require 'js2-mode)
 (require 'yasnippet)
 
-#+end_src
+#+END_SRC
 
 ** Code
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   ;;; Code:
-  
+
   ;; 全局启用 yasnippet
   (yas-global-mode 1)
 
@@ -87,17 +89,17 @@
                   (add-to-list 'yas-snippet-dirs dir)))
               (yas-reload-all)
               (yas-minor-mode 1)
-              
+
               ;; 禁用某些模式下的 yasnippet
               (dolist (hook '(term-mode-hook))
                 (add-hook hook (lambda () (yas-minor-mode -1))))
               ))
-#+end_src
+#+END_SRC
 
 ** Ends
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 
 (provide 'init-yasnippet)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; init-yasnippet.el ends here
-#+end_src
+#+END_SRC

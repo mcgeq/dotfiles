@@ -64,7 +64,7 @@
 
 *** Whitespace
 
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 ;;; Code:
 
 ;; whitespace
@@ -96,18 +96,18 @@ whitespace-style
   tab-mark
 )
 )
-#+end_src
+#+END_SRC
 
 *** Autorevert
 
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 ;; autorevert
 (add-hook 'after-init-hook 'global-auto-revert-mode)
 
-#+end_src
+#+END_SRC
 
 *** Hideshow
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 ;; hideshow
 (add-hook 'prog-mode-hook 'hs-minor-mode)
 ;; 这里额外启用了 :box t 属性使得提示更加明显
@@ -121,11 +121,11 @@ whitespace-style
 
 (setq hs-set-up-overlay 'hideshow-folded-overlay-fn)
 
-#+end_src
+#+END_SRC
 
 *** Newcomment
 
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 ;; newcomment
 ;; 2. 绑定键位
 (global-set-key [remap comment-dwim] #'comment-or-uncomment)
@@ -145,7 +145,7 @@ whitespace-style
 ;; 4. 设置自定义变量
 (setq comment-auto-fill-only-comments t)
 
-#+end_src
+#+END_SRC
 
 ** Ends
 #+BEGIN_SRC emacs-lisp

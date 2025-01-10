@@ -13,7 +13,8 @@
   ;; Copyright (C) 2024, mcge, all rights reserved.
   ;; Create   Date: 2025-01-04 15:00:00
   ;; Version: 0.1
-  ;; Modified   By: 2025-01-04 15:46:46
+  ;; Modified   By:  mcge <mcgeq@outlook.com>
+  ;; Last Modified:  <2025-01-10 Fri 10:15>
   ;; Keywords:
   ;; Compatibility: GNU Emacs 31.0.50
 
@@ -45,31 +46,30 @@
 
   ;;; Change log:
   ;;
-  
+
 #+END_SRC
 
 
 ** Require
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 ;;; Require:
 (require 'magit)
 
-#+end_src
+#+END_SRC
 
 ** Code
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 
   ;;; Code:
-  
   (add-hook 'git-commit-mode-hook #'flyspell-mode)
   (setq magit-diff-refine-hunk t)
   (setq magit-ediff-dwim-show-on-hunks t)
 
-#+end_src
+#+END_SRC
 
 ** Binding Keymap
 
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 
 ;; 自定义magit菜单
 (transient-define-prefix mcge-magit-menu ()
@@ -143,11 +143,11 @@
    ]
   )
 
-#+end_src
+#+END_SRC
 
 ** Ends
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (provide 'init-magit)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; init-magit.el ends here
-#+end_src
+#+END_SRC

@@ -13,7 +13,8 @@
   ;; Copyright (C) 2024, mcge, all rights reserved.
   ;; Create   Date: 2025-01-04 15:00:00
   ;; Version: 0.1
-  ;; Modified   By: 2025-01-04 15:46:46
+  ;; Modified   By:  mcge <mcgeq@outlook.com>
+  ;; Last Modified:  <2025-01-10 Fri 10:25>
   ;; Keywords:
   ;; Compatibility: GNU Emacs 31.0.50
 
@@ -45,21 +46,21 @@
 
   ;;; Change log:
   ;;
-  
+
 #+END_SRC
 
 
 ** Require
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 ;;; Require:
 (require 'sort-tab)
 
-#+end_src
+#+END_SRC
 
 ** Code
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   ;;; Code:
-  
+
   (sort-tab-mode 1)
 
   (setq sort-tab-hide-function
@@ -69,11 +70,11 @@
                 (derived-mode-p 'eshell-mode) ; 隐藏 aweshell 缓冲区
                 ;; 可以添加更多条件来隐藏其他缓冲区
                 ))))
-#+end_src
+#+END_SRC
 
 ** Ends
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (provide 'init-sort-tab)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; init-sort-tab.el ends here
-#+end_src
+#+END_SRC

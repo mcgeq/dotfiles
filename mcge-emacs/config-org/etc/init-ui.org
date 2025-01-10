@@ -13,7 +13,8 @@
   ;; Copyright (C) 2024, mcge, all rights reserved.
   ;; Create   Date: 2025-01-04 15:00:00
   ;; Version: 0.1
-  ;; Modified   By: 2025-01-04 15:46:46
+  ;; Modified   By:  mcge <mcgeq@outlook.com>
+  ;; Last Modified:  <2025-01-10 Fri 10:14>
   ;; Keywords:
   ;; Compatibility: GNU Emacs 31.0.50
 
@@ -50,14 +51,14 @@
 
 
 ** Require
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 ;;; Require:
 (require 'ef-themes)
 
-#+end_src
+#+END_SRC
 
 ** Code
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   ;;; Code:
 
 ;; 自动切换主题
@@ -66,11 +67,11 @@
   (load-theme 'ef-summer t))
 
 
-#+end_src
+#+END_SRC
 
 ** Nerd icons
 
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 ;; nerd-icons
 (require 'nerd-icons)
 (setq nerd-icons-font-family (concat mcgemacs-custom-icon-font-family ""))
@@ -79,12 +80,12 @@
 (nerd-icons-completion-mode)
 (add-hook 'marginalia-mode-hook #'nerd-icons-completion-marginalia-setup)
 
-#+end_src
+#+END_SRC
 
 ** Ends
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 
 (provide 'init-ui)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; init-ui.el ends here
-#+end_src
+#+END_SRC
