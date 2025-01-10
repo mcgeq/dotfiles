@@ -1,5 +1,4 @@
 * init-blink-search.el
-
 :PROPERTIES:
 :HEADER-ARGS: :tangle (concat temporary-file-directory "init-blink-search.el") :lexical t
 :END:
