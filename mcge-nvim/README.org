@@ -1,0 +1,85 @@
+* Nvim Config
+** 插件管理
+- 插件管理 :: [[https://github.com/folke/lazy.nvim.git][lazy.nvim]]
+** 快捷键提示
+- 快捷键 :: [[https://github.com/folke/which-key.nvim.git][which-key.nvim]]
+** 启动和buffer
+- Dashboard :: [[https://github.com/goolord/alpha-nvim.git][alpha-nvim]]
+- 管理buffers :: [[https://github.com/moll/vim-bbye.git][vim-bbye]]
+** Treesit
+- Treesitter :: [[https://github.com/nvim-treesitter/nvim-treesitter.git][nvim-treesitter]]
+  - 重构 :: [[https://github.com/nvim-treesitter/nvim-treesitter-refactor.git][nvim-treesitter-refactor]]
+  - 操作文本对象 :: [[https://github.com/nvim-treesitter/nvim-treesitter-refactor.git][nvim-treesit][nvim-treesitter-textobjects]]
+** UI
+- 状态栏 :: [[https://github.com/nvim-lualine/lualine.nvim.git][lualine.nvim]]
+- 水平线 :: [[https://github.com/lukas-reineke/indent-blankline.nvim.git][indent-blankline.nvim]]
+- 高亮光标下的字符 :: [[https://github.com/RRethy/vim-illuminate.git][vim-illuminate]]
+- 在侧边显示git符号 :: [[https://github.com/lewis6991/gitsigns.nvim.git][gitsigns.nvim]]
+ - 匹配括号 :: [[https://github.com/windwp/nvim-autopairs.git][nvim-autopairs]]
+*** Themes
+- 主题 :: [[https://github.com/folke/tokyonight.nvim.git][tokyonight.nvim]]
+*** bufferline
+- 顶部显示buffer :: [[https://github.com/akinsho/bufferline.nvim][bufferline.nvim]]
+** 搜索
+- 搜索 :: [[https://github.com/nvim-telescope/telescope.nvim.git][telescope.nvim]]
+  - 配置UI :: [[https://github.com/nvim-telescope/telescope-ui-select.nvim.git][telescope-ui-select.nvim]]
+  - 搜索参数 :: [[https://github.com/nvim-telescope/telescope-live-grep-args.nvim.git][telescope-live-grep-args]]
+  - 环境 :: [[https://github.com/LinArcX/telescope-env.nvim.git][telescope-env.nvim]]
+  - plenary :: [[https://github.com/nvim-lua/plenary.nvim.git][plenary.nvim]]
+** 终端
+- 终端 :: [[https://github.com/akinsho/toggleterm.nvim.git][toggleterm.nvim]]
+** 注释
+- 注释 :: [[https://github.com/numToStr/Comment.nvim.git][Comment.nvim]]
+- ts :: [[https://github.com/JoosepAlviste/nvim-ts-context-commentstring.git][nvim-ts-context-commentstring]]
+- todo :: [[https://github.com/folke/todo-comments.nvim.git][todo-comments.nvim]]
+** 文件管理器
+- 文件管理器 :: [[https://github.com/nvim-tree/nvim-tree.lua.git][nvim-tree]]
+- 文件管理器图标 :: [[https://github.com/nvim-tree/nvim-web-devicons.git][nvim-web-devicons]]
+** LSP
+- LSP :: [[https://github.com/neovim/nvim-lspconfig.git][nvim-lspconfig]]
+  - 管理语言服务 :: [[https://github.com/williamboman/mason.nvim.git][mason.nvim]]
+  - 管理语言服务器 :: [[https://github.com/williamboman/mason-lspconfig.nvim.git][mason-lspconfig.nvim]]
+  - 自动安装升级 :: [[https://github.com/WhoIsSethDaniel/mason-tool-installer.nvim.git][mason-tool-installer.nvim]]
+*** 代码折叠
+- 折叠 :: [[https://github.com/kevinhwang91/nvim-ufo.git][nvim-ufo]]
+  - 依赖promise-async :: [[https://github.com/kevinhwang91/promise-async.git][promise-async]]
+** 补全
+- nvim-cmp补全 :: [[https://github.com/hrsh7th/nvim-cmp.git][nvim-cmp]]
+    - buffer :: [[https://github.com/hrsh7th/cmp-buffer.git][cmp-buffer]]
+    - nvim-lsp :: [[https://github.com/hrsh7th/cmp-nvim-lsp.git][cmp-nvim-lsp]]
+    - path :: [[https://github.com/hrsh7th/cmp-path.git][cmp-path]]
+    - cmp-vsnip :: [[https://github.com/hrsh7th/cmp-vsnip.git][cmp-vsnip]]
+    - 补全参数提示 :: [[https://github.com/hrsh7th/cmp-nvim-lsp-signature-help.git][cmp-nvim-lsp-signature-help]]
+    - snippest  :: [[https://github.com/rafamadriz/friendly-snippets.git][friendly-snippets]]
+    - snippets :: [[https://github.com/L3MON4D3/LuaSnip.git][LuaSnip]]
+    - cmp-luasnip :: [[https://github.com/saadparwaiz1/cmp_luasnip.git][cmp-luasnip]]
+    - cmdline :: [[https://github.com/hrsh7th/cmp-cmdline.git][cmp-cmdline]]
+    - 补全UI :: [[https://github.com/onsails/lspkind.nvim.git][lspkind.nvim]]
+** 调试
+- 调试 :: Dap
+    - nvim-dap :: [[https://github.com/mfussenegger/nvim-dap.git][nvim-dap]]
+    - 调试 :: [[https://github.com/theHamsta/nvim-dap-virtual-text.git][nvim-dap-virtual-text]]
+    - 调试UI :: [[https://github.com/rcarriga/nvim-dap-ui.git][nvim-dap-ui]]
+  - nvim扩展 :: [[https://github.com/Exafunction/codeium.nvim.git][codeium.nvim]]
+** 测试框架
+- 测试 :: neotest
+  - neotest :: [[https://github.com/nvim-neotest/neotest.git][neotest]]
+  - go :: [[https://github.com/nvim-neotest/neotest-go.git][neotest-go]]
+** 通知
+- 通知提示 :: [[https://github.com/rcarriga/nvim-notify.git][nvim-notify]]
+** 语言服务
+- Language :: 语言
+  + typescript-tools :: [[https://github.com/pmizio/typescript-tools.nvim.git][typescript-tools.nvim]]
+  + JSON :: [[https://github.com/b0o/SchemaStore.nvim.git][SchemaStore.nvim]]
+  + Rust :: [[https://github.com/mrcjkb/rustaceanvim.git][rustaceanvim]]
+  + Java :: [[https://github.com/mfussenegger/nvim-jdtls.git][nvim-jdtls]]
+  + markdown :: [[https://github.com/jakewvincent/mkdnflow.nvim.git][mkdnflow.nvim]]
+  +   预览markdown :: [[https://github.com/iamcco/markdown-preview.nvim.git][markdown-preview.nvim]]
+** 其他
+- 操作周围对象 :: [[https://github.com/kylechui/nvim-surround.git][nvim-surround]]
+- 符号的树视图 :: [[https://github.com/SmiteshP/nvim-navic.git][nvim-navic]]
+- 无干扰编码 :: [[https://github.com/folke/zen-mode.nvim.git][zen-mode.nvim]]
+- 彩虹括号 :: [[https://github.com/HiPhish/rainbow-delimiters.nvim.git][rainbow-delimiters.nvim]]
+- 可视化提示 :: [[https://github.com/j-hui/fidget.nvim.git][fidget.nvim]]
+- 绘制ASCII :: [[https://github.com/jbyuki/venn.nvim.git][venn.nvim]]
+- 编辑大文件 :: [[https://github.com/LunarVim/bigfile.nvim.git][bigfile.nvim]]
