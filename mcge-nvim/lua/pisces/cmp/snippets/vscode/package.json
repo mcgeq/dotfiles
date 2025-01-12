@@ -16,6 +16,25 @@
       },
       {
         "language": [
+          "rust"
+        ],
+        "path": "./rust.json"
+      },
+      {
+        "language": [
+          "python"
+        ],
+        "path": "./python.json"
+      },
+      {
+        "language": [
+          "c",
+          "cpp"
+        ],
+        "path": "./cpp.json"
+      },
+      {
+        "language": [
           "typescript",
           "typescriptreact",
           "javascript",

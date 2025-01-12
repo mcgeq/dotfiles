@@ -395,10 +395,10 @@ local UserConfig = {
 	clangd = {
 		enable = true,
 		lsp = "clangd",
-		-- linter = "clangd-tidy",
+		linter = "clangd-tidy",
 		formatter = "clang-format",
 		format_on_save = true,
-		indent = 4,
+		indent = 2,
 	},
 
 	---@class GolangConfig
