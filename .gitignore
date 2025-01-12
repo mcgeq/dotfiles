@@ -8,6 +8,9 @@ mcge-emacs/site-lisp/config/*
 # nushell
 mcge-nushell/history.*
 mcge-scoop/config.json
+
+# nvim lazy
+mcge-nvim/lazy-lock.json
 # Logs
 logs
 *.log
