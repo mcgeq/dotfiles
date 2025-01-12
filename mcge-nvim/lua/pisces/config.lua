@@ -393,11 +393,11 @@ local UserConfig = {
 
 	---@class ClangdConfig
 	clangd = {
-		enable = false,
+		enable = true,
 		lsp = "clangd",
 		-- linter = "clangd-tidy",
 		formatter = "clang-format",
-		format_on_save = false,
+		format_on_save = true,
 		indent = 4,
 	},
 
