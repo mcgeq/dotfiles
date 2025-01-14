@@ -22,9 +22,13 @@ function _G.log(v)
   return v
 end
 
-function _G.keymap(mode, lhs, rhs, opts)
+function _G.keymap(mode, lhs, rhs, opts, desc)
   if not lhs or not rhs then
     return
+  end
+
+  if opts then
+    opts = vim.tbl_extend("force", opts, (desc or {}))
   end
 
   local keyOpts = vim.tbl_extend("force", { remap = false, silent = true }, (opts or {}))

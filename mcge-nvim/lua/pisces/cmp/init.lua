@@ -30,11 +30,11 @@ local mapping = {
 keymap("c", cfg.keys.select_next_item, "<C-n>", {
   remap = true,
   silent = true,
-})
+}, {desc = 'Cmp Select Next'})
 keymap("c", cfg.keys.select_prev_item, "<C-p>", {
   remap = true,
   silent = true,
-})
+}, {desc = 'Cmp Select Prev'})
 
 cmp.setup({
   -- we use luasnip

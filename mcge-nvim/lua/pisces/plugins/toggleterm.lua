@@ -113,11 +113,11 @@ if toggleterm and cfg and cfg.enable then
 
   vim.keymap.set({ "n", "t" }, cfg.toggle_float_window, function()
     M.toggleA(cfg.toggle_float_window_command)
-  end)
+  end, {desc = 'Terminal Open'})
   vim.keymap.set({ "n", "t" }, cfg.toggle_side_window, function()
     M.toggleB(cfg.toggle_side_window_command)
-  end)
+  end, {desc = 'Terminal Side'})
   vim.keymap.set({ "n", "t" }, cfg.toggle_bottom_window, function()
     M.toggleC(cfg.toggle_bottom_window_command)
-  end)
+  end, {desc = 'Terminal Bottom'})
 end

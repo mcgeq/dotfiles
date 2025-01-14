@@ -76,7 +76,7 @@ M.copilot_chat = function()
     if input ~= "" then
       copilot_chat.ask(input)
     end
-  end)
+  end, {desc = 'Copilot Chat'})
 end
 
 return M

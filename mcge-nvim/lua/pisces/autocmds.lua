@@ -94,7 +94,7 @@ autocmd({ "FileType" }, {
     "neotest-output",
   },
   callback = function()
-    keymap({ "i", "n" }, { "q", "<esc>" }, "<esc>:close<CR>", { buffer = true })
+    keymap({ "i", "n" }, { "q", "<esc>" }, "<esc>:close<CR>", { buffer = true }, { desc = 'close'})
   end,
 })
 

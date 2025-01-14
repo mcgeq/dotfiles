@@ -48,25 +48,25 @@ if neotest and cfg then
 
   keymap("n", cfg.toggle, function()
     neotest.summary.toggle()
-  end)
+  end, {desc = 'Neotest Toggle'})
 
   keymap("n", cfg.run, function()
     neotest.run.run()
-  end)
+  end, { desc = 'Neotest Run'})
 
   keymap("n", cfg.run_dap, function()
     neotest.run.run({ strategy = "dap" })
-  end)
+  end, { desc = 'Neotest Dap Run'})
 
   keymap("n", cfg.run_file, function()
     neotest.run.run(vim.fn.expand("%"))
-  end)
+  end, { desc = 'Neotest Run File'})
 
   keymap("n", cfg.run_stop, function()
     neotest.run.stop()
-  end)
+  end, { desc = 'Neotest Stop'})
 
   keymap("n", cfg.output_open, function()
     neotest.output.open({ enter = true })
-  end)
+  end, { desc = 'Neotest Output'})
 end
