@@ -24,27 +24,37 @@
 ---@field copilot_chat? CopilotChatConfig
 ---@field neotest? NeotestConfig neotest plugin user config
 
---- 开发环境配置
+--- 开发环境基础配置
 ---@class DevConfig
----@field lsp? LSPConfig LSP common config
----@field dap? DAPConfig DAP common config
----@field frontend? FrontendConfig Frontend development user config
----@field clangd? ClangdConfig Clangd user config
----@field golang? GolangConfig Golang development user config
----@field lua? LuaConfig Lua development user config
----@field rust? RustConfig Rust development user config
----@field bash? BashConfig sh development user config
----@field python? PythonConfig python development user config
----@field ruby? RubyConfig ruby development user config
----@field json? JsonConfig Json user config
----@field markdown? MarkdownConfig
----@field toml? TomlConfig Toml user config
----@field yaml? YamlConfig Yaml user config
----@field docker? DockerConfig Docker user config
----@field solidity? SolidityConfig
----@field java? JavaConfig
----@field git? GitConfig git user config
----@field mirror? MirrorConfig mirror config
+---@field enable boolean
+---@field dev_lsp? string
+---@field dev_formatter? string
+---@field dev_linter? string
+---@field dev_format_on_save? boolean
+---@field dev_indent? number
+
+---@class FrontendConfig: DevConfig Frontend development user config
+---@field dev_f_cspell? boolean
+---@field dev_f_tailwindcss? boolean
+---@field dev_f_unocss? boolean
+---@field dev_f_prisma? boolean
+---@field dev_f_vue? boolean
+
+
+---@class MarkdownConfig: DevConfig
+---@field wrap? boolean
+---@field theme? string
+---@field keys? MarkdownConfigKeys
+
+---@class MarkdownConfigKeys
+---@field m_next_link? string
+---@field m_prev_link? string
+---@field m_next_heading? string
+---@field m_prev_heading? string
+---@field m_go_back? string
+---@field m_follow_link? string
+---@field m_toggle_item? string
+
 
 --- 快捷键
 ---@class Commonkeys
@@ -168,3 +178,133 @@
 ---@field t_preview_scrolling_down? string
 ---@field t_recent_files? string
 ---@field t_telescope_help_tags? string
+
+--- nvim-surround
+---@class SurroundConfig
+---@field enable boolean
+---@field keys? SurroundConfigKeys
+
+---@class SurroundConfigKeys
+---@field s_normal? string
+---@field s_normal_cur? string
+---@field s_delete? string
+---@field s_change? string
+---@field s_visual? string
+---@field s_visual_line? string
+---@field s_insert? boolean
+---@field s_insert_line? boolean
+---@field s_normal_line? boolean
+---@field s_normal_cur_line? boolean
+
+--- venn
+---@class VENNConfig
+---@field enable boolean
+---@field keys? VENNConfigKeys
+
+---@class VENNConfigKeys
+---@field v_toggle? string
+---@field v_up? string
+---@field v_down? string
+---@field v_left? string
+---@field v_right? string
+---@field v_draw_box? string
+
+--- zen-mode
+---@class ZenConfig
+---@field enable boolean
+---@field keys? ZenConfigKeys
+
+---@class ZenConfigKeys
+---@field z_toogle? string
+
+--- comment
+---@class CommentConfig
+---@field enable boolean
+---@field keys? CommentConfigKeys
+
+---@class CommentConfigKeys
+---@field c_n_toggle_line? string
+---@field c_n_toggle_gbc? string
+---@field c_v_toggle_line? string
+---@field c_v_toggle_block? string
+
+--- toggleterm
+---@class ToggleTermConfig
+---@field enable boolean
+---@field keys? ToggleTermConfigKeys
+
+---@class ToggleTermConfigKeys
+---@field t_toggle_float_window? string
+---@field t_toggle_float_window_command? string
+---@field t_toggle_side_window? string
+---@field t_toggle_side_window_command? string
+---@field t_toggle_bottom_window? string
+---@field t_toggle_bottom_window_command? string
+
+--- copilot
+---@class CopilotChatConfig
+---@field enable boolean
+---@field keys? CopilotChatConfigKeys
+
+---@class CopilotChatConfigKeys
+---@field c_quick_chat? string
+---@field c_prompt_actions? string
+---@field c_help_actions? string
+
+--- LSP
+---@class LSPConfig
+---@field enable boolean
+---@field keys? LSPConfigKeys
+
+---@class LSPConfigKeys
+---@field l_definition? string
+---@field l_implementation? string
+---@field l_references? string
+---@field l_hover? string
+---@field l_call_incoming? string
+---@field l_call_outgoing? string
+---@field l_rename? string
+---@field l_code_action? string
+---@field l_format? string
+---@field l_diagnostics_open_float? string
+---@field l_diagnostics_goto_next? string
+---@field l_diagnostics_goto_prev? string
+
+--- DAP
+---@class DAPConfig
+---@field enable boolean
+---@field keys? DAPConfigKeys
+
+---@class DAPConfigKeys
+---@field d_continue? string
+---@field d_terminate? string
+---@field d_step_over? string
+---@field d_step_into? string
+---@field d_step_out? string
+---@field d_toggle_breakpoint? string
+---@field d_clear_breakpoint? string
+---@field d_eval? string
+
+--- neotest
+---@class NeotestConfig
+---@field enable boolean
+---@field keys? NeotestConfigKeys
+
+---@class NeotestConfigKeys
+---@field t_toggle? string
+---@field t_run? string
+---@field t_run_file? string
+---@field t_run_dap? string
+---@field t_run_stop? string
+---@field t_output_open? string
+
+--- gitsigns
+---@class GitConfig
+---@field enable boolean
+---@field code_actions? string
+---@field signcolumn? boolean
+---@field numhl? boolean
+---@field linehl? boolean
+---@field word_diff? boolean
+---@field current_line_blame? boolean
+
