@@ -1,7 +1,14 @@
-add_newline = false
+add_newline = true
 scan_timeout = 1000
 command_timeout = 10000
-format = '$all$line_break$env_var$character'
+format = """\
+$directory\
+${custom.directory_separator_not_git}\
+${custom.directory_separator_git}\
+$symbol($git_branch[](fg:#FCF392))\
+$symbol( $git_commit$git_status$git_metrics$git_state)$fill$cmd_duration$nodejs$all\
+${custom.git_config_email}
+$character"""
 
 [env_var.VIRTUAL_ENV]
 format = 'venv:[$env_value]($style) '
