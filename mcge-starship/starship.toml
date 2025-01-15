@@ -10,6 +10,9 @@ $symbol( $git_commit$git_status$git_metrics$git_state)$fill$cmd_duration$nodejs$
 ${custom.git_config_email}
 $character"""
 
+[fill]
+symbol = " "
+
 [env_var.VIRTUAL_ENV]
 format = 'venv:[$env_value]($style) '
 style = 'yellow bold'
