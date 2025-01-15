@@ -200,7 +200,7 @@ local UserConfig = {
 			find_files = "<leader>ff",
 			live_grep = "<leader>fg",
 			find_buffers = "<leader>fb",
-			find_commands = "<leader>fc",
+			find_current_buffer = "<leader>fc",
 			telescope_help_tags = "<leader>fh",
 			-- super find  "xx" -tmd ---@see telescope-live-grep-args.nvim
 			live_grep_args = "sf",
@@ -540,7 +540,7 @@ local UserConfig = {
 		numhl = false, -- Toggle with `:Gitsigns toggle_numhl`
 		linehl = false, -- Toggle with `:Gitsigns toggle_linehl`
 		word_diff = false, -- Toggle with `:Gitsigns toggle_word_diff`
-		current_line_blame = false, -- Toggle with `:Gitsigns toggle_current_line_blame`
+		current_line_blame = true, -- Toggle with `:Gitsigns toggle_current_line_blame`
 	},
 }
 

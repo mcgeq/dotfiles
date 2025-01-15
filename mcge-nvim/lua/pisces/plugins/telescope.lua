@@ -55,7 +55,12 @@ if telescope and lga_actions and cfg and cfg.enable then
 	keymap("n", cfg.keys.live_grep_args, telescope_builtin.live_grep_args, { desc = "Telescope live grep args" })
 	keymap("n", cfg.keys.recent_file, telescope_builtin.oldfiles, { desc = "Telescope recent file" })
 	keymap("n", cfg.keys.find_buffers, telescope_builtin.buffers, { desc = "Telescope buffers" })
-	keymap("n", cfg.keys.find_commands, telescope_builtin.commands, { desc = "Telescope commands" })
+	keymap(
+		"n",
+		cfg.keys.find_current_buffer,
+		telescope_builtin.current_buffer_fuzzy_find,
+		{ desc = "Telescope commands" }
+	)
 	keymap("n", cfg.keys.telescope_help_tags, telescope_builtin.help_tags, { desc = "Telescope help tags" })
 	-- keymap("n", cfg.keys.find_files, ":<CMD<Telescope find_files<CR>")
 	-- keymap("n", cfg.keys.live_grep, ":<CMD>Telescope live_grep<CR>")
