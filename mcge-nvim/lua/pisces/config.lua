@@ -1,11 +1,43 @@
----@type UserConfig
-local M = {}
-
-M['colorscheme'] = "tokyonight"
-M['max_highlight_line_count'] = 5000
-M['nable_imselec'] = false
-M['enable_very_magic_search'] = false
-M['ix_windows_clipboar'] = false
+---@class UserConfig
+---@field colorscheme? "tokyonight" | "nord" | "onedark" | "gruvbox" | "nightfox" | "nordfox" | "duskfox" | "dracula" builtin colorscheme
+---@field max_highlight_line_count? number disable code hightlight on big file for performance default 10000
+---@field enable_imselect? boolean auto switch your input method, default false  ---@see https://github.com/daipeihust/im-select
+---@field enable_very_magic_search? boolean enable regexp very magic mode ---@see https://www.youtube.com/watch?v=VjOcINs6QWs
+---@field fix_windows_clipboard? boolean fix yank problem on windows WSL2 ---@see  https://stackoverflow.com/questions/44480829/how-to-copy-to-clipboard-in-vim-of-bash-on-windows
+---@field keys? Commonkeys common keymappings
+---@field s_windows? SWindowConfig enabled by default
+---@field s_tab? STabConfig disabled by default
+---@field cmp? CMPConfig Completion user config
+---@field notify? NotifyConfig nvim-notify plugin user config
+---@field nvimTree? NvimTreeConfig nvim-tree plugin user config
+---@field bufferLine? BufferLineConfig bufferline.nvim plugin user config
+---@field telescope? TelescopeConfig telescope.nvim plugin user config
+---@field surround? SurroundConfig nvim-surround plugin user config
+---@field venn? VENNConfig venn.nvim plugin user config
+---@field zen? ZenConfig zen-mode.nvim plugin user config
+---@field comment? CommentConfig Comment.nvim plugin user config
+---@field toggleterm? ToggleTermConfig toggleterm.nvim plugin user config
+---@field copilot_chat? CopilotChatConfig
+---@field neotest? NeotestConfig neotest plugin user config
+---@field lsp? LSPConfig LSP common config
+---@field dap? DAPConfig DAP common config
+---@field frontend? FrontendConfig Frontend development user config
+---@field clangd? ClangdConfig Clangd user config
+---@field golang? GolangConfig Golang development user config
+---@field lua? LuaConfig Lua development user config
+---@field rust? RustConfig Rust development user config
+---@field bash? BashConfig sh development user config
+---@field python? PythonConfig python development user config
+---@field ruby? RubyConfig ruby development user config
+---@field json? JsonConfig Json user config
+---@field markdown? MarkdownConfig
+---@field toml? TomlConfig Toml user config
+---@field yaml? YamlConfig Yaml user config
+---@field docker? DockerConfig Docker user config
+---@field solidity? SolidityConfig
+---@field java? JavaConfig
+---@field git? GitConfig git user config
+---@field mirror? MirrorConfig mirror config
 
 local UserConfig = {
 
@@ -168,7 +200,7 @@ local UserConfig = {
 			find_files = "<leader>ff",
 			live_grep = "<leader>fg",
 			find_buffers = "<leader>fb",
-      find_commands = "<leader>fc",
+			find_commands = "<leader>fc",
 			telescope_help_tags = "<leader>fh",
 			-- super find  "xx" -tmd ---@see telescope-live-grep-args.nvim
 			live_grep_args = "sf",
@@ -513,12 +545,12 @@ local UserConfig = {
 }
 
 ---@class MirrorConfig
-UserConfig['mirror'] = {
--- treesitter = "https://github.com/",
-		treesitter = false,
-		packer = "https://github.com/",
-		-- TODO: LSP DAP mirror config
-		-- carefully change these value
+UserConfig["mirror"] = {
+	-- treesitter = "https://github.com/",
+	treesitter = false,
+	packer = "https://github.com/",
+	-- TODO: LSP DAP mirror config
+	-- carefully change these value
 }
 
 return UserConfig
