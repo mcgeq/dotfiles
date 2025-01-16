@@ -95,6 +95,8 @@
     (require 'init-fingertip)
     (require 'init-treesit)
     (require 'init-org)
+    (require 'init-auto-save)
+    (require 'init-symbol-overlay)
     )
 #+END_SRC
 

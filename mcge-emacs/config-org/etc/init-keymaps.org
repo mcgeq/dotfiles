@@ -119,6 +119,22 @@
 (global-set-key (kbd "C-c C-r")   'recentf)
 #+END_SRC
 
+** 绑定M-p
+#+begin_src emacs-lisp
+  (defun previous-multilines ()
+    "Scroll down multiple lines"
+    (interactive)
+    (scroll-down (/ (window-body-height) 3)))
+
+  (defun next-multilines ()
+    "Scroll up multiple lines"
+    (interactive)
+    (scroll-up (/ (window-body-height) 3)))
+
+  (global-set-key (kbd "M-n") 'next-multilines)
+  (global-set-key (kbd "M-p") 'previous-multilines)
+#+end_src
+
 ** magit
 #+BEGIN_SRC emacs-lisp
 ;;; init-magit.el

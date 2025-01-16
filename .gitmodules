@@ -196,3 +196,12 @@
 [submodule "emacs-ht"]
 	path = mcge-emacs/site-lisp/extensions/org/ht
 	url = https://github.com/Wilfred/ht.el.git
+[submodule "emacs-auto-save"]
+	path = mcge-emacs/site-lisp/extensions/auto-save
+	url = https://github.com/manateelazycat/auto-save.git
+[submodule "emacs-symbol-overlay"]
+	path = mcge-emacs/site-lisp/extensions/symbol-overlay
+	url = https://github.com/wolray/symbol-overlay.git
+[submodule "emacs-ws-butler"]
+	path = mcge-emacs/site-lisp/extensions/ws-butler
+	url = https://github.com/lewang/ws-butler.git
