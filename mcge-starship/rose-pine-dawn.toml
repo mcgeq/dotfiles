@@ -32,7 +32,6 @@ $time\n  \
 [󱞪](fg:iris) \
 """
 
-
 palette = "rose-pine-dawn"
 
 [palettes.rose-pine-dawn]
@@ -84,8 +83,8 @@ behind = '[⇣\(${count}\)](bg:overlay fg:rose)'
 disabled = false
 format = "[](fg:overlay)[ $time 󰴈 ]($style)[](fg:overlay)"
 style = "bg:overlay fg:rose"
-time_format = "%T %a"
-use_12hr = false
+time_format = "%I:%M%P"
+use_12hr = true
 
 [username]
 disabled = false
