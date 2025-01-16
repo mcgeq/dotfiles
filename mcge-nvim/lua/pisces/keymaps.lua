@@ -12,7 +12,7 @@
 local cfg = require("pisces").config
 local keys = cfg.keys
 if not keys then
-  return
+   return
 end
 
 -- leader key
@@ -38,21 +38,21 @@ keymap({ "n", "v" }, keys.n_v_10k, "10k")
 
 -- very magic search mode
 if cfg.enable_very_magic_search then
-  keymap({ "n", "v" }, "/", "/\\v", {
-    remap = false,
-    silent = false,
-  })
-  keymap("c", "s/", "s/\\v", {
-    remap = false,
-    silent = false,
-  })
+   keymap({ "n", "v" }, "/", "/\\v", {
+      remap = false,
+      silent = false,
+   })
+   keymap("c", "s/", "s/\\v", {
+      remap = false,
+      silent = false,
+   })
 end
 
 -------------------- fix ------------------------------
 
 local opts_expr = {
-  expr = true,
-  silent = true,
+   expr = true,
+   silent = true,
 }
 -- fix :set wrap
 keymap("n", "j", "v:count == 0 ? 'gj' : 'j'", opts_expr)
@@ -72,33 +72,33 @@ keymap("x", "p", '"_dP')
 --------------- super window -----------------------
 
 if cfg.s_windows ~= nil and cfg.s_windows.enable then
-  local skey = cfg.s_windows.keys
-  keymap("n", "s", "")
-  keymap("n", skey.split_vertically, ":vsp<CR>")
-  keymap("n", skey.split_horizontally, ":sp<CR>")
-  keymap("n", skey.close, "<C-w>c")
-  keymap("n", skey.close_others, "<C-w>o") -- close others
-  keymap("n", skey.jump_left, "<C-w>h")
-  keymap("n", skey.jump_down, "<C-w>j")
-  keymap("n", skey.jump_up, "<C-w>k")
-  keymap("n", skey.jump_right, "<C-w>l")
-  keymap("n", skey.width_decrease, ":vertical resize -10<CR>")
-  keymap("n", skey.width_increase, ":vertical resize +10<CR>")
-  keymap("n", skey.height_decrease, ":horizontal resize -10<CR>")
-  keymap("n", skey.height_increase, ":horizontal resize +10<CR>")
-  keymap("n", skey.size_equal, "<C-w>=")
+   local skey = cfg.s_windows.keys
+   keymap("n", "s", "")
+   keymap("n", skey.split_vertically, ":vsp<CR>")
+   keymap("n", skey.split_horizontally, ":sp<CR>")
+   keymap("n", skey.close, "<C-w>c")
+   keymap("n", skey.close_others, "<C-w>o") -- close others
+   keymap("n", skey.jump_left, "<C-w>h")
+   keymap("n", skey.jump_down, "<C-w>j")
+   keymap("n", skey.jump_up, "<C-w>k")
+   keymap("n", skey.jump_right, "<C-w>l")
+   keymap("n", skey.width_decrease, ":vertical resize -10<CR>")
+   keymap("n", skey.width_increase, ":vertical resize +10<CR>")
+   keymap("n", skey.height_decrease, ":horizontal resize -10<CR>")
+   keymap("n", skey.height_increase, ":horizontal resize +10<CR>")
+   keymap("n", skey.size_equal, "<C-w>=")
 end
 
 -------------- super tab ---------------------------
 
 if cfg.s_tab ~= nil and cfg.s_tab.enable then
-  local tkey = cfg.s_tab.keys
-  keymap("n", tkey.split, "<CMD>tab split<CR>")
-  keymap("n", tkey.close, "<CMD>tabclose<CR>")
-  keymap("n", tkey.next, "<CMD>tabnext<CR>")
-  keymap("n", tkey.prev, "<CMD>tabprev<CR>")
-  keymap("n", tkey.first, "<CMD>tabfirst<CR>")
-  keymap("n", tkey.last, "<CMD>tablast<CR>")
+   local tkey = cfg.s_tab.keys
+   keymap("n", tkey.split, "<CMD>tab split<CR>")
+   keymap("n", tkey.close, "<CMD>tabclose<CR>")
+   keymap("n", tkey.next, "<CMD>tabnext<CR>")
+   keymap("n", tkey.prev, "<CMD>tabprev<CR>")
+   keymap("n", tkey.first, "<CMD>tabfirst<CR>")
+   keymap("n", tkey.last, "<CMD>tablast<CR>")
 end
 
 -- Esc back to Normal mode
