@@ -1,0 +1,156 @@
+* init-org-agenda.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle (concat temporary-file-directory "init-org-agenda.el") :lexical t
+:END:
+
+** Headers
+#+BEGIN_SRC emacs-lisp
+  ;;; init-org-agenda.el -- Config for Org Agenda -*- lexical-binding: t; -*-
+
+  ;; Filename: init.el
+  ;; Description: Config for Org Agenda
+  ;; Author: mcge <mcgeq@outlook.com>
+  ;; Copyright (C) 2024, mcge, all rights reserved.
+  ;; Create   Date: 2025-01-04 15:00:00
+  ;; Version: 0.1
+  ;; Modified   By:  mcge <mcgeq@outlook.com>
+  ;; Last Modified:  <2025-01-10 Fri 10:14>
+  ;; Keywords:
+  ;; Compatibility: GNU Emacs 31.0.50
+
+  ;;; Commentary:
+  ;;
+  ;; Config for Org Agenda
+  ;;
+
+  ;;; Installation:
+  ;;
+  ;; Put init-org-agenda.el to your load-path.
+  ;; The load-path is usually ~/elisp/.
+  ;; It's set in your ~/.emacs like this:
+  ;; (add-to-list 'load-path (expand-file-name "~/elisp"))
+  ;;
+  ;; And the following to your ~/.emacs startup file.
+  ;;
+  ;; (require 'init-org-agenda)
+  ;;
+  ;; No need more.
+
+  ;;; Customize:
+  ;;
+  ;;
+  ;;
+  ;; All of the above can customize by:
+  ;;      M-x customize-group RET init-aider RET
+  ;;
+
+  ;;; Change log:
+  ;;
+
+#+END_SRC
+
+** Require
+#+BEGIN_SRC emacs-lisp
+  ;;; Require:
+  (require 'org-agenda)
+
+#+END_SRC
+
+** Code
+#+BEGIN_SRC emacs-lisp
+  ;;; Code:
+  ;; 设置 org agenda 展示的文件
+  (setq org-agenda-files (list mcgemacs-org-agenda-files))
+  (setq agenda-used-time-grid t)
+  ;; or-agenda-time-grid 八分图
+  ;; #+tblname: 八分图时间段的概念命名
+  ;; |----+-----------+----------+------------------|
+  ;; | No | 时间段    | 维基命名 | 自定义命名       |
+  ;; |----+-----------+----------+------------------|
+  ;; |  1 | 0 时~3 时   | 凌晨     | 午夜(夜)         |
+  ;; |  2 | 3 时~6 时   | 拂晓     | 破晓(破,dawn)    |
+  ;; |  3 | 6 时~9 时   | 早晨     | 早晨(早,morning) |
+  ;; |  4 | 9 时~12 时  | 午前     | 明昼(明)         |
+  ;; |  5 | 12 时~15 时 | 午后     | 午后(午)         |
+  ;; |  6 | 15 时~18 时 | 傍晚     | 下午(下)         |
+  ;; |  7 | 18 时~21 时 | 薄暮     | 向晚(向,Dusk)    |
+  ;; |  8 | 21 时~24 时 | 深夜     | 深夜(深,Night)   |
+  ;; |----+-----------+----------+------------------|
+  (setq org-agenda-time-grid (quote ((daily today require-timed)
+                                     (300
+                                      600
+                                      900
+                                      1200
+                                      1500
+                                      1800
+                                      2100
+                                      2400)
+                                     "......"
+                                     "-----------------------------------------------------"
+                                     )))
+
+  (setq org-agenda-include-diary t)
+  (setq org-agenda-diary-file mcgeamcs-org-agenda-diray-file)
+  (setq diary-file mcgeamcs-org-agenda-diray-file)
+
+  ;; 设置本地坐标
+  (setq calendar-longitude 116.9962)
+  (setq calendar-latitude 39.91)
+
+  ;;Sunrise and Sunset
+  ;;日出而作, 日落而息
+  (defun diary-sunrise ()
+    (let ((dss (diary-sunrise-sunset)))
+      (with-temp-buffer
+        (insert dss)
+        (goto-char (point-min))
+        (while (re-search-forward " ([^)]*)" nil t)
+          (replace-match "" nil nil))
+        (goto-char (point-min))
+        (search-forward ",")
+        (buffer-substring (point-min) (match-beginning 0)))))
+
+  (defun diary-sunset ()
+    (let ((dss (diary-sunrise-sunset))
+          start end)
+      (with-temp-buffer
+        (insert dss)
+        (goto-char (point-min))
+        (while (re-search-forward " ([^)]*)" nil t)
+          (replace-match "" nil nil))
+        (goto-char (point-min))
+        (search-forward ", ")
+        (setq start (match-end 0))
+        (search-forward " at")
+        (setq end (match-beginning 0))
+        (goto-char start)
+        (capitalize-word 1)
+        (buffer-substring start end))))
+
+  (setq calendar-chinese-celestial-stem
+        ["甲" "乙" "丙" "丁" "戊" "己" "庚" "辛" "壬" "癸"])
+  (setq calendar-chinese-terrestrial-branch
+        ["子" "丑" "寅" "卯" "辰" "巳" "午" "未" "申" "酉" "戌" "亥"])
+#+END_SRC
+
+*** Standard Diary
+#+begin_src emacs-lisp
+  ;;Day info
+  ;; 日出而作, 日落而息
+  ;; %%(diary-sunrise)
+  ;; %%(diary-sunset)
+  ;; %%(diary-lunar-phases)
+  ;;
+  ;; %%(diary-iso-date)
+  ;;中国农历
+  ;; %%(diary-chinese-date)
+#+end_src
+
+
+** Ends
+#+BEGIN_SRC emacs-lisp
+
+(provide 'init-org-agenda)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; init-org-agenda.el ends here
+#+END_SRC
