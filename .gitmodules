@@ -217,3 +217,12 @@
 [submodule "emacs-f-el"]
 	path = mcge-emacs/site-lisp/extensions/f.el
 	url = https://github.com/rejeep/f.el.git
+[submodule "emacs-rime"]
+	path = mcge-emacs/site-lisp/extensions/emacs-rime
+	url = https://github.com/DogLooksGood/emacs-rime.git
+[submodule "emacs-posframe"]
+	path = mcge-emacs/site-lisp/extensions/posframe
+	url = https://github.com/tumashu/posframe.git
+[submodule "emacs-popup-el"]
+	path = mcge-emacs/site-lisp/extensions/popup-el
+	url = https://github.com/auto-complete/popup-el.git
