@@ -205,3 +205,15 @@
 [submodule "emacs-ws-butler"]
 	path = mcge-emacs/site-lisp/extensions/ws-butler
 	url = https://github.com/lewang/ws-butler.git
+[submodule "emacs-helpful"]
+	path = mcge-emacs/site-lisp/extensions/helpful
+	url = https://github.com/Wilfred/helpful.git
+[submodule "emacs-elisp-refs"]
+	path = mcge-emacs/site-lisp/extensions/elisp-refs
+	url = https://github.com/Wilfred/elisp-refs.git
+[submodule "emacs-s-el"]
+	path = mcge-emacs/site-lisp/extensions/s.el
+	url = https://github.com/magnars/s.el.git
+[submodule "emacs-f-el"]
+	path = mcge-emacs/site-lisp/extensions/f.el
+	url = https://github.com/rejeep/f.el.git
