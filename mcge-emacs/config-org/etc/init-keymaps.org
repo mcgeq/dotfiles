@@ -73,9 +73,19 @@
 
 ** 打开默认配置文件
 #+BEGIN_SRC emacs-lisp
-(global-set-key (kbd "C-q") 'mcg/open-init-file)
+  (global-set-key (kbd "C-q") 'mcg/open-init-file)
 
 #+END_SRC
+
+** Org Download Image
+#+begin_src emacs-lisp
+  ;; org download image
+  (lazy-load-local-keys
+   '(("C-c v" . mg/org-insert-clipboard-image))
+   org-mode-map
+   "init-org-download")
+#+end_src
+
 
 ** Custom C-a
 
