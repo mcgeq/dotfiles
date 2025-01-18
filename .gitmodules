@@ -235,3 +235,9 @@
 [submodule "emacs-cal-china-x"]
 	path = mcge-emacs/site-lisp/extensions/org/cal-china-x
 	url = https://github.com/xwl/cal-china-x.git
+[submodule "emacs-json-mode"]
+	path = mcge-emacs/site-lisp/extensions/json-mode
+	url = https://github.com/json-emacs/json-mode.git
+[submodule "emacs-json-snatcher"]
+	path = mcge-emacs/site-lisp/extensions/json-snatcher
+	url = https://github.com/Sterlingg/json-snatcher.git
