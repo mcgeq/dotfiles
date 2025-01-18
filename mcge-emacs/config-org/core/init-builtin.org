@@ -53,6 +53,8 @@
 
 #+BEGIN_SRC emacs-lisp
   ;;; Require:
+  (require 'savehist)
+  (require 'saveplace)
   (require 'whitespace)
   (require 'autorevert)
   (require 'hideshow)
@@ -61,6 +63,27 @@
 #+END_SRC
 
 ** Code
+** savehist
+#+BEGIN_SRC emacs-lisp
+
+;; savehist
+(add-hook 'after-init-hook 'savehist-mode)
+
+(setq enable-recursive-minibuffers t)
+(setq history-length 1000)
+(setq savehist-additional-variables '(mark-ring
+                                      global-mark-ring
+                                      search-ring
+                                      regexp-search-ring
+                                      extended-command-history))
+(setq savehist-autosave-interval 300)
+#+END_SRC
+
+*** Save place mode
+#+BEGIN_SRC emacs-lisp
+  ;; saveplacs
+  (add-hook 'after-init-hook 'save-place-mode)
+#+END_SRC
 
 *** Whitespace
 

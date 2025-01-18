@@ -7,7 +7,7 @@
 #+BEGIN_SRC emacs-lisp
   ;;; init-org-agenda.el -- Config for Org Agenda -*- lexical-binding: t; -*-
 
-  ;; Filename: init.el
+  ;; Filename: init-org-agenda.el
   ;; Description: Config for Org Agenda
   ;; Author: mcge <mcgeq@outlook.com>
   ;; Copyright (C) 2024, mcge, all rights reserved.

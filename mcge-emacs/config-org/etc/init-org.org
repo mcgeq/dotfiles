@@ -77,6 +77,61 @@
         org-startup-with-inline-images t
         org-indent-mode-turns-on-hiding-stars nil)
 
+  ;; done close time
+  (setq org-log-done 'time)
+
+  ;; TOOD 的关键词设置，可以设置不同的组
+  (setq org-todo-keywords '((sequence
+                             "TODO(t)"
+                             "HOLD(h!)"
+                             "WIP(i!)"
+                             "WAIT(w!)"
+                             "|"
+                             "DONE(d!)"
+                             "CANCELLED(c@/!)")
+                            (sequence
+                             "REPORT(r)"
+                             "BUG(b)"
+                             "KNOWNCAUSE(k)"
+                             "|"
+                             "FIXED(f!)")))
+  ;; TODO 关键词的样式设置
+  (setq org-todo-keyword-faces '(("TODO"       :foreground "#7c7c75" :weight bold)
+                                 ("HOLD"       :foreground "#feb24c" :weight bold)
+                                 ("WIP"        :foreground "#0098dd" :weight bold)
+                                 ("WAIT"       :foreground "#9f7efe" :weight bold)
+                                 ("DONE"       :foreground "#50a14f" :weight bold)
+                                 ("CANCELLED"  :foreground "#ff6480" :weight bold)
+                                 ("REPORT"     :foreground "magenta" :weight bold)
+                                 ("BUG"        :foreground "red"     :weight bold)
+                                 ("KNOWNCAUSE" :foreground "yellow"  :weight bold)
+                                 ("FIXED"      :foreground "green"   :weight bold)))
+
+  ;; 当标题行状态变化时标签同步发生的变化
+  ;; Moving a task to CANCELLED adds a CANCELLED tag
+  ;; Moving a task to WAIT adds a WAIT tag
+  ;; Moving a task to HOLD adds WAIT and HOLD tags
+  ;; Moving a task to a done state removes WAIT and HOLD tags
+  ;; Moving a task to TODO removes WAIT, CANCELLED, and HOLD tags
+  ;; Moving a task to DONE removes WAIT, CANCELLED, and HOLD tags
+  (setq org-todo-state-tags-triggers
+        (quote (("CANCELLED" ("CANCELLED" . t))
+                ("WAIT" ("WAIT" . t))
+                ("HOLD" ("WAIT") ("HOLD" . t))
+                (done ("WAIT") ("HOLD"))
+                ("TODO" ("WAIT") ("CANCELLED") ("HOLD"))
+                ("DONE" ("WAIT") ("CANCELLED") ("HOLD")))))
+
+  ;; 重复执行时加上时间戳
+  (setq org-log-repeat 'time)
+  ;; Deadline 修改时加上一条记录
+  (setq org-log-redeadline 'note)
+  ;; Schedule 修改时加上一条记录
+  (setq org-log-reschedule 'note)
+  ;; 以抽屉的方式记录
+  (setq org-log-into-drawer t)
+  ;; 紧接着标题行或者计划/截止时间戳后加上记录抽屉
+  (setq org-log-state-notes-insert-after-drawers nil)
 
   (custom-set-faces
    '(org-level-1 ((t (:height 1.15))))

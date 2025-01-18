@@ -90,46 +90,53 @@
 
 ** Custom some directory
 #+BEGIN_SRC emacs-lisp
-  ;; 定义 emacs 配置文件目录上级目录
-  (defvar mcgemacs-custom-dir (if *is-win32p* (file-truename "D:/config")
-                                (file-truename "~")))
-  ;; 自定义博客目录
-  (defvar mcgemacs-blog-dir      (if *is-win32p* (file-truename "D:/workspaces/blog/mcge-blog")
-                                   (file-truename "~/workspaces/blog/mcge-blog")))
+    ;; 定义 emacs 配置文件目录上级目录
+    (defvar mcgemacs-custom-dir (if *is-win32p* (file-truename "D:/config")
+                                  (file-truename "~")))
+    ;; 自定义博客目录
+    (defvar mcgemacs-blog-dir      (if *is-win32p* (file-truename "D:/workspaces/blog/mcge-blog")
+                                     (file-truename "~/workspaces/blog/mcge-blog")))
 
-  (defvar mcgemacs-blog-org-dir  (concat mcgemacs-blog-dir "/content-org"))
-  ;; 自定义 org 目录
-  (defvar mcgemacs-org-dir       (if *is-win32p* (file-truename "D:/org")
-                                   (file-truename "~/org")))
-  ;; 定义一些启动目录，方便下次迁移
-  (defvar mcgemacs-root-dir      (concat mcgemacs-custom-dir "/dotfiles/mcge-emacs"))
-  (defvar mcgemacs-config-dir    (concat mcgemacs-root-dir "/config-org"))
-  (defvar mcgemacs-extension-dir (concat mcgemacs-root-dir "/extensions"))
+    (defvar mcgemacs-blog-org-dir  (concat mcgemacs-blog-dir "/content-org"))
+    ;; 自定义 org 目录
+    (defvar mcgemacs-org-dir       (if *is-win32p* (file-truename "D:/org")
+                                     (file-truename "~/org")))
+    ;; 定义一些启动目录，方便下次迁移
+    (defvar mcgemacs-root-dir      (concat mcgemacs-custom-dir "/dotfiles/mcge-emacs"))
+    (defvar mcgemacs-config-dir    (concat mcgemacs-root-dir "/config-org"))
+    (defvar mcgemacs-extension-dir (concat mcgemacs-root-dir "/extensions"))
 
-  ;; custom lsp-bridge
-  (defvar mcgemacs-custom-lsp-bridge-langserver-dir (concat mcgemacs-root-dir "/langservers"))
-  (defvar mcgemacs-custom-lsp-bridge-multiserver-dir (concat mcgemacs-root-dir "/multiservers"))
+    ;; custom lsp-bridge
+    (defvar mcgemacs-custom-lsp-bridge-langserver-dir (concat mcgemacs-root-dir "/langservers"))
+    (defvar mcgemacs-custom-lsp-bridge-multiserver-dir (concat mcgemacs-root-dir "/multiservers"))
 
-  (defvar mcgemacs-org-agenda-files (concat mcgemacs-org-dir "/diary-by-months/"))
-  (defvar mcgeamcs-org-agenda-diray-file (expand-file-name "standard-diary"
-                                                           (concat mcgemacs-org-dir "/mcge/")))
+    (defvar mcgemacs-org-agenda-files (concat mcgemacs-org-dir "/diary-by-months/"))
+    (defvar mcgeamcs-org-agenda-diray-file (expand-file-name "standard-diary"
+                                                             (concat mcgemacs-org-dir "/mcge/")))
 
-  (defvar org-file-note     (expand-file-name "notes.org"     (concat mcgemacs-org-dir "/notes")))
-  (defvar org-file-task     (expand-file-name "tasks.org"      mcgemacs-org-dir))
-  (defvar org-file-calendar (expand-file-name "calendar.org"  mcgemacs-org-dir))
-  (defvar org-file-finished (expand-file-name "finished.org"  mcgemacs-org-dir))
-  (defvar org-file-canceled (expand-file-name "canceled.org"  mcgemacs-org-dir))
-  (defvar org-file-diary    (expand-file-name "diary.org"     mcgemacs-org-dir))
-  (defvar org-file-journal  (expand-file-name "inbox.org"    (concat mcgemacs-org-dir "/journal")))
-  (defvar org-file-billing  (expand-file-name "billing.org"  (concat mcgemacs-org-dir "/billing")))
-  (defvar org-file-password (expand-file-name "passwords.org.cpt" (concat mcgemacs-org-dir "/private")))
-  (defvar org-file-blog   (expand-file-name "all-posts.org" mcgemacs-blog-org-dir))
-  ;; custom
-  (defvar org-emacs-blog   (expand-file-name "all-about-emacs.org" mcgemacs-blog-org-dir))
-  (defvar org-prattle-blog   (expand-file-name "all-about-prattle.org" mcgemacs-blog-org-dir))
-  (defvar org-tools-blog   (expand-file-name "all-about-tools.org" mcgemacs-blog-org-dir))
-  (defvar org-development-blog   (expand-file-name "all-about-development.org" mcgemacs-blog-org-dir))
-  (defvar org-mcu-blog     (expand-file-name "all-about-mcu-blog.org" mcgemacs-blog-org-dir))
+    (defvar org-file-note     (expand-file-name "notes.org"
+                                                (concat mcgemacs-org-dir "/notes")))
+    (defvar org-file-task     (expand-file-name "tasks.org"
+                                                mcgemacs-org-dir))
+    (defvar org-file-calendar (expand-file-name "calendar.org"  mcgemacs-org-dir))
+    (defvar org-file-finished (expand-file-name "finished.org"  mcgemacs-org-dir))
+    (defvar org-file-canceled (expand-file-name "canceled.org"  mcgemacs-org-dir))
+    (defvar org-file-diary    (expand-file-name (format-time-string "%Y%m.org")
+                                                mcgemacs-org-agenda-files))
+    (defvar org-file-journal  (expand-file-name "inbox.org"
+                                                (concat mcgemacs-org-dir "/journal")))
+    (defvar org-file-billing  (expand-file-name "billing.org"
+                                                (concat mcgemacs-org-dir "/billing")))
+    (defvar org-file-password (expand-file-name "passwords.org.cpt"
+                                                (concat mcgemacs-org-dir "/private")))
+    (defvar org-file-blog   (expand-file-name "all-posts.org" mcgemacs-blog-org-dir))
+    ;; custom
+    (defvar org-emacs-blog   (expand-file-name "all-about-emacs.org" mcgemacs-blog-org-dir))
+    (defvar org-prattle-blog   (expand-file-name "all-about-prattle.org" mcgemacs-blog-org-dir))
+    (defvar org-tools-blog   (expand-file-name "all-about-tools.org" mcgemacs-blog-org-dir))
+    (defvar org-development-blog   (expand-file-name "all-about-development.org"
+                                                     mcgemacs-blog-org-dir))
+    (defvar org-mcu-blog     (expand-file-name "all-about-mcu-blog.org" mcgemacs-blog-org-dir))
 #+END_SRC
 
 ** Set image size
