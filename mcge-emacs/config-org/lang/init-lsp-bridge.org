@@ -71,44 +71,44 @@
 ** Config bridge
 
 #+BEGIN_SRC emacs-lisp
-;;; Code:
-;; custom language server dir
-(setq lsp-bridge-user-langserver-dir mcgemacs-custom-lsp-bridge-langserver-dir)
-(setq lsp-bridge-user-multiserver-dir mcgemacs-custom-lsp-bridge-multiserver-dir)
-(setq lsp-bridge-enable-completion-in-minibuffer t)
-(setq lsp-bridge-signature-show-function 'lsp-bridge-signature-show-with-frame)
-(setq lsp-bridge-enable-with-tramp t)
-(setq lsp-bridge-enable-org-babel t)
-(setq lsp-bridge-enable-inlay-hint t)
-(setq lsp-bridge-semantic-tokens t)
-;; formatter
-;;(setq lsp-bridge-enable-auto-format-code t)
-(setq-default lsp-bridge-semantic-tokens-ignore-modifier-limit-types ["variable"])
+  ;;; Code:
+  ;; custom language server dir
+  (setq lsp-bridge-user-langserver-dir mcgemacs-custom-lsp-bridge-langserver-dir)
+  (setq lsp-bridge-user-multiserver-dir mcgemacs-custom-lsp-bridge-multiserver-dir)
+  (setq lsp-bridge-enable-completion-in-minibuffer t)
+  (setq lsp-bridge-signature-show-function 'lsp-bridge-signature-show-with-frame)
+  (setq lsp-bridge-enable-with-tramp t)
+  (setq lsp-bridge-enable-org-babel t)
+  (setq lsp-bridge-enable-inlay-hint t)
+  (setq lsp-bridge-semantic-tokens t)
+  ;; formatter
+  (setq lsp-bridge-enable-auto-format-code t)
+  (setq-default lsp-bridge-semantic-tokens-ignore-modifier-limit-types ["variable"])
 
-(setq acm-enable-capf t)
-(setq acm-enable-quick-access t)
-(setq acm-backend-yas-match-by-trigger-keyword t)
-(setq acm-enable-tabnine nil)
-(setq acm-candidate-match-function 'orderless-flex)
-(setq acm-enable-codeium nil)
-(setq acm-enable-lsp-workspace-symbol t)
+  (setq acm-enable-capf t)
+  (setq acm-enable-quick-access t)
+  (setq acm-backend-yas-match-by-trigger-keyword t)
+  (setq acm-enable-tabnine nil)
+  (setq acm-candidate-match-function 'orderless-flex)
+  (setq acm-enable-codeium nil)
+  (setq acm-enable-lsp-workspace-symbol t)
 
-(global-lsp-bridge-mode)
+  (global-lsp-bridge-mode)
 
-(add-to-list 'lsp-bridge-multi-lang-server-extension-list '(("html") . "html_tailwindcss"))
-(add-to-list 'lsp-bridge-multi-lang-server-extension-list '(("css") . "css_tailwindcss"))
+  (add-to-list 'lsp-bridge-multi-lang-server-extension-list '(("html") . "html_tailwindcss"))
+  (add-to-list 'lsp-bridge-multi-lang-server-extension-list '(("css") . "css_tailwindcss"))
 
-(setq lsp-bridge-get-multi-lang-server-by-project
-      (lambda (project-path filepath)
-        ;;
-        (save-excursion
-          (when (string-equal (file-name-extension filepath) "ts")
-            (dolist (buf (buffer-list))
-              (when (string-equal (buffer-file-name buf) filepath)
-                (with-current-buffer buf
-                  (goto-char (point-min))
-                  (when (search-backward-regexp (regexp-quote "from \"https://deno.land") nil t)
-                    (return "deno")))))))))
+  (setq lsp-bridge-get-multi-lang-server-by-project
+        (lambda (project-path filepath)
+          ;;
+          (save-excursion
+            (when (string-equal (file-name-extension filepath) "ts")
+              (dolist (buf (buffer-list))
+                (when (string-equal (buffer-file-name buf) filepath)
+                  (with-current-buffer buf
+                    (goto-char (point-min))
+                    (when (search-backward-regexp (regexp-quote "from \"https://deno.land") nil t)
+                      (return "deno")))))))))
 #+END_SRC
 
 ** Keymap
