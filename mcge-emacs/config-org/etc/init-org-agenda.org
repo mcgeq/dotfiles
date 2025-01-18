@@ -61,7 +61,53 @@
   ;;; Code:
   ;; 设置 org agenda 展示的文件
   (setq org-agenda-files (list mcgemacs-org-agenda-files))
+
   (setq agenda-used-time-grid t)
+  (setq org-agenda-use-time-grid t)
+
+  ;; 设置时间线的当前时间指示串
+  (setq org-agenda-current-time-string "⏰------------now")
+
+  ;; 设置 org-agenda 格式
+  (setq org-agenda-format-date 'org-agenda-format-date-aligned)
+  (defun org-agenda-format-date-aligned (date)
+    "Format a DATE string for display in the daily/weekly agenda, or timeline."
+    (require 'cal-iso)
+    (let* ((dayname (aref cal-china-x-days
+                          (calendar-day-of-week date)))
+           (day (cadr date))
+           (month (car date))
+           (year (nth 2 date))
+           (day-of-week (calendar-day-of-week date))
+           (iso-week (org-days-to-iso-week
+                      (calendar-absolute-from-gregorian date)))
+           (cn-date (calendar-chinese-from-absolute (calendar-absolute-from-gregorian date)))
+           (cn-month (cl-caddr cn-date))
+           (cn-day (cl-cadddr cn-date))
+           (cn-month-string (concat (aref cal-china-x-month-name
+                                          (1- (floor cn-month)))
+                                    (if (integerp cn-month)
+                                        ""
+                                      "（闰月）")))
+           (cn-day-string (aref cal-china-x-day-name
+                                (1- cn-day)))
+           (extra (format " 农历%s%s%s%s"
+                          (if (or (eq org-agenda-current-span 'day)
+                                  (= day-of-week 1)
+                                  (= cn-day 1))
+                              cn-month-string
+                            "")
+                          (if (or (= day-of-week 1)
+                                  (= cn-day 1))
+                              (if (integerp cn-month) "" "[闰]") "")
+                          cn-day-string
+                          (if (or (= day-of-week 1)
+                                  (eq org-agenda-current-span 'day))
+                              (format " 今年第%02d 周" iso-week)
+                            "")))
+      (format "%04d-%02d-%02d 星期%s%s%s\n" year month
+              day dayname extra (concat " 第" (format-time-string "%j") "天"))))
+
   ;; or-agenda-time-grid 八分图
   ;; #+tblname: 八分图时间段的概念命名
   ;; |----+-----------+----------+------------------|
@@ -92,6 +138,32 @@
   (setq org-agenda-include-diary t)
   (setq org-agenda-diary-file mcgeamcs-org-agenda-diray-file)
   (setq diary-file mcgeamcs-org-agenda-diray-file)
+
+    ;; 日程视图的前缀设置
+    (setq org-agenda-prefix-format '((agenda . " %i %-25:c %5t %s")
+                                     (todo   . " %i %-25:c ")
+                                     (tags   . " %i %-25:c ")
+                                     (search . " %i %-25:c ")))
+  ;; 对于计划中的任务在视图里的显示
+  (setq org-agenda-scheduled-leaders
+        '("计划 " "应在%02d 天前开始 "))
+  ;; 对于截止日期的任务在视图里的显示
+  (setq org-agenda-deadline-leaders
+        '("截止 " "还有%02d 天到期 " "已经过期%02d 天 "))
+
+  (setq org-time-stamp-formats '("<%Y-%m-%d %A>" . "<%Y-%m-%d %A %H:%M>"))
+  ;; 不同日程类别间的间隔
+  (setq org-cycle-separator-lines 2)
+  ;; 日记插入精确时间戳
+  (setq org-agenda-insert-diary-extract-time t)
+  ;; q 退出时删除 agenda 缓冲区
+  (setq org-agenda-sticky t)
+  ;; 时间不足位时前面加 0
+  (setq org-agenda-time-leading-zero t)
+  ;; 标签显示的位置，第 80 列往前右对齐
+  (setq org-agenda-tags-column -80)
+  ;; 提前 3 天截止日期到期告警
+  (setq org-deadline-warning-days 3)
 
   ;; 设置本地坐标
   (setq calendar-longitude 116.9962)

@@ -110,7 +110,6 @@
 
 #+END_SRC
 
-
 ** Ends
 #+BEGIN_SRC emacs-lisp
 (provide 'init)

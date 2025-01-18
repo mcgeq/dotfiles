@@ -61,10 +61,14 @@
 #+BEGIN_SRC emacs-lisp
   ;;; Code:
 
-;; 自动切换主题
-(if (>= (string-to-number (format-time-string "%H")) 18)
-    (load-theme 'ef-bio t)
-  (load-theme 'ef-summer t))
+
+  ;; Automatically switch themes
+  ;; (if (>= (string-to-number (format-time-string "%H")) 18)
+  ;;     (load-theme 'ef-bio t)
+  ;;   (load-theme 'ef-summer t))
+  ;; ef-arbutus
+  ;; ef-tritanopia-light
+  (load-theme 'ef-arbutus t)
 
 
 #+END_SRC

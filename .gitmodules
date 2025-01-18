@@ -232,3 +232,6 @@
 [submodule "emacs-async"]
 	path = mcge-emacs/site-lisp/extensions/org/emacs-async
 	url = https://github.com/jwiegley/emacs-async.git
+[submodule "emacs-cal-china-x"]
+	path = mcge-emacs/site-lisp/extensions/org/cal-china-x
+	url = https://github.com/xwl/cal-china-x.git
