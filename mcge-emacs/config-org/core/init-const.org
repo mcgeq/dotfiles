@@ -111,7 +111,7 @@
     (defvar mcgemacs-custom-lsp-bridge-multiserver-dir (concat mcgemacs-root-dir "/multiservers"))
 
     (defvar mcgemacs-org-agenda-files (concat mcgemacs-org-dir "/diary-by-months/"))
-    (defvar mcgeamcs-org-agenda-diray-file (expand-file-name "standard-diary"
+    (defvar mcgeamcs-org-agenda-diary-file (expand-file-name "standard-diary"
                                                              (concat mcgemacs-org-dir "/mcge/")))
 
     (defvar org-file-note     (expand-file-name "notes.org"
@@ -121,7 +121,7 @@
     (defvar org-file-calendar (expand-file-name "calendar.org"  mcgemacs-org-dir))
     (defvar org-file-finished (expand-file-name "finished.org"  mcgemacs-org-dir))
     (defvar org-file-canceled (expand-file-name "canceled.org"  mcgemacs-org-dir))
-    (defvar org-file-diary    (expand-file-name (format-time-string "%Y%m.org")
+    (defvar org-file-diary    (expand-file-name (format-time-string "diary_%Y%m.org")
                                                 mcgemacs-org-agenda-files))
     (defvar org-file-journal  (expand-file-name "inbox.org"
                                                 (concat mcgemacs-org-dir "/journal")))
