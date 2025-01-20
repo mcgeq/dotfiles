@@ -277,3 +277,6 @@
 [submodule "emacs-jump"]
 	path = mcge-emacs/site-lisp/extensions/lsp/clojure/jump
 	url = https://github.com/eschulte/jump.el.git
+[submodule "emacs-cloel"]
+	path = mcge-emacs/site-lisp/extensions/lsp/cloel
+	url = https://github.com/manateelazycat/cloel.git
