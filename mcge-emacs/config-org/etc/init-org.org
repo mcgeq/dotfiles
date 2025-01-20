@@ -326,7 +326,7 @@
     ;; 设置日历的节日，通用节日已经包含了所有节日
     (setq calendar-holidays (append cal-china-x-general-holidays
                                     cal-china-x-important-holidays
-                                    other-holidays)))
+                                    )))
 
   ;; 自动初始化 cal-china-x
   (add-hook 'after-init-hook 'cal-china-x-setup)
