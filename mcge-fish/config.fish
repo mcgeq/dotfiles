@@ -2,45 +2,14 @@ if status is-interactive
     # Commands to run in interactive sessions can go here
 end
 
-# 定义一个显示欢迎语的函数
-function show_welcome
-    # 获取 Git 配置中的用户名，如果没有则使用默认值
-    set -l git_user_name (git config --get user.name ^/dev/null)
-    if test -z "$git_user_name"
-        set git_user_name "mcgeq"
-    end
-
-    # 获取当前时间
-    set hour (date +'%H')
-    set current_time (date '+%Y-%m-%d %H:%M:%S')
-
-    # 打印英文问候语
-    if test $hour -lt 12
-        echo "$current_time Good morning, $git_user_name!"
-    else if test $hour -lt 18
-        echo "$current_time Good afternoon, $git_user_name!"
-    else
-        echo "$current_time Good evening, $git_user_name!"
-    end
-end
-
-show_welcome
-
 # emacs
 abbr e "emacs -nw"
 set -x PATH $PATH "~/emacs/bin"
 
 # emacs end
 
-# git
-abbr gpl  "git pull"
-abbr gplr "git pull --rebase"
-abbr gph  "git push"
-abbr gsi  "git submodule update --init --recursive"
-abbr gsh  "git submodule foreach git reset --hard"
-abbr gsm  "git submodule foreach 'git checkout $(git symbolic-ref --short HEAD)'"
-abbr gst  "git status"
-# git end
+# paru
+abbr pry "paru -Syyu"
 
 # paru -Ss
 function prs
@@ -71,6 +40,23 @@ function prr
     end
     paru -Rns $argv
 end
+# paru end
+
+# git
+abbr gad  "git add ."
+abbr gpl  "git pull"
+abbr gplr "git pull --rebase"
+abbr gph  "git push"
+abbr gsi  "git submodule update --init --recursive"
+abbr gsh  "git submodule foreach git reset --hard"
+abbr gsm  "git submodule foreach 'git checkout (git symbolic-ref --short HEAD)'"
+abbr gst  "git status"
+# git end
+
+# cargo bin
+set -x PATH $PATH "~/.cargo/bin"
+# cargo bin end
+
 
 # starship
 starship init fish | source
