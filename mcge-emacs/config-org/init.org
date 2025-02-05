@@ -106,6 +106,7 @@
          (require 'init-helpful)
          (require 'init-org)
          (require 'init-org-agenda)
+         (require 'init-consult-todo)
          ))
     )
 #+END_SRC
