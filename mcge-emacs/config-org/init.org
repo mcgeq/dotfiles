@@ -107,6 +107,7 @@
          (require 'init-org)
          (require 'init-org-agenda)
          (require 'init-consult-todo)
+         (require 'init-org-numbering)
          ))
     )
 #+END_SRC

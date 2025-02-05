@@ -286,3 +286,6 @@
 [submodule "emacs-hl-todo"]
 	path = mcge-emacs/site-lisp/extensions/hl-todo
 	url = https://github.com/tarsius/hl-todo.git
+[submodule "emacs-org-numbering"]
+	path = mcge-emacs/site-lisp/extensions/org/org-numbering
+	url = https://github.com/yibie/org-numbering.git
