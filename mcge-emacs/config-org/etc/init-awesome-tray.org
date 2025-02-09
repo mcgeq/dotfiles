@@ -46,7 +46,7 @@
 
   ;;; Change log:
   ;;
-  
+
 #+END_SRC
 
 
@@ -60,6 +60,7 @@
 ** Code
 #+BEGIN_SRC emacs-lisp
   ;;; Code:
+  (setq awesome-tray-position 'center)
   (setq awesome-tray-date-format "[%-Y-%-m-%-d %-H:%-M]")
   (setq awesome-tray-active-modules '("git" "location" "belong" "mode-name" "date"))
   (setq awesome-tray-info-padding-right 1)
