@@ -47,7 +47,7 @@ end
 -- 自动更新 "Last Modified" 信息
 local function update_last_modified_info()
    local origin_pos = vim.fn.getpos(".")                         -- 获取当前光标位置
-   local regexp = " Last Modified:  2025-01-16 15:08:20
+   local regexp = " Last Modified:  "
    local line_num, col_num = unpack(vim.fn.searchpos(regexp, "n")) -- 查找 "Last Modified: " 字符串的位置
 
    -- 如果找到了该行
@@ -60,7 +60,7 @@ local function update_last_modified_info()
    end
 
    local username, email = get_git_user_info()
-   local regexp_modified_by = " Modified   By:  mcge <mcgeq@outlook.com>
+   local regexp_modified_by = " Modified   By:  "
    local line_num_modified_by, col_num_modified_by = unpack(vim.fn.searchpos(regexp_modified_by, "n")) -- 查找 "Modified By: " 字符串的位置
 
    -- 如果找到了该行，更新 "Modified By" 字段
