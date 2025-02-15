@@ -54,6 +54,7 @@
 
 #+BEGIN_SRC emacs-lisp
   (require 'markdown-ts-mode)
+  (require 'flymake-vale)
 #+END_SRC
 
 
@@ -61,6 +62,21 @@
 #+BEGIN_SRC emacs-lisp
 
   ;;; Code:
+  (add-hook 'text-mode-hook #'flymake-vale-load)
+  (add-hook 'latex-mode-hook #'flymake-vale-load)
+  (add-hook 'org-mode-hook #'flymake-vale-load)
+  (add-hook 'markdown-mode-hook #'flymake-vale-load)
+  (add-hook 'message-mode-hook #'flymake-vale-load)
+
+  (add-hook 'find-file-hook 'flymake-vale-maybe-load)
+  ;; flymake-vale-modes defaults to:
+  ;;  => (text-mode latex-mode org-mode markdown-mode message-mode)
+
+  (add-to-list 'flymake-vale-modes 'adoc-mode)
+
+  (add-hook 'org-msg-mode-hook (lambda ()
+                                 (setq flymake-vale-file-ext "org")
+                                 (flymake-vale-load)))
 #+END_SRC
 
 
