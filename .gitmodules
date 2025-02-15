@@ -289,3 +289,6 @@
 [submodule "emacs-org-numbering"]
 	path = mcge-emacs/site-lisp/extensions/org/org-numbering
 	url = https://github.com/yibie/org-numbering.git
+[submodule "emacs-markdown-ts-mode"]
+	path = mcge-emacs/site-lisp/extensions/markdown-ts-mode
+	url = https://github.com/LionyxML/markdown-ts-mode.git
