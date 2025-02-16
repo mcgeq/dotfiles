@@ -109,6 +109,7 @@
          (require 'init-consult-todo)
          (require 'init-org-numbering)
          (require 'init-markdown)
+         (require 'init-grip-mode)
          ))
     )
 #+END_SRC

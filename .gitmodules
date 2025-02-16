@@ -295,3 +295,9 @@
 [submodule "emacs-flymake-vale"]
 	path = mcge-emacs/site-lisp/extensions/flymake-vale
 	url = https://github.com/tpeacock19/flymake-vale.git
+[submodule "emacs-grip-mode"]
+	path = mcge-emacs/site-lisp/extensions/md/grip-mode
+	url = https://github.com/seagle0128/grip-mode.git
+[submodule "emacs-ox-gfm"]
+	path = mcge-emacs/site-lisp/extensions/org/ox-gfm
+	url = https://github.com/larstvei/ox-gfm.git

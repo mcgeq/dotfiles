@@ -4,6 +4,7 @@ mcge-vimrc/pack/mcge/start/ultisnips/tags
 !mcge-vimrc/coc-data/ultisnips/*
 
 mcge-emacs/site-lisp/config/*
+mcge-emacs/config-org/**/*.md
 
 # nushell
 mcge-nushell/history.*

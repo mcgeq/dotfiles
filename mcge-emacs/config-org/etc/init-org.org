@@ -332,6 +332,17 @@
   (add-hook 'after-init-hook 'cal-china-x-setup)
 #+end_src
 
+*** ox-gfm
+#+begin_src emacs-lisp
+
+  ;; viewer
+  (eval-after-load "org"
+    '(require 'ox-gfm nil t))
+  (add-to-list 'org-export-backends 'md)
+  (add-to-list 'org-export-backends 'gfm)
+#+end_src
+
+
 ** Ends
 
 #+BEGIN_SRC emacs-lisp
