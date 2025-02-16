@@ -14,10 +14,10 @@
   ;; Copyright (C) 2024, mcge, all rights reserved.
   ;; Create   Date: 2025-01-04 15:00:00
   ;; Version: 0.1
-  ;; Modified   By:  mcge <mcgeq@outlook.com>
-  ;; Last Modified:  <2025-01-10 Fri 10:50>
+  ;; Modified   By:  mcgeq <mcgeq@outlook.com>
+  ;; Last Modified:  <2025-02-16 Sun 11:34>
   ;; Keywords:
-  ;; Compatibility: GNU Emacs 31.0.50
+  ;; Compatibility: 31.0.50
 
   ;;; Commentary:
   ;;
@@ -118,7 +118,8 @@
 #+BEGIN_SRC emacs-lisp
 
 ;;; Code:
-
+;; 绑定到保存前钩子
+(add-hook 'before-save-hook 'mcg/org-update-file-headers)
 #+END_SRC
 
 ** Ends

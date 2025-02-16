@@ -14,10 +14,10 @@
   ;; Copyright (C) 2024, mcge, all rights reserved.
   ;; Create   Date: 2025-01-04 15:00:00
   ;; Version: 0.1
-  ;; Modified   By:  mcge <mcgeq@outlook.com>
-  ;; Last Modified:  <2025-01-10 Fri 10:02>
+  ;; Modified   By:  mcgeq <mcgeq@outlook.com>
+  ;; Last Modified:  <2025-02-16 Sun 11:48>
   ;; Keywords:
-  ;; Compatibility: GNU Emacs 31.0.50
+  ;; Compatibility: 31.0.50
 
   ;;; Commentary:
   ;;
@@ -59,6 +59,7 @@
   (require 'org-superstar)
   (require 'org-appear)
   (require 'cal-china-x)
+  (require 'ox)
 
 #+END_SRC
 
@@ -340,6 +341,91 @@
     '(require 'ox-gfm nil t))
   (add-to-list 'org-export-backends 'md)
   (add-to-list 'org-export-backends 'gfm)
+#+end_src
+
+
+*** 行间距
+#+begin_src emacs-lisp
+  ;; 当 org 模块加载完毕后设置行间距
+  (with-eval-after-load 'org
+    (setq line-spacing 0.25)
+    (setq org-list-demote-modify-bullet
+          '(("+" . "-") ("-" . "+") ("*" . "+") ("1." . "a."))))
+  (font-lock-add-keywords
+   'org-mode
+   '(("^ +\\([-*]\\) "
+      (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "▻"))))))
+#+end_src
+
+
+*** 美化org
+#+begin_src emacs-lisp
+  ;; ================================
+  ;; 在 org mode 里美化字符串
+  ;; ================================
+  (defun mcg/org-prettify-symbols ()
+    (setq prettify-symbols-alist
+          (mapcan (lambda (x) (list x (cons (upcase (car x)) (cdr x))))
+                  '(
+                    ("#+begin_src"      . "↪")         ; 21AA 9998
+                    ("#+end_src"        . "↩")         ; 21A9 □ 9633
+                    ("#+begin_example"  . 129083)       ; 🠻
+                    ("#+end_example"    . 129081)       ; 🠹
+                    ("#+results:"       . 9776)         ; ☰
+                    ("#+attr_latex:"    . "🄛")
+                    ("#+attr_html:"     . "🄗")
+                    ("#+attr_org:"      . "🄞")
+                    ("#+name:"          . "🄝")         ; 127261
+                    ("#+caption:"       . "🄒")         ; 127250
+                    ("#+date:"          . "📅")         ; 128197
+                    ("#+author:"        . "💁")         ; 128100
+                    ("#+setupfile:"     . 128221)       ; 📝
+                    ("#+email:"         . 128231)       ; 📧
+                    ("#+startup:"       . 10034)        ; ✲
+                    ("#+options:"       . 9965)         ; ⛭
+                    ("#+title:"         . 10162)        ; ➲
+                    ("#+subtitle:"      . 11146)        ; ⮊
+                    ("#+downloaded:"    . 8650)         ; ⇊
+                    ("#+language:"      . 128441)       ; 🖹
+                    ("#+begin_quote"    . 187)          ; »
+                    ("#+end_quote"      . 171)          ; «
+                    ("#+begin_results"  . 8943)         ; ⋯
+                    ("#+end_results"    . 8943)         ; ⋯
+                    (":PROPERTIES:"     . "⥼")
+                    (":HEADER-ARGS:"    . "Э")
+                    (":END:"            . "⥽")
+                    )))
+    (setq prettify-symbols-unprettify-at-point t)
+    (prettify-symbols-mode 1))
+
+  (add-hook 'org-mode-hook 'mcg/org-prettify-symbols)
+#+end_src
+
+
+*** 中英文前后空格
+#+begin_src emacs-lisp
+  ;; https://emacs-china.org/t/org-mode/22313?u=vagrantjoker
+  ;; 解决中文标记前后空格的问题
+  (font-lock-add-keywords 'org-mode
+                          '(("\\cc\\( \\)[/+*_=~][^a-zA-Z0-9]*?[/+*_=~]\\( \\)?\\cc?"
+                            (1 (prog1 () (compose-region (match-beginning 1) (match-end 1) ""))))
+                            ("\\cc?\\( \\)?[/+*_=~][^a-zA-Z0-9]*?[/+*_=~]\\( \\)\\cc"
+                             (2 (prog1 () (compose-region (match-beginning 2) (match-end 2) "")))))
+                          'append)
+
+  (with-eval-after-load 'org
+    (defun eli-strip-ws-maybe (text _backend _info)
+      (let* ((text (replace-regexp-in-string
+                    "\\(\\cc\\) *\n *\\(\\cc\\)"
+                    "\\1\\2" text));; remove whitespace from line break
+             ;; remove whitespace from `org-emphasis-alist'
+             (text (replace-regexp-in-string "\\(\\cc\\) \\(.*?\\) \\(\\cc\\)"
+                                             "\\1\\2\\3" text))
+             ;; restore whitespace between English words and Chinese words
+             (text (replace-regexp-in-string "\\(\\cc\\)\\(\\(?:<[^>]+>\\)?[a-z0-9A-Z-]+\\(?:<[^>]+>\\)?\\)\\(\\cc\\)"
+                                             "\\1 \\2 \\3" text)))
+        text))
+    (add-to-list 'org-export-filter-paragraph-functions #'eli-strip-ws-maybe))
 #+end_src
 
 

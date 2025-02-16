@@ -13,9 +13,10 @@
   ;; Copyright (C) 2024, mcge, all rights reserved.
   ;; Create   Date: 2025-01-04 15:00:00
   ;; Version: 0.1
-  ;; Modified   By: 2025-01-04 15:46:46
+  ;; Modified   By:  mcgeq <mcgeq@outlook.com>
+  ;; Last Modified:  <2025-02-16 Sun 11:46>
   ;; Keywords:
-  ;; Compatibility: GNU Emacs 31.0.50
+  ;; Compatibility: 31.0.50
 
   ;;; Commentary:
   ;;
@@ -45,7 +46,7 @@
 
   ;;; Change log:
   ;;
-  
+
 #+END_SRC
 
 
@@ -57,7 +58,7 @@
 
 ** Code
 #+BEGIN_SRC emacs-lisp
-  
+
   ;;; Code:
 
   (defun mcg/open-init-file()
@@ -108,7 +109,8 @@
     (interactive)
     (let ((filename (mcg/customize-image-file-name)))
       (shell-command (concat "powershell -command \"Add-Type -AssemblyName System.Windows.Forms;if ($([System.Windows.Forms.Clipboard]::ContainsImage())) {$image = [System.Windows.Forms.Clipboard]::GetImage();[System.Drawing.Bitmap]$image.Save('"
-                             filename "',[System.Drawing.Imaging.ImageFormat]::Png); Write-Output 'clipboard content saved as file'} else {Write-Output 'clipboard does not contain image data'}\""))
+                             filename "',[System.Drawing.Imaging.ImageFormat]::Png); Write-Output 'clipboard content saved
+  as file'} else {Write-Output 'clipboard does not contain image data'}\""))
       (insert (concat "[[file:" filename "]]")))
     (org-display-inline-images)
     )
@@ -116,55 +118,101 @@
 
 ** 指定代码目录
 #+BEGIN_SRC emacs-lisp
-(defun mcg/open-source-code-dir ()
-  "Open source coding directory."
-  (interactive)
-  )
+  (defun mcg/open-source-code-dir ()
+    "Open source coding directory."
+    (interactive)
+    )
 #+END_SRC
 
 ** Update file modify time
 #+BEGIN_SRC emacs-lisp
-(defun mcge/update-last-modified-time ()
-  "Update the `Last Modified' timestamp in the current buffer."
-  (interactive)
-  (when (and (buffer-file-name)
-             (not (string-match-p "init-function" (buffer-name))))
-    (save-excursion
-      (goto-char (point-min))
-      (when (re-search-forward "Last Modified:.*$" nil t)
-        (replace-match (concat "Last Modified:  " (format-time-string "%Y-%m-%d %H:%M:%S")))))))
+  (defun mcge/update-last-modified-time ()
+    "Update the `Last Modified' timestamp in the current buffer."
+    (interactive)
+    (when (and (buffer-file-name)
+               (not (string-match-p "init-function" (buffer-name))))
+      (save-excursion
+        (goto-char (point-min))
+        (when (re-search-forward "Last Modified:.*$" nil t)
+          (replace-match (concat "Last Modified:  " (format-time-string "%Y-%m-%d %H:%M:%S")))))))
 
-;; Update modified By
-(defun mcge/update-last-modified-by ()
-  "Update the `Modified By' in the current buffer."
-  (interactive)
-  (when (and (buffer-file-name)
-             (not (string-match-p "init-function" (buffer-name))))
-    (save-excursion
-      (goto-char (point-min))
-      (when (re-search-forward "Modified   By:.*$" nil t)
-        (replace-match (concat "Modified   By:  " (get-git-user-name)
-                               " <" (get-git-user-email) ">"))))))
+  ;; Update modified By
+  (defun mcge/update-last-modified-by ()
+    "Update the `Modified By' in the current buffer."
+    (interactive)
+    (when (and (buffer-file-name)
+               (not (string-match-p "init-function" (buffer-name))))
+      (save-excursion
+        (goto-char (point-min))
+        (when (re-search-forward "Modified   By:.*$" nil t)
+          (replace-match (concat "Modified   By:  " (get-git-user-name)
+                                 " <" (get-git-user-email) ">"))))))
 
-(defun mcge/update-file-headers ()
-  "Update the `Last Modified' and `Modified By' lines in the current buffer."
-  (interactive)
-  (mcge/update-last-modified-time)
-  (mcge/update-last-modified-by))
+  (defun mcge/update-file-headers ()
+    "Update the `Last Modified' and `Modified By' lines in the current buffer."
+    (interactive)
+    (mcge/update-last-modified-time)
+    (mcge/update-last-modified-by))
 #+END_SRC
 
 
 ** Custom C-a
 
 #+BEGIN_SRC emacs-lisp
-(defun mcge-smart-move-beginning-of-line ()
-  "Move point to the first non-whitespace character, or to the beginning of the line."
-  (interactive)  ;; This makes the function callable as a command
-  (let ((current-point (point)))
-    (back-to-indentation)  ;; Move to the first non-whitespace character
-    (when (eq current-point (point))  ;; If point was already there, move to beginning of line
-      (move-beginning-of-line 1))))
+  (defun mcge-smart-move-beginning-of-line ()
+    "Move point to the first non-whitespace character, or to the beginning of the line."
+    (interactive)  ;; This makes the function callable as a command
+    (let ((current-point (point)))
+      (back-to-indentation)  ;; Move to the first non-whitespace character
+      (when (eq current-point (point))  ;; If point was already there, move to beginning of line
+        (move-beginning-of-line 1))))
 #+END_SRC
+
+** 更新orgheader信息
+#+begin_src emacs-lisp
+
+
+  ;; 获取 Git 用户名和邮箱
+  (defun get-git-user-info ()
+    "返回 Git 配置的用户名和邮箱组成的 cons 对"
+    (let ((name (string-trim (shell-command-to-string "git config user.name")))
+          (email (string-trim (shell-command-to-string "git config user.email"))))
+      (if (or (string-empty-p name) (string-empty-p email))
+          (setq name (user-login-name)
+                email "mcgeq@outlook.com")) ;; Default email if Git config is missing
+      (cons name email)))
+
+  ;; 生成标准时间戳格式
+  (defun generate-timestamp ()
+    "生成格式为 <YYYY-MM-DD Day HH:MM> 的时间戳"
+    (format-time-string "<%Y-%m-%d %a %H:%M>"))
+
+  ;; 更新文件头元数据
+  (defun mcg/org-update-file-headers ()
+    "自动更新 Modified By 和 Last Modified 字段"
+    (interactive)
+    (when (and (buffer-file-name)
+               (string-match "\\.org\\'" (buffer-file-name)))
+      (save-excursion
+        (goto-char (point-min))
+        (let* ((git-info (get-git-user-info))
+               (user-name (car git-info))
+               (user-email (cdr git-info))
+               (timestamp (generate-timestamp)))
+          ;; 更新 Modified By
+          (when (re-search-forward "Modified   By:.*$" nil t)
+            (replace-match (format "Modified   By:  %s <%s>" user-name user-email)))
+          ;; 更新 Last Modified
+          (goto-char (point-min))
+          (when (re-search-forward "Last Modified:.*$" nil t)
+            (replace-match (format "Last Modified:  %s" timestamp)))
+          ;; 更新 Compatibility
+          (goto-char (point-min))
+          (when (re-search-forward "Compatibility:.*$" nil t)
+            (replace-match (format "Compatibility: %s" emacs-version))))
+      (message "File header updated"))))
+#+end_src
+
 
 ** Ends
 #+BEGIN_SRC emacs-lisp
