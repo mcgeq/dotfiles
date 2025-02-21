@@ -12,6 +12,7 @@ mcge-scoop/config.json
 
 # nvim lazy
 mcge-nvim/lazy-lock.json
+mcge-nvim/nvim-data/*
 # Logs
 logs
 *.log
