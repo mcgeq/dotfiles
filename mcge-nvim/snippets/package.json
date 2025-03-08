@@ -1,0 +1,26 @@
+{
+  "name": "mcgeq-snippets",
+  "contributes": {
+    "snippets": [
+      {
+        "language": "rust",
+        "path": "./rust.json"
+      },
+      {
+        "language": ["c","cpp"],
+        "path": "./cpp.json"
+      },
+      {
+         "language": [
+           "typescript",
+           "typescriptreact",
+           "javascript",
+           "javascriptreact",
+           "vue",
+           "svelte"
+         ],
+         "path": "./FE.json"
+       },
+    ]
+  }
+}

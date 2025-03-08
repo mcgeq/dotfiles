@@ -3,3 +3,4 @@
 -- Add any additional options here
 vim.g.lazyvim_rust_diagnostics = "rust-analyzer"
 vim.g.lazyvim_prettier_needs_config = true
+vim.g.lazyvim_mini_snippets_in_completion = true
