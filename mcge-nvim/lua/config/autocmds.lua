@@ -53,6 +53,6 @@ end
 
 -- 设置在文件保存时自动调用更新 "Last Modified" 信息
 vim.api.nvim_create_autocmd("BufWritePre", {
-  pattern = "*.{rs,c,cpp,py,ts,cs}", -- 所有文件类型
+  pattern = "*.{rs,c,cpp,py,ts,cs,dart}", -- 所有文件类型
   callback = update_last_modified_info,
 })

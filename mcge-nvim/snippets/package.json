@@ -11,6 +11,10 @@
         "path": "./cpp.json"
       },
       {
+        "language": ["dart"],
+        "path": "./dart.json"
+      },
+      {
          "language": [
            "typescript",
            "typescriptreact",
