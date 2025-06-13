@@ -234,7 +234,7 @@
 	url = https://github.com/jwiegley/emacs-async.git
 [submodule "emacs-cal-china-x"]
 	path = mcge-emacs/site-lisp/extensions/org/cal-china-x
-	url = https://github.com/xwl/cal-china-x.git
+	url = https://github.com/mcgeq/cal-china-x.git
 [submodule "emacs-json-mode"]
 	path = mcge-emacs/site-lisp/extensions/json-mode
 	url = https://github.com/json-emacs/json-mode.git
@@ -301,3 +301,6 @@
 [submodule "emacs-ox-gfm"]
 	path = mcge-emacs/site-lisp/extensions/org/ox-gfm
 	url = https://github.com/larstvei/ox-gfm.git
+[submodule "emacs-magit-llama"]
+	path = mcge-emacs/site-lisp/extensions/llama
+	url = https://github.com/tarsius/llama.git
