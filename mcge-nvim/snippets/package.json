@@ -7,24 +7,35 @@
         "path": "./rust.json"
       },
       {
-        "language": ["c","cpp"],
+        "language": [
+          "c",
+          "cpp"
+        ],
         "path": "./cpp.json"
       },
       {
-        "language": ["dart"],
+        "language": [
+          "dart"
+        ],
         "path": "./dart.json"
       },
       {
-         "language": [
-           "typescript",
-           "typescriptreact",
-           "javascript",
-           "javascriptreact",
-           "vue",
-           "svelte"
-         ],
-         "path": "./FE.json"
-       },
+        "language": [
+          "typescript",
+          "typescriptreact",
+          "javascript",
+          "javascriptreact",
+          "vue",
+          "svelte"
+        ],
+        "path": "./FE.json"
+      },
+      {
+        "language": [
+          "svelte"
+        ],
+        "path": "./svelte.json"
+      }
     ]
   }
 }
