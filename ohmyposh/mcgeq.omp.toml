@@ -1,0 +1,151 @@
+version = 3
+final_space = true
+
+[[blocks]]
+  type = 'prompt'
+  alignment = 'left'
+  newline = true
+
+  [[blocks.segments]]
+    leading_diamond = '╭─'
+    template = ' {{ if .WSL }} on {{ end }}{{ .Icon }} '
+    foreground = '#ffffff'
+    background = '#0c7bbb'
+    type = 'os'
+    style = 'diamond'
+
+    [blocks.segments.properties]
+      alpine = ''
+      arch = ''
+      centos = ''
+      debian = ''
+      elementary = ''
+      fedora = ''
+      gentoo = ''
+      linux = ''
+      macos = ''
+      manjaro = ''
+      mint = ''
+      opensuse = ''
+      raspbian = ''
+      ubuntu = ''
+      windows = ''
+
+  [[blocks.segments]]
+    template = ' 🏠 '
+    foreground = '#ffffff'
+    powerline_symbol = ''
+    background = '#DA627D'
+    type = 'text'
+    style = 'diamond'
+
+  [[blocks.segments]]
+    template = ' {{ .Path }} '
+    foreground = '#ffffff'
+    powerline_symbol = ''
+    background = '#8a62da'
+    type = 'path'
+    style = 'powerline'
+
+    [blocks.segments.properties]
+      style = 'folder'
+
+  [[blocks.segments]]
+    trailing_diamond = ''
+    template = ' {{ .UpstreamIcon }}{{ .HEAD }}{{if .BranchStatus }} {{ .BranchStatus }}{{ end }}{{ if .Working.Changed }}  {{ .Working.String }}{{ end }}{{ if and (.Working.Changed) (.Staging.Changed) }} |{{ end }}{{ if .Staging.Changed }}  {{ .Staging.String }}{{ end }}{{ if gt .StashCount 0 }}  {{ .StashCount }}{{ end }} '
+    foreground = '#43CCEA'
+    powerline_symbol = ''
+    background = '#191f48'
+    type = 'git'
+    style = 'powerline'
+    foreground_templates = ['{{ if or (.Working.Changed) (.Staging.Changed) }}#FF9248{{ end }}', '{{ if and (gt .Ahead 0) (gt .Behind 0) }}#ff4500{{ end }}', '{{ if gt .Ahead 0 }}#B388FF{{ end }}', '{{ if gt .Behind 0 }}#B388FF{{ end }}']
+
+    [blocks.segments.properties]
+      branch_template = '{{ trunc 25 .Branch }}'
+      fetch_status = true
+      fetch_upstream_icon = true
+
+  [[blocks.segments]]
+    template = ' jj {{.ChangeID}}{{if .Working.Changed}}  {{ .Working.String }}{{ end }} '
+    foreground = '#193549'
+    powerline_symbol = ''
+    background = '#ffeb3b'
+    type = 'jujutsu'
+    style = 'powerline'
+
+    [blocks.segments.properties]
+      fetch_status = true
+      ignore_working_copy = false
+
+[[blocks]]
+  type = 'prompt'
+  alignment = 'right'
+
+  [[blocks.segments]]
+    template = '<#cc7eda> | </><#7eb8da>RAM:</> {{ (div ((sub .PhysicalTotalMemory .PhysicalAvailableMemory)|float64) 1073741824.0) }}/{{ (div .PhysicalTotalMemory 1073741824.0) }}GB'
+    foreground = '#81ff91'
+    type = 'sysinfo'
+    style = 'diamond'
+
+  [[blocks.segments]]
+    template = '<#cc7eda> | </><#7eb8da></> {{ if .PackageManagerIcon }}{{ .PackageManagerIcon }} {{ end }}{{ .Full }}'
+    foreground = '#81ff91'
+    type = 'node'
+    style = 'powerline'
+
+    [blocks.segments.properties]
+      fetch_version = true
+
+  [[blocks.segments]]
+    template = '<#cc7eda> | </><#7eb8da></> {{ .Full }}'
+    foreground = '#81ff91'
+    type = 'php'
+    style = 'powerline'
+
+  [[blocks.segments]]
+    template = '<#cc7eda> | </><#7eb8da> </> {{ .Full }}'
+    foreground = '#81ff91'
+    type = 'npm'
+    style = 'powerline'
+
+  [[blocks.segments]]
+    template = '<> </>'
+    foreground = '#81ff91'
+    type = 'sysinfo'
+    style = 'powerline'
+
+  [[blocks.segments]]
+    leading_diamond = ''
+    trailing_diamond = ''
+    template = '⌛ {{ .FormattedMs }} '
+    foreground = '#4b4b4b'
+    background = '#cecece'
+    type = 'executiontime'
+    style = 'diamond'
+
+    [blocks.segments.properties]
+      style = 'austin'
+      threshold = 150
+
+  [[blocks.segments]]
+    leading_diamond = ''
+    trailing_diamond = ''
+    template = '⏰ {{ .CurrentDate | date .Format }} '
+    foreground = '#4b4b4b'
+    background = '#cecece'
+    type = 'time'
+    style = 'diamond'
+
+    [blocks.segments.properties]
+      time_format = '15:04:05'
+
+[[blocks]]
+  type = 'prompt'
+  alignment = 'left'
+  newline = true
+
+  [[blocks.segments]]
+    template = '╰─'
+    foreground = '#0c7bbb'
+    type = 'text'
+    style = 'plain'

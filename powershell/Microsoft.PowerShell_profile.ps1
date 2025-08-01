@@ -14,7 +14,7 @@ Import-Module -Name Terminal-Icons
 #设置PowerShell主题
 
 # Set-PoshPrompt -Theme JanDeDobbeleer
-Invoke-Expression (&starship init powershell)
+# Invoke-Expression (&starship init powershell)
 fnm env --use-on-cd | Out-String | Invoke-Expression
 
 # scoop-search
@@ -22,6 +22,9 @@ Invoke-Expression (&scoop-search --hook)
 
 # 删除现有的 rm 别名
 Remove-Item Alias:rm -ErrorAction SilentlyContinue
+
+# oh-my-posh
+oh-my-posh init pwsh --config $env:POSH_THEMES_PATH\mcgeq.omp.toml | Invoke-Expression
 
 # alias
 New-Alias -Name gad -Value gitAdd
@@ -234,16 +237,16 @@ function Update-Packages {
 function rmDirOrFiles {
     param (
         [string]$Path,
-        [string[]]$Args  # 允许不定数量的参数
+        [string[]]$Arguments  # 允许不定数量的参数
     )
 
     # 确认删除
     if (Test-Path $Path) {
         # 输出确认信息
-        # Write-Host "Preparing to delete: '$Path' with arguments: $($Args -join ', ')"
+        # Write-Host "Preparing to delete: '$Path' with arguments: $($Arguments -join ', ')"
         
         # 解析传入的参数
-        foreach ($arg in $Args) {
+        foreach ($arg in $Arguments) {
             # Write-Host "Processing argument: $arg"
             switch ($arg) {
                 '-f' { 
@@ -274,10 +277,6 @@ function rmDirOrFiles {
         Write-Host "Path '$Path' does not exist."
     }
 }
-
-
-
-
 
 # 封装 cd 命令
 function cd {
