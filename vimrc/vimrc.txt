@@ -28,10 +28,10 @@ g:mcge_custom_shell = "pwsh"
 
 
 # 自定义vim配置文件路径
-g:mcge_customvimrcdir = "D:/config/dotfiles/mcge-vimrc"
+g:mcge_customvimrcdir = "D:/config/dotfiles/vimrc"
 
 if has("unix")
-    g:mcge_customvimrcdir = "~/dotfiles/mcge-vimrc"
+    g:mcge_customvimrcdir = "~/dotfiles/vimrc"
     g:mcge_custom_project = "~/projects"
     g:mcge_custom_workspace = "~/workspace"
     g:mcge_custom_fzf_dir = "~/.fzf"
