@@ -304,3 +304,9 @@
 [submodule "emacs-magit-llama"]
 	path = emacs/site-lisp/extensions/llama
 	url = https://github.com/tarsius/llama.git
+[submodule "emacs-web-mode"]
+	path = emacs/site-lisp/extensions/lsp/web-mode
+	url = https://github.com/fxbois/web-mode.git
+[submodule "emacs-jujutsu"]
+	path = emacs/site-lisp/extensions/jujutsu
+	url = https://github.com/bennyandresen/jujutsu.el.git

@@ -64,7 +64,7 @@
 (setq lsp-bridge-enable-inlay-hint t)
 (setq lsp-bridge-semantic-tokens t)
 ;; formatter
-(setq lsp-bridge-enable-auto-format-code t)
+;; (setq lsp-bridge-enable-auto-format-code t)
 (setq-default lsp-bridge-semantic-tokens-ignore-modifier-limit-types ["variable"])
 
 (setq acm-enable-capf t)

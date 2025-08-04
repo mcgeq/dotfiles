@@ -220,6 +220,32 @@ function GitPushAllBranch {
 function jjInit {
     jj init
 }
+
+function jjStatus {
+    jj status
+}
+
+function jjGitPush {
+    jj git push
+}
+
+function jjFetch {
+    jj git fetch
+}
+
+function jjFetchRebaseMain {
+    jjFetch
+    jjRebaseMain
+}
+
+function jjBookmarkMain {
+    jj bookmark set main -r '@-'
+}
+
+function jjRebaseMain {
+    jj rebase -d main@origin
+}
+
 function jjAdd {
     jj add
 }
@@ -235,9 +261,7 @@ function jjLog {
 function jjDiff {
     jj diff
 }
-function jjStatus {
-    jj status
-}
+
 function jjCheckout {
     param (
         [string]$revision
@@ -301,10 +325,15 @@ New-Alias -Name gsub -Value gitSubmoduleResetHard
 New-Alias -Name jad -Value jjAdd
 New-Alias -Name jst -Value jjStatus
 New-Alias -Name jco -Value jjCommit
-New-Alias -Name jlog -Value jjLog
-New-Alias -Name jdif -Value jjDiff
+New-Alias -Name jlg -Value jjLog
+New-Alias -Name jdf -Value jjDiff
 New-Alias -Name jch -Value jjCheckout
 New-Alias -Name jme -Value jjMerge
+New-Alias -Name jgf -Value jjFetch
+New-Alias -Name jfm -Value jjFetchRebaseMain
+New-Alias -Name jbm -Value jjBookmarkMain
+New-Alias -Name jrm -Value jjRebaseMain
+New-Alias -Name jjp -Value jjGitPush
 
 # 其他别名
 New-Alias -Name ppm -Value pnpm
