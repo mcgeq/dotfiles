@@ -78,7 +78,7 @@
 (defvar mcgemacs-org-dir       (if *is-win32p* (file-truename "D:/org")
                                  (file-truename "~/org")))
 ;; 定义一些启动目录，方便下次迁移
-(defvar mcgemacs-root-dir      (concat mcgemacs-custom-dir "/dotfiles/mcge-emacs"))
+(defvar mcgemacs-root-dir      (concat mcgemacs-custom-dir "/dotfiles/emacs"))
 (defvar mcgemacs-config-dir    (concat mcgemacs-root-dir "/config-org"))
 (defvar mcgemacs-extension-dir (concat mcgemacs-root-dir "/extensions"))
 

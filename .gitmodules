@@ -310,3 +310,9 @@
 [submodule "emacs-jujutsu"]
 	path = emacs/site-lisp/extensions/jujutsu
 	url = https://github.com/bennyandresen/jujutsu.el.git
+[submodule "emacs-instant-rename-tag"]
+	path = emacs/site-lisp/extensions/instant-rename-tag
+	url = https://github.com/manateelazycat/instant-rename-tag.git
+[submodule "emacs-highlight-matching-tag"]
+	path = emacs/site-lisp/extensions/highlight-matching-tag
+	url = https://github.com/manateelazycat/highlight-matching-tag.git

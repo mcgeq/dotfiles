@@ -46,7 +46,7 @@
 ;;(require 'lang-typescript)
 (require 'lang-rust)
 ;;(require 'lang-css-mode)
-;;(require 'lang-web-mode)
+(require 'lang-web-mode)
 ;;(require 'lang-clojure)
 ;; (require 'lang-lua)
 
@@ -75,7 +75,20 @@
 (setq acm-enable-codeium nil)
 (setq acm-enable-lsp-workspace-symbol t)
 
-;; (setq lsp-bridge-enable-debug t)
+(defun custom-lsp-bridge-project-root (filepath)
+  "Find project root by searching for .jj, .git or .dir-locals.el"
+  (or
+   ;; 1. 优先查找 .jj 目录
+   (locate-dominating-file filepath ".jj")
+   
+   ;; 2. 然后是默认的 .git 和 .dir-locals.el
+   (locate-dominating-file filepath ".git")
+   (locate-dominating-file filepath ".dir-locals.el")))
+
+;; 设置自定义项目检测函数
+(setq lsp-bridge-get-project-path-by-filepath 'custom-lsp-bridge-project-root)
+
+(setq lsp-bridge-enable-debug t)
 
 (global-lsp-bridge-mode)
 

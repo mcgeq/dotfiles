@@ -4,7 +4,7 @@ This is the configuration information about using the software.
 
 ## Git
 
-[Git README](mcge-gitconfig/README.md)
+[Git README](gitconfig/README.md)
 
 想在任何**git**项目中使用标准统一的git commit提交信息，请复制**dotfiles**目录下的下列文件
 
@@ -18,7 +18,7 @@ This is the configuration information about using the software.
 
 ### Eslint
 
-**mcge-commit**目录
+**commit**目录
 
 #### 分支
 
@@ -37,28 +37,28 @@ Terminal configuration information.
 
 - <https://github.com/QianSong1/wezterm-config>
 
-[Wezterm README](mcge-wezterm/README.md)
+[Wezterm README](wezterm/README.md)
 
 ### powershell
 
-[powershell README](mcge-powershell/README.md)
+[powershell README](powershell/README.md)
 
 ### nushell
 
-[nushell README](mcge-nushell/README.md)
+[nushell README](nushell/README.md)
 
 ### starship
 
-[starship README](mcge-starship/README.md)
+[starship README](starship/README.md)
 
 ## Editor
 
 ### Emacs
 
-[Emacs README](mcge-emacs/README.org)
+[Emacs README](emacs/README.org)
 
 ### Vim
 
-[Vim README](mcge-vimrc/README.org)
+[Vim README](vimrc/README.org)
 
 ### Neovim
