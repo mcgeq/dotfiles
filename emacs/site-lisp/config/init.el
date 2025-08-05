@@ -79,7 +79,6 @@
   (require 'init-treesit)
   (require 'init-symbol-overlay)
   (require 'init-rime)
-  (require 'init-jujutsu)
 
   ;; Delay loading
   (run-with-timer

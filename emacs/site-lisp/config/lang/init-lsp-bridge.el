@@ -80,7 +80,7 @@
   (or
    ;; 1. 优先查找 .jj 目录
    (locate-dominating-file filepath ".jj")
-   
+
    ;; 2. 然后是默认的 .git 和 .dir-locals.el
    (locate-dominating-file filepath ".git")
    (locate-dominating-file filepath ".dir-locals.el")))
@@ -88,7 +88,7 @@
 ;; 设置自定义项目检测函数
 (setq lsp-bridge-get-project-path-by-filepath 'custom-lsp-bridge-project-root)
 
-(setq lsp-bridge-enable-debug t)
+;; (setq lsp-bridge-enable-debug t)
 
 (global-lsp-bridge-mode)
 

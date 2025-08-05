@@ -56,7 +56,7 @@
   (memq window-system '(x w32 ns pc pgtk))
   "Currently running in terminal mode.")
 
-(defvar mcg--fonts-default '("Cascadia Mono" "FiraCode Nerd Font" "DejaVuSansMono Nerd Font Mono" "Consolas" "Source Code Pro" "Hack" "Fira Code"))
+(defvar mcg--fonts-default '("FiraCode Nerd Font Mono","Cascadia Mono" "FiraCode Nerd Font" "DejaVuSansMono Nerd Font Mono" "Consolas" "Source Code Pro" "Hack" "Fira Code"))
 (defvar mcg--fonts-unicode '("Symbola" "Segoe UI Symbol" "Symbol"))
 (defvar mcg--fonts-emoji    '("Noto Color Emoji" "Apple Color Emoji"))
 (defvar mcg--fonts-cjk     '("KaiTi" "WenQuanYi Micro Hei" "Microsoft Yahei UI" "Microsoft Yahei" "STFangsong"))

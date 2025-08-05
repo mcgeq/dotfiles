@@ -52,7 +52,7 @@
 ;;   (load-theme 'ef-summer t))
 ;; ef-arbutus
 ;; ef-tritanopia-light
-(load-theme 'ef-arbutus t)
+(load-theme 'ef-autumn t)
 
 ;; nerd-icons
 (require 'nerd-icons)
