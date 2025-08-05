@@ -56,6 +56,7 @@
 (require 'init-function)
 (require 'lazy-load)
 (require 'init-ui)
+(require 'init-doom-modeline)
 
 (let (;; 加速启动
         (gc-cons-threshold most-positive-fixnum)

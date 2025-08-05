@@ -313,3 +313,12 @@
 [submodule "emacs-highlight-matching-tag"]
 	path = emacs/site-lisp/extensions/highlight-matching-tag
 	url = https://github.com/manateelazycat/highlight-matching-tag.git
+[submodule "emacs-doom-modeline"]
+	path = emacs/site-lisp/extensions/doom-modeline
+	url = https://github.com/seagle0128/doom-modeline.git
+[submodule "emacs-modeline-shrink-path"]
+	path = emacs/site-lisp/extensions/shrink-path
+	url = https://gitlab.com/bennya/shrink-path.el.git
+[submodule "emacs-solaire-mode"]
+	path = emacs/site-lisp/extensions/solaire-mode
+	url = https://github.com/hlissner/emacs-solaire-mode.git
