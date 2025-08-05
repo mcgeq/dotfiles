@@ -79,9 +79,6 @@
 [submodule "emacs-sort-tab"]
 	path = emacs/site-lisp/extensions/sort-tab
 	url = https://github.com/manateelazycat/sort-tab.git
-[submodule "emacs-awesome-tray"]
-	path = emacs/site-lisp/extensions/awesome-tray
-	url = https://github.com/manateelazycat/awesome-tray.git
 [submodule "emacs-consult"]
 	path = emacs/site-lisp/extensions/consult
 	url = https://github.com/minad/consult.git
