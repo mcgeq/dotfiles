@@ -13,7 +13,7 @@ Import-Module -Name Terminal-Icons
 
 #设置PowerShell主题
 # Set-PoshPrompt -Theme JanDeDobbeleer
-# Invoke-Expression (&starship init powershell)
+Invoke-Expression (&starship init powershell)
 fnm env --use-on-cd | Out-String | Invoke-Expression
 
 # scoop-search
@@ -23,7 +23,7 @@ Invoke-Expression (&scoop-search --hook)
 Remove-Item Alias:rm -ErrorAction SilentlyContinue
 
 # oh-my-posh
-oh-my-posh init pwsh --config $env:POSH_THEMES_PATH\mcgeq.omp.toml | Invoke-Expression
+# oh-my-posh init pwsh --config $env:POSH_THEMES_PATH\mcgeq.omp.toml | Invoke-Expression
 
 #------------------------------------------  Import Modules END  ------------------------------------------
 
