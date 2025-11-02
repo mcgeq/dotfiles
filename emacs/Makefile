@@ -3,8 +3,8 @@ EM ?= emacs
 EE ?= $(EM) -Q --batch --eval "(progn (require 'ob-tangle) (setq org-confirm-babel-evaluate nil))"
 
 
-# 需要加载的目录，可能有 lisp site-lisp 等
-DS = core etc lang
+# 需要加载的目录
+DS = core ui editor completion tools org docs lang
 
 # 编译生成后的*.el 文件存放位置
 DF ?= site-lisp/config
@@ -19,7 +19,7 @@ check_dir.$(1):
 $(1): $(patsubst config-org/$(1)/%.org, site-lisp/config/$(1)/%.el, $(wildcard config-org/$(1)/*.org))
 
 clean-$(1):
-	rm -rf site-lisp/config/$(1)
+	-powershell -Command "if (Test-Path 'site-lisp/config/$(1)') { Remove-Item -Recurse -Force 'site-lisp/config/$(1)' }"
 
 .PHONY: clean-$(1)
 
@@ -37,7 +37,13 @@ el: $(DS) init.el
 
 # 字节码翻译 暂未使用
 elc:
-	$(EM) --batch -l ./init.el -L "site-lisp/config" --eval '(byte-recompile-directory "site-lisp/config/etc" 0)'
+	$(EM) --batch -l ./init.el -L "site-lisp/config" --eval '(byte-recompile-directory "site-lisp/config/core" 0)'
+	$(EM) --batch -l ./init.el -L "site-lisp/config" --eval '(byte-recompile-directory "site-lisp/config/ui" 0)'
+	$(EM) --batch -l ./init.el -L "site-lisp/config" --eval '(byte-recompile-directory "site-lisp/config/editor" 0)'
+	$(EM) --batch -l ./init.el -L "site-lisp/config" --eval '(byte-recompile-directory "site-lisp/config/completion" 0)'
+	$(EM) --batch -l ./init.el -L "site-lisp/config" --eval '(byte-recompile-directory "site-lisp/config/tools" 0)'
+	$(EM) --batch -l ./init.el -L "site-lisp/config" --eval '(byte-recompile-directory "site-lisp/config/org" 0)'
+	$(EM) --batch -l ./init.el -L "site-lisp/config" --eval '(byte-recompile-directory "site-lisp/config/docs" 0)'
 	$(EM) --batch -l ./init.el -L "site-lisp/config" --eval '(byte-recompile-directory "site-lisp/config/lang" 0)'
 
 
@@ -47,4 +53,4 @@ generate: el
 generate-elc: el elc
 
 clean:
-	rm -rf site-lisp/config
+	-powershell -Command "if (Test-Path 'site-lisp/config') { Remove-Item -Recurse -Force 'site-lisp/config' }"

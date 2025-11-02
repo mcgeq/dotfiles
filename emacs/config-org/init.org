@@ -6,125 +6,268 @@
 ** Headers
 
 #+BEGIN_SRC emacs-lisp
-  ;;; init.el -- Config for Emacs Start -*- lexical-binding: t; -*-
+  ;;; init.el -- Emacs Configuration Manager -*- lexical-binding: t; -*-
 
   ;; Filename: init.el
-  ;; Description: Config for Emacs Start
+  ;; Description: Emacs Configuration - Version 2.0
   ;; Author: mcge <mcgeq@outlook.com>
-  ;; Copyright (C) 2024, mcge, all rights reserved.
+  ;; Copyright (C) 2024-2025, mcge, all rights reserved.
   ;; Create   Date: 2025-01-04 15:00:00
-  ;; Version: 0.1
-  ;; Modified   By:  mcgeq <mcgeq@outlook.com>
-  ;; Last Modified:  <2025-02-16 Sun 11:34>
-  ;; Keywords:
-  ;; Compatibility: 31.0.50
+  ;; Version: 2.0
+  ;; Modified   By: mcgeq <mcgeq@outlook.com>
+  ;; Last Modified: <2025-02-16 Sun 12:00>
+  ;; Keywords: emacs, configuration, startup
+  ;; Compatibility: GNU Emacs 31.0.50+
 
   ;;; Commentary:
   ;;
-  ;; Config for Emacs Start
+  ;; Emacs配置管理器 - 使用Git Submodules和Org Babel
+  ;;
+  ;; 配置结构:
+  ;; 1. Core: 核心基础配置
+  ;; 2. UI: 用户界面和主题
+  ;; 3. Editor: 编辑器增强
+  ;; 4. Completion: 代码补全
+  ;; 5. Tools: 工具集
+  ;; 6. Org: Org mode扩展
+  ;; 7. Lang: 语言支持
   ;;
 
   ;;; Installation:
   ;;
-  ;; Put init.el to your load-path.
-  ;; The load-path is usually ~/elisp/.
-  ;; It's set in your ~/.emacs like this:
-  ;; (add-to-list 'load-path (expand-file-name "~/elisp"))
+  ;; 1. 克隆dotfiles仓库并初始化submodules:
+  ;;    git clone --recursive https://github.com/user/dotfiles.git
   ;;
-  ;; And the following to your ~/.emacs startup file.
+  ;; 2. 编译配置:
+  ;;    cd dotfiles/emacs
+  ;;    make generate
   ;;
-  ;; (require 'init)
-  ;;
-  ;; No need more.
-
-  ;;; Customize:
-  ;;
-  ;;
-  ;;
-  ;; All of the above can customize by:
-  ;;      M-x customize-group RET init-aider RET
-  ;;
+  ;; 3. 加载配置:
+  ;;    emacs -Q -l site-lisp/config/init.el
 
   ;;; Change log:
   ;;
+  ;; Version 2.0 (2025-02-16):
+  ;; - 重构为模块化结构
+  ;; - 统一Load-path管理
+  ;; - 添加配置验证系统
+  ;; - 优化启动性能
+  ;;
 
 #+END_SRC
 
-** Require
-*** Custom const variable and function
-
+** Initialize Emacs UI
 #+BEGIN_SRC emacs-lisp
-  ;;; Require:
-  ;; Hide tools menu vertical-scroll
-  ;; (push '(menu-bar-lines   . 0) default-frame-alist)
-  ;; (push '(tool-bar-lines    . 0) default-frame-alist)
-  ;; (push '(vertical-scroll-bars) default-frame-alist)
-
-  (menu-bar-mode 0)
-  (tool-bar-mode 0)
-  (scroll-bar-mode 0)
-
-  (require 'hydra)
-  (require 'init-const)
-  (require 'init-font)
-  (require 'init-function)
-  (require 'lazy-load)
-  (require 'init-ui)
-
+;;; 初始化Emacs界面
+;; Hide tools menu vertical-scroll
+(menu-bar-mode 0)
+(tool-bar-mode 0)
+(scroll-bar-mode 0)
 #+END_SRC
 
-*** Emacs base config
+** Phase 1: Core Infrastructure (Priority 0)
 #+BEGIN_SRC emacs-lisp
-  (let (;; 加速启动
-          (gc-cons-threshold most-positive-fixnum)
-        ;; 清空避免加载远程文件的时候分析文件
-            (file-name-handler-alist nil))
-    (require 'init-builtin)
-    (require 'init-sort-tab)
-    (require 'init-doom-modeline)
-    (require 'init-auto-save)
-    (require 'init-line-number)
-    (require 'init-generic)
-    (require 'init-editor)
-    (require 'init-marginalia)
-    (require 'init-vertico)
-    (require 'init-keymaps)
-    (require 'init-lsp-bridge)
-    (require 'init-recentf)
-    (require 'init-wraplish)
-    (require 'init-fingertip)
-    (require 'init-indent)
-    (require 'init-treesit)
-    (require 'init-symbol-overlay)
-    (require 'init-rime)
+;;; Phase 1: 核心基础设施
 
-    ;; Delay loading
-    (run-with-timer
-     1 nil
-     #'(lambda ()
-         (require 'init-yasnippet)
-         (require 'init-helpful)
-         (require 'init-org)
-         (require 'init-org-agenda)
-         (require 'init-consult-todo)
-         (require 'init-org-numbering)
-         (require 'init-markdown)
-         (require 'init-grip-mode)
-         ))
-    )
+;; 记录启动时间
+(defvar mcg-startup-start-time (current-time))
+
+;; 加载路径和基础配置（最高优先级）
+(require 'init-paths)      ; 路径配置管理
+(require 'init-loadpath)   ; Load-path管理
+(require 'init-verify)     ; 配置验证
+
+;; 核心常量和函数
+(require 'init-font)       ; 字体配置
+(require 'init-function)   ; 自定义函数
+(require 'init-builtin)    ; 内置功能增强
+
+;; 注册已加载的模块
+(mcg-register-loaded-module 'init-paths)
+(mcg-register-loaded-module 'init-loadpath)
+(mcg-register-loaded-module 'init-verify)
+(mcg-register-loaded-module 'init-font)
+(mcg-register-loaded-module 'init-function)
+(mcg-register-loaded-module 'init-builtin)
 #+END_SRC
 
-** Code
+** Phase 2: UI and Themes (Priority 1)
 #+BEGIN_SRC emacs-lisp
+;;; Phase 2: 用户界面和主题
 
-;;; Code:
+;; 加载UI配置
+(require 'init-ui)
+(require 'init-doom-modeline)
+
+(mcg-register-loaded-module 'init-ui)
+(mcg-register-loaded-module 'init-doom-modeline)
+#+END_SRC
+
+** Phase 3: Editor Enhancement (Priority 2)
+#+BEGIN_SRC emacs-lisp
+;;; Phase 3: 编辑器增强
+
+;; 性能优化：在快速GC模式下加载编辑器配置
+(defmacro with-fast-gc (&rest body)
+  "在快速GC模式下执行代码"
+  `(let ((gc-threshold gc-cons-threshold)
+         (file-handler file-name-handler-alist))
+     (setq gc-cons-threshold most-positive-fixnum
+           file-name-handler-alist nil)
+     (unwind-protect
+         (progn ,@body)
+       (setq gc-cons-threshold gc-threshold
+             file-name-handler-alist file-handler)
+       (garbage-collect))))
+
+(with-fast-gc
+  ;; 编辑器配置（已迁移到editor目录）
+  (require 'init-line-number)
+  (require 'init-indent)
+  (require 'init-editor)
+  (require 'init-treesit)
+  
+  ;; 工具配置（已迁移到tools目录）
+  (require 'init-sort-tab)
+  (require 'init-auto-save)
+  (require 'init-generic)
+  (require 'init-symbol-overlay)
+  (require 'init-rime)
+  
+  (mcg-register-loaded-module 'init-sort-tab)
+  (mcg-register-loaded-module 'init-auto-save)
+  (mcg-register-loaded-module 'init-line-number)
+  (mcg-register-loaded-module 'init-generic)
+  (mcg-register-loaded-module 'init-editor)
+  (mcg-register-loaded-module 'init-treesit)
+  (mcg-register-loaded-module 'init-symbol-overlay)
+  (mcg-register-loaded-module 'init-rime))
+#+END_SRC
+
+** Phase 4: Completion and Search (Priority 3)
+#+BEGIN_SRC emacs-lisp
+;;; Phase 4: 代码补全和搜索（已迁移到completion目录）
+
+(require 'init-marginalia)
+(require 'init-vertico)
+(require 'init-embark)
+(require 'init-yasnippet)
+
+(mcg-register-loaded-module 'init-marginalia)
+(mcg-register-loaded-module 'init-vertico)
+(mcg-register-loaded-module 'init-embark)
+(mcg-register-loaded-module 'init-yasnippet)
+#+END_SRC
+
+** Phase 5: Keybindings
+#+BEGIN_SRC emacs-lisp
+;;; Phase 5: 键绑定
+
+;; 通用键绑定配置（保留在etc目录）
+(require 'init-keymaps)
+
+;; 工具配置（已迁移到tools目录）
+(require 'init-recentf)
+(require 'init-wraplish)
+(require 'init-fingertip)
+
+(mcg-register-loaded-module 'init-keymaps)
+(mcg-register-loaded-module 'init-recentf)
+(mcg-register-loaded-module 'init-wraplish)
+(mcg-register-loaded-module 'init-fingertip)
+#+END_SRC
+
+** Phase 6: LSP and Languages (Delayed Loading)
+#+BEGIN_SRC emacs-lisp
+;;; Phase 6: LSP和语言支持（延迟加载）
+
+(defun mcg-load-lang-support ()
+  "加载语言支持"
+  (require 'init-lsp-bridge)
+  ;; 按需加载具体语言
+  (mcg-load-extension "rust-mode")
+  (mcg-load-extension "lua-mode")
+  (mcg-load-extension "web-mode")
+  
+  (require 'lang-rust)
+  (require 'lang-lua)
+  (require 'lang-web-mode)
+  (require 'lang-cpp)
+  
+  (mcg-register-loaded-module 'init-lsp-bridge)
+  (mcg-register-loaded-module 'lang-rust)
+  (mcg-register-loaded-module 'lang-lua)
+  (mcg-register-loaded-module 'lang-web-mode)
+  (mcg-register-loaded-module 'lang-cpp))
+
+;; 延迟1秒加载语言支持
+(run-with-timer 1 nil #'mcg-load-lang-support)
+#+END_SRC
+
+** Phase 7: Org and Documentation (Delayed Loading)
+#+BEGIN_SRC emacs-lisp
+;;; Phase 7: Org和文档支持（延迟加载）
+
+(defun mcg-load-org-support ()
+  "加载Org和文档支持（已迁移到org和docs目录）"
+  ;; 工具配置
+  (require 'init-helpful)
+  (require 'init-blink-search)
+  (require 'init-color-rg)
+  
+  ;; Org配置
+  (require 'init-org)
+  (require 'init-org-agenda)
+  (require 'init-consult-todo)
+  (require 'init-org-numbering)
+  (require 'init-capture-hugo)
+  (require 'init-org-download)
+  
+  ;; 文档配置
+  (require 'init-markdown)
+  (require 'init-grip-mode)
+  
+  (mcg-register-loaded-module 'init-helpful)
+  (mcg-register-loaded-module 'init-blink-search)
+  (mcg-register-loaded-module 'init-color-rg)
+  (mcg-register-loaded-module 'init-org)
+  (mcg-register-loaded-module 'init-org-agenda)
+  (mcg-register-loaded-module 'init-consult-todo)
+  (mcg-register-loaded-module 'init-org-numbering)
+  (mcg-register-loaded-module 'init-capture-hugo)
+  (mcg-register-loaded-module 'init-org-download)
+  (mcg-register-loaded-module 'init-markdown)
+  (mcg-register-loaded-module 'init-grip-mode))
+
+;; 延迟2秒加载Org支持
+(run-with-timer 2 nil #'mcg-load-org-support)
+#+END_SRC
+
+** Hooks
+#+BEGIN_SRC emacs-lisp
+;;; 钩子配置
+
 ;; 绑定到保存前钩子
 (add-hook 'before-save-hook 'mcg/org-update-file-headers)
+#+END_SRC
+
+** Display Startup Time
+#+BEGIN_SRC emacs-lisp
+;;; 显示启动时间
+
+(defun mcg-display-startup-time ()
+  "显示启动时间"
+  (let ((elapsed (float-time (time-subtract (current-time) mcg-startup-start-time))))
+    (message "Emacs configuration loaded in %.2f seconds" elapsed)))
+
+;; 延迟显示启动时间
+(run-with-timer 3 nil #'mcg-display-startup-time)
 #+END_SRC
 
 ** Ends
 #+BEGIN_SRC emacs-lisp
 (provide 'init)
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; init.el ends here
 #+END_SRC
+

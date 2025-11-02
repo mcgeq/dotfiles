@@ -1,0 +1,175 @@
+* init-paths.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle (concat temporary-file-directory "init-paths.el") :lexical t
+:END:
+
+** Headers
+#+BEGIN_SRC emacs-lisp
+  ;;; init-paths.el -- Path Configuration Management -*- lexical-binding: t; -*-
+
+  ;; Filename: init-paths.el
+  ;; Description: 统一管理所有路径配置，支持跨平台
+  ;; Author: mcge <mcgeq@outlook.com>
+  ;; Copyright (C) 2024, mcge, all rights reserved.
+  ;; Create   Date: 2025-01-04 15:00:00
+  ;; Version: 2.0
+  ;; Modified   By: mcge <mcgeq@outlook.com>
+  ;; Last Modified: <2025-02-16 Sun 12:00>
+  ;; Keywords: paths, configuration, cross-platform
+  ;; Compatibility: GNU Emacs 31.0.50
+
+  ;;; Commentary:
+  ;;
+  ;; 路径配置管理，支持环境变量配置，消除硬编码路径
+  ;;
+
+#+END_SRC
+
+** System Detection
+#+BEGIN_SRC emacs-lisp
+;;; 系统检测（需要在init-const之前加载，所以在这里定义）
+
+(defconst *is-win32p*
+  (memq system-type '(cygwin windows-nt ms-dos))
+  "Running on a WinNT System.")
+
+(defconst *is-linux*
+  (eq system-type 'gnu/linux)
+  "Running on a GNU/Linux System.")
+
+(defconst *is-mac*
+  (eq system-type 'darwin)
+  "Running on a MacOS System.")
+
+;; GUI `window-system'
+(defconst *is-gui-p*
+  (memq window-system '(x w32 ns pc pgtk))
+  "Currently running in terminal mode.")
+
+(defconst emacs/>=29p
+  (>= emacs-major-version 29)
+  "Emacs is 29 or above.")
+#+END_SRC
+
+** Path Initialization
+#+BEGIN_SRC emacs-lisp
+;;; 路径初始化
+
+(defun mcg-init-paths (base-dir)
+  "初始化路径配置
+
+  参数:
+  - BASE-DIR: 基础目录路径（用户自定义根目录）"
+  (setq mcgemacs-custom-dir (file-truename base-dir))
+  (setq mcgemacs-root-dir (concat mcgemacs-custom-dir "/dotfiles/emacs"))
+  (setq mcgemacs-config-dir (concat mcgemacs-root-dir "/config-org"))
+  (setq mcgemacs-extension-dir (concat mcgemacs-root-dir "/site-lisp/extensions"))
+
+  ;; LSP配置目录
+  (setq mcgemacs-custom-lsp-bridge-langserver-dir (concat mcgemacs-root-dir "/langservers"))
+  (setq mcgemacs-custom-lsp-bridge-multiserver-dir (concat mcgemacs-root-dir "/multiservers"))
+
+  ;; Org相关路径
+  (setq mcgemacs-org-dir (concat mcgemacs-custom-dir "/org"))
+  (setq mcgemacs-org-agenda-files (concat mcgemacs-org-dir "/diary-by-months/"))
+
+  ;; 博客路径
+  (setq mcgemacs-blog-dir (concat mcgemacs-custom-dir "/workspaces/blog/mcge-blog"))
+  (setq mcgemacs-blog-org-dir (concat mcgemacs-blog-dir "/content-org")))
+
+;; 自动检测基础目录
+(let ((env-config-dir (getenv "MCG_EMACS_CONFIG_DIR")))
+  (if env-config-dir
+      (mcg-init-paths env-config-dir)
+    ;; 默认配置
+    (mcg-init-paths (if *is-win32p* "D:/config" "~"))))
+
+;; 定义扩展目录的完整路径（用于兼容旧代码）
+(setq mcgemacs-extension-dir (concat mcgemacs-root-dir "/site-lisp/extensions"))
+#+END_SRC
+
+** Path Helper
+#+BEGIN_SRC emacs-lisp
+;;; 路径辅助函数
+
+(defun mcg-get-path (path-key)
+  "获取配置路径
+
+  支持的path-key:
+  - :config 主配置目录
+  - :blog 博客目录
+  - :org Org目录
+  - :root Emacs根目录
+  - :extensions 扩展目录
+  - :lsp-servers LSP服务器目录"
+  (pcase path-key
+    (:config mcgemacs-custom-dir)
+    (:blog mcgemacs-blog-dir)
+    (:org mcgemacs-org-dir)
+    (:root mcgemacs-root-dir)
+    (:extensions mcgemacs-extension-dir)
+    (:lsp-servers mcgemacs-custom-lsp-bridge-langserver-dir)
+    (_ (error "Unknown path key: %s" path-key))))
+#+END_SRC
+
+** Additional Path Variables
+#+BEGIN_SRC emacs-lisp
+;;; 其他路径变量（向后兼容）
+
+(defvar mcgeamcs-org-agenda-diary-file (expand-file-name "standard-diary"
+                                                          (concat mcgemacs-org-dir "/mcge/")))
+(defvar org-file-note     (expand-file-name "notes.org"
+                                            (concat mcgemacs-org-dir "/notes")))
+(defvar org-file-task     (expand-file-name "tasks.org"
+                                            mcgemacs-org-dir))
+(defvar org-file-calendar (expand-file-name "calendar.org"  mcgemacs-org-dir))
+(defvar org-file-finished (expand-file-name "finished.org"  mcgemacs-org-dir))
+(defvar org-file-canceled (expand-file-name "canceled.org"  mcgemacs-org-dir))
+(defvar org-file-diary    (expand-file-name (format-time-string "diary_%Y%m.org")
+                                            mcgemacs-org-agenda-files))
+(defvar org-file-journal  (expand-file-name "inbox.org"
+                                            (concat mcgemacs-org-dir "/journal")))
+(defvar org-file-billing  (expand-file-name "billing.org"
+                                            (concat mcgemacs-org-dir "/billing")))
+(defvar org-file-password (expand-file-name "passwords.org.cpt"
+                                            (concat mcgemacs-org-dir "/private")))
+(defvar org-file-blog   (expand-file-name "all-posts.org" mcgemacs-blog-org-dir))
+;; custom
+(defvar org-emacs-blog   (expand-file-name "all-about-emacs.org" mcgemacs-blog-org-dir))
+(defvar org-prattle-blog   (expand-file-name "all-about-prattle.org" mcgemacs-blog-org-dir))
+(defvar org-tools-blog   (expand-file-name "all-about-tools.org" mcgemacs-blog-org-dir))
+(defvar org-development-blog   (expand-file-name "all-about-development.org"
+                                                 mcgemacs-blog-org-dir))
+(defvar org-mcu-blog     (expand-file-name "all-about-mcu-blog.org" mcgemacs-blog-org-dir))
+#+END_SRC
+
+** Font Configuration
+#+BEGIN_SRC emacs-lisp
+;;; 字体配置
+
+(defvar mcg--fonts-default '("FiraCode Nerd Font Mono","Cascadia Mono" "FiraCode Nerd Font" "DejaVuSansMono Nerd Font Mono" "Consolas" "Source Code Pro" "Hack" "Fira Code"))
+(defvar mcg--fonts-unicode '("Symbola" "Segoe UI Symbol" "Symbol"))
+(defvar mcg--fonts-emoji    '("Noto Color Emoji" "Apple Color Emoji"))
+(defvar mcg--fonts-cjk     '("KaiTi" "WenQuanYi Micro Hei" "Microsoft Yahei UI" "Microsoft Yahei" "STFangsong"))
+(defvar mcgemacs-custom-icon-font-family "FiraCode Nerd Font")
+#+END_SRC
+
+** Other Configuration
+#+BEGIN_SRC emacs-lisp
+;;; 其他配置
+
+;; image size
+(defvar mcge/image-scale-mode-step 1.2
+    "Image scale factor.")
+
+;; emacs-rime user data
+(defvar mcgemacs-rime-user-data-dir (if *is-linux* (expand-file-name "~/.config/fcitx/rime")
+                                      (expand-file-name (concat mcgemacs-custom-dir "/rime"))))
+#+END_SRC
+
+** Ends
+#+BEGIN_SRC emacs-lisp
+(provide 'init-paths)
+;;; init-paths.el ends here
+#+END_SRC
+

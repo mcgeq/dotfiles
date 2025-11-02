@@ -1,73 +1,91 @@
-;;; init-doom-modeline.el -- Config for AutoSave -*- lexical-binding: t; -*-
+* init-doom-modeline.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle (concat temporary-file-directory "init-doom-modeline.el") :lexical t
+:END:
 
-;; Filename: init.el
-;; Description: Config for AutoSave
-;; Author: mcge <mcgeq@outlook.com>
-;; Copyright (C) 2024, mcge, all rights reserved.
-;; Create   Date: 2025-01-04 15:00:00
-;; Version: 0.1
-;; Modified   By:  mcge <mcgeq@outlook.com>
-;; Last Modified:  <2025-01-10 Fri 10:14>
-;; Keywords:
-;; Compatibility: GNU Emacs 31.0.50
+** Headers
 
-;;; Commentary:
-;;
-;; Config for AutoSave
-;;
+#+BEGIN_SRC emacs-lisp
+  ;;; init-doom-modeline.el -- Config for doom-modeline -*- lexical-binding: t; -*-
 
-;;; Installation:
-;;
-;; Put init-doom-modeline.el to your load-path.
-;; The load-path is usually ~/elisp/.
-;; It's set in your ~/.emacs like this:
-;; (add-to-list 'load-path (expand-file-name "~/elisp"))
-;;
-;; And the following to your ~/.emacs startup file.
-;;
-;; (require 'init-doom-modeline)
-;;
-;; No need more.
+  ;; Filename: init-doom-modeline.el
+  ;; Description: Config for doom-modeline and themes integration
+  ;; Author: mcge <mcgeq@outlook.com>
+  ;; Copyright (C) 2024, mcge, all rights reserved.
+  ;; Create   Date: 2025-01-04 15:00:00
+  ;; Version: 0.1
+  ;; Modified   By: mcgeq <mcgeq@outlook.com>
+  ;; Last Modified:  <2025-08-05 Wed 22:38>
+  ;; Keywords:
+  ;; Compatibility: GNU Emacs 31.0.50
 
-;;; Customize:
-;;
-;;
-;;
-;; All of the above can customize by:
-;;      M-x customize-group RET init-aider RET
-;;
+  ;;; Commentary:
+  ;;
+  ;; Config for doom-modeline with intelligent theme integration
+  ;; Supports ef-themes and doom-themes series
+  ;;
 
-;;; Change log:
-;;
+  ;;; Installation:
+  ;;
+  ;; Put init-doom-modeline.el to your load-path.
+  ;; The load-path is usually ~/elisp/.
+  ;; It's set in your ~/.emacs like this:
+  ;; (add-to-list 'load-path (expand-file-name "~/elisp"))
+  ;;
+  ;; And the following to your ~/.emacs startup file.
+  ;;
+  ;; (require 'init-doom-modeline)
+  ;;
+  ;; No need more.
 
+  ;;; Customize:
+  ;;
+  ;;
+  ;;
+  ;; All of the above can customize by:
+  ;;      M-x customize-group RET init-aider RET
+
+  ;;; Change log:
+  ;;
+
+#+END_SRC
+
+
+** Require
+#+BEGIN_SRC emacs-lisp
 ;;; Require:
-(require 'doom-modeline)
-
+;; 安全加载doom-modeline，即使失败也不阻止启动
+(condition-case err
+    (require 'doom-modeline)
+  (error (message "Warning: Failed to load doom-modeline: %s" (error-message-string err))))
 ;;; Code:
+#+END_SRC
+
+** Code
+#+BEGIN_SRC emacs-lisp
 ;; ============================================================
 ;; 通用主题智能适配系统
 ;; 支持 ef-themes 和 doom-themes 系列
 ;; ============================================================
-(doom-modeline-mode 1)
+
 ;; 主题视觉配置仓库（可根据需要扩展）
 
 (defvar mcg/theme-styles
   '(
     ;; ef-themes 系列
-    ((ef-bio ef-winter ef-summer ef-spring) ; 所有 ef 主题共享类似设置
+    ((ef-bio ef-winter ef-summer ef-spring)
      :style "ef"
-     :dark t ; 是否为深色主题
+     :dark t
      :doom-modeline-height 25
      :doom-modeline-buffer-file-name-style 'auto
      :solaire-bg-alt (lambda (theme) (ef-themes--palette-value 'bg-alt theme))
      :hl-line-bg (lambda (theme) (ef-themes--palette-value 'bg-dim theme))
      :status-bar-color (lambda (theme) 
                          (cond
-                          ((eq theme 'ef-bio) "#6a95c0")   ; 蓝色
-                          ((eq theme 'ef-winter) "#5d7fa8") ; 冷蓝
-                          ((eq theme 'ef-summer) "#4a9c7c") ; 绿色
-                          ((eq theme 'ef-spring) "#b57edc"))) ; 紫色
-    )
+                          ((eq theme 'ef-bio) "#6a95c0")
+                          ((eq theme 'ef-winter) "#5d7fa8")
+                          ((eq theme 'ef-summer) "#4a9c7c")
+                          ((eq theme 'ef-spring) "#b57edc")))
     
     ;; ef-autumn 特殊处理（浅色主题）
     (ef-autumn
@@ -77,7 +95,7 @@
      :doom-modeline-buffer-file-name-style 'truncate-except-project
      :solaire-bg-alt (lambda (_) "#ebe1d1")
      :hl-line-bg (lambda (_) "#e0d6c6")
-     :status-bar-color (lambda (_) "#a6732f")) ; 暖橙色
+     :status-bar-color (lambda (_) "#a6732f"))
     
     ;; doom-themes 系列
     (doom-themes
@@ -87,22 +105,21 @@
      :doom-modeline-buffer-file-name-style 'truncate-upto-project
      :solaire-bg-alt (lambda (theme) 
                        (if (funcall (plist-get (cdr (assoc 'doom-themes mcg/theme-styles)) :dark) theme)
-                           "#282c34" ; 深色背景
-                         "#f0f0f0")) ; 浅色背景
+                           "#282c34"
+                         "#f0f0f0"))
      :hl-line-bg (lambda (theme) 
                    (if (funcall (plist-get (cdr (assoc 'doom-themes mcg/theme-styles)) :dark) theme)
                        "#2d333b" 
                      "#e4e4e4"))
      :status-bar-color (lambda (theme)
                          (cond
-                          ((eq theme 'doom-one) "#51afef") ; 蓝色
-                          ((eq theme 'doom-vibrant) "#a9a1e1") ; 紫色
-                          ((eq theme 'doom-acario-dark) "#cf9a72") ; 棕色
-                          ((eq theme 'doom-acario-light) "#7f9f7f") ; 淡绿
-                          (t "#d18ec2"))) ; 默认粉色
-    )
-    
-    ;; 默认设置（当主题不在仓库中时使用）
+                          ((eq theme 'doom-one) "#51afef")
+                          ((eq theme 'doom-vibrant) "#a9a1e1")
+                          ((eq theme 'doom-acario-dark) "#cf9a72")
+                          ((eq theme 'doom-acario-light) "#7f9f7f")
+                          (t "#d18ec2"))))
+
+    ;; 默认设置
     (default
      :style "unknown"
      :dark (lambda (theme) (if (string-match-p "dark" (symbol-name theme)) t nil))
@@ -110,8 +127,7 @@
      :doom-modeline-buffer-file-name-style 'auto
      :solaire-bg-alt (lambda (_) "#181818")
      :hl-line-bg (lambda (_) "#202020")
-     :status-bar-color (lambda (_) "#5d7fa8"))
-    )
+     :status-bar-color (lambda (_) "#5d7fa8")))
   "主题特定的视觉参数仓库")
 
 ;; 主题智能适配器
@@ -125,19 +141,19 @@
          ((listp theme-id)
           (when (memq theme theme-id)
             (throw 'found (cons theme (cdr entry)))))
-         
+
          ;; 处理独立主题
          ((symbolp theme-id)
           (when (eq theme-id theme)
             (throw 'found (cons theme (cdr entry)))))
-         
+
          ;; 处理主题系列（如 doom-themes）
          ((eq theme-id 'doom-themes)
           (when (string-prefix-p "doom-" (symbol-name theme))
             (throw 'found (cons theme (cdr entry)))))))
-    
+
     ;; 未找到匹配时使用默认设置
-    (cons theme (cdr (assoc 'default mcg/theme-styles)))))
+    (cons theme (cdr (assoc 'default mcg/theme-styles))))))
 
 (defun mcg/apply-theme-settings ()
   "应用当前主题的视觉设置"
@@ -150,50 +166,50 @@
            (is-dark (if (functionp (plist-get settings :dark))
                         (funcall (plist-get settings :dark) theme)
                       (plist-get settings :dark))))
-    
-    ;; 应用 doom-modeline 设置
-    (when (bound-and-true-p doom-modeline-mode)
-      (setq doom-modeline-height (plist-get settings :doom-modeline-height))
-      (setq doom-modeline-buffer-file-name-style 
-            (plist-get settings :doom-modeline-buffer-file-name-style))
+
+      ;; 应用 doom-modeline 设置
+      (when (bound-and-true-p doom-modeline-mode)
+        (setq doom-modeline-height (plist-get settings :doom-modeline-height))
+        (setq doom-modeline-buffer-file-name-style 
+              (plist-get settings :doom-modeline-buffer-file-name-style))
+
+        (let ((bar-color (if (functionp (plist-get settings :status-bar-color))
+                             (funcall (plist-get settings :status-bar-color) theme)
+                           (plist-get settings :status-bar-color))))
+
+          ;; 更新状态条颜色
+          (custom-set-faces
+           `(doom-modeline-bar 
+             ((t (:background ,bar-color)))))
+          
+          ;; 根据深浅色调整图标
+          (setq doom-modeline-major-mode-color-icon t
+                doom-modeline-buffer-state-icon (if is-dark t nil)
+                doom-modeline-icon t)))
       
-      (let ((bar-color (if (functionp (plist-get settings :status-bar-color))
-                           (funcall (plist-get settings :status-bar-color) theme)
-                         (plist-get settings :status-bar-color))))
-        
-        ;; 更新状态条颜色
-        (custom-set-faces
-         `(doom-modeline-bar 
-           ((t (:background ,bar-color)))))
-        
-        ;; 根据深浅色调整图标
-        (setq doom-modeline-major-mode-color-icon t
-              doom-modeline-buffer-state-icon (if is-dark t nil)
-              doom-modeline-icon t)))
-    
-    ;; 应用 solaire-mode 设置
-    (when (bound-and-true-p solaire-global-mode)
-      (let ((bg-alt (if (functionp (plist-get settings :solaire-bg-alt))
-                        (funcall (plist-get settings :solaire-bg-alt) theme)
-                      (plist-get settings :solaire-bg-alt)))
-            (hl-bg (if (functionp (plist-get settings :hl-line-bg))
-                       (funcall (plist-get settings :hl-line-bg) theme)
-                     (plist-get settings :hl-line-bg))))
-        
-        (custom-set-faces
-         `(solaire-default-face 
-           ((t (:background ,bg-alt))))
-         `(solaire-hl-line-face 
-           ((t (:background ,hl-bg))))
-        
-        ;; 更新高亮行设置
-        (with-eval-after-load 'hl-line
-          (set-face-background 'hl-line hl-bg))))
-    
-    ;; 刷新界面
-    (force-mode-line-update)
-    (redisplay t)
-    (message "已应用 %s 主题的视觉设置 (类型: %s)" theme style)))
+      ;; 应用 solaire-mode 设置
+      (when (bound-and-true-p solaire-global-mode)
+        (let ((bg-alt (if (functionp (plist-get settings :solaire-bg-alt))
+                          (funcall (plist-get settings :solaire-bg-alt) theme)
+                        (plist-get settings :solaire-bg-alt)))
+              (hl-bg (if (functionp (plist-get settings :hl-line-bg))
+                         (funcall (plist-get settings :hl-line-bg) theme)
+                       (plist-get settings :hl-line-bg))))
+          
+          (custom-set-faces
+           `(solaire-default-face 
+             ((t (:background ,bg-alt))))
+           `(solaire-hl-line-face 
+             ((t (:background ,hl-bg)))))
+          
+          ;; 更新高亮行设置
+          (with-eval-after-load 'hl-line
+            (set-face-background 'hl-line hl-bg))))
+      
+      ;; 刷新界面
+      (force-mode-line-update)
+      (redisplay t)
+      (message "已应用 %s 主题的视觉设置 (类型: %s)" theme style)))))
 
 ;; ============================================================
 ;; 主题切换钩子
@@ -236,7 +252,7 @@
 (defun mcg/load-theme-with-settings (theme)
   "安全加载主题并应用设置"
   (interactive
-   (list (intern (completing-read "加载主题: " (mapcar #'symbol-name (custom-available-themes)))))
+   (list (intern (completing-read "加载主题: " (mapcar #'symbol-name (custom-available-themes))))))
   ;; 禁用当前主题
   (mapc #'disable-theme custom-enabled-themes)
   ;; 加载新主题
@@ -280,7 +296,7 @@
                          'face '(:slant italic))))
       
       (insert "\n当前主题: " (symbol-name (car custom-enabled-themes)))
-      (special-mode))
+      (special-mode)))
     (display-buffer buf 
                     '((display-buffer-in-side-window)
                       (side . bottom)
@@ -324,11 +340,16 @@
             (if (functionp value)
                 (princ (format "%s" (funcall value theme)))
               (princ value))
-            (princ "\n")))))))
+            (princ "\n"))))))) 
 
 (global-set-key (kbd "C-c t i") #'mcg/show-theme-settings)
 
+#+END_SRC
 
+** Ends
+#+BEGIN_SRC emacs-lisp
 (provide 'init-doom-modeline)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; init-doom-modeline.el ends here
+#+END_SRC
+

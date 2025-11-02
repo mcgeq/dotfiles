@@ -1,0 +1,251 @@
+* init-loadpath.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle (concat temporary-file-directory "init-loadpath.el") :lexical t
+:END:
+
+** Headers
+#+BEGIN_SRC emacs-lisp
+  ;;; init-loadpath.el -- Load-path Management -*- lexical-binding: t; -*-
+
+  ;; Filename: init-loadpath.el
+  ;; Description: 统一管理所有Git Submodules的load-path
+  ;; Author: mcge <mcgeq@outlook.com>
+  ;; Copyright (C) 2024, mcge, all rights reserved.
+  ;; Create   Date: 2025-01-04 15:00:00
+  ;; Version: 2.0
+  ;; Modified   By: mcge <mcgeq@outlook.com>
+  ;; Last Modified: <2025-02-16 Sun 12:00>
+  ;; Keywords: load-path, submodules, extensions
+  ;; Compatibility: GNU Emacs 31.0.50
+
+  ;;; Commentary:
+  ;;
+  ;; 统一管理所有Git Submodules的load-path，支持智能加载和依赖管理
+  ;; 此文件必须在其他配置加载之前被加载
+  ;;
+
+  ;;; Installation:
+  ;;
+  ;; Put init-loadpath.el to your load-path.
+  ;; The load-path is usually ~/elisp/.
+  ;; It's set in your ~/.emacs like this:
+  ;; (add-to-list 'load-path (expand-file-name "~/elisp"))
+  ;;
+  ;; And the following to your ~/.emacs startup file.
+  ;;
+  ;; (require 'init-loadpath)
+  ;;
+  ;; No need more.
+
+  ;;; Customize:
+  ;;
+  ;;
+  ;;
+  ;; All of the above can customize by:
+  ;;      M-x customize-group RET init-aider RET
+
+  ;;; Change log:
+  ;;
+
+#+END_SRC
+
+
+** Load-path Helper Functions
+#+BEGIN_SRC emacs-lisp
+;;; Load-path管理函数
+
+(defun mcg-add-submodule-to-load-path (submodule-path &optional feature-name)
+  "添加Git Submodule到load-path
+
+  参数:
+  - SUBMODULE-PATH: 相对于 mcgemacs-root-dir 的子模块路径
+  - FEATURE-NAME: 可选的特性名称，用于验证加载成功
+
+  使用示例:
+  (mcg-add-submodule-to-load-path \"site-lisp/extensions/vertico\")"
+  (let ((full-path (expand-file-name submodule-path mcgemacs-root-dir)))
+    (if (file-directory-p full-path)
+        (progn
+          (add-to-list 'load-path full-path)
+          (when feature-name
+            (condition-case err
+                (require (intern feature-name))
+              (error (message "Warning: Failed to load %s from %s: %s"
+                              feature-name submodule-path
+                              (error-message-string err))))))
+      (message "Warning: Submodule path does not exist: %s" full-path))))
+
+(defun mcg-add-load-path-if-exists (path)
+  "仅在目录存在时添加到load-path"
+  (let ((full-path (expand-file-name path mcgemacs-root-dir)))
+    (when (file-directory-p full-path)
+      (add-to-list 'load-path full-path)
+      t)))
+
+(defun mcg-load-all-extensions ()
+  "加载所有extensions子目录到load-path（已废弃，使用mcg-load-extension）"
+  (let ((extensions-dir (expand-file-name "site-lisp/extensions" mcgemacs-root-dir)))
+    (when (file-directory-p extensions-dir)
+      (dolist (subdir (directory-files extensions-dir t "^\\([^.]\\)"))
+        (when (file-directory-p subdir)
+          (add-to-list 'load-path subdir))))))
+#+END_SRC
+
+** Extension Registry
+#+BEGIN_SRC emacs-lisp
+;;; 扩展注册表
+
+(defvar mcg-extension-registry
+  `(
+    ;; 核心基础设施 - 不自动加载，由配置模块负责
+    ("lazy-load" . (:required nil :priority 0 :auto-load nil))
+
+    ;; UI相关 - 不自动加载，由配置模块负责
+    ("doom-modeline" . (:required nil :priority 1 :auto-load nil))
+    ("solaire-mode" . (:required nil :priority 1 :auto-load nil))
+    ("ef-themes" . (:required nil :priority 1 :auto-load nil))
+    ("nerd-icons" . (:required nil :priority 1 :auto-load nil))
+    ("nerd-icons-completion" . (:required nil :priority 2 :auto-load nil))
+
+    ;; 编辑器增强 - 不自动加载，由配置模块负责
+    ("vertico" . (:required nil :priority 10 :auto-load nil))
+    ("marginalia" . (:required nil :priority 10 :auto-load nil))
+    ("orderless" . (:required nil :priority 10 :auto-load nil))
+    ("embark" . (:required nil :priority 20 :auto-load nil))
+
+    ;; 代码补全 - 不自动加载，由配置模块负责
+    ("yasnippet" . (:required nil :priority 30 :auto-load nil))
+    ("yasnippet-snippet" . (:required nil :priority 31 :auto-load nil))
+
+    ;; 工具 - 不自动加载，由配置模块负责
+    ("auto-save" . (:required nil :priority 40 :auto-load nil))
+    ("sort-tab" . (:required nil :priority 40 :auto-load nil))
+    ("blink-search" . (:required nil :priority 50 :auto-load nil))
+    ("color-rg" . (:required nil :priority 50 :auto-load nil))
+    ("helpful" . (:required nil :priority 50 :auto-load nil))
+    ("symbol-overlay" . (:required nil :priority 50 :auto-load nil))
+
+    ;; LSP相关
+    ("lsp-bridge" . (:required nil :priority 100 :auto-load nil))
+    ("rust-mode" . (:required nil :priority 100 :auto-load nil))
+    ("lua-mode" . (:required nil :priority 100 :auto-load nil))
+    ("web-mode" . (:required nil :priority 100 :auto-load nil))
+
+    ;; Org相关
+    ("ox-hugo" . (:required nil :priority 200 :auto-load nil))
+    ("org-download" . (:required nil :priority 200 :auto-load nil))
+    ("org-numbering" . (:required nil :priority 200 :auto-load nil))
+    ("cal-china-x" . (:required nil :priority 200 :auto-load nil))
+
+    ;; Markdown相关
+    ("markdown-mode" . (:required nil :priority 200 :auto-load nil))
+    ("markdown-ts-mode" . (:required nil :priority 200 :auto-load nil))
+    ("grip-mode" . (:required nil :priority 200 :auto-load nil))
+
+    ;; 其他
+    ("hydra" . (:required nil :priority 60 :auto-load nil))
+    ("beacon" . (:required nil :priority 60 :auto-load nil))
+    ("vundo" . (:required nil :priority 60 :auto-load nil))
+    ("magit" . (:required nil :priority 70 :auto-load nil))
+    )
+  "扩展注册表，定义所有Git Submodules的加载属性")
+
+(defun mcg-extension-enabled-p (extension-name)
+  "检查扩展是否启用"
+  (let ((extension (assoc extension-name mcg-extension-registry)))
+    (and extension
+         (not (plist-get (cdr extension) :disabled)))))
+
+(defun mcg-extension-required-p (extension-name)
+  "检查扩展是否必需"
+  (let ((extension (assoc extension-name mcg-extension-registry)))
+    (and extension
+         (plist-get (cdr extension) :required))))
+
+(defun mcg-extension-priority (extension-name)
+  "获取扩展优先级"
+  (let ((extension (assoc extension-name mcg-extension-registry)))
+    (if extension
+        (plist-get (cdr extension) :priority)
+      999)))  ; 默认最低优先级
+
+(defun mcg-extension-auto-load-p (extension-name)
+  "检查扩展是否自动加载"
+  (let ((extension (assoc extension-name mcg-extension-registry)))
+    (and extension
+         (plist-get (cdr extension) :auto-load))))
+#+END_SRC
+
+** Load Extensions
+#+BEGIN_SRC emacs-lisp
+;;; 加载扩展
+
+(defun mcg-load-extension (extension-name)
+  "加载指定的扩展
+
+  参数:
+  - EXTENSION-NAME: 扩展名称（对应submodule路径的最后一部分）"
+  (let* ((extension-path (file-name-as-directory
+                          (expand-file-name extension-name
+                                            (expand-file-name
+                                             "site-lisp/extensions"
+                                             mcgemacs-root-dir))))
+         (extension (assoc extension-name mcg-extension-registry)))
+    (condition-case err
+        (when (file-directory-p extension-path)
+          (add-to-list 'load-path extension-path)
+          (when (and extension (mcg-extension-auto-load-p extension-name))
+            ;; 如果注册了自动加载，尝试require
+            (require (intern extension-name) nil t))
+          t)
+      (error
+       (if (mcg-extension-required-p extension-name)
+           (error "Required extension %s failed to load: %s"
+                  extension-name
+                  (error-message-string err))
+         (message "Warning: Optional extension %s failed to load: %s"
+                  extension-name
+                  (error-message-string err))
+         nil)))))
+
+(defun mcg-load-core-extensions ()
+  "加载核心扩展（必需的基础设施）"
+  (dolist (extension-name (mapcar #'car
+                                   (seq-filter (lambda (x)
+                                                 (plist-get (cdr x) :required))
+                                               mcg-extension-registry)))
+    (mcg-load-extension extension-name)))
+
+(defun mcg-load-extensions-by-priority ()
+  "按优先级加载所有扩展"
+  (let ((sorted-extensions (sort (copy-sequence mcg-extension-registry)
+                                 (lambda (a b)
+                                   (< (plist-get (cdr (cdr a)) :priority)
+                                      (plist-get (cdr (cdr b)) :priority))))))
+    (dolist (extension sorted-extensions)
+      (mcg-load-extension (car extension)))))
+#+END_SRC
+
+** Initialize
+#+BEGIN_SRC emacs-lisp
+;;; 初始化
+
+;; 基础load-path
+(add-to-list 'load-path (expand-file-name "site-lisp/config" mcgemacs-root-dir))
+
+;; 添加extensions目录到load-path（不自动加载，由配置模块负责）
+;; 这样做可以避免lexical-binding冲突和重复加载问题
+(let ((extensions-dir (expand-file-name "site-lisp/extensions" mcgemacs-root-dir)))
+  (when (file-directory-p extensions-dir)
+    (dolist (subdir (directory-files extensions-dir t "^\\([^.]\\)"))
+      (when (file-directory-p subdir)
+        (add-to-list 'load-path subdir)))))
+#+END_SRC
+
+** Ends
+#+BEGIN_SRC emacs-lisp
+(provide 'init-loadpath)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; init-loadpath.el ends here
+#+END_SRC
+

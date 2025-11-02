@@ -1,0 +1,181 @@
+* init-verify.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle (concat temporary-file-directory "init-verify.el") :lexical t
+:END:
+
+** Headers
+#+BEGIN_SRC emacs-lisp
+  ;;; init-verify.el -- Configuration Verification -*- lexical-binding: t; -*-
+
+  ;; Filename: init-verify.el
+  ;; Description: 验证配置完整性和正确性
+  ;; Author: mcge <mcgeq@outlook.com>
+  ;; Copyright (C) 2024, mcge, all rights reserved.
+  ;; Create   Date: 2025-01-04 15:00:00
+  ;; Version: 2.0
+  ;; Modified   By: mcge <mcgeq@outlook.com>
+  ;; Last Modified: <2025-02-16 Sun 12:00>
+  ;; Keywords: verification, validation, diagnostics
+  ;; Compatibility: GNU Emacs 31.0.50
+
+  ;;; Commentary:
+  ;;
+  ;; 配置验证和错误诊断系统
+  ;;
+
+#+END_SRC
+
+
+** Verification Variables
+#+BEGIN_SRC emacs-lisp
+;;; 验证变量
+
+(defvar mcg-verification-errors '() "验证错误列表")
+(defvar mcg-verification-warnings '() "验证警告列表")
+(defvar mcg-verification-enabled t "是否启用配置验证")
+#+END_SRC
+
+** Verification Functions
+#+BEGIN_SRC emacs-lisp
+;;; 验证函数
+
+(defun mcg-verify-directories ()
+  "验证必需的目录是否存在"
+  (let ((required-dirs
+         '((mcgemacs-root-dir . "Emacs根目录")
+           (mcgemacs-config-dir . "配置目录")
+           (mcgemacs-extension-dir . "扩展目录"))))
+    (dolist (dir-pair required-dirs)
+      (let ((dir-value (symbol-value (car dir-pair)))
+            (dir-name (cdr dir-pair)))
+        (unless (file-directory-p dir-value)
+          (add-to-list 'mcg-verification-errors
+                       (format "%s不存在: %s" dir-name dir-value)))))))
+
+(defun mcg-verify-core-modules ()
+  "验证核心模块是否加载成功"
+  (let ((required-modules
+         '(init-paths init-font init-function init-builtin)))
+    (dolist (module required-modules)
+      (unless (featurep module)
+        (add-to-list 'mcg-verification-errors
+                     (format "核心模块加载失败: %s" module))))))
+
+(defun mcg-verify-submodules ()
+  "验证关键Git Submodules是否存在"
+  (when (featurep 'init-loadpath)
+    (let ((critical-submodules
+           '("lazy-load" "doom-modeline" "ef-themes" "vertico" "marginalia")))
+      (dolist (submodule critical-submodules)
+        (let ((submodule-path (expand-file-name
+                               submodule
+                               (expand-file-name "site-lisp/extensions"
+                                                 mcgemacs-root-dir))))
+          (unless (file-directory-p submodule-path)
+            (add-to-list 'mcg-verification-warnings
+                         (format "子模块不存在: %s (路径: %s)" submodule submodule-path))))))))
+
+(defun mcg-verify-configuration ()
+  "执行完整配置验证"
+  (when mcg-verification-enabled
+    (setq mcg-verification-errors '())
+    (setq mcg-verification-warnings '())
+
+    (message "Verifying Emacs configuration...")
+    (mcg-verify-directories)
+    (mcg-verify-core-modules)
+    (mcg-verify-submodules)
+
+    ;; 报告结果
+    (cond
+     (mcg-verification-errors
+      (message "Configuration errors found:")
+      (dolist (err mcg-verification-errors)
+        (message "  ERROR: %s" err))
+      (error "Configuration verification failed"))
+     (mcg-verification-warnings
+      (message "Configuration warnings:")
+      (dolist (warn mcg-verification-warnings)
+        (message "  WARNING: %s" warn))
+      (message "Configuration verification completed with warnings"))
+     (t
+      (message "Configuration verification passed")))))
+#+END_SRC
+
+** Safe Require
+#+BEGIN_SRC emacs-lisp
+;;; 安全的require
+
+(defun mcg-safe-require (feature &optional filename noerror)
+  "安全地require一个特性
+
+  参数:
+  - FEATURE: 特性名称
+  - FILENAME: 文件名（可选）
+  - NOERROR: 如果为t，出错时不报错
+
+  返回:
+  - 成功加载返回t，否则返回nil"
+  (condition-case err
+      (progn
+        (require feature filename noerror)
+        t)
+    (error
+     (if noerror
+         (progn
+           (message "Warning: Failed to load %s: %s"
+                    feature
+                    (error-message-string err))
+           nil)
+       (error "Failed to load required feature %s: %s"
+              feature
+              (error-message-string err))))))
+#+END_SRC
+
+** Configuration Metadata
+#+BEGIN_SRC emacs-lisp
+;;; 配置元数据
+
+(defconst mcg-config-version "2.0.0"
+  "配置版本号")
+
+(defconst mcg-config-build-date (format-time-string "%Y-%m-%d %H:%M:%S")
+  "配置编译时间")
+
+(defvar mcg-config-loaded-modules '()
+  "已加载的配置模块列表")
+
+(defun mcg-register-loaded-module (module-name)
+  "注册已加载的模块"
+  (add-to-list 'mcg-config-loaded-modules module-name))
+
+(defun mcg-show-config-info ()
+  "显示配置信息"
+  (interactive)
+  (let ((buf (get-buffer-create "*Emacs Config Info*")))
+    (with-current-buffer buf
+      (erase-buffer)
+      (insert (propertize "Emacs Configuration Information\n" 'face '(:weight bold :height 1.3)))
+      (insert (propertize "================================\n\n" 'face '(:weight bold)))
+      (insert (format "Version: %s\n" mcg-config-version))
+      (insert (format "Build Date: %s\n" mcg-config-build-date))
+      (insert (format "Emacs Version: %s\n" emacs-version))
+      (insert (format "\n" ))
+      (insert (propertize "Loaded Modules:\n" 'face '(:weight bold)))
+      (insert (format "Total: %d\n\n" (length mcg-config-loaded-modules)))
+      (dolist (module mcg-config-loaded-modules)
+        (insert (format "  ✓ %s\n" module)))
+      (setq-local buffer-read-only t)
+      (goto-char (point-min))
+      (display-line-numbers-mode)))
+    (display-buffer buf))
+
+(global-set-key (kbd "C-c C-i") #'mcg-show-config-info)
+#+END_SRC
+
+** Ends
+#+BEGIN_SRC emacs-lisp
+(provide 'init-verify)
+;;; init-verify.el ends here
+#+END_SRC
+
