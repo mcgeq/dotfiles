@@ -55,15 +55,19 @@
   (require 'lazy-load)
   (require 'lsp-bridge)
   (require 'lsp-bridge-jdtls)
+  
+  ;; Language-specific configurations
   (require 'lang-cpp)
+  (require 'lang-rust)
+  ;; Uncomment if you need these languages:
   ;;(require 'lang-java)
   ;;(require 'lang-typescript)
-  (require 'lang-rust)
   ;;(require 'lang-css-mode)
   ;;(require 'lang-web-mode)
   ;;(require 'lang-clojure)
-  ;; (require 'lang-lua)
+  ;;(require 'lang-lua)
 
+  ;; Terminal support for non-graphic displays
   (unless (display-graphic-p)
     (require 'acm-terminal))
 
@@ -76,50 +80,92 @@
   ;; custom language server dir
   (setq lsp-bridge-user-langserver-dir mcgemacs-custom-lsp-bridge-langserver-dir)
   (setq lsp-bridge-user-multiserver-dir mcgemacs-custom-lsp-bridge-multiserver-dir)
+
+  ;; ===== Core Features =====
+  ;; Enable completion in minibuffer for better UX
   (setq lsp-bridge-enable-completion-in-minibuffer t)
+  ;; Use frame to show signature (better visibility than minibuffer)
   (setq lsp-bridge-signature-show-function 'lsp-bridge-signature-show-with-frame)
+  ;; Signature frame position (options: "top-left", "top-right", "bottom-left", "bottom-right", "point")
+  (setq lsp-bridge-signature-show-with-frame-position "bottom-right")
+  ;; Enable tramp support for remote files
   (setq lsp-bridge-enable-with-tramp t)
+  ;; Enable org-babel LSP completion
   (setq lsp-bridge-enable-org-babel t)
+  ;; Enable inlay hints (useful for strongly typed languages like Rust)
   (setq lsp-bridge-enable-inlay-hint t)
+  ;; Enable semantic tokens for better syntax highlighting
   (setq lsp-bridge-semantic-tokens t)
-  ;; formatter
-  (setq lsp-bridge-enable-auto-format-code t)
   (setq-default lsp-bridge-semantic-tokens-ignore-modifier-limit-types ["variable"])
+  ;; Enable auto format on save
+  (setq lsp-bridge-enable-auto-format-code t)
+  ;; Diagnostic delay (in seconds, default 0.5) - optimize for responsiveness
+  (setq lsp-bridge-diagnostic-fetch-idle 0.3)
+  ;; Hover diagnostic - show diagnostic tooltip when cursor hovers over error
+  (setq lsp-bridge-enable-hover-diagnostic t)
+  ;; Find definition in open windows when possible (better multi-window workflow)
+  (setq lsp-bridge-find-def-select-in-open-windows t)
+  ;; Enable search words indexing for better completion
+  (setq lsp-bridge-enable-search-words t)
+  ;; Performance: ensure log level is not debug (avoid performance issues)
+  (setq lsp-bridge-log-level 'default)
+  (setq lsp-bridge-enable-debug nil)
 
+  ;; ===== ACM (Auto Complete Menu) Configuration =====
+  ;; Enable capf backend for non-LSP completion
   (setq acm-enable-capf t)
+  ;; Enable quick access for faster navigation
   (setq acm-enable-quick-access t)
+  ;; Match yasnippet by trigger keyword
   (setq acm-backend-yas-match-by-trigger-keyword t)
+  ;; Disable TabNine (high CPU usage, only enable if needed)
   (setq acm-enable-tabnine nil)
+  ;; Use orderless-flex for flexible candidate matching
   (setq acm-candidate-match-function 'orderless-flex)
+  ;; Disable Codeium (enable if needed)
   (setq acm-enable-codeium nil)
+  ;; Enable LSP workspace symbol for symbol search
   (setq acm-enable-lsp-workspace-symbol t)
+  ;; Enable doc display in completion menu
+  (setq acm-enable-doc t)
+  ;; Enable icons in completion menu (set to nil if icons not displaying correctly)
+  (setq acm-enable-icon t)
+  ;; Async markdown rendering for doc (better performance than sync)
+  (setq acm-enable-doc-markdown-render 'async)
 
+  ;; Enable global lsp-bridge mode
   (global-lsp-bridge-mode)
 
+  ;; ===== Multi-Language Server Configuration =====
+  ;; Configure TailwindCSS support for HTML/CSS
   (add-to-list 'lsp-bridge-multi-lang-server-extension-list '(("html") . "html_tailwindcss"))
   (add-to-list 'lsp-bridge-multi-lang-server-extension-list '(("css") . "css_tailwindcss"))
 
+  ;; Custom function to select language server based on project context
+  ;; Example: Detect Deno projects by checking for deno.land imports
   (setq lsp-bridge-get-multi-lang-server-by-project
         (lambda (project-path filepath)
-          ;;
           (save-excursion
             (when (string-equal (file-name-extension filepath) "ts")
               (dolist (buf (buffer-list))
                 (when (string-equal (buffer-file-name buf) filepath)
                   (with-current-buffer buf
                     (goto-char (point-min))
-                    (when (search-backward-regexp (regexp-quote "from \"https://deno.land") nil t)
+                    ;; Search forward from beginning of buffer
+                    (when (search-forward-regexp "from \"https://deno\\.land" nil t)
                       (return "deno")))))))))
 #+END_SRC
 
 ** Keymap
 #+BEGIN_SRC emacs-lisp
-(lazy-load-set-keys
- '(
-   ("C-c C-u d l" .  lsp-bridge-diagnostic-list)
-   ("C-c C-u d w" .  lsp-bridge-workspace-diagnostic-list)
-   )
- lsp-bridge-mode-map)
+  ;; Define keybindings for lsp-bridge
+  (lazy-load-set-keys
+   '(
+     ;; Diagnostic commands
+     ("C-c C-u d l" . lsp-bridge-diagnostic-list)        ;; List diagnostics
+     ("C-c C-u d w" . lsp-bridge-workspace-diagnostic-list) ;; Workspace diagnostics
+     )
+   lsp-bridge-mode-map)
 #+END_SRC
 
 ** flymake bridge
@@ -131,11 +177,11 @@
 
 ** Update modify file time
 #+BEGIN_SRC emacs-lisp
-;; save file update time
-;; 在编程模式下启用保存文件时自动更新 `Last Modified` 时间的功能
-(add-hook 'prog-mode-hook
-          (lambda ()
-            (add-hook 'before-save-hook 'mcge/update-file-headers nil t)))
+  ;; Auto-update "Last Modified" timestamp in file headers when saving
+  ;; 在编程模式下启用保存文件时自动更新 `Last Modified` 时间的功能
+  (add-hook 'prog-mode-hook
+            (lambda ()
+              (add-hook 'before-save-hook 'mcge/update-file-headers nil t)))
 #+END_SRC
 
 
