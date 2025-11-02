@@ -1,0 +1,89 @@
+gui:
+  language: "en" # 界面语言，例如 "en"、"zh-CN" 等
+  showIcons: true # 是否在界面中显示图标（需要 Nerd Font 字体支持）
+  showFileTree: true # 在文件变更面板中以树形显示
+  showRootItemInFileTree: true # 在文件树中显示根目录项
+  screenMode: "normal" # 界面初始模式："normal" / "half" / "full"
+  scrollHeight: 2 # 每次滚动的行数
+  sidePanelWidth: 0.3333 # 侧边栏宽度比例 (0-1之间)
+  mainPanelSplitMode: "flexible" # 主面板分割模式: "horizontal" / "vertical" / "flexible"
+  
+  # Nerd Font 图标配置（用于 commit 区域等图标显示）
+  nerdFontsVersion: "3" # Nerd Font 版本，设置为 "3" 以正确显示 commit 图标
+  
+  # 界面美化增强选项
+  showCommandLog: true # 显示命令日志
+  showListFooter: true # 显示列表页脚信息
+  showPanelJumps: true # 显示面板跳转提示
+  
+  theme:
+    # 活动边框颜色 - 使用柔和的粉色/紫色，匹配美观界面风格
+    activeBorderColor:
+      - "#d4a5ff" # 浅紫色，与面板标题色协调
+      - "bold"
+    
+    # 非活动边框颜色 - 使用深灰色，更加柔和低调
+    inactiveBorderColor:
+      - "#3a3a3a" # 深灰色，不会过于突兀
+      - "dim"
+    
+    # 选项文本颜色 - 使用浅蓝色，提升可读性
+    optionsTextColor:
+      - "#7dd3fc" # 浅蓝色，清新明亮
+    
+    # 背景色 - 设为默认以保持终端背景透明（显示背景图）
+    bgColor: "default"
+git:
+  parseEmoji: true
+  paging:
+    useConfig: true # 是否使用 Git 本身配置的分页工具
+    colorArg: "always" # 例如 "always" 表示强制彩色输出
+  showIcons: true # Git 相关视图是否显示图标
+  commitPrefix:
+    - pattern: "" # 用于匹配分支名等，从分支名提取前缀
+      replace: "" # 替换或生成 commit 前缀
+  branchLogCmd: "git log --graph --color=always --abbrev-commit --decorate --date=relative --pretty=medium --oneline {{branchName}} --"
+keybinding:
+  universal:
+    quit: "q" # 通用退出键
+    refresh: "r" # 通用刷新键
+  files:
+    stage: "space" # 在文件视图中，空格键用于 stage／unstage
+    open: "enter"
+  commitFiles:
+    commit: "c" # 提交已暂存文件
+  branches:
+    checkout: "enter" # 分支面板中回车切换分支
+customCommands:
+  - key: "<c-c>"
+    context: "files"
+    description: "Conventional commit template"
+    prompts:
+      - type: "menu"
+        key: "Type"
+        title: "Select commit type:"
+        options:
+          - name: "feat"
+            description: "A new feature"
+            value: "feat"
+          - name: "fix"
+            description: "A bug fix"
+            value: "fix"
+      - type: "input"
+        key: "Scope"
+        title: "(Optional) Scope:"
+        initialValue: ""
+      - type: "input"
+        key: "Message"
+        title: "Commit message:"
+        initialValue: ""
+      - type: "confirm"
+        key: "Confirm"
+        title: "Commit?"
+        body: "Will commit: \"{{.Form.Type}}{{ if .Form.Scope }}({{.Form.Scope}}){{ end }}: {{.Form.Message}}\""
+    command: "git commit -m \"{{.Form.Type}}{{ if .Form.Scope }}({{.Form.Scope}}){{ end }}: {{.Form.Message}}\""
+    loadingText: "Committing…"
+os:
+  editCommand: "nvim" # 当在 lazygit 中编辑文件时使用的编辑器
+  editCommandTemplate: "{{editor}} {{filename}}" # 可选模板
+  openInBrowserCommand: "start" # Windows 中用以默认浏览器打开 URL
