@@ -103,7 +103,7 @@
           (file-name-handler-alist nil))
   (require 'init-builtin)
   (require 'init-sort-tab)
-  (require 'init-awesome-tray)
+  (require 'init-doom-modeline)
   (require 'init-auto-save)
   (require 'init-line-number)
   (require 'init-generic)
