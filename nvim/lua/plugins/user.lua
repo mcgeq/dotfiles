@@ -27,6 +27,15 @@ return {
       -- add more custom luasnip configuration such as filetype extend or custom snippets
       local luasnip = require "luasnip"
       luasnip.filetype_extend("javascript", { "javascriptreact" })
+
+      -- 加载自定义文件头 snippets
+      local snippets = require "config.snippets"
+      local ls = require "luasnip"
+
+      -- 为每个文件类型加载 snippets
+      for filetype, filetype_snippets in pairs(snippets) do
+        ls.add_snippets(filetype, filetype_snippets)
+      end
     end,
   },
 
