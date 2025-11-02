@@ -1,20 +1,20 @@
+---Tab title formatting event handler
+---Customizes tab bar appearance with icons, colors, and indicators
+---@see https://github.com/wez/wezterm/discussions/628#discussioncomment-1874614
 local wezterm = require("wezterm")
-
--- Inspired by https://github.com/wez/wezterm/discussions/628#discussioncomment-1874614
-
-local GLYPH_SEMI_CIRCLE_LEFT = ""
--- local GLYPH_SEMI_CIRCLE_LEFT = utf8.char(0xe0b6)
-local GLYPH_SEMI_CIRCLE_RIGHT = ""
--- local GLYPH_SEMI_CIRCLE_RIGHT = utf8.char(0xe0b4)
-local GLYPH_CIRCLE = "󰇷 "
--- local GLYPH_CIRCLE = utf8.char(0xf111)
-local GLYPH_ADMIN = "󰖳 "
--- local GLYPH_ADMIN = utf8.char(0xfc7e)
 
 local M = {}
 
+---Constants
+local GLYPH_SEMI_CIRCLE_LEFT = ""
+local GLYPH_SEMI_CIRCLE_RIGHT = ""
+local GLYPH_CIRCLE = "󰇷 "
+local GLYPH_ADMIN = "󰖳 "
+
+---Format items for tab title
 M.cells = {}
 
+---Color scheme for tab bar states
 M.colors = {
   default = {
     bg = "#8C246F",
@@ -24,31 +24,46 @@ M.colors = {
     bg = "#248C6E",
     fg = "#0F2536",
   },
-
   hover = {
     bg = "#786D22",
     fg = "#0F2536",
   },
+  unseen_output = "#FF3B8B",
 }
 
-M.set_process_name = function(s)
-  local a = string.gsub(s, "(.*[/\\])(.*)", "%2")
-  return a:gsub("%.exe$", "")
+---Extract process name from full path
+---@param path string Full path to process
+---@return string Process name without path and extension
+function M.set_process_name(path)
+  if not path or type(path) ~= "string" then
+    return ""
+  end
+  local name = string.gsub(path, "(.*[/\\])(.*)", "%2")
+  return name:gsub("%.exe$", "")
 end
 
-M.set_title = function(process_name, static_title, active_title, max_width, inset)
-  local title
+---Format tab title with appropriate icon and text
+---@param process_name string Process name
+---@param static_title string Static tab title (if set)
+---@param active_title string Active pane title
+---@param max_width number Maximum width for title
+---@param inset number? Inset/offset for title (default: 6)
+---@return string Formatted title
+function M.set_title(process_name, static_title, active_title, max_width, inset)
   inset = inset or 6
+  local title = ""
 
-  if process_name:len() > 0 and static_title:len() == 0 then
-    title = "  " .. process_name .. " ~ " .. " "
-  elseif static_title:len() > 0 then
-    title = "󰌪  " .. static_title .. " ~ " .. " "
+  if process_name and process_name:len() > 0 and (not static_title or static_title:len() == 0) then
+    title = "  " .. process_name .. " ~ "
+  elseif static_title and static_title:len() > 0 then
+    title = "󰌪  " .. static_title .. " ~ "
   else
-    title = "󰌽  " .. active_title .. " ~ " .. " "
+    local safe_title = active_title and tostring(active_title) or ""
+    title = "󰌽  " .. safe_title .. " ~ "
   end
 
-  if title:len() > max_width - inset then
+  -- Truncate if too long
+  if max_width and title:len() > max_width - inset then
     local diff = title:len() - max_width + inset
     title = wezterm.truncate_right(title, title:len() - diff)
   end
@@ -56,34 +71,46 @@ M.set_title = function(process_name, static_title, active_title, max_width, inse
   return title
 end
 
-M.check_if_admin = function(p)
-  if p:match("^Administrator: ") then
-    return true
+---Check if pane title indicates administrator/sudo session
+---@param title string Pane title
+---@return boolean True if admin session
+function M.check_if_admin(title)
+  if not title or type(title) ~= "string" then
+    return false
   end
-  return false
+  return title:match("^Administrator: ") ~= nil
 end
 
----@param fg string
----@param bg string
----@param attribute table
----@param text string
-M.push = function(bg, fg, attribute, text)
+---Add a format item to the cells array
+---@param bg string Background color
+---@param fg string Foreground color
+---@param attribute table Attribute (e.g., { Intensity = "Bold" })
+---@param text string Text to display
+function M.push(bg, fg, attribute, text)
+  if not bg or not fg or not attribute or not text then
+    wezterm.log_error("tab-title.push: Missing required parameters")
+    return
+  end
+
   table.insert(M.cells, { Background = { Color = bg } })
   table.insert(M.cells, { Foreground = { Color = fg } })
   table.insert(M.cells, { Attribute = attribute })
   table.insert(M.cells, { Text = text })
 end
 
-M.setup = function()
+---Setup the tab title formatting event handler
+function M.setup()
   wezterm.on("format-tab-title", function(tab, tabs, panes, config, hover, max_width)
+    if not tab or not tab.active_pane then
+      wezterm.log_error("tab-title.setup: Invalid tab or active_pane")
+      return {}
+    end
+
+    -- Reset cells for this tab
     M.cells = {}
 
-    local bg
-    local fg
-    local process_name = M.set_process_name(tab.active_pane.foreground_process_name)
-    local is_admin = M.check_if_admin(tab.active_pane.title)
-    local title = M.set_title(process_name, tab.tab_title, tab.active_pane.title, max_width, (is_admin and 8))
-
+    -- Determine colors based on state
+    local bg, fg
     if tab.is_active then
       bg = M.colors.is_active.bg
       fg = M.colors.is_active.fg
@@ -95,14 +122,36 @@ M.setup = function()
       fg = M.colors.default.fg
     end
 
+    -- Get process name and title
+    local process_name = ""
+    local active_title = ""
+    local static_title = ""
+
+    local ok = pcall(function()
+      process_name = M.set_process_name(tab.active_pane.foreground_process_name or "")
+      active_title = tab.active_pane.title or ""
+      static_title = tab.tab_title or ""
+    end)
+
+    if not ok then
+      wezterm.log_warn("tab-title.setup: Failed to get tab information")
+    end
+
+    local is_admin = M.check_if_admin(active_title)
+    local title = M.set_title(process_name, static_title, active_title, max_width, (is_admin and 8) or 6)
+
+    -- Check for unseen output
     local has_unseen_output = false
-    for _, pane in ipairs(tab.panes) do
-      if pane.has_unseen_output then
-        has_unseen_output = true
-        break
+    if tab.panes then
+      for _, pane in ipairs(tab.panes) do
+        if pane.has_unseen_output then
+          has_unseen_output = true
+          break
+        end
       end
     end
 
+    -- Build the tab title
     -- Left semi-circle
     M.push(fg, bg, { Intensity = "Bold" }, GLYPH_SEMI_CIRCLE_LEFT)
 
@@ -116,7 +165,7 @@ M.setup = function()
 
     -- Unseen output alert
     if has_unseen_output then
-      M.push(bg, "#FF3B8B", { Intensity = "Bold" }, " " .. GLYPH_CIRCLE)
+      M.push(bg, M.colors.unseen_output, { Intensity = "Bold" }, " " .. GLYPH_CIRCLE)
     end
 
     -- Right padding

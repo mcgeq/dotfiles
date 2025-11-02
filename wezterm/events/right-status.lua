@@ -1,9 +1,15 @@
+---Right status bar event handler
+---Displays date/time and battery status
+---@see https://wezfurlong.org/wezterm/config/lua/wezterm/battery_info.html
 local wezterm = require("wezterm")
 local math = require("utils.math")
+
 local M = {}
 
+---Constants
 M.separator_char = " ~ "
 
+---Color scheme for right status elements
 M.colors = {
   date_fg = "#7F82BB",
   date_bg = "#0F2536",
@@ -13,14 +19,21 @@ M.colors = {
   separator_bg = "#0F2536",
 }
 
-M.cells = {} -- wezterm FormatItems (ref: https://wezfurlong.org/wezterm/config/lua/wezterm/format.html)
+---Format items for wezterm status bar
+M.cells = {}
 
----@param text string
----@param icon string
----@param fg string
----@param bg string
----@param separate boolean
-M.push = function(text, icon, fg, bg, separate)
+---Add a status element to the cells array
+---@param text string The text to display
+---@param icon string The icon to display
+---@param fg string Foreground color
+---@param bg string Background color
+---@param separate boolean Whether to add a separator after this element
+function M.push(text, icon, fg, bg, separate)
+  if not text or not icon or not fg or not bg then
+    wezterm.log_error("right-status.push: Missing required parameters")
+    return
+  end
+
   table.insert(M.cells, { Foreground = { Color = fg } })
   table.insert(M.cells, { Background = { Color = bg } })
   table.insert(M.cells, { Attribute = { Intensity = "Bold" } })
@@ -35,40 +48,75 @@ M.push = function(text, icon, fg, bg, separate)
   table.insert(M.cells, "ResetAttributes")
 end
 
-M.set_date = function()
-  local date = wezterm.strftime(" %a %H:%M")
+---Update date/time in status bar
+function M.set_date()
+  local ok, date = pcall(function()
+    return wezterm.strftime(" %a %H:%M")
+  end)
+
+  if not ok then
+    wezterm.log_error("right-status.set_date: Failed to format date")
+    date = " --:-- "
+  end
+
   M.push(date, "", M.colors.date_fg, M.colors.date_bg, true)
 end
 
-M.set_battery = function()
-  -- ref: https://wezfurlong.org/wezterm/config/lua/wezterm/battery_info.html
+---Update battery status in status bar
+---@see https://wezfurlong.org/wezterm/config/lua/wezterm/battery_info.html
+function M.set_battery()
   local discharging_icons = { "󰂃", "󰁻", "󰁼", "󰁽", "󰁾", "󰁿", "󰂀", "󰂁", "󰂂", "󰁹" }
   local charging_icons = { "󰢜", "󰂆", "󰂇", "󰂈", "󰢝", "󰂉", "󰢞", "󰂊", "󰂋", "󰂅" }
 
-  local charge = ""
-  local icon = ""
+  local charge = "N/A"
+  local icon = "?"
 
-  for _, b in ipairs(wezterm.battery_info()) do
-    local idx = math.clamp(math.round(b.state_of_charge * 10), 1, 10)
-    charge = string.format("%.0f%%", b.state_of_charge * 100)
+  local ok, battery_info = pcall(function()
+    return wezterm.battery_info()
+  end)
 
-    if b.state == "Charging" then
-      icon = charging_icons[idx]
-    else
-      icon = discharging_icons[idx]
+  if ok and battery_info then
+    for _, b in ipairs(battery_info) do
+      local idx = math.clamp(math.round(b.state_of_charge * 10), 1, 10)
+      charge = string.format("%.0f%%", b.state_of_charge * 100)
+
+      if b.state == "Charging" then
+        icon = charging_icons[idx] or charging_icons[1]
+      else
+        icon = discharging_icons[idx] or discharging_icons[1]
+      end
+      break -- Use first battery
     end
+  else
+    wezterm.log_warn("right-status.set_battery: Failed to get battery info")
   end
 
   M.push(charge, icon, M.colors.battery_fg, M.colors.battery_bg, false)
 end
 
-M.setup = function()
-  wezterm.on("update-right-status", function(window, _pane)
+---Setup the right status bar event handler
+function M.setup()
+  wezterm.on("update-right-status", function(window, pane)
+    if not window then
+      wezterm.log_error("right-status.setup: window is nil")
+      return
+    end
+
+    -- Reset cells for this update
     M.cells = {}
+
+    -- Update status elements
     M.set_date()
     M.set_battery()
 
-    window:set_right_status(wezterm.format(M.cells))
+    -- Set the status bar
+    local ok, err = pcall(function()
+      window:set_right_status(wezterm.format(M.cells))
+    end)
+
+    if not ok then
+      wezterm.log_error("right-status.setup: Failed to set right status: " .. tostring(err))
+    end
   end)
 end
 
