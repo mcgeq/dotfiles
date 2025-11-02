@@ -1,7 +1,425 @@
-#+title: My Emacs Configuration
-#+author: mcg
-* Welcome
+#+title: Emacs Configuration
+#+author: mcge
+#+email: mcgeq@outlook.com
+#+date: 2025-02-16
+#+language: en
 
-2025年01月04日
+* Welcome to My Emacs Configuration
 
-Reconfigure Emacs to use as many built-in features as possible and use fewer unnecessary plugins.
+This is a modern, modular Emacs configuration written using literate programming
+with Org Mode. It's designed for Emacs 29+ with extensive language support,
+LSP integration, and productivity features.
+
+* Philosophy
+
+** Built-in First
+   Reconfigure Emacs to use as many built-in features as possible and use fewer
+   unnecessary plugins.
+
+** Modular Design
+   Configuration split into logical modules organized by functionality
+
+** Literate Programming
+   Written in Org Mode for easy documentation and maintenance
+
+** Performance Optimized
+   Lazy loading, fast startup, and minimal overhead
+
+* 🎯 Features
+
+** Core Stack
+   - Emacs 29+ with tree-sitter support
+   - LSP Bridge for language server integration
+   - Vertico + Marginalia + Embark for completions
+   - Magit for Git operations
+
+** Language Support
+   Full development support for:
+   - *Systems*: C/C++, Rust (rust-analyzer), Lua
+   - *Web*: TypeScript, JavaScript, HTML/CSS, JSX/React
+   - *Dynamic*: Python, Bash
+   - *Markup*: Markdown, Org Mode
+
+** Key Features
+   - [[https://github.com/minad/vertico][Vertico]]: Modern minibuffer completions
+   - [[https://github.com/minad/marginalia][Marginalia]]: Rich annotations
+   - [[https://github.com/oantolin/embark][Embark]]: Contextual actions
+   - [[https://github.com/manateelazycat/lsp-bridge][LSP Bridge]]: Blazing fast LSP
+   - [[https://magit.vc/][Magit]]: Git interface
+   - [[https://github.com/manateelazycat/blink-search][Blink-search]]: Universal search
+   - [[https://github.com/manateelazycat/color-rg][Color-rg]]: Fast grep
+   - [[https://github.com/doomemacs/doom-modeline][Doom Modeline]]: Status line
+   - [[https://github.com/manateelazycat/emacs-rime][Rime]]: Chinese input
+
+* 📦 Installation
+
+** Prerequisites
+   - Emacs 29+ (recommended) or Emacs 28+ with tree-sitter
+   - Git for package management
+   - Node.js for lsp-bridge
+   - (Optional) Universal Ctags for symbol navigation
+
+** Quick Install
+
+*** Step 1: Clone Repository
+    #+begin_src bash
+    git clone <repository-url> ~/dotfiles
+    cd ~/dotfiles/emacs
+    #+end_src
+
+*** Step 2: Initialize Git Submodules
+    #+begin_src bash
+    git submodule update --init --recursive
+    #+end_src
+
+*** Step 3: Generate Configuration
+    #+begin_src bash
+    # Generate Emacs Lisp from Org files
+    make generate
+    
+    # Or on Windows (PowerShell)
+    make -f Makefile generate
+    #+end_src
+    
+    This compiles the Org Mode files in =config-org/= to Emacs Lisp files in
+    =site-lisp/config/=.
+
+*** Step 4: Link to Emacs
+
+**** Option A: Symlink (Recommended)
+     #+begin_src bash
+     # Linux/macOS
+     ln -s ~/dotfiles/emacs ~/.emacs.d
+     
+     # Windows (PowerShell as Administrator)
+     New-Item -ItemType SymbolicLink -Path $env:USERPROFILE\.emacs.d -Target D:\config\dotfiles\emacs
+     #+end_src
+
+**** Option B: Manual Load
+     Add to your =~/.emacs= or =~/.emacs.d/init.el=:
+     #+begin_src emacs-lisp
+     (load-file "~/dotfiles/emacs/site-lisp/config/init.el")
+     #+end_src
+
+*** Step 5: First Launch
+    #+begin_src bash
+    emacs
+    #+end_src
+    
+    Emacs will automatically compile the configuration on first run.
+
+** Troubleshooting
+
+   If you encounter issues:
+   
+   #+begin_src bash
+   # Clean generated files
+   make clean
+   
+   # Regenerate
+   make generate
+   
+   # Check Emacs version
+   emacs --version  # Should be 28+ (29+ recommended)
+   #+end_src
+
+* 🗂️ Configuration Structure
+
+#+begin_src text
+emacs/
+├── Makefile                     # Build system for Org → EL compilation
+├── README.org                   # This file
+├── config-org/                  # Source: Org Mode literate config
+│   ├── init.org                 # Main entry point
+│   ├── core/                    # Core configuration
+│   │   ├── init-paths.org       # Path management
+│   │   ├── init-loadpath.org    # Load-path setup
+│   │   ├── init-const.org       # Constants
+│   │   ├── init-font.org        # Font configuration
+│   │   ├── init-function.org    # Custom functions
+│   │   ├── init-builtin.org     # Built-in features
+│   │   └── init-verify.org      # Configuration validation
+│   ├── ui/                      # User interface
+│   ├── editor/                  # Editor features
+│   ├── completion/              # Completions
+│   ├── tools/                   # Tools
+│   ├── lang/                    # Language support
+│   ├── org/                     # Org Mode
+│   ├── docs/                    # Documentation
+│   └── etc/                     # Miscellaneous
+├── site-lisp/                   # Generated: Compiled EL files
+│   ├── config/                  # Same structure as config-org/
+│   └── extensions/              # Git submodules
+│       ├── lsp/                 # LSP bridge
+│       ├── magit/               # Git interface
+│       ├── vertico/             # Completions
+│       ├── org/                 # Org Mode
+│       ├── blink-search/        # Search
+│       └── ...                  # Other extensions
+├── snippets/                    # Snippets
+└── langservers/                 # Language server configs
+#+end_src
+
+* ⚙️ Configuration Management
+
+** Makefile Commands
+
+   #+begin_src bash
+   # Generate all configuration files
+   make generate
+   
+   # Clean generated files
+   make clean
+   
+   # Generate and byte-compile (optional)
+   make generate-elc
+   #+end_src
+
+** Module System
+
+   Configuration is organized into phases:
+   
+   1. *Phase 1*: Core Infrastructure
+      - Path management
+      - Load-path setup
+      - Configuration validation
+      - Constants and utilities
+   
+   2. *Phase 2*: UI and Themes
+      - Doom modeline
+      - Awesome tray
+      - UI customization
+   
+   3. *Phase 3*: Editor Enhancement
+      - Line numbers
+      - Indentation
+      - Tree-sitter
+      - Auto-save
+   
+   4. *Phase 4*: Completions
+      - Vertico
+      - Marginalia
+      - Embark
+      - Yasnippet
+   
+   5. *Phase 5*: Keybindings
+      - Global bindings
+      - Mode-specific bindings
+   
+   6. *Phase 6*: LSP and Languages* (delayed)
+      - lsp-bridge
+      - Language-specific configs
+   
+   7. *Phase 7*: Org and Docs* (delayed)
+      - Org Mode
+      - Markdown
+      - Documentation tools
+
+** Adding New Modules
+
+   #+begin_example org
+   1. Create an Org file in the appropriate config-org/ directory
+   2. Use Org Babel with :tangle directive:
+      * module-name.el
+      :PROPERTIES:
+      :HEADER-ARGS: :tangle path/to/module-name.el :lexical t
+      :END:
+      
+      #+BEGIN_SRC emacs-lisp
+      ;; Your code here
+      #+END_SRC
+   3. Add (require 'module-name) to the appropriate phase in init.org
+   4. Run make generate
+   #+end_example
+
+* ⌨️ Key Bindings
+
+** Completions (Vertico)
+   - =C-M-r= :: Recent files (consult-recent)
+   - =C-x b= :: Switch buffer
+   - =C-x 4 b= :: Switch buffer in other window
+   - =C-x 5 b= :: Switch buffer in other frame
+
+** Search (Blink-search)
+   - =C-r= :: Blink search menu
+   - =C-f= :: Find file
+   - =C-g= :: Grep
+   - =M-c= :: Search commands
+
+** Code Navigation
+   - =M-.= :: Go to definition (Xref)
+   - =M-,= :: Go back (Pop tag mark)
+   - =C-c C-r= :: References
+
+** Git (Magit)
+   - =C-x g= :: Magit status
+   - =C-x M-g= :: Magit dispatch
+
+** Org Mode
+   - =C-c a= :: Agenda
+   - =C-c c= :: Capture
+   - =C-c l= :: Store link
+   - =C-c C-l= :: Insert link
+
+** Miscellaneous
+   - =C-c t= :: Toggle sort-tab
+   - =C-/= :: Vundo (visual undo)
+   - =C-c h= :: Helpful
+   - =M-g g= :: Go to line
+
+** Hydra
+
+   Some features are available via hydras:
+   
+   - =C-c g= :: Git hydra
+   - =C-c w= :: Window hydra
+   
+   Press the key and follow the on-screen hints.
+
+* 🔧 Customization
+
+** Paths
+
+   Edit =config-org/core/init-paths.org= to set custom paths:
+   
+   #+begin_src emacs-lisp
+   (defvar mcg/project-dir "~/projects"
+     "Projects directory")
+   #+end_src
+
+** Fonts
+
+   Edit =config-org/core/init-font.org=:
+   
+   #+begin_src emacs-lisp
+   (set-face-attribute 'default nil
+                       :family "Consolas"
+                       :height 120)
+   #+end_src
+
+** Languages
+
+   Add language support in =config-org/lang/=:
+   
+   #+begin_src emacs-lisp
+   (use-package lang-python
+     :custom
+     (python-shell-interpreter "python3"))
+   #+end_src
+
+** Themes
+
+   Themes are in =site-lisp/extensions/themes/=
+   
+   #+begin_src emacs-lisp
+   (load-theme 'doom-one t)
+   #+end_src
+
+* 📝 Org Mode
+
+** Features
+    This configuration is optimized for Org Mode:
+    
+    - *Agenda* :: Task management and scheduling
+    - *Capture* :: Quick note-taking
+    - *Export* :: Multiple formats (HTML, Markdown, etc.)
+    - *Babel* :: Code execution within documents
+    - *Hugo* :: Blog publishing integration
+
+** Snippets
+    Custom snippets in =snippets/org-mode/=:
+    
+    - Header templates
+    - TODO templates
+    - Code block templates
+
+** Capture Templates
+    Configured in =config-org/org/init-org.org=:
+    
+    - Task capture
+    - Note capture
+    - Ideas capture
+
+* 🔍 Debugging
+
+** Enable Debug Mode
+   #+begin_src emacs-lisp
+   (setq debug-on-error t)
+   (setq debug-on-quit t)
+   #+end_src
+
+** View Startup Log
+   #+begin_src bash
+   emacs --debug-init 2>&1 | tee debug.log
+   #+end_src
+
+** Check Loaded Modules
+   #+begin_src emacs-lisp
+   M-x mcg-list-loaded-modules
+   #+end_src
+
+** Profiling
+   #+begin_src emacs-lisp
+   (require 'profiler)
+   (profiler-start 'cpu+mem)
+   ;; ... do work ...
+   (profiler-report)
+   (profiler-stop)
+   #+end_src
+
+* 🚀 Performance
+
+   Configuration is optimized for fast startup:
+   
+   - *Lazy Loading* :: Language and Org support load on idle
+   - *Fast GC* :: Increased GC threshold during startup
+   - *Deferred* :: Heavy features load after 1-2 seconds
+   
+   Expected startup time: *< 1 second* on modern hardware.
+   
+   Startup time is displayed after loading:
+   
+   #+begin_example
+   Emacs configuration loaded in 0.85 seconds
+   #+end_example
+
+* 📚 Resources
+
+** Learning Emacs
+   - Press =C-h t= for the Emacs tutorial
+   - Press =C-h i m org RET= for Org Mode manual
+   - Visit [[https://www.emacswiki.org/][EmacsWiki]]
+
+** Documentation
+   - [[https://www.gnu.org/software/emacs/manual/][Emacs Manual]]
+   - [[https://orgmode.org/manual/][Org Mode Manual]]
+   - [[https://github.com/minad/vertico][Vertico]]
+   - [[https://github.com/minad/marginalia][Marginalia]]
+   - [[https://github.com/oantolin/embark][Embark]]
+   - [[https://github.com/manateelazycat/lsp-bridge][lsp-bridge]]
+   - [[https://magit.vc/][Magit]]
+
+** Tips
+   - Use =C-h v= to view variables
+   - Use =C-h k= to see what a key does
+   - Use Helpful (=C-c h=) for better documentation
+   - Check =*Messages*= buffer for errors
+
+* 🤝 Contributing
+
+   This is a personal configuration. Feel free to:
+   
+   1. Fork it for your own use
+   2. Adapt it to your workflow
+   3. Report issues or suggestions
+
+* 🙏 Acknowledgments
+
+   - All Emacs package maintainers
+   - Org Mode community
+   - Emacs Reddit/Discord communities
+   - Language server protocol authors
+
+* 📄 License
+
+   Same as the parent dotfiles repository.
