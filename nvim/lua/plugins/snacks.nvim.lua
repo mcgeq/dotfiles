@@ -1,9 +1,58 @@
 return {
   "folke/snacks.nvim",
-  opts = {
-    picker = {},
-    explorer = {},
-  },
+  opts = function(_, opts)
+    opts = opts or {}
+    opts.picker = opts.picker or {}
+    opts.explorer = opts.explorer or {}
+    -- Dashboard configuration
+    opts.dashboard = opts.dashboard or {}
+    opts.dashboard.preset = opts.dashboard.preset or {}
+    opts.dashboard.preset.header = table.concat({
+      " /\\/\\    ___   __ _   /\\ \\ \\__   __(_) _ __ ___ ",
+      "/    \\  / __| / _` | /  \\/ /\\ \\ / /| || '_ ` _ \\",
+      "/ /\\/\\ \\| (__ | (_| |/ /\\  /  \\ V / | || | | | | |",
+      "\\/    \\/ \\___| \\__, |\\_\\ \\/    \\_/  |_||_| |_| |_|",
+      "               |___/                               ",
+    }, "\n")
+    opts.dashboard.preset.keys = vim.list_extend(opts.dashboard.preset.keys or {}, {
+      {
+        key = "c",
+        icon = "⚙ ",
+        desc = "Config       ",
+        action = function()
+          local ok, snacks = pcall(require, "snacks")
+          if ok and snacks and snacks.picker then
+            snacks.picker.files {
+              cwd = vim.fn.stdpath "config",
+              prompt_title = " Neovim Config",
+              hidden = true,
+            }
+          end
+        end,
+      },
+      {
+        key = "l",
+        icon = "󰒲",
+        desc = "Lazy         ",
+        action = "<cmd>Lazy<CR>",
+      },
+      {
+        key = "m",
+        icon = "🔧",
+        desc = "Mason        ",
+        action = "<cmd>Mason<CR>",
+      },
+      {
+        key = "q",
+        icon = "󰗼",
+        desc = "Quit         ",
+        action = "<cmd>qa<CR>",
+      },
+    })
+    return opts
+  end,
+  -- Note: Using Snacks global variable here is safe in lazy.nvim keys configuration
+  -- because the plugin loads before keys are bound. The global is guaranteed to exist.
   keys = {
     -- Top Pickers & Explorer
     { "<leader><space>", function() Snacks.picker.smart() end, desc = "Smart Find Files" },
@@ -38,7 +87,6 @@ return {
     { '<leader>s"', function() Snacks.picker.registers() end, desc = "Registers" },
     { '<leader>s/', function() Snacks.picker.search_history() end, desc = "Search History" },
     { "<leader>sa", function() Snacks.picker.autocmds() end, desc = "Autocmds" },
-    { "<leader>sb", function() Snacks.picker.lines() end, desc = "Buffer Lines" },
     { "<leader>sc", function() Snacks.picker.command_history() end, desc = "Command History" },
     { "<leader>sC", function() Snacks.picker.commands() end, desc = "Commands" },
     { "<leader>sd", function() Snacks.picker.diagnostics() end, desc = "Diagnostics" },

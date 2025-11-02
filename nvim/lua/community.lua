@@ -5,12 +5,11 @@
 ---@type LazySpec
 return {
   "AstroNvim/astrocommunity",
+  -- languages
   { import = "astrocommunity.pack.lua" },
-  -- import/override with your plugins folder
   { import = "astrocommunity.pack.yaml" },
   { import = "astrocommunity.pack.xml" },
   { import = "astrocommunity.pack.biome" },
-  -- languages
   { import = "astrocommunity.pack.rust" },
   { import = "astrocommunity.pack.python-ruff" },
   { import = "astrocommunity.pack.vue" },
@@ -25,18 +24,17 @@ return {
   { import = "astrocommunity.pack.go" },
   { import = "astrocommunity.pack.json" },
   { import = "astrocommunity.pack.kotlin" },
-  { import = "astrocommunity.pack.lua" },
   { import = "astrocommunity.pack.markdown" },
   { import = "astrocommunity.pack.rainbow-delimiter-indent-blankline" },
   { import = "astrocommunity.pack.sql" },
   { import = "astrocommunity.pack.svelte" },
   { import = "astrocommunity.pack.toml" },
+  { import = "astrocommunity.pack.jj" },
   -- search
   { import = "astrocommunity.fuzzy-finder.fzf-lua" },
   -- git
   { import = "astrocommunity.git.blame-nvim" },
   { import = "astrocommunity.git.gist-nvim" },
-  { import = "astrocommunity.pack.jj" },
 
   { import = "astrocommunity.color.ccc-nvim" },
   { import = "astrocommunity.comment.ts-comments-nvim" },
@@ -44,6 +42,7 @@ return {
   { import = "astrocommunity.completion.blink-cmp-git" },
   { import = "astrocommunity.completion.blink-cmp" },
   { import = "astrocommunity.diagnostics.trouble-nvim" },
+  -- editing support
   { import = "astrocommunity.editing-support.bigfile-nvim" },
   { import = "astrocommunity.editing-support.conform-nvim" },
   { import = "astrocommunity.editing-support.nvim-treesitter-context" },
@@ -52,6 +51,7 @@ return {
   { import = "astrocommunity.editing-support.yanky-nvim" },
   -- files
   { import = "astrocommunity.file-explorer.mini-files" },
+  -- fuzzy finder (additional)
   { import = "astrocommunity.fuzzy-finder.namu-nvim" },
   { import = "astrocommunity.fuzzy-finder.snacks-picker" },
   { import = "astrocommunity.indent.indent-blankline-nvim" },
