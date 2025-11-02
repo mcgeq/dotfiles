@@ -85,7 +85,7 @@
                           ((eq theme 'ef-bio) "#6a95c0")
                           ((eq theme 'ef-winter) "#5d7fa8")
                           ((eq theme 'ef-summer) "#4a9c7c")
-                          ((eq theme 'ef-spring) "#b57edc")))
+                          ((eq theme 'ef-spring) "#b57edc"))))
     
     ;; ef-autumn 特殊处理（浅色主题）
     (ef-autumn
@@ -209,7 +209,7 @@
       ;; 刷新界面
       (force-mode-line-update)
       (redisplay t)
-      (message "已应用 %s 主题的视觉设置 (类型: %s)" theme style)))))
+      (message "已应用 %s 主题的视觉设置 (类型: %s)" theme style))))
 
 ;; ============================================================
 ;; 主题切换钩子
@@ -300,7 +300,7 @@
     (display-buffer buf 
                     '((display-buffer-in-side-window)
                       (side . bottom)
-                      (window-height . 0.4)))))
+                      (window-height . 0.4))))
 
 (global-set-key (kbd "C-c t s") #'mcg/theme-selector)
 

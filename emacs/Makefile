@@ -4,7 +4,7 @@ EE ?= $(EM) -Q --batch --eval "(progn (require 'ob-tangle) (setq org-confirm-bab
 
 
 # 需要加载的目录
-DS = core ui editor completion tools org docs lang
+DS = core ui editor completion tools etc org docs lang
 
 # 编译生成后的*.el 文件存放位置
 DF ?= site-lisp/config
@@ -42,6 +42,7 @@ elc:
 	$(EM) --batch -l ./init.el -L "site-lisp/config" --eval '(byte-recompile-directory "site-lisp/config/editor" 0)'
 	$(EM) --batch -l ./init.el -L "site-lisp/config" --eval '(byte-recompile-directory "site-lisp/config/completion" 0)'
 	$(EM) --batch -l ./init.el -L "site-lisp/config" --eval '(byte-recompile-directory "site-lisp/config/tools" 0)'
+	$(EM) --batch -l ./init.el -L "site-lisp/config" --eval '(byte-recompile-directory "site-lisp/config/etc" 0)'
 	$(EM) --batch -l ./init.el -L "site-lisp/config" --eval '(byte-recompile-directory "site-lisp/config/org" 0)'
 	$(EM) --batch -l ./init.el -L "site-lisp/config" --eval '(byte-recompile-directory "site-lisp/config/docs" 0)'
 	$(EM) --batch -l ./init.el -L "site-lisp/config" --eval '(byte-recompile-directory "site-lisp/config/lang" 0)'

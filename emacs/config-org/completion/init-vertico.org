@@ -53,7 +53,7 @@
 ** Require
 #+BEGIN_SRC emacs-lisp
   ;;; Require:
-
+  (require 'lazy-load)
   (require 'crm)
   (require 'vertico)
   (require 'vertico-directory)

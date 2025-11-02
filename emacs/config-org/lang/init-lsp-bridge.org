@@ -52,6 +52,7 @@
 
 ** Require
 #+BEGIN_SRC emacs-lisp
+  (require 'lazy-load)
   (require 'lsp-bridge)
   (require 'lsp-bridge-jdtls)
   (require 'lang-cpp)

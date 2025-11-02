@@ -54,6 +54,7 @@
 ** Require
 #+BEGIN_SRC emacs-lisp
 ;;; Require:
+(require 'lazy-load)
 (require 'fingertip)
 
 ;;; Code:

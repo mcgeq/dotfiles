@@ -54,6 +54,7 @@
 
 #+BEGIN_SRC emacs-lisp
   ;;; Require:
+  (require 'lazy-load)
   (require 'dired)
   (require 'embark)
   (require 'embark-consult)

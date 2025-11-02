@@ -53,6 +53,7 @@
 ** Require
 #+BEGIN_SRC emacs-lisp
   ;;; Require:
+  (require 'lazy-load)
   (require 'symbol-overlay)
 
 #+END_SRC
