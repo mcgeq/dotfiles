@@ -18,6 +18,10 @@ return {
 
   -- You can disable default plugins as follows:
   { "max397574/better-escape.nvim", enabled = false },
+  
+  -- Disable error-lens.nvim due to conflict with aerial.nvim and extmark issues
+  -- The error occurs when error-lens tries to set extmarks that conflict with aerial.nvim
+  { "chikko80/error-lens.nvim", enabled = false },
 
   -- You can also easily customize additional setup of plugins that is outside of the plugin's setup call
   {

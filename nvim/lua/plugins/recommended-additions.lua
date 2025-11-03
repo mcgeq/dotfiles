@@ -30,7 +30,8 @@ return {
   -- ============================================
 
   -- 错误高亮增强 - 更好的错误显示
-  { import = "astrocommunity.diagnostics.error-lens-nvim" },
+  -- 已禁用：与 aerial.nvim 冲突导致 extmark 错误
+  -- { import = "astrocommunity.diagnostics.error-lens-nvim" },
 
   -- LSP 诊断行内显示
   { import = "astrocommunity.diagnostics.lsp_lines-nvim" },
