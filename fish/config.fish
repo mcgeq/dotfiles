@@ -5,6 +5,8 @@ end
 # emacs
 abbr e "emacs -nw"
 set -x PATH $PATH "~/emacs/bin"
+# 确保 Fish 启动时 PATH 包含 Cargo bin
+set -gx PATH $HOME/.cargo/bin $PATH
 
 # emacs end
 
