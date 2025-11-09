@@ -87,7 +87,7 @@ program = "difft"  # difft 可执行文件的路径或命令名
 # --color=always: 始终使用颜色输出
 # $left: 左侧文件
 # $right: 右侧文件
-diff-args = ["--color=always", "$left", "$right"]
+diff-args = ["--color=always", "--display=side-by-side-show-both", "$left", "$right"]
 
 # Mergiraf 合并工具配置
 # Mergiraf 是一个快速的三路合并工具
@@ -340,6 +340,26 @@ eject = ["squash", "--from", "@", "--into"]
 "text warning" = { bold = true, fg = "red" }  # 警告文本：粗体、红色，用于警告信息
 "text error" = { bold = true, fg = "red" }  # 错误文本：粗体、红色，用于错误信息
 
+# 书签颜色
+# 书签是 Jujutsu 中用于标记提交的命名引用（类似于 Git 的分支）
+"bookmarks" = { fg = "bright green", bold = true }  # 书签：亮绿色、粗体，便于识别分支和标记
+
+# 标签颜色
+# 标签用于标记特定的提交（类似于 Git 的 tag）
+"tags" = "green"  # 标签：绿色，用于标记重要的提交版本
+
+# 时间戳颜色
+# 时间戳显示提交的创建时间
+"timestamp" = "default"  # 时间戳：使用默认颜色，保持日志的可读性
+
+# Git HEAD 颜色
+# Git HEAD 标记当前 Git 仓库的 HEAD 位置
+"git_head" = "blue"  # Git HEAD：蓝色，标识 Git 仓库的当前 HEAD
+
+# Git 引用颜色
+# Git 引用包括分支、标签等 Git 对象引用
+"git_refs" = "blue"  # Git 引用：蓝色，与 git_head 保持一致，便于识别 Git 相关的引用
+
 ## ================================================================================================
 ## 模板函数别名
 ## ================================================================================================
@@ -376,6 +396,24 @@ eject = ["squash", "--from", "@", "--into"]
 # 返回: 相对时间字符串，如 "[2 hours ago]"
 'format_timestamp(ts)' = '"[" ++ ts.ago() ++ "]"'
 
+# 时间格式化辅助函数
+# 用于在不同日志视图中显示不同格式的时间戳
+
+# 本地时间格式化（转换为当前时区）
+# 参数: timestamp - 时间戳对象
+# 返回: 格式化的本地时间字符串，如 "2024-01-15 14:30:45"
+'local_time(timestamp)' = 'timestamp.local().format("%Y-%m-%d %H:%M:%S")'
+
+# 本地化时间格式化（包含时区信息）
+# 参数: timestamp - 时间戳对象
+# 返回: 格式化的本地时间字符串（带时区），如 "2024-01-15 14:30:45 +0800"
+'localised_time(timestamp)' = 'timestamp.local().format("%Y-%m-%d %H:%M:%S %z")'
+
+# 原始时间格式化（保持原始时区）
+# 参数: timestamp - 时间戳对象
+# 返回: 格式化的原始时间字符串（带时区），如 "2024-01-15 06:30:45 +0000"
+'original_time(timestamp)' = 'timestamp.format("%Y-%m-%d %H:%M:%S %z")'
+
 # 书签渲染函数
 # 渲染提交的书签（分支名），如果是本地书签则创建 GitHub 链接
 # 参数:
@@ -399,9 +437,18 @@ eject = ["squash", "--from", "@", "--into"]
 # 注意：由于模板语法限制，暂时简化实现
 
 # GitHub 仓库基础 URL
-# 需要根据实际仓库修改为正确的 GitHub 仓库地址
-# 例如: "https://github.com/username/repository"
-'gh_pr_base()' = '"https://github.com/your-org/your-repo"'
+# 默认返回 "undefined"，表示无法确定仓库 URL
+# 这样 render_bookmarks 函数会跳过 GitHub 链接的生成
+# 
+# 如果需要为特定项目启用 GitHub 链接功能，可以在项目级别的配置中覆盖此函数：
+# 在 .jj/config.toml 或仓库的配置文件中设置：
+#   [template-aliases]
+#   'gh_pr_base()' = '"https://github.com/username/repo"'
+#
+# 或者，如果 jj 支持从 git config 读取，可以尝试：
+#   'gh_pr_base()' = 'git_config("remote.origin.url")'
+#   但需要注意将 SSH URL (git@github.com:user/repo.git) 转换为 HTTPS URL
+'gh_pr_base()' = '"undefined"'
 
 # 检查提交描述中是否包含 GitHub PR URL
 # 参数:
@@ -475,6 +522,92 @@ eject = ["squash", "--from", "@", "--into"]
   if(commit.git_head(), label("git_head", "git_head()")),
   if(commit.conflict(), label("conflict", "conflict")),
 )'''
+
+# smlog 日志布局函数
+# 生成一个更对齐的日志布局，提高可读性：
+# - Change ID 和其他固定宽度字段在左侧对齐
+# - 书签和标签可选显示（使用 jjbookmarks, jjtags 时）
+# - 书签用方括号包围以区分标签
+# - 描述从同一行开始
+# 参数:
+#   timestr: 时间戳字符串
+#   description: 提交描述
+#   bookmarks: 书签字符串
+#   tags: 标签字符串
+# 返回: 格式化的单行日志条目
+'smlog(timestr, description, bookmarks, tags)' = '''
+if(root,
+  format_root_commit(self),
+  label(if(current_working_copy, "working_copy"),
+    concat(
+      separate(" ",
+        format_short_change_id_with_hidden_and_divergent_info(self),
+        format_short_commit_id(commit_id),
+        timestr,
+        bookmarks,
+        tags,
+        working_copies,
+        if(git_head, label("git_head", "git_head()")),
+        if(conflict, label("conflict", "conflict")),
+        if(empty, label("empty", "(empty)")),
+        if(author.email(), author.email().local()),
+        if(description,
+          description,
+          label(if(empty, "empty"), "(no description)"),
+        ),
+      ) ++ "\n",
+    ),
+  )
+)
+'''
+
+# 日志视图模板变体
+# 提供多种日志显示格式，适应不同的使用场景
+
+# logv: 详细日志视图
+# 显示：作者姓名、提交者时间戳和时区、完整描述
+# 用途: 查看完整的提交信息，包括多行描述
+'logv' = 'smlog(original_time(committer.timestamp()), description, if(bookmarks, surround("[", "]", separate(" ", bookmarks)), ""), if(tags, separate(" ", tags), ""))'
+
+# log1: 单行日志视图（默认）
+# 显示：提交者时间戳、描述的第一行、书签、标签
+# 用途: 快速浏览提交历史，每行显示一个提交
+'log1' = 'smlog(original_time(committer.timestamp()), description.first_line(), if(bookmarks, surround("[", "]", separate(" ", bookmarks)), ""), if(tags, separate(" ", tags), ""))'
+
+# log1current: 单行日志视图（当前时区）
+# 显示：提交者时间戳（转换为当前时区）、描述的第一行、书签、标签
+# 用途: 使用本地时区查看提交时间，更符合本地习惯
+'log1current' = 'smlog(local_time(committer.timestamp()), description.first_line(), if(bookmarks, surround("[", "]", separate(" ", bookmarks)), ""), if(tags, separate(" ", tags), ""))'
+
+# log1author: 单行日志视图（作者时间）
+# 显示：作者时间戳和时区、描述的第一行、书签、标签
+# 用途: 查看作者实际创建提交的时间（可能与提交者时间不同）
+'log1author' = 'smlog(original_time(author.timestamp()), description.first_line(), if(bookmarks, surround("[", "]", separate(" ", bookmarks)), ""), if(tags, separate(" ", tags), ""))'
+
+# log1authorcurrent: 单行日志视图（作者时间，当前时区）
+# 显示：作者时间戳（转换为当前时区）、描述的第一行、书签、标签
+# 用途: 使用本地时区查看作者时间
+'log1authorcurrent' = 'smlog(local_time(author.timestamp()), description.first_line(), if(bookmarks, surround("[", "]", separate(" ", bookmarks)), ""), if(tags, separate(" ", tags), ""))'
+
+# log1nobookmarks: 单行日志视图（不显示书签）
+# 显示：提交者时间戳、描述的第一行、标签（不显示书签）
+# 用途: 简化显示，专注于提交内容而非分支信息
+'log1nobookmarks' = 'smlog(original_time(committer.timestamp()), description.first_line(), "", if(tags, separate(" ", tags), ""))'
+
+# log1notags: 单行日志视图（不显示标签）
+# 显示：提交者时间戳、描述的第一行、书签（不显示标签）
+# 用途: 简化显示，专注于分支信息而非版本标签
+'log1notags' = 'smlog(original_time(committer.timestamp()), description.first_line(), if(bookmarks, surround("[", "]", separate(" ", bookmarks)), ""), "")'
+
+# log2: 两行日志视图（紧凑布局）
+# 使用 jj 内置的紧凑日志模板
+# 用途: 每行提交显示两行，包含更多信息但保持紧凑
+'log2' = "builtin_log_compact"
+
+# log3: 三行日志视图
+# 使用 jj 内置的紧凑日志模板，每行提交后添加空行
+# 用途: 更宽松的显示，便于阅读复杂提交
+'log3' = 'builtin_log_compact ++ "\n"'
 
 ## ================================================================================================
 ## 模板定义
