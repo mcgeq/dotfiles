@@ -6,3 +6,4 @@ email = "mcgeq@outlook.com"
 
 [ui]
 default-command = "log"
+editor = "nvim"
