@@ -1,9 +1,542 @@
-"$schema" = "https://jj-vcs.github.io/jj/latest/config-schema.json"
+## ------------------------------------------------------------------------------------------------
+# mcgeq's Jujutsu Configuration
+# 
+# 更新日期: 2025-11-09
+# 文档: https://jj-vcs.github.io/jj/prerelease/config-schema.json
+## ------------------------------------------------------------------------------------------------
 
+"$schema" = "https://jj-vcs.github.io/jj/prerelease/config-schema.json"
+
+## ================================================================================================
+## 基础设置
+## ================================================================================================
+
+# 用户信息配置
+# 这些信息会用于所有提交的 author 和 committer 字段
 [user]
-name = "mcgeq"
-email = "mcgeq@outlook.com"
+name = "mcgeq"      # 提交者姓名，会显示在提交记录中
+email = "mcgeq@outlook.com"  # 提交者邮箱，会显示在提交记录中
 
+# 用户界面配置
 [ui]
+# 默认命令：当直接运行 `jj` 而不带任何参数时执行的命令
+# "log" 表示默认显示提交日志
 default-command = "log"
+
+# 编辑器：用于编辑提交信息、交互式变基等操作
+# "nvim" 使用 Neovim 作为编辑器
 editor = "nvim"
+
+# 差异查看器：用于查看文件差异
+# "meld" 是一个图形化的文件对比工具
+diff-editor = "meld"
+
+# 合并工具：用于解决合并冲突
+# "meld" 可以可视化地解决冲突
+merge-editor = "meld"
+
+# 日志中是否显示被省略的合成节点
+# true: 显示被省略的节点，有助于理解提交历史
+# false: 隐藏被省略的节点，日志更简洁
+log-synthetic-elided-nodes = true
+
+# 图形样式：提交历史的图形显示样式
+# "square": 使用方形字符绘制图形
+# 其他选项: "curved", "angled", "straight"
+graph.style = "square"
+
+# 分页器：用于分页显示长输出
+# ":builtin": 使用 jj 内置的分页器
+# 其他选项: "less", "more", "cat" 等
+pager = ":builtin"
+
+# 是否自动添加 Signed-off-by 行到提交信息
+# true: 自动在提交信息末尾添加 Signed-off-by 签名
+# false: 不自动添加，需要手动添加
+should-sign-off = true
+
+## ================================================================================================
+## 合并工具配置
+## ================================================================================================
+
+# Meld 合并工具配置
+# Meld 是一个图形化的文件对比和合并工具
+[merge-tools.meld]
+program = "meld"  # meld 可执行文件的路径或命令名
+# 查看差异时的参数
+# --newtab: 在新标签页中打开文件
+# --color=always: 始终使用颜色输出
+# $left: 左侧文件（旧版本）
+# $right: 右侧文件（新版本）
+diff-args = ["--newtab", "--color=always", "$left", "$right"]
+# 合并冲突时的参数
+# $base: 共同祖先版本
+# $left: 左侧版本（当前分支）
+# $right: 右侧版本（要合并的分支）
+# -o $output: 输出合并结果到指定文件
+merge-args = ["$base", "$left", "$right", "-o", "$output"]
+# 冲突解决失败时的退出码
+# [1] 表示退出码为 1 时认为合并失败
+merge-conflict-exit-codes = [1]
+
+# Difftastic (difft) 差异查看器配置
+# Difftastic 是一个语法感知的差异查看器，可以更好地显示代码差异
+[merge-tools.difft]
+program = "difft"  # difft 可执行文件的路径或命令名
+# 查看差异时的参数
+# --color=always: 始终使用颜色输出
+# $left: 左侧文件
+# $right: 右侧文件
+diff-args = ["--color=always", "$left", "$right"]
+
+# Mergiraf 合并工具配置
+# Mergiraf 是一个快速的三路合并工具
+[merge-tools.mergiraf]
+program = "mergiraf"  # mergiraf 可执行文件的路径或命令名
+# 合并参数
+# merge: 执行合并操作
+# $base: 共同祖先版本
+# $left: 左侧版本
+# $right: 右侧版本
+# -o $output: 输出文件
+# --fast: 快速模式
+merge-args = ["merge", "$base", "$left", "$right", "-o", "$output", "--fast"]
+# 冲突解决失败时的退出码
+merge-conflict-exit-codes = [1]
+# 冲突标记样式：使用 Git 风格的冲突标记（<<<<<<<, =======, >>>>>>>）
+conflict-marker-style = "git"
+
+## ================================================================================================
+## Git 集成配置
+## ================================================================================================
+
+# Git 后端配置
+# Jujutsu 可以使用 Git 作为后端存储，这样可以与现有的 Git 工作流兼容
+[git]
+# 是否自动创建本地书签
+# false: 不自动创建，需要手动创建书签
+# true: 自动为 Git 分支创建对应的 jj 书签
+auto-local-bookmark = false
+
+# 推送书签的前缀
+# 当推送书签到 Git 时，会使用这个前缀来避免与 Git 分支名冲突
+# 例如：推送书签 "main" 会变成 Git 分支 "mcgeq/push-main"
+push-bookmark-prefix = "mcgeq/push-"
+
+# 私有提交的 revset 表达式
+# 这些提交不会被推送到 Git 远程仓库
+# 'blacklist()' 是一个自定义的 revset，匹配所有标记为 wip 或 private 的提交
+private-commits = 'blacklist()'
+
+# 是否将 .git 目录放在 .jj 目录旁边
+# true: 将 .git 和 .jj 放在同一目录下，方便管理
+# false: 使用独立的目录结构
+colocate = true
+
+# 是否使用子进程执行 Git 命令
+# true: 使用子进程，更安全但可能稍慢
+# false: 直接调用 Git，更快但可能有兼容性问题
+subprocess = true
+
+# 快照配置
+[snapshot]
+# 是否自动更新过时的快照
+# true: 自动更新，确保快照信息是最新的
+# false: 不自动更新，可能需要手动刷新
+auto-update-stale = true
+
+## ================================================================================================
+## Gerrit 集成配置（可选，默认禁用）
+## ================================================================================================
+
+# Gerrit 代码审查系统集成
+# Gerrit 是一个基于 Git 的代码审查工具，常用于大型开源项目
+[gerrit]
+# 是否启用 Gerrit 集成
+# false: 禁用 Gerrit 功能，不自动添加 Change-Id
+# true: 启用 Gerrit 功能，提交时会自动添加 Change-Id
+enabled = false
+
+# Gerrit 服务器 URL
+# 用于生成 Gerrit Change-Id 链接和提交审查
+# 启用时需要修改为实际的 Gerrit 服务器地址
+# 例如: 'https://gerrit-review.googlesource.com'
+url = 'http://example.com'
+
+## ================================================================================================
+## Revset 别名定义
+## ================================================================================================
+
+# Revset 是 Jujutsu 中用于选择提交的表达式语言
+# 类似于 Git 中的 revision specifiers（如 HEAD, master, HEAD~3 等）
+
+# 默认 revset 配置
+[revsets]
+# 默认日志显示的 revset
+# 'stack(@)': 显示当前工作目录(@)所在的工作栈
+# 工作栈包括当前提交及其可变的祖先提交（最多2层）
+log = 'stack(@)'
+
+# Revset 别名定义
+# 可以定义自定义的 revset 表达式，方便重复使用
+[revset-aliases]
+# 基础别名
+# 'at': '@' 的简写，指向当前工作目录
+'at' = '@'
+
+# 'user(x)': 查找作者或提交者包含 x 的所有提交
+# 例如: user("mcgeq") 会找到所有由 mcgeq 创建或提交的变更
+'user(x)' = 'author(x) | committer(x)'
+
+# 分支和标签相关
+# 'immutable_heads()': 不可变提交的头部
+# 包括：主干分支、远程书签、标签
+# 这些提交通常不应该被修改或删除
+'immutable_heads()' = 'present(trunk()) | remote_bookmarks() | tags()'
+
+# 'gh_pages()': GitHub Pages 分支的所有祖先
+# 用于查找与 gh-pages 分支相关的提交
+'gh_pages()' = 'ancestors(remote_bookmarks(exact:"gh-pages"))'
+
+# 'trunk()': 主干分支（main 或 master）
+# 自动检测远程仓库中的 main 或 master 分支
+# 这是项目的主要开发分支
+'trunk()' = 'latest((present(main) | present(master)) & remote_bookmarks())'
+
+# 工作流相关
+# 'wip()': 工作进展中的提交
+# 匹配描述以 "wip:" 开头的提交（Work In Progress）
+# 这些提交通常是未完成的工作，不应该被推送
+'wip()' = 'description(glob:"wip:*")'
+
+# 'private()': 私有提交
+# 匹配描述以 "private:" 开头的提交
+# 这些提交包含敏感信息或实验性代码，不应该被推送
+'private()' = 'description(glob:"private:*")'
+
+# 'blacklist()': 黑名单提交
+# 包含所有应该被排除的提交（wip 和 private）
+# 这些提交通常不会被推送到远程仓库
+'blacklist()' = 'wip() | private()'
+
+# 栈相关
+# 'stack()': 当前工作栈
+# 返回当前提交及其可变的祖先提交（默认2层深度）
+# 工作栈通常包含一个功能或修复的所有相关提交
+'stack()' = 'ancestors(reachable(@, mutable()), 2)'
+
+# 'stack(x)': 指定提交的工作栈
+# 返回指定提交 x 及其可变的祖先提交（默认2层深度）
+'stack(x)' = 'ancestors(reachable(x, mutable()), 2)'
+
+# 'stack(x, n)': 指定提交和深度的工作栈
+# 返回指定提交 x 及其可变的祖先提交，深度为 n
+'stack(x, n)' = 'ancestors(reachable(x, mutable()), n)'
+
+# 工作项相关
+# 'open()': 打开的提交
+# 返回从主干分支分叉出来的、属于当前用户的提交栈
+# 这些是正在进行的、还未合并到主干的工作
+'open()' = 'stack(trunk().. & mine(), 1)'
+
+# 'ready()': 准备就绪的提交
+# 返回所有打开的提交，但排除黑名单中的提交
+# 这些提交已经完成，可以推送到远程仓库进行审查
+'ready()' = 'open() ~ blacklist()::'
+
+## ================================================================================================
+## 命令别名
+## ================================================================================================
+
+# 命令别名可以简化常用的 jj 命令
+# 使用方式: jj <别名> [参数...]
+[aliases]
+# 基础快捷命令
+# 'd': 查看工作目录的差异
+# 等同于: jj diff
+d = ["diff"]
+
+# 's': 显示当前提交的详细信息
+# 等同于: jj show
+s = ["show"]
+
+# 'll': 显示详细的提交日志
+# 使用内置的详细日志模板，显示更多信息
+# 等同于: jj log -T builtin_log_detailed
+ll = ["log", "-T", "builtin_log_detailed"]
+
+# 'nt': 从主干分支创建新变更
+# 创建一个新的变更，基于最新的主干分支
+# 等同于: jj new trunk()
+nt = ["new", "trunk()"]
+
+# 工作流命令
+# 'open': 显示所有打开的提交
+# 列出所有从主干分叉出来的、正在进行的提交
+# 等同于: jj log -r open()
+open = ["log", "-r", "open()"]
+
+# 'credit': 显示文件的逐行注释（blame）
+# 显示文件中每一行的作者和提交信息
+# 等同于: jj file annotate
+credit = ["file", "annotate"]
+
+# 'ready': 显示所有准备就绪的提交
+# 列出所有完成的、可以推送的提交（排除 wip 和 private）
+# 等同于: jj log -r ready()
+ready = ["log", "-r", "ready()"]
+
+# 变基命令
+# 'retrunk': 将当前变更变基到最新的主干分支
+# 将当前提交重新应用到最新的主干分支上
+# 用于同步最新的主干分支变更
+# 等同于: jj rebase -d trunk()
+retrunk = ["rebase", "-d", "trunk()"]
+
+# 'reheat': 重新加热（完整变基）
+# 将当前工作栈中的所有提交变基到最新的主干分支
+# 包括所有从主干分叉出来的提交
+# 用于大规模同步主干分支的变更
+# 等同于: jj rebase -d trunk() -s all:roots(trunk()..stack(@))
+reheat = ["rebase", "-d", "trunk()", "-s", "all:roots(trunk()..stack(@))"]
+
+# 提交操作
+# 'consume': 将指定提交压缩到当前提交
+# 将另一个提交的更改合并到当前提交中
+# 用法: jj consume <提交ID>
+# 等同于: jj squash --into @ --from <提交ID>
+consume = ["squash", "--into", "@", "--from"]
+
+# 'eject': 将当前提交的一部分内容分离到新提交
+# 将当前提交的更改分离出来，创建一个新的提交
+# 用法: jj eject <提交ID>
+# 等同于: jj squash --from @ --into <提交ID>
+eject = ["squash", "--from", "@", "--into"]
+
+## ================================================================================================
+## 颜色配置
+## ================================================================================================
+
+# 终端颜色配置
+# 用于自定义 jj 命令输出中各种元素的外观
+[colors]
+# Change ID 颜色
+# Change ID 是 Jujutsu 中每个变更的唯一标识符
+"normal change_id" = { bold = true, fg = "magenta" }  # 普通变更 ID：粗体、洋红色
+"immutable change_id" = { bold = false, fg = "bright cyan" }  # 不可变更更 ID：非粗体、亮青色
+
+# 节点颜色
+# 节点是提交历史图中表示提交的符号
+"node" = { bold = true }  # 默认节点样式：粗体
+"node elided" = { fg = "bright black" }  # 被省略的节点：亮黑色（灰色），表示历史中被隐藏的部分
+"node working_copy" = { fg = "green" }  # 工作目录节点：绿色，表示当前工作目录
+"node conflict" = { fg = "red" }  # 冲突节点：红色，表示存在合并冲突的提交
+"node immutable" = { fg = "bright cyan" }  # 不可变节点：亮青色，表示不能修改的提交（如已推送的提交）
+"node wip" = { fg = "yellow" }  # WIP 节点：黄色，表示工作进展中的提交
+"node normal" = { bold = false }  # 普通节点：非粗体，表示一般的提交
+
+# 文本颜色
+"text link" = { bold = true, fg = "magenta" }  # 超链接文本：粗体、洋红色，用于可点击的链接
+"text warning" = { bold = true, fg = "red" }  # 警告文本：粗体、红色，用于警告信息
+"text error" = { bold = true, fg = "red" }  # 错误文本：粗体、红色，用于错误信息
+
+## ================================================================================================
+## 模板函数别名
+## ================================================================================================
+
+# 模板函数别名用于自定义日志和提交信息的显示格式
+# 这些函数可以在模板中调用，用于格式化输出
+[template-aliases]
+# 超链接辅助函数
+# 创建一个终端可点击的超链接
+# 参数:
+#   url: 链接的 URL 地址
+#   text: 显示的文本
+# 返回: 格式化的超链接字符串，在支持的终端中可以点击跳转
+'hyperlink(url, text)' = '''
+  concat(
+    raw_escape_sequence("\e]8;;" ++ url ++ "\e\\"),
+    label("text link", text),
+    raw_escape_sequence("\e]8;;\e\\"),
+  )
+'''
+
+# 签名格式化函数
+# 格式化提交者签名，显示邮箱地址
+# 参数:
+#   signature: 签名对象（包含姓名和邮箱）
+# 返回: 格式化的邮箱字符串，如 "<email@example.com>"
+# 如果邮箱为空，显示警告信息 "NO EMAIL"
+'format_short_signature(signature)' = '"<" ++ if(signature.email(), signature.email(), label("text warning", "NO EMAIL")) ++ ">"'
+
+# 时间戳格式化函数
+# 将时间戳格式化为相对时间（如 "2 hours ago"）
+# 参数:
+#   ts: 时间戳对象
+# 返回: 相对时间字符串，如 "[2 hours ago]"
+'format_timestamp(ts)' = '"[" ++ ts.ago() ++ "]"'
+
+# 书签渲染函数
+# 渲染提交的书签（分支名），如果是本地书签则创建 GitHub 链接
+# 参数:
+#   commit: 提交对象
+# 返回: 书签列表，本地书签会转换为 GitHub 链接
+# 用途: 在日志中显示书签，点击可以跳转到 GitHub 分支页面
+'render_bookmarks(commit)' = '''
+  commit.bookmarks().map(|b|
+    if(b.remote(),
+      b,
+      if(gh_pr_base() != "undefined",
+        hyperlink(gh_pr_base() ++ "/tree/" ++ b.name(), b),
+        b
+      )
+    )
+  )
+'''
+
+# GitHub PR 相关函数
+# 用于处理 GitHub Pull Request 链接
+# 注意：由于模板语法限制，暂时简化实现
+
+# GitHub 仓库基础 URL
+# 需要根据实际仓库修改为正确的 GitHub 仓库地址
+# 例如: "https://github.com/username/repository"
+'gh_pr_base()' = '"https://github.com/your-org/your-repo"'
+
+# 检查提交描述中是否包含 GitHub PR URL
+# 参数:
+#   s: 提交描述字符串
+# 返回: 布尔值，如果包含 "GH-PR: " 则返回 true
+'has_ghpr_url(s)' = 's.contains("GH-PR: ")'
+
+# 获取 GitHub PR URL（简化实现）
+# 由于模板语法限制，暂时返回占位符
+# 参数:
+#   s: 提交描述字符串
+# 返回: 占位符 "PR"
+# 注意: 实际 URL 需要在提交描述中手动查看
+'get_ghpr_url(s)' = '"PR"'
+
+# Gerrit Change-Id 相关函数
+# 用于处理 Gerrit 代码审查系统的 Change-Id
+
+# 检查提交描述中是否包含 Change-Id
+# 参数:
+#   s: 提交描述字符串
+# 返回: 布尔值，如果包含 "Change-Id: I" 则返回 true
+'has_change_id(s)' = 's.contains("Change-Id: I")'
+
+# 生成完整的 Gerrit Change-Id（31 个字符）
+# 参数:
+#   c: Change ID 对象
+# 返回: 31 个字符的十六进制字符串
+# 用途: 生成完整的 Gerrit Change-Id
+'gerrit_id(c)' = 'c.normal_hex().substr(0, 31)'
+
+# 生成指定长度的 Gerrit Change-Id
+# 参数:
+#   c: Change ID 对象
+#   n: 需要的字符长度
+# 返回: n 个字符的十六进制字符串
+# 用途: 生成缩短的 Change-Id 用于显示
+'gerrit_id(c, n)' = 'c.normal_hex().substr(0, n)'
+
+# 提交头部格式化函数
+# 格式化提交日志中每行的头部信息
+# 参数:
+#   commit: 提交对象
+# 返回: 格式化的提交头部字符串
+# 包含:
+#   - Change ID（带隐藏和分歧信息）
+#   - 作者签名（邮箱）
+#   - 时间戳（相对时间）
+#   - 书签（带 GitHub 链接）
+#   - 标签
+#   - 工作目录
+#   - 提交 ID（短格式）
+#   - GitHub PR 链接（如果存在）
+#   - Gerrit Change-Id 链接（如果启用并存在）
+#   - Git HEAD 标记（如果是 Git HEAD）
+#   - 冲突标记（如果存在冲突）
+'format_short_commit_header(commit)' = '''separate(" ",
+  format_short_change_id_with_hidden_and_divergent_info(commit),
+  format_short_signature(commit.author()),
+  format_timestamp(commit_timestamp(commit)),
+  render_bookmarks(commit),
+  commit.tags(),
+  commit.working_copies(),
+  format_short_commit_id(commit.commit_id()),
+  if(has_ghpr_url(commit.description()),
+    "[" ++ hyperlink(get_ghpr_url(commit.description()), "GH: PR") ++ "]"
+  ),
+  if(config("gerrit.enabled").as_boolean() && has_change_id(commit.description()),
+    "[" ++ hyperlink(config("gerrit.url").as_string() ++ "/q/I" ++ gerrit_id(commit.change_id()), "CR: I" ++ commit.change_id().normal_hex().substr(0, 10)) ++ "]"
+  ),
+  if(commit.git_head(), label("git_head", "git_head()")),
+  if(commit.conflict(), label("conflict", "conflict")),
+)'''
+
+## ================================================================================================
+## 模板定义
+## ================================================================================================
+
+# 模板定义用于自定义各种输出的格式
+# 这些模板控制 jj 命令的输出外观
+[templates]
+# 操作日志节点模板
+# 用于操作日志（op log）中显示节点符号
+# 如果有当前操作，显示 "@"，否则显示 "◉"
+op_log_node = 'if(current_operation, "@", "◉")'
+
+# 日志节点模板
+# 用于提交日志中显示每个提交的节点符号
+# 根据提交的状态显示不同的符号和颜色：
+#   - "⇋" (elided): 被省略的节点（灰色）
+#   - "◉" (working_copy): 当前工作目录（绿色）
+#   - "x" (conflict): 存在冲突（红色）
+#   - "◆" (immutable): 不可变提交（亮青色）
+#   - "!" (wip): 工作进展中的提交（黄色）
+#   - "○" (normal): 普通提交（默认样式）
+log_node = '''
+label("node",
+  coalesce(
+    if(!self, label("elided", "⇋")),
+    if(current_working_copy, label("working_copy", "◉")),
+    if(conflict, label("conflict", "x")),
+    if(immutable, label("immutable", "◆")),
+    if(description.starts_with("wip: "), label("wip", "!")),
+    label("normal", "○")
+  )
+)
+'''
+
+# 提交描述模板
+# 用于自动格式化新提交的描述信息
+# 功能:
+#   1. 保留用户输入的原始描述
+#   2. 如果启用 Gerrit 且描述中没有 Change-Id，自动添加 Change-Id
+#   3. 如果启用 should-sign-off 且描述中没有 Signed-off-by，自动添加 Signed-off-by
+#   4. 自动添加变更摘要，列出本次提交修改的文件
+# 用途: 确保所有提交都包含必要的元数据和格式化的变更信息
+draft_commit_description = '''
+concat(
+  description,
+  "\n",
+  if(
+    config("gerrit.enabled").as_boolean() && !has_change_id(description),
+    "\nChange-Id: I" ++ gerrit_id(change_id),
+    ""
+  ),
+  if(
+    config("ui.should-sign-off").as_boolean() && !description.contains("Signed-off-by: " ++ author.name()),
+    "\nSigned-off-by: " ++ author.name() ++ " <" ++ author.email() ++ ">",
+    ""
+  ),
+  "\n",
+  surround(
+    "\nJJ: This commit contains the following changes:\n",
+    "",
+    indent("JJ:     ", diff.summary()),
+  ),
+)
+'''
