@@ -6,14 +6,19 @@
       "rootPatterns": ["*.csproj", ".vim/", ".git/", ".hg/"]
     }
   },
+
   "workspace.rootPatterns": [".git", ".hg", ".projections.json"],
+
   "rust-analyzer.enable": true,
   "rust-analyzer.checkOnSave": true,
+
   "python.linting.ruffEnabled": true,
   "python.formatting.provider": "ruff",
   "pyright.organizeimports.provider": "ruff",
+
   "typescript.suggest.autoImports": true,
   "typescript.updateImportsOnFileMove.enabled": "always",
+
   "suggest.enablePreselect": true,
   "suggest.autoTrigger": "always",
   "suggest.timeout": 5000,
@@ -45,6 +50,7 @@
     "typeParameter": "\uf728",
     "default": " "
   },
+
   "diagnostic.errorSign": "\uf467",
   "diagnostic.warningSign": "\uf071",
   "diagnostic.infoSign": "\uf129",
@@ -54,7 +60,9 @@
   "diagnostic.checkCurrentLine": true,
   "diagnostic.virtualTextPrefix": " ❯❯❯ ",
   "diagnostic.virtualText": true,
+
   "coc.preferences.formatOnSave": true,
+
   "explorer.width": 38,
   "explorer.quitOnOpen": true,
   "explorer.file.column.indent.indentLine": true,

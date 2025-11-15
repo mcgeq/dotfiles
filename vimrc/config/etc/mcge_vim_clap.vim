@@ -1,3 +1,7 @@
 vim9script
 
-g:clap_theme = 'material_design_dark'
+var s_plugin = g:mcge_customvimrcdir .. '/config/plugins/navigation/clap.vim'
+
+if filereadable(s_plugin)
+    execute $'source {s_plugin}'
+endif

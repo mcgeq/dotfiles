@@ -1,15 +1,39 @@
 @echo off
 setlocal enabledelayedexpansion
 
-REM 文件存在会覆盖文件内容
-set WRITE_VIMRC_FILE=%USERPROFILE%\vimfiles\vimrc
+REM ---------------------------------------------------------------------------
+REM 定位路径
+REM ---------------------------------------------------------------------------
+set "TARGET_DIR=%USERPROFILE%\vimfiles"
+set "WRITE_VIMRC_FILE=%TARGET_DIR%\vimrc"
+set "SOURCE_FILE=%cd%\vimrc.txt"
 
-echo The path to file written is [ %WRITE_VIMRC_FILE% ]
+echo Target vimrc will be written to: "%WRITE_VIMRC_FILE%"
+echo Source vimrc: "%SOURCE_FILE%"
 
-REM 获取当前日期
-set dateStamp=%date:~0,4%-%date:~5,2%-%date:~8,2%
+REM ---------------------------------------------------------------------------
+REM 校验路径
+REM ---------------------------------------------------------------------------
+if not exist "%TARGET_DIR%" (
+    echo Target directory not found. Creating "%TARGET_DIR%" ...
+    mkdir "%TARGET_DIR%" || (
+        echo Failed to create target directory. Abort.
+        exit /b 1
+    )
+)
 
-REM 获取源文件的文件名(不包括扩展名)
+if not exist "%SOURCE_FILE%" (
+    echo Source file not found. Abort.
+    exit /b 1
+)
+
+REM ---------------------------------------------------------------------------
+REM 备份原 vimrc
+REM ---------------------------------------------------------------------------
+for /f "tokens=1-3 delims=/-. " %%a in ("%date%") do (
+    set dateStamp=%%c-%%a-%%b
+)
+
 for %%F in ("%WRITE_VIMRC_FILE%") do (
     set fileName=%%~nF
     set fileExtension=%%~xF
@@ -18,21 +42,24 @@ for %%F in ("%WRITE_VIMRC_FILE%") do (
 
 set "distFile=%sourceFolder%%fileName%_%dateStamp%%fileExtension%"
 
-if exist %WRITE_VIMRC_FILE% (
-    REM 复制文件并重命名
-    copy ^/y "%WRITE_VIMRC_FILE%" "%distFile%"
-    
-    echo The file is copied as [ %distFile% ]
-
-    del %WRITE_VIMRC_FILE%
+if exist "%WRITE_VIMRC_FILE%" (
+    copy /y "%WRITE_VIMRC_FILE%" "%distFile%" >nul && (
+        echo Backup saved to "%distFile%"
+    ) || (
+        echo Failed to backup existing vimrc. Abort.
+        exit /b 1
+    )
+    del /q "%WRITE_VIMRC_FILE%"
 )
 
-REM 获取当前目录
-set currentDirPath=%cd%
-set vimrcFilePath=%currentDirPath%\vimrc.txt
+REM ---------------------------------------------------------------------------
+REM 写入新的 vimrc
+REM ---------------------------------------------------------------------------
+type "%SOURCE_FILE%" > "%WRITE_VIMRC_FILE%"
+if errorlevel 1 (
+    echo Failed to write vimrc.
+    exit /b 1
+)
 
-echo Read file is [ %vimrcFilePath% ]
-
-type %vimrcFilePath% > %WRITE_VIMRC_FILE%
-
-echo File write successfully.
+echo File written successfully.
+exit /b 0

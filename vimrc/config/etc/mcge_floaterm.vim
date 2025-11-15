@@ -1,4 +1,7 @@
 vim9script
 
-# set shell
-g:floaterm_shell = $"{g:mcge_custom_shell}"
+var s_plugin = g:mcge_customvimrcdir .. '/config/plugins/terminal/floaterm.vim'
+
+if filereadable(s_plugin)
+    execute $'source {s_plugin}'
+endif

@@ -1,9 +1,9 @@
 vim9script
 
-g:UltiSnipsSnippetDirectories = ["UltiSnips", "vim-snippets/snippets", $"{g:mcge_customvimrcdir}/snippets"]
-g:UltiSnipsExpandTrigger = "<tab>"
-g:UltiSnipsListSnippets = "<c-tab>"
-g:UltiSnipsJumpForwardTrigger = "<c-b>"
-g:UltiSnipsJumpBackwardTrigger = "<c-z>"
+var s_plugin = g:mcge_customvimrcdir .. '/config/plugins/edit/ultisnips.vim'
+
+if filereadable(s_plugin)
+    execute $'source {s_plugin}'
+endif
 
 
