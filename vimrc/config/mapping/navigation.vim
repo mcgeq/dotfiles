@@ -17,15 +17,6 @@ nnoremap <silent><nowait> <leader>og :<c-u>Clap igrep<CR>
 nnoremap <silent><nowait> <leader>or :<c-u>Clap recent_files<CR>
 # -------------------- vim-clap   end --------------------
 
-# --------------------  fzf     start --------------------
-nnoremap <silent><nowait> <C-l> :<c-u>Lines<CR>
-inoremap <silent><nowait> <C-l> <Esc>:<c-u>Lines<CR>
-vnoremap <silent><nowait> <C-l> :<c-u>Lines<CR>
-nnoremap <silent><nowait> <C-s> :<c-u>BLines<CR>
-inoremap <silent><nowait> <C-s> <Esc>:<c-u>BLines<CR>
-vnoremap <silent><nowait> <C-s> :<c-u>BLines<CR>
-# --------------------      fzf   end --------------------
-
 # -------------------- vista start --------------------
 nnoremap <silent><nowait> <leader>v :<c-u>Vista<CR>             # 打开Vista窗口
 nnoremap <silent><nowait> <leader>vb :<c-u>Vista!!<CR>          # 更新Vista窗口

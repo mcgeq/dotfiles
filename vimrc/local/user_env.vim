@@ -35,14 +35,12 @@ if has('unix')
   call SetIfUndef("g:mcge_customvimrcdir", "~/dotfiles/vimrc")
   call SetIfUndef("g:mcge_custom_project", "~/projects")
   call SetIfUndef("g:mcge_custom_workspace", "~/workspace")
-  call SetIfUndef("g:mcge_custom_fzf_dir", "~/.fzf")
   call SetIfUndef("g:mcge_custom_preview_bash", "/usr/bin/bash")
 else
   # Windows 路径（根据你的实际路径修改）
   call SetIfUndef("g:mcge_customvimrcdir", "D:/config/dotfiles/vimrc")
   call SetIfUndef("g:mcge_custom_project", "F:/2024/projects")
   call SetIfUndef("g:mcge_custom_workspace", "D:/workspaces")
-  call SetIfUndef("g:mcge_custom_fzf_dir", "D:/bin/fzf")
   call SetIfUndef("g:mcge_custom_preview_bash", "D:/bin/Git/bin/bash.exe")
 endif
 

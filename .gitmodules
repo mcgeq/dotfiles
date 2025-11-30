@@ -49,15 +49,9 @@
 [submodule "vim-floaterm"]
 	path = vimrc/pack/mcge/start/vim-floaterm
 	url = https://github.com/voldikss/vim-floaterm.git
-[submodule "vim-fzf"]
-	path = vimrc/pack/mcge/start/fzf.vim
-	url = https://github.com/junegunn/fzf.vim.git
 [submodule "vim-molokai"]
 	path = vimrc/pack/mcge/start/molokai
 	url = https://github.com/tomasr/molokai.git
-[submodule "fzf"]
-	path = vimrc/pack/mcge/start/fzf
-	url = https://github.com/junegunn/fzf.git
 [submodule "emacs-magit"]
 	path = emacs/site-lisp/extensions/magit
 	url = https://github.com/magit/magit.git
