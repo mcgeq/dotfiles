@@ -1,29 +1,35 @@
-if true then return {} end -- WARN: REMOVE THIS LINE TO ACTIVATE THIS FILE
-
--- AstroUI provides the basis for configuring the AstroNvim User Interface
--- Configuration documentation can be found with `:h astroui`
--- NOTE: We highly recommend setting up the Lua Language Server (`:LspInstall lua_ls`)
---       as this provides autocomplete and documentation while editing
+-- AstroUI 配置
+-- 管理 UI 外观、主题、图标等
+-- 文档: `:h astroui`
 
 ---@type LazySpec
 return {
   "AstroNvim/astroui",
   ---@type AstroUIOpts
   opts = {
-    -- change colorscheme
-    colorscheme = "astrodark",
-    -- AstroUI allows you to easily modify highlight groups easily for any and all colorschemes
+    -- ===== 主题配置 =====
+    colorscheme = "astrodark", -- 默认主题（可选：astrotheme, catppuccin, tokyonight 等）
+
+    -- ===== 高亮组配置 =====
     highlights = {
-      init = { -- this table overrides highlights in all themes
+      -- 全局高亮覆盖（应用于所有主题）
+      init = {
+        -- 示例：修改背景色
         -- Normal = { bg = "#000000" },
+        -- 高亮当前行号
+        -- CursorLineNr = { fg = "#ffcc00", bold = true },
       },
-      astrodark = { -- a table of overrides/changes when applying the astrotheme theme
-        -- Normal = { bg = "#000000" },
+      
+      -- 特定主题的高亮覆盖
+      astrodark = {
+        -- 自定义 astrodark 主题的高亮
+        -- Normal = { bg = "#1a1a2e" },
       },
     },
-    -- Icons can be configured throughout the interface
+
+    -- ===== 图标配置 =====
     icons = {
-      -- configure the loading of the lsp in the status line
+      -- LSP 加载动画
       LSPLoading1 = "⠋",
       LSPLoading2 = "⠙",
       LSPLoading3 = "⠹",
@@ -34,6 +40,19 @@ return {
       LSPLoading8 = "⠧",
       LSPLoading9 = "⠇",
       LSPLoading10 = "⠏",
+
+      -- 可以在这里添加更多自定义图标
+      -- Git = "",
+      -- GitBranch = "",
+      -- GitAdd = "",
+      -- GitChange = "",
+      -- GitDelete = "",
+    },
+
+    -- ===== 状态行配置 =====
+    status = {
+      -- 可以在这里配置状态行的各个组件
+      -- 参考: `:h astroui.status`
     },
   },
 }

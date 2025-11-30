@@ -2,7 +2,56 @@ return {
   "folke/snacks.nvim",
   opts = function(_, opts)
     opts = opts or {}
+    
+    -- ============================================
+    -- Picker 优化配置
+    -- ============================================
     opts.picker = opts.picker or {}
+    -- 性能优化
+    opts.picker.throttle = 20 -- 降低延迟，提升响应速度
+    opts.picker.follow = true -- 自动跟随光标
+    
+    -- 窗口布局优化
+    opts.picker.layout = {
+      preset = "default", -- 使用默认布局（居中显示）
+      -- 可选布局: "default" | "ivy" | "dropdown" | "cursor"
+    }
+    
+    -- 预览窗口配置
+    opts.picker.preview = {
+      enabled = true,
+      width = 0.5, -- 预览窗口占 50% 宽度
+      border = "rounded", -- 圆角边框
+    }
+    
+    -- 搜索行为优化
+    opts.picker.matcher = {
+      frecency = true, -- 启用频率+最近使用排序（智能排序）
+      case_mode = "smart_case", -- 智能大小写（小写忽略大小写，大写精确匹配）
+    }
+    
+    -- Git 集成优化
+    opts.picker.formatters = {
+      file = {
+        filename_first = true, -- 文件名优先显示（更易扫描）
+      },
+    }
+    
+    -- 性能：排除大文件和目录
+    opts.picker.files = {
+      hidden = false, -- 默认不显示隐藏文件（需要时可用 <C-h> 切换）
+      follow = true, -- 跟随符号链接
+      ignore_patterns = {
+        "node_modules",
+        ".git",
+        "dist",
+        "build",
+        "target",
+        ".next",
+        ".cache",
+      },
+    }
+    
     opts.explorer = opts.explorer or {}
     -- Dashboard configuration
     opts.dashboard = opts.dashboard or {}

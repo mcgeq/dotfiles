@@ -1,168 +1,48 @@
 -- LuaSnip snippets 配置
--- 文件头 snippets 定义
+-- 文件头 snippets 定义（重构版本）
+-- 使用模块化结构和常量配置
 
-local luasnip = require "luasnip"
-local s = luasnip.snippet
-local t = luasnip.text_node
-local i = luasnip.insert_node
-local f = luasnip.function_node
+local constants = require("config.constants")
+local headers = require("config.snippets.headers")
 
-local function get_filename()
-  return vim.fn.expand "%:t"
-end
+local M = {}
 
-local function get_current_date_time()
-  return os.date "%Y-%m-%d %H:%M:%S"
-end
-
-local function get_current_year()
-  return os.date "%Y"
-end
-
--- 通用的文件头模板
-local function create_file_header(comment_prefix)
-  return s(
-    "header",
-    {
-      t { comment_prefix .. " -----------------------------------------------------------------------------" },
-      t { comment_prefix .. "    Copyright (C) " },
-      f(get_current_year, {}),
-      t { " mcge. All rights reserved." },
-      t { "", comment_prefix .. " Author:         mcge" },
-      t { "", comment_prefix .. " Email:          <mcgeq@outlook.com>" },
-      t { "", comment_prefix .. " File:           " },
-      f(get_filename, {}),
-      t { "", comment_prefix .. " Description:    " },
-      i(1, "Description of the file"),
-      t { "", comment_prefix .. " Create   Date:  " },
-      f(get_current_date_time, {}),
-      t { "", comment_prefix .. " Last Modified:  " },
-      f(get_current_date_time, {}),
-      t { "", comment_prefix .. " Modified   By:  mcgeq <mcgeq@outlook.com>" },
-      t { "", comment_prefix .. " -----------------------------------------------------------------------------" },
-      t { "" },
-    }
-  )
-end
-
-return {
-  -- Rust 文件头 (使用 // 注释)
-  rust = {
-    create_file_header "//",
-  },
-  -- C/C++ 文件头 (使用 // 注释)
-  c = {
-    create_file_header "//",
-  },
-  cpp = {
-    create_file_header "//",
-  },
-  -- Python 文件头 (使用 # 注释)
-  python = {
-    create_file_header "#",
-  },
-  -- TypeScript/JavaScript 文件头 (使用 // 注释)
-  typescript = {
-    create_file_header "//",
-  },
-  javascript = {
-    create_file_header "//",
-  },
-  typescriptreact = {
-    create_file_header "//",
-  },
-  javascriptreact = {
-    create_file_header "//",
-  },
-  -- Lua 文件头 (使用 -- 注释)
-  lua = {
-    create_file_header "--",
-  },
-  -- Go 文件头 (使用 // 注释)
-  go = {
-    create_file_header "//",
-  },
-  -- Java 文件头 (使用 // 注释)
-  java = {
-    create_file_header "//",
-  },
-  -- C# 文件头 (使用 // 注释)
-  cs = {
-    create_file_header "//",
-  },
-  -- HTML 文件头 (使用 <!-- 和 --> 注释)
-  html = {
-    s(
-      "header",
-      {
-        t { "<!-- -----------------------------------------------------------------------------" },
-        t { "    Copyright (C) " },
-        f(get_current_year, {}),
-        t { " mcge. All rights reserved." },
-        t { "", " Author:         mcge" },
-        t { "", " Email:          <mcgeq@outlook.com>" },
-        t { "", " File:           " },
-        f(get_filename, {}),
-        t { "", " Description:    " },
-        i(1, "Description of the file"),
-        t { "", " Create   Date:  " },
-        f(get_current_date_time, {}),
-        t { "", " Last Modified:  " },
-        f(get_current_date_time, {}),
-        t { "", " Modified   By:  mcgeq <mcgeq@outlook.com>" },
-        t { "", " ----------------------------------------------------------------------------- -->" },
-        t { "" },
-      }
-    ),
-  },
-  -- CSS 文件头 (使用 /* 和 */ 注释)
-  css = {
-    s(
-      "header",
-      {
-        t { "/* -----------------------------------------------------------------------------" },
-        t { "    Copyright (C) " },
-        f(get_current_year, {}),
-        t { " mcge. All rights reserved." },
-        t { "", " Author:         mcge" },
-        t { "", " Email:          <mcgeq@outlook.com>" },
-        t { "", " File:           " },
-        f(get_filename, {}),
-        t { "", " Description:    " },
-        i(1, "Description of the file"),
-        t { "", " Create   Date:  " },
-        f(get_current_date_time, {}),
-        t { "", " Last Modified:  " },
-        f(get_current_date_time, {}),
-        t { "", " Modified   By:  mcgeq <mcgeq@outlook.com>" },
-        t { "", " ----------------------------------------------------------------------------- */" },
-        t { "" },
-      }
-    ),
-  },
-  scss = {
-    s(
-      "header",
-      {
-        t { "/* -----------------------------------------------------------------------------" },
-        t { "    Copyright (C) " },
-        f(get_current_year, {}),
-        t { " mcge. All rights reserved." },
-        t { "", " Author:         mcge" },
-        t { "", " Email:          <mcgeq@outlook.com>" },
-        t { "", " File:           " },
-        f(get_filename, {}),
-        t { "", " Description:    " },
-        i(1, "Description of the file"),
-        t { "", " Create   Date:  " },
-        f(get_current_date_time, {}),
-        t { "", " Last Modified:  " },
-        f(get_current_date_time, {}),
-        t { "", " Modified   By:  mcgeq <mcgeq@outlook.com>" },
-        t { "", " ----------------------------------------------------------------------------- */" },
-        t { "" },
-      }
-    ),
-  },
+-- 为使用单行注释的语言生成 snippets
+local line_comment_filetypes = {
+  "rust",
+  "c",
+  "cpp",
+  "javascript",
+  "typescript",
+  "javascriptreact",
+  "typescriptreact",
+  "lua",
+  "go",
+  "java",
+  "cs",
+  "kotlin",
+  "swift",
+  "dart",
 }
+
+-- 为使用单行注释的语言创建 snippets
+for _, ft in ipairs(line_comment_filetypes) do
+  local comment_style = constants.filetype_to_comment[ft]
+  if comment_style then
+    local comment_prefix = constants.comment_styles[comment_style]
+    M[ft] = { headers.create_line_comment_header(comment_prefix) }
+  end
+end
+
+-- Python 使用 # 注释
+M.python = { headers.create_line_comment_header(constants.comment_styles.hash) }
+
+-- HTML 使用块注释
+M.html = { headers.create_block_comment_header("<!--", "-->") }
+
+-- CSS/SCSS 使用块注释
+M.css = { headers.create_block_comment_header("/*", "*/") }
+M.scss = { headers.create_block_comment_header("/*", "*/") }
+
+return M
 
