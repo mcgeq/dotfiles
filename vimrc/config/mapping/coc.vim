@@ -1,7 +1,5 @@
 vim9script
 
-import autoload "mcge_utils.vim"
-
 # -------------------- coc-explorer start --------------------
 # coc-explorer
 nmap <leader>e :CocCommand explorer<CR>
@@ -26,7 +24,7 @@ nnoremap <silent> <leader>y :<C-u>CocList -A --normal yank<CR>
 # other plugin before putting this into your config
 inoremap <silent><expr> <TAB>
       \ coc#pum#visible() ? coc#pum#next(1) :
-      \ mcge_utils.CheckBackspace() ? "\<Tab>" :
+      \ g:CheckBackspace() ? "\<Tab>" :
       \ coc#refresh()
 inoremap <expr><S-TAB> coc#pum#visible() ? coc#pum#prev(1) : "\<C-h>"
 

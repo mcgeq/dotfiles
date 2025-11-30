@@ -1,7 +1,5 @@
 vim9script
 
-import autoload "mcge_utils.vim"
-
 # -------------------- 保存退出 start --------------------
 # 保存文件
 nnoremap <silent> <C-x><C-s> :w<CR>

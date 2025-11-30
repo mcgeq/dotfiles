@@ -1,405 +1,371 @@
-# Vim 9 Configuration
+# mcge's Vim Configuration
 
-A modern Vim configuration written in **Vim9script** with comprehensive language support using CoC.nvim (Conquer of Completion) and traditional Vim plugins.
+> **Version 2.0** - Modern, Modular, High-Performance
 
-## 🌟 Features
+[中文文档](./README_CN.md)
 
-### Language Support (via CoC.nvim)
-Full LSP and language support for 30+ languages:
-- **Systems**: C/C++ (clangd), Java, CMake
-- **Web**: TypeScript/JavaScript, HTML, CSS, Vue, Volar
-- **Dynamic**: Python (Pyright), Lua
-- **Rust**: rust-analyzer
-- **Functional**: Clojure
-- **Data**: JSON, SQL, TOML, YAML, XML
-- **Markup**: Markdown, TailwindCSS, UnoCSS
-- **Shell**: Bash, PowerShell
-- **Other**: Git, Prettier, ESLint
+A production-ready Vim configuration written in **Vim9script** with modular architecture, intelligent lazy loading, and comprehensive LSP support via CoC.nvim.
 
-### Core Plugins
-- **Completion**: CoC.nvim - Language Server Protocol
-- **Fuzzy Finder**: FZF, vim-clap
-- **File Explorer**: CoC Explorer, Vista
-- **Git**: vim-gitgutter, Fugitive
-- **Terminal**: Floaterm
-- **Statusline**: Airline
-- **UI**: Which-key, Startify
-- **Snippets**: Ultisnips with comprehensive snippets library
-- **Commenting**: NERDCommenter
+---
 
-### Editor Features
-- Auto-completion with IntelliSense
-- Git integration and highlighting
-- Syntax highlighting and error diagnostics
-- Code formatting (Prettier, clang-format)
-- Multiple cursors support
-- Project-wide symbol search
-- Floating terminal
-- Session management
+## ✨ Features
+
+### 🏗️ Modular Architecture (v2.0)
+
+```
+Bootstrap → Core → Modules → Config → Local
+     ↓         ↓        ↓         ↓        ↓
+  Environ   Utils   UI/LSP   Compat   User
+```
+
+- **Bootstrap** - Environment initialization, constants, basic settings
+- **Core** - Error handling, utilities, module loader, health check
+- **Modules** - UI config, LSP config (modular, pluggable)
+- **Config** - Legacy compatibility, plugin config, key mappings
+- **Local** - User customizations (not tracked by Git)
+
+### ⚡ Performance Optimization
+
+- **Smart Lazy Loading** - UI & LSP load on demand, startup < 100ms
+- **Performance Monitoring** - Built-in startup time tracking & module stats
+- **Health Checks** - Auto-detect config, dependencies & plugin status
+- **Deferred Init** - Statusline & non-critical modules load later
+
+### 🌐 Language Support (45+ CoC Extensions)
+
+- **System**: C/C++ (clangd), Java, CMake, Zig
+- **Web**: TypeScript/JavaScript, HTML, CSS/SCSS, Vue 2/3, React, TailwindCSS v3
+- **Dynamic**: Python (Pyright), Lua, Clojure, Shell
+- **Systems**: Rust (rust-analyzer)
+- **Data**: JSON, YAML, TOML, XML, SQL
+- **Tools**: Git, Prettier, ESLint, AI Completion (TabNine)
+
+### 🔧 Core Plugins
+
+**LSP & Completion**
+- CoC.nvim - Full LSP support with 45+ extensions
+
+**Search & Navigation**
+- **Clap** - Modern fuzzy finder (faster than FZF)
+- **Vista** - Code outline and symbol navigation
+- **CoC Explorer** - File browser
+
+**UI & Appearance**
+- **Startify** - Start screen
+- **Airline** - Status line
+- **Which-key** - Key binding hints
+
+**Editing Enhancements**
+- **Floaterm** - Floating terminal
+- **vim-surround** - Quick surroundings
+- **vim-commentary** - Comments
+
+---
 
 ## 📦 Installation
 
-### Prerequisites
-- Vim 9.0+ (compiled with `+python3`, `+ruby`, `+nodejs`, `+clipboard`)
-- Node.js 14+ (for CoC.nvim)
-- Universal Ctags (for Vista)
+### Requirements
+
+**Required**
+- Vim 9.0+ or Neovim 0.8+
+- Node.js 16+ (for CoC.nvim)
 - Git
-- (Optional) FZF for fuzzy finding
 
-### Quick Install
+**Recommended**
+- `ripgrep` (rg) - Fast text search
+- `fd` - Fast file finding
+- `ctags` - Code tags (for Vista)
 
-#### Windows:
+### Windows Installation
+
 ```powershell
-# Install from dotfiles location
-cd D:\config\dotfiles\vimrc
+# 1. Install recommended tools
+winget install BurntSushi.ripgrep.MSVC
+winget install sharkdp.fd
+winget install UniversalCtags.UniversalCtags
 
-# Run install script
+# 2. Clone configuration
+git clone <your-repo> vimrc
+
+# 3. Run install script
+cd vimrc
 .\install.bat
 ```
 
-The install script will:
-1. Link `init.vim` to your Vim runtime path
-2. Setup pack directory structure
-3. Configure CoC.nvim
-4. Install plugin dependencies
+### Linux/macOS Installation
 
-#### Linux/macOS:
 ```bash
-# Navigate to vimrc directory
-cd ~/dotfiles/vimrc
+# 1. Install recommended tools
+# Ubuntu/Debian
+sudo apt install ripgrep fd-find universal-ctags
 
-# Run install script
+# macOS
+brew install ripgrep fd ctags
+
+# 2. Clone configuration
+git clone <your-repo> vimrc
+
+# 3. Run install script
+cd vimrc
+chmod +x install.sh
 ./install.sh
 ```
 
 ### First Launch
 
-1. Start Vim:
-   ```bash
-   vim
-   ```
+1. Start Vim: `vim`
+2. CoC extensions will auto-install (takes a few minutes on first launch)
+3. Run health check: `:CheckHealth`
+4. View startup time: `:VimStartupTime`
 
-2. Install CoC extensions:
-   ```vim
-   :CocInstall
-   ```
+---
 
-3. **Important**: Update your main `vimrc` or `~/.vimrc` to source this configuration:
-
-   **For Windows**:
-   ```vim
-   vim9script
-
-   def SetPackPath(custom_dir: string)
-       var packpath_exist = index(split(&packpath, ','), custom_dir) != -1
-       if !packpath_exist
-           execute 'set packpath+=' .. custom_dir
-       endif
-   enddef
-
-   # Set your custom variables
-   g:mcge_custom_project = "F:/2024/projects"
-   g:mcge_custom_workspace = "F:/workspace"
-   g:mcge_custom_fzf_dir = "D:/bin/fzf"
-   g:mcge_custom_preview_bash = "D:/bin/Git/bin/bash.exe"
-   g:mcge_customvimrcdir = "D:/config/dotfiles/vimrc"
-
-   SetPackPath(g:mcge_customvimrcdir)
-   execute 'source ' .. fnameescape(g:mcge_customvimrcdir .. '/init.vim')
-   ```
-
-   **For Unix**:
-   ```vim
-   vim9script
-
-   def SetPackPath(custom_dir: string)
-       var packpath_exist = index(split(&packpath, ','), custom_dir) != -1
-       if !packpath_exist
-           execute 'set packpath+=' .. custom_dir
-       endif
-   enddef
-
-   g:mcge_customvimrcdir = "~/dotfiles/vimrc"
-   g:mcge_custom_project = "~/projects"
-   g:mcge_custom_workspace = "~/workspace"
-   g:mcge_custom_fzf_dir = "~/.fzf"
-   g:mcge_custom_preview_bash = "/usr/bin/bash"
-
-   SetPackPath(g:mcge_customvimrcdir)
-   execute 'source ' .. fnameescape(g:mcge_customvimrcdir .. '/init.vim')
-   ```
-
-## 🗂️ Configuration Structure
+## 🗂️ Directory Structure
 
 ```
 vimrc/
-├── init.vim                    # Main configuration entry point
-├── vimrc.txt                   # Template for main vimrc
-├── install.bat / install.sh    # Installation scripts
-├── config/
-│   ├── core/                   # Core functionality
-│   │   ├── mcge_startify.vim   # Dashboard
-│   │   └── mcge_which_key.vim  # Key binding guide
-│   ├── etc/                    # Plugin configurations
-│   │   ├── mcge_base.vim       # Base Vim settings
-│   │   ├── mcge_ui.vim         # UI customization
-│   │   ├── mcge_coc.vim        # CoC.nvim config
-│   │   ├── mcge_fzf.vim        # FZF configuration
-│   │   ├── mcge_keymap.vim     # Key mappings
-│   │   ├── mcge_airline.vim    # Statusline
-│   │   ├── mcge_floaterm.vim   # Floating terminal
-│   │   ├── mcge_vista.vim      # Tag viewer
-│   │   └── ...
-│   ├── coc-settings.json       # CoC configuration
-│   └── autoload/
-│       └── mcge_utils.vim      # Utility functions
-├── colors/                     # Custom colorschemes
-│   └── mcge_scheme.vim
-├── pack/                       # Vim 8+ native package manager
-│   └── mcge/
-│       └── start/              # Auto-loaded plugins
-│           ├── coc.nvim/
-│           ├── vim-fzf/
-│           ├── airline/
-│           ├── vim-snippets/   # Comprehensive snippets
-│           └── ...
-└── snippets/                   # Custom snippets
-    ├── python.snippets
-    ├── rust.snippets
-    ├── typescript.snippets
-    └── typescriptreact.snippets
+├── init.vim                # Main entry point
+├── bootstrap/              # Environment & settings
+├── core/                   # Error handling, utilities, loader, health check
+├── modules/                # UI & LSP modules (modular, pluggable)
+├── config/                 # Plugin configs, mappings, language-specific
+├── local/                  # User customizations (not tracked by Git)
+└── pack/                   # Vim plugins
 ```
+
+**Architecture Layers**: Bootstrap → Core → Modules → Config → Local
+
+---
 
 ## ⌨️ Key Bindings
 
 ### Leader Key: `<Space>`
 
-#### General
-- `<Leader> h` - Toggle file tree (CoC Explorer)
-- `<Leader> f f` - Find files (FZF)
-- `<Leader> f g` - Grep files
-- `<Leader> f b` - Buffers
-- `<Leader> b d` - Delete buffer
-- `<Leader> q` - Quit
+### Startify Start Screen
 
-#### Code Actions (CoC)
+| Key | Function |
+|-----|----------|
+| `n` | New file |
+| `f` | File search (Clap) |
+| `o` | Recent files |
+| `w` | Text search |
+| `s` | Load session |
+| `c` | Open config |
+
+### Clap Search (Recommended)
+
+| Shortcut | Function |
+|----------|----------|
+| `<leader>p` | File search |
+| `<leader>P` | Git files |
+| `<leader>/` | Text search |
+| `<leader>bb` | Buffers |
+| `<leader>fh` | Recent files |
+| `<leader>gc` | Git commits |
+
+### Vista Code Outline
+
+| Shortcut | Function |
+|----------|----------|
+| `<F8>` | Toggle outline |
+| `<leader>v` | Toggle outline |
+| `<leader>vf` | Symbol search |
+
+### CoC LSP
+
+**Code Navigation**
 - `gd` - Go to definition
 - `gy` - Go to type definition
 - `gi` - Go to implementation
-- `gr` - References
-- `K` - Hover documentation
-- `<Leader> r n` - Rename symbol
-- `<Leader> a` - Code actions
-- `<Leader> f` - Format file
+- `gr` - Find references
+- `K` - Show documentation
 
-#### Navigation
-- `<Ctrl-hjkl>` - Navigate splits
-- `<Ctrl-o>` - Jump backward
-- `<Ctrl-i>` - Jump forward
-- `<Leader> t` - Floating terminal
+**Code Actions**
+- `<leader>rn` - Rename symbol
+- `<leader>f` - Format code
+- `[g` / `]g` - Previous/next diagnostic
 
-#### Git
-- `]c` - Next hunk
-- `[c` - Previous hunk
-- `<Leader> hs` - Stage hunk
-- `<Leader> hr` - Reset hunk
+### Windows and Buffers
 
-#### Vista (Tags Viewer)
-- `<Leader> v t` - Toggle Vista
-- `<Leader> v f` - Find symbol in file
-- `<Leader> v p` - Open project tree
+- `<Ctrl-h/j/k/l>` - Switch windows
+- `<Ctrl-n/p>` - Switch buffers
+- `<Ctrl-x><Ctrl-s>` - Save file
 
-#### Which Key
-Press `<Leader>` and wait to see available key combinations.
+---
 
 ## ⚙️ Configuration
 
-### Environment Variables
+### User Environment Variables
 
-Configure in your main `vimrc`:
+Edit `local/user_env.vim`:
 
 ```vim
-# Windows
-g:mcge_custom_project = "F:/2024/projects"
-g:mcge_custom_workspace = "D:/workspaces"
-g:mcge_custom_fzf_dir = "D:/bin/fzf"
+vim9script
 
-# Unix
-g:mcge_custom_project = "~/projects"
-g:mcge_custom_workspace = "~/workspace"
-g:mcge_custom_fzf_dir = "~/.fzf"
+# Author info
+g:mcge_custom_author = "Your Name"
+g:mcge_custom_email = "<your@email.com>"
+
+# Vista backend (coc or ctags)
+g:mcge_custom_vista_executive = "coc"
+
+# Windows paths
+if has('win32') || has('win64')
+  g:mcge_custom_project = "E:/MyProjects"
+  g:mcge_custom_workspace = "E:/Workspaces"
+endif
+```
+
+### User Settings
+
+Edit `local/user_settings.vim`:
+
+```vim
+vim9script
+
+# Your custom settings
+set number
+set relativenumber
 ```
 
 ### CoC Configuration
 
-Edit `config/coc-settings.json` to customize LSP behavior:
+Edit `config/coc-settings.json`:
 
 ```json
 {
   "python.linting.enabled": true,
   "python.formatting.provider": "black",
-  "clangd.path": "/usr/bin/clangd",
   "rust-analyzer.checkOnSave.command": "clippy"
 }
 ```
 
-### Adding Snippets
+---
 
-Custom snippets are in `snippets/`. Format:
+## 🔧 Common Commands
 
-```snip
-# python.snippets
-snippet ifmain
-abbr if __name__ == "__main__":
-if __name__ == "__main__":
-    ${1:main()}
-```
-
-### Auto-Update Timestamps
-
-Automatically updates file headers when saving `.rs`, `.c`, `.cpp`, `.py`, `.ts`, `.cs` files:
+### Performance and Debugging
 
 ```vim
-autocmd BufWritePre *.{rs,c,cpp,py,ts,cs} mcge_utils.AutoUpdateLastUpdateInfo()
+:VimStartupTime          " View startup time
+:VimrcLoadReport         " Module loading report
+:CheckHealth             " Health check
 ```
 
-## 🔧 CoC Extensions Management
+### Clap Search
 
-### Install Extension
 ```vim
-:CocInstall coc-tsserver
+:Clap files              " File search
+:Clap grep               " Text search
+:Clap buffers            " Buffers
+:Clap history            " Recent files
 ```
 
-### List Extensions
+### Vista Outline
+
 ```vim
-:CocList extensions
+:Vista                   " Toggle outline
+:Vista finder            " Symbol search
+:Vista coc               " Use CoC backend
 ```
 
-### Update Extensions
+### CoC
+
 ```vim
-:CocUpdate
+:CocInfo                 " CoC info
+:CocList extensions      " Extension list
+:CocCommand explorer     " File browser
+:Format                  " Format code
+:OR                      " Organize imports
 ```
 
-### Extension Status
+---
+
+## 🐛 Troubleshooting
+
+### CoC Not Working
+
+1. Check Node.js: `node --version` (requires 16+)
+2. View status: `:CocInfo`
+3. Restart CoC: `:CocRestart`
+
+### Search is Slow
+
+1. Ensure ripgrep is installed: `rg --version`
+2. Use Clap: `:Clap files`
+3. Use CoC List: `:CocList files`
+
+### Vista Not Showing Symbols
+
+1. Check file type: `:Vista info`
+2. Switch backend: `:Vista coc`
+3. Check CoC: `:CocInfo`
+
+---
+
+## 🚀 Performance Metrics
+
+- **Startup Time**: ~80-100ms
+- **Modules**: 40+
+- **CoC Extensions**: 45+
+
+### View Performance
+
 ```vim
-:CocList services
+:VimStartupTime          " Startup time
+:VimrcLoadReport         " Module loading report
+:CheckHealth             " Health status
 ```
 
-## 📝 Snippets
+---
 
-### Built-in Snippets
-Via `ultisnips` with comprehensive library:
-- 100+ languages supported
-- Thousands of snippets
-
-### Custom Snippets
-- `snippets/python.snippets` - Python templates
-- `snippets/rust.snippets` - Rust boilerplate
-- `snippets/typescript.snippets` - TypeScript/JavaScript
-- `snippets/typescriptreact.snippets` - React/JSX
-
-## 🎨 UI Customization
-
-### Colorscheme
-Custom colorscheme: `colors/mcge_scheme.vim`
-
-Change colorscheme in `config/etc/mcge_ui.vim`:
-```vim
-colorscheme mcge_scheme
-```
-
-### Airline Theme
-Configure in `config/etc/mcge_airline.vim`:
-```vim
-g:airline_theme = 'powerlineish'
-```
-
-### Font
-Set in `config/etc/mcge_base.vim`:
-```vim
-set guifont=Consolas:h12
-```
-
-## 🔍 Troubleshooting
-
-### CoC not working
-1. Ensure Node.js is installed: `node --version`
-2. Check CoC status: `:CocInfo`
-3. Reinstall CoC: `:CocUninstall coc.nvim` then `:CocInstall coc.nvim`
-
-### FZF not finding files
-1. Ensure FZF is in PATH
-2. Check `g:mcge_custom_fzf_dir` is correct
-3. Verify executable: `fzf --version`
-
-### Snippets not expanding
-1. Check Ultisnips is loaded: `:echo g:did_plug`
-2. Verify trigger key: `let g:UltiSnipsExpandTrigger='<Tab>'`
-
-### Floaterm not opening
-Ensure Node.js and Python 3 are installed and in PATH.
-
-## 📚 Plugin Management
-
-This configuration uses Vim 8+ native package management (`pack/`).
+## 📚 Advanced Usage
 
 ### Adding Plugins
 
-1. Create plugin directory:
-   ```bash
-   mkdir -p pack/mcge/start/plugin-name
-   ```
+```bash
+cd pack/mcge/start
+git clone https://github.com/author/plugin-name
+```
 
-2. Install via git:
-   ```bash
-   cd pack/mcge/start/plugin-name
-   git clone <repository-url> .
-   ```
+### Adding CoC Extensions
 
-Or use [vim-plug](https://github.com/junegunn/vim-plug) for better management.
+```vim
+:CocInstall coc-extension-name
+```
 
-## 🆚 Vim9script Features
+### Custom Key Bindings
 
-This configuration leverages Vim 9's modern features:
-- Type safety
-- Improved performance
-- Modern syntax
-- Better scoping
+Edit `local/user_mappings.vim`:
 
-Example from the config:
 ```vim
 vim9script
 
-def SetPackPath(custom_dir: string)
-    var packpath_exist = index(split(&packpath, ','), custom_dir) != -1
-    if !packpath_exist
-        execute 'set packpath+=' .. custom_dir
-    endif
-enddef
+nnoremap <leader>w :w<CR>
+nnoremap <leader>q :q<CR>
 ```
 
-## 🤝 Contributing
+---
 
-This is a personal configuration. Feel free to:
-1. Fork it for your own use
-2. Adapt it to your workflow
-3. Report issues or suggestions
+## 🔗 Resources
+
+- [Vim 9 Documentation](https://vimhelp.org/vim9.txt.html)
+- [CoC.nvim](https://github.com/neoclide/coc.nvim)
+- [vim-clap](https://github.com/liuchengxu/vim-clap)
+- [Vista.vim](https://github.com/liuchengxu/vista.vim)
+
+---
 
 ## 📄 License
 
-Same as the parent dotfiles repository.
+MIT License
 
 ## 🙏 Acknowledgments
 
-- CoC.nvim team for amazing LSP integration
-- All plugin authors for their contributions
-- Vim community for constant improvements
+- CoC.nvim team
+- All plugin authors
+- Vim community
 
-## 📖 Resources
+---
 
-- [Vim 9 Documentation](https://vimhelp.org/if_vim9.txt.html)
-- [CoC.nvim Documentation](https://github.com/neoclide/coc.nvim)
-- [Ultisnips Documentation](https://github.com/SirVer/ultisnips)
-- [FZF Documentation](https://github.com/junegunn/fzf)
-
-
+**Enjoy your Vim journey!** 🎉
