@@ -16,6 +16,8 @@
 
 ## ⌨️ 快捷键
 
+> **注意**: 快捷键已在 `lua/plugins/nvim-spectre.lua` 中配置
+
 ### 打开 Spectre
 
 | 快捷键 | 功能 | 说明 |

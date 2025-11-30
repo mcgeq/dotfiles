@@ -39,6 +39,7 @@ return {
   
   -- === 文档 ===
   { import = "astrocommunity.pack.markdown" }, -- Markdown
+  { import = "astrocommunity.note-taking.neorg" }, -- Neorg (现代化笔记系统)
   
   -- === 版本控制 ===
   { import = "astrocommunity.pack.jj" }, -- Jujutsu VCS
@@ -121,9 +122,16 @@ return {
   -- ============================================
   -- 界面美化
   -- ============================================
-  { import = "astrocommunity.indent.indent-blankline-nvim" }, -- 缩进线
+  { import = "astrocommunity.pack.rainbow-delimiter-indent-blankline" }, -- 彩虹缩进线（包含 indent-blankline + rainbow-delimiters）
   { import = "astrocommunity.utility.noice-nvim" }, -- 美化 UI 和通知
   { import = "astrocommunity.color.ccc-nvim" }, -- 颜色预览
+  
+  -- ============================================
+  -- 窗口和分割管理
+  -- ============================================
+  { import = "astrocommunity.split-and-window.edgy-nvim" }, -- 智能窗口布局管理（固定边栏）
+  { import = "astrocommunity.split-and-window.colorful-winsep-nvim" }, -- 彩色窗口分隔符
+  { import = "astrocommunity.split-and-window.windows-nvim" }, -- 自动窗口大小调整
   
   -- ============================================
   -- 注释增强

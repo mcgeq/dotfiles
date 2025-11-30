@@ -46,6 +46,32 @@
    - Frecency 智能排序、Ivy 布局、预览窗口
    - 大幅提升搜索体验和性能
 
+### 📝 笔记和组织
+
+10. **[Neorg](./neorg.md)** - 现代化笔记系统
+    - GTD 任务管理、结构化笔记、知识组织
+    - 专为 Neovim 设计的 Org-mode 替代
+
+### 🎨 视觉增强
+
+11. **[Rainbow Delimiter + Indent Blankline](./rainbow-delimiter-indent-blankline.md)** - 彩虹缩进可视化
+    - 7色彩虹括号 + 匹配颜色的缩进线
+    - 多层嵌套一目了然
+
+### 🪟 窗口管理
+
+12. **[edgy.nvim](./edgy-nvim.md)** - 智能窗口布局管理
+    - 自动固定边栏到四个边缘
+    - 保持主编辑区域整洁
+
+13. **[colorful-winsep.nvim](./colorful-winsep-nvim.md)** - 彩色窗口分隔符
+    - 美化分隔符，当前窗口高亮
+    - 平滑动画效果
+
+14. **[windows.nvim](./windows-nvim.md)** - 自动窗口调整
+    - 切换窗口时自动扩展
+    - 聚焦当前任务
+
 ## 🎯 快速上手
 
 ### 推荐学习顺序
