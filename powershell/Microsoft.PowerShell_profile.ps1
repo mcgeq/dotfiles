@@ -213,6 +213,40 @@ function GitSubmoduleUpdate {
 function GitPushAllBranch {
     git push --all origin -u
 }
+function GitSubmoduleInit {
+    Write-Host "Step 1: Initializing all submodules..." -ForegroundColor Cyan
+    git submodule update --init --recursive
+    Write-Host "✓ Submodules initialized!" -ForegroundColor Green
+}
+function GitSubmoduleCheckoutMain {
+    Write-Host "Step 2: Switching all submodules to main/master/trunk branch..." -ForegroundColor Cyan
+    git submodule foreach '
+        if (git show-ref --verify --quiet refs/remotes/origin/main) {
+            git checkout main; Write-Host "✓ $name -> main" -ForegroundColor Green
+        } elseif (git show-ref --verify --quiet refs/remotes/origin/master) {
+            git checkout master; Write-Host "✓ $name -> master" -ForegroundColor Green
+        } elseif (git show-ref --verify --quiet refs/remotes/origin/trunk) {
+            git checkout trunk; Write-Host "✓ $name -> trunk" -ForegroundColor Green
+        } else {
+            Write-Host "⚠ $name -> no main/master/trunk branch" -ForegroundColor Yellow
+        }
+    '
+}
+function GitSubmodulePullAll {
+    Write-Host "Step 3: Pulling latest updates for all submodules..." -ForegroundColor Cyan
+    git submodule foreach 'git pull --rebase 2>$null || Write-Host "⚠ Failed to pull $name" -ForegroundColor Yellow'
+    Write-Host "✓ All submodules updated!" -ForegroundColor Green
+}
+function GitSubmoduleSyncAll {
+    Write-Host "=== Syncing All Submodules ===" -ForegroundColor Magenta
+    GitSubmoduleInit
+    Write-Host ""
+    GitSubmoduleCheckoutMain
+    Write-Host ""
+    GitSubmodulePullAll
+    Write-Host ""
+    Write-Host "=== ✓ All Done! ===" -ForegroundColor Magenta
+}
 #------------------------------------------  Git Functions END  ------------------------------------------
 
 #------------------------------------------  Jujutsu Functions BEGIN  ------------------------------------------
@@ -320,6 +354,10 @@ New-Alias -Name gab -Value PullAllBranches
 New-Alias -Name gsu -Value GitSubmoduleUpdate
 New-Alias -Name gpha -Value GitPushAllBranch
 New-Alias -Name gsub -Value gitSubmoduleResetHard
+New-Alias -Name gsi -Value GitSubmoduleInit
+New-Alias -Name gscm -Value GitSubmoduleCheckoutMain
+New-Alias -Name gspl -Value GitSubmodulePullAll
+New-Alias -Name gsync -Value GitSubmoduleSyncAll
 
 # Jujutsu 别名
 New-Alias -Name jad -Value jjAdd
