@@ -316,3 +316,6 @@
 [submodule "emacs-solaire-mode"]
 	path = emacs/site-lisp/extensions/ui/solaire-mode
 	url = https://github.com/hlissner/emacs-solaire-mode.git
+[submodule "emacs/site-lisp/extensions/ui/themes/modus-themes"]
+	path = emacs/site-lisp/extensions/ui/themes/modus-themes
+	url = https://github.com/protesilaos/modus-themes.git

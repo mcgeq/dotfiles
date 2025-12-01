@@ -146,6 +146,7 @@
     ("ui/doom-modeline"      . (:priority 1 :required nil :auto-load nil))
     ("ui/shrink-path"        . (:priority 1 :required nil :auto-load nil))
     ("ui/solaire-mode"       . (:priority 1 :required nil :auto-load nil))
+    ("ui/themes/modus-themes" . (:priority 1 :required nil :auto-load nil))
     ("ui/themes/ef-themes"   . (:priority 1 :required nil :auto-load nil))
     ("ui/themes/nerd-icons"  . (:priority 1 :required nil :auto-load nil))
     ("ui/themes/nerd-icons-completion" . (:priority 2 :required nil :auto-load nil))
