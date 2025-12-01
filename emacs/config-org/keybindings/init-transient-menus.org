@@ -426,6 +426,17 @@
 #+BEGIN_SRC emacs-lisp
   ;;; === 信息菜单 ===
   
+  ;; Helper functions for info display
+  (defun mcg-show-load-path ()
+    "Display Emacs load-path."
+    (interactive)
+    (pp load-path))
+  
+  (defun mcg-show-features ()
+    "Display loaded Emacs features."
+    (interactive)
+    (pp features))
+  
   (transient-define-prefix mcg-info-menu ()
     "System and configuration info"
     ["System Info"
@@ -436,8 +447,8 @@
      [("p" "Performance" mcg-show-startup-stats)
       ("l" "LSP servers" mcg-lsp-show-server-status)
       ("t" "Theme info" mcg/show-theme-settings)]
-     [("L" "Load path" (lambda () (interactive) (pp load-path)))
-      ("f" "Features" (lambda () (interactive) (pp features)))
+     [("L" "Load path" mcg-show-load-path)
+      ("f" "Features" mcg-show-features)
       ("q" "Back" transient-quit-one)]])
   
   (global-set-key (kbd "C-c i ?") 'mcg-info-menu)

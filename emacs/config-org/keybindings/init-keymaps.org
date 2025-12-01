@@ -205,6 +205,22 @@
   ;;; === Tabs (Sort-tab) - C-c t 前缀 ===
   ;; Moved from M-7/M-8/M-s to avoid conflicts
   
+  ;; Define helper functions for tab selection by index
+  (defun mcg-select-tab-1 ()
+    "Select tab 1."
+    (interactive)
+    (sort-tab-select-by-index 0))
+  
+  (defun mcg-select-tab-2 ()
+    "Select tab 2."
+    (interactive)
+    (sort-tab-select-by-index 1))
+  
+  (defun mcg-select-tab-3 ()
+    "Select tab 3."
+    (interactive)
+    (sort-tab-select-by-index 2))
+  
   (lazy-load-global-keys
    '(;; Navigation
      ("C-c t n" . sort-tab-select-next-tab)
@@ -217,10 +233,10 @@
      ("C-c t o" . sort-tab-close-other-tabs)
      ("C-c t K" . sort-tab-close-all-tabs)
      
-     ;; Alternative: Use numbers for quick access
-     ("C-c t 1" . (lambda () (interactive) (sort-tab-select-by-index 0)))
-     ("C-c t 2" . (lambda () (interactive) (sort-tab-select-by-index 1)))
-     ("C-c t 3" . (lambda () (interactive) (sort-tab-select-by-index 2))))
+     ;; Quick access by number
+     ("C-c t 1" . mcg-select-tab-1)
+     ("C-c t 2" . mcg-select-tab-2)
+     ("C-c t 3" . mcg-select-tab-3))
    "sort-tab")
   
   ;; Optional: Keep M-7/M-8 for tab navigation if you prefer
