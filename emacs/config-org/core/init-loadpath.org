@@ -76,6 +76,7 @@
     ("core/ht"            . (:priority 0 :required nil :auto-load nil))
     ("core/popup-el"      . (:priority 0 :required nil :auto-load nil))
     ("core/lazy-load"     . (:priority 0 :required nil :auto-load nil))
+    ("core/compat"        . (:priority 0 :required t :auto-load nil))  ; Required for transient
 
     ;; === Completion === 补全系统
     ("completion/vertico"     . (:priority 10 :required nil :auto-load nil))

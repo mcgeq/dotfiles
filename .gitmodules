@@ -319,3 +319,6 @@
 [submodule "emacs/site-lisp/extensions/ui/themes/modus-themes"]
 	path = emacs/site-lisp/extensions/ui/themes/modus-themes
 	url = https://github.com/protesilaos/modus-themes.git
+[submodule "emacs/site-lisp/extensions/core/compat"]
+	path = emacs/site-lisp/extensions/core/compat
+	url = https://github.com/emacs-compat/compat.git
