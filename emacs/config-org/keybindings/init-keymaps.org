@@ -1,55 +1,24 @@
-* init-keymaps.el
+* init-keymaps.el (Version 2.0 - Refactored)
 :PROPERTIES:
 :HEADER-ARGS: :tangle (concat temporary-file-directory "init-keymaps.el") :lexical t
 :END:
 
 ** Headers
 #+BEGIN_SRC emacs-lisp
-  ;;; init-keymaps.el -- Config for Keymaps -*- lexical-binding: t; -*-
-
-  ;; Filename: init-keymaps.el
-  ;; Description: Config for Emacs Start
+  ;;; init-keymaps.el -- Refactored Keybindings -*- lexical-binding: t; -*-
+  
   ;; Author: mcge <mcgeq@outlook.com>
-  ;; Copyright (C) 2024, mcge, all rights reserved.
-  ;; Create   Date: 2025-01-04 15:00:00
-  ;; Version: 0.1
-  ;; Modified   By:  mcge <mcgeq@outlook.com>
-  ;; Last Modified:  <2025-01-10 Fri 10:04>
-  ;; Keywords:
-  ;; Compatibility: GNU Emacs 31.0.50
-
+  ;; Version: 2.0
+  ;; Keywords: keybindings, keyboard
+  
   ;;; Commentary:
-  ;;
-  ;; Config for Keymaps
-  ;;
-
-  ;;; Installation:
-  ;;
-  ;; Put init-keymaps.el to your load-path.
-  ;; The load-path is usually ~/elisp/.
-  ;; It's set in your ~/.emacs like this:
-  ;; (add-to-list 'load-path (expand-file-name "~/elisp"))
-  ;;
-  ;; And the following to your ~/.emacs startup file.
-  ;;
-  ;; (require 'init-keymaps)
-  ;;
-  ;; No need more.
-
-  ;;; Customize:
-  ;;
-  ;;
-  ;;
-  ;; All of the above can customize by:
-  ;;      M-x customize-group RET init-aider RET
-  ;;
-
-  ;;; Change log:
-  ;;
-
+  ;; Refactored keybinding configuration with:
+  ;; - Standard LSP bindings (M-., M-,, M-?)
+  ;; - Organized prefixes (C-c g/m/s/t/n/p)
+  ;; - No conflicts with Emacs defaults
+  ;; - Which-key integration
+  ;; - Better discoverability
 #+END_SRC
-
-
 
 ** Require
 #+BEGIN_SRC emacs-lisp
@@ -60,283 +29,497 @@
   (require 'org)
 #+END_SRC
 
-** 删除不常用快捷键
+** Unset Conflicting Keys
 #+BEGIN_SRC emacs-lisp
-  ;;; Code:
-  ;; 解除不常用的快捷键定义
-   (lazy-load-unset-keys
-    '("C-z" "s-q" "M-m" "M-l"))
-     ;; replace-string
-     (global-set-key (kbd "C-c r") 'replace-string)
-     ;; make-directory
-     (global-set-key (kbd "C-c d") 'make-directory)
+  ;;; 解除不常用或冲突的快捷键
+  (lazy-load-unset-keys
+   '("C-z"   ; suspend-frame (rarely used)
+     "s-q"   ; save-buffers-kill-emacs (dangerous)
+     ))
+  
+  ;; Note: Keep M-m and M-l free for user bindings
+  ;; M-g is reserved for goto commands (Emacs default)
+  ;; M-s is reserved for search commands (Emacs default)
 #+END_SRC
 
-** 打开默认配置文件
+** Basic Editing
 #+BEGIN_SRC emacs-lisp
-  (global-set-key (kbd "C-q") 'mcg/open-init-file)
-
-#+END_SRC
-
-** Org Download Image
-#+begin_src emacs-lisp
-  ;; org download image
-  (lazy-load-local-keys
-   '(("C-c v" . mg/org-insert-clipboard-image))
-   org-mode-map
-   "init-org-download")
-#+end_src
-
-
-** Custom C-a
-
-#+BEGIN_SRC emacs-lisp
-  ;; C-a
-  ;; 将新函数绑定到 Ctrl+a
+  ;;; === 基础编辑 ===
+  
+  ;; Smart beginning of line
   (global-set-key (kbd "C-a") 'mcge-smart-move-beginning-of-line)
-
+  
+  ;; Quick access to init file
+  (global-set-key (kbd "C-c e") 'mcg/open-init-file)
+  
+  ;; Replace string
+  (global-set-key (kbd "C-c r") 'replace-string)
+  
+  ;; Make directory
+  (global-set-key (kbd "C-c d") 'make-directory)
 #+END_SRC
 
-** 插入新行
+** Line Manipulation
 #+BEGIN_SRC emacs-lisp
-;; insert newline
-(global-set-key (kbd "C-c <down>")
-                (lambda ()
-                  (interactive)
-                  (end-of-line)
-                  (newline-and-indent)))
-(global-set-key (kbd "C-c <up>")
-                (lambda ()
-                  (interactive)
-                  (beginning-of-line)
-                  (newline)
-                  (forward-line -1)
-                  (indent-according-to-mode)))
-(global-set-key (kbd "M-m p n")
-                (lambda ()
-                  (interactive)
-                  (forward-line 1)
-                  (transpose-lines 1)
-                  (forward-line -1)
-                  (indent-according-to-mode)))
-;; move current line to prev or next line
-(global-set-key (kbd "M-m p p")
-                (lambda ()
-                  (interactive)
-                  (transpose-lines 1)
-                  (forward-line -2)
-                  (indent-according-to-mode)))
-;; recentf
-(global-set-key (kbd "C-c C-r")   'recentf)
+  ;;; === 行操作 ===
+  
+  ;; Insert newline above/below
+  (global-set-key (kbd "C-c <down>")
+                  (lambda ()
+                    (interactive)
+                    (end-of-line)
+                    (newline-and-indent)))
+  
+  (global-set-key (kbd "C-c <up>")
+                  (lambda ()
+                    (interactive)
+                    (beginning-of-line)
+                    (newline)
+                    (forward-line -1)
+                    (indent-according-to-mode)))
+  
+  ;; Move lines up/down
+  (global-set-key (kbd "M-<up>")
+                  (lambda ()
+                    (interactive)
+                    (transpose-lines 1)
+                    (forward-line -2)
+                    (indent-according-to-mode)))
+  
+  (global-set-key (kbd "M-<down>")
+                  (lambda ()
+                    (interactive)
+                    (forward-line 1)
+                    (transpose-lines 1)
+                    (forward-line -1)
+                    (indent-according-to-mode)))
 #+END_SRC
 
-** 绑定M-p
-#+begin_src emacs-lisp
-  (defun previous-multilines ()
-    "Scroll down multiple lines"
+** Scrolling
+#+BEGIN_SRC emacs-lisp
+  ;;; === 滚动 ===
+  
+  (defun mcg-scroll-down-third ()
+    "Scroll down 1/3 of window height."
     (interactive)
     (scroll-down (/ (window-body-height) 3)))
-
-  (defun next-multilines ()
-    "Scroll up multiple lines"
+  
+  (defun mcg-scroll-up-third ()
+    "Scroll up 1/3 of window height."
     (interactive)
     (scroll-up (/ (window-body-height) 3)))
-
-  (global-set-key (kbd "M-n") 'next-multilines)
-  (global-set-key (kbd "M-p") 'previous-multilines)
-#+end_src
-
-** magit
-#+BEGIN_SRC emacs-lisp
-;;; init-magit.el
-;; magit
-(lazy-load-global-keys
- '(
-   ("M-m s t" . magit-status)
-   ("M-m s a" . magit-submodule-add)
-   ("M-m s r" . magit-submodule-remove)
-   ("M-m f r" . magit-file-rename)
-   ("M-m b r" . magit-branch-rename)
-   ("M-m b c" . magit-branch-create)
-   ("M-m r r" . magit-remote-rename)
-   ("M-m l"   . magit-log)
-   ("M-m d d" . magit-dispatch)
-   ("M-m d f" . magit-file-dispatch)
-   ("M-m p f" . magit-pull)
-   ("M-m p h" . magit-push)
-   ("M-m m"   . mcge-magit-menu)
-   )
- "init-magit")
+  
+  ;; Fast scrolling with M-n/M-p
+  (global-set-key (kbd "M-n") 'mcg-scroll-up-third)
+  (global-set-key (kbd "M-p") 'mcg-scroll-down-third)
 #+END_SRC
 
-** Sort-tab
+** LSP - Standard Bindings
 #+BEGIN_SRC emacs-lisp
-  ;;; ### Sort-Tab ### from lazycat
-  ;;; --- 多标签浏览
+  ;;; === LSP - 标准绑定 ===
+  ;; Following standard LSP/Emacs conventions
+  
+  ;; Navigation (standard LSP bindings)
+  (global-set-key (kbd "M-.")     'lsp-bridge-find-def)
+  (global-set-key (kbd "M-,")     'lsp-bridge-find-def-return)
+  (global-set-key (kbd "M-?")     'lsp-bridge-find-references)
+  (global-set-key (kbd "C-M-.")   'lsp-bridge-find-def-other-window)
+  
+  ;; Documentation (C-h prefix for help)
+  (global-set-key (kbd "C-h .")   'lsp-bridge-popup-documentation)
+  (global-set-key (kbd "C-h ,")   'lsp-bridge-show-signature)
+  
+  ;; Documentation scrolling
+  (global-set-key (kbd "C-h <up>")   'lsp-bridge-popup-documentation-scroll-up)
+  (global-set-key (kbd "C-h <down>") 'lsp-bridge-popup-documentation-scroll-down)
+  
+  ;; Code actions (C-c r prefix for refactoring)
+  (global-set-key (kbd "C-c r r") 'lsp-bridge-rename)
+  (global-set-key (kbd "C-c r i") 'lsp-bridge-code-action)
+  (global-set-key (kbd "C-c r f") 'lsp-bridge-code-format)
+  
+  ;; Diagnostics (C-c ! prefix for errors)
+  (global-set-key (kbd "C-c ! n") 'lsp-bridge-diagnostic-jump-next)
+  (global-set-key (kbd "C-c ! p") 'lsp-bridge-diagnostic-jump-prev)
+  (global-set-key (kbd "C-c ! l") 'lsp-bridge-diagnostic-list)
+  
+  ;; Implementation
+  (global-set-key (kbd "C-c r l") 'lsp-bridge-find-impl)
+  
+  ;; Workspace
+  (global-set-key (kbd "C-c r w") 'lsp-bridge-workspace-list-symbols)
+  
+  ;; Note: These align with init-lsp-common.org configuration
+#+END_SRC
+
+** Git (Magit) - C-x g and C-c g
+#+BEGIN_SRC emacs-lisp
+  ;;; === Git (Magit) - 标准绑定 ===
+  
+  ;; Primary: Standard C-x g (recommended by Magit)
   (lazy-load-global-keys
-   '(
-     ("M-7" . sort-tab-select-prev-tab)    ;选择前一个标签
-     ("M-8" . sort-tab-select-next-tab)    ;选择后一个标签
-     ("M-s 7" . sort-tab-select-first-tab) ;选择第一个标签
-     ("M-s 8" . sort-tab-select-last-tab)  ;选择最后一个标签
-     ("C-;" . sort-tab-close-current-tab)  ;关闭当前标签
-     ("M-s q" . sort-tab-close-other-tabs)   ;关闭后台标签
-     ("M-s Q" . sort-tab-close-all-tabs)     ;关闭所有标签
-     )
+   '(("C-x g"   . magit-status)
+     ("C-x M-g" . magit-dispatch))
+   "init-magit")
+  
+  ;; Alternative: C-c g prefix (for consistency with other C-c prefixes)
+  (lazy-load-global-keys
+   '(;; Main commands
+     ("C-c g s" . magit-status)
+     ("C-c g l" . magit-log)
+     ("C-c g d" . magit-dispatch)
+     ("C-c g f" . magit-file-dispatch)
+     
+     ;; Branches
+     ("C-c g b b" . magit-branch-create)
+     ("C-c g b r" . magit-branch-rename)
+     ("C-c g b d" . magit-branch-delete)
+     
+     ;; Remote
+     ("C-c g r a" . magit-remote-add)
+     ("C-c g r r" . magit-remote-rename)
+     ("C-c g r d" . magit-remote-remove)
+     
+     ;; Push/Pull
+     ("C-c g p" . magit-push)
+     ("C-c g f" . magit-pull)
+     
+     ;; Submodules
+     ("C-c g m a" . magit-submodule-add)
+     ("C-c g m r" . magit-submodule-remove)
+     ("C-c g m u" . magit-submodule-update)
+     
+     ;; Files
+     ("C-c g F r" . magit-file-rename)
+     ("C-c g F d" . magit-file-delete)
+     
+     ;; Menu
+     ("C-c g ?" . mcge-magit-menu))
+   "init-magit")
+#+END_SRC
+
+** Tabs (Sort-tab) - C-c t
+#+BEGIN_SRC emacs-lisp
+  ;;; === Tabs (Sort-tab) - C-c t 前缀 ===
+  ;; Moved from M-7/M-8/M-s to avoid conflicts
+  
+  (lazy-load-global-keys
+   '(;; Navigation
+     ("C-c t n" . sort-tab-select-next-tab)
+     ("C-c t p" . sort-tab-select-prev-tab)
+     ("C-c t f" . sort-tab-select-first-tab)
+     ("C-c t l" . sort-tab-select-last-tab)
+     
+     ;; Management
+     ("C-c t k" . sort-tab-close-current-tab)
+     ("C-c t o" . sort-tab-close-other-tabs)
+     ("C-c t K" . sort-tab-close-all-tabs)
+     
+     ;; Alternative: Use numbers for quick access
+     ("C-c t 1" . (lambda () (interactive) (sort-tab-select-by-index 0)))
+     ("C-c t 2" . (lambda () (interactive) (sort-tab-select-by-index 1)))
+     ("C-c t 3" . (lambda () (interactive) (sort-tab-select-by-index 2))))
    "sort-tab")
+  
+  ;; Optional: Keep M-7/M-8 for tab navigation if you prefer
+  ;; Uncomment if you want quick access (but conflicts with digit arguments)
+  ;; (lazy-load-global-keys
+  ;;  '(("M-7" . sort-tab-select-prev-tab)
+  ;;    ("M-8" . sort-tab-select-next-tab))
+  ;;  "sort-tab")
 #+END_SRC
 
-** yasnippets
+** Markmacro - C-c m
 #+BEGIN_SRC emacs-lisp
-(global-set-key (kbd "C-c C-n") 'yas-new-snippet)
-#+END_SRC
-
-** elisp
-
-#+BEGIN_SRC emacs-lisp
-  ;; elisp-mode
-  ;;; Elisp
-  ;;; --- Elisp 编程设置
-  (let ((map emacs-lisp-mode-map))
-    (define-key map (kbd "C-c C-b") 'eval-buffer)
-    (define-key map (kbd "C-c C-c") 'eval-to-comment))
-  (let ((map lisp-interaction-mode-map))
-    (define-key map (kbd "C-c C-c") 'eval-to-comment))
-  ;;(let ((map org-mode-map))
-  ;;  (define-key map (kbd "C-c C-;") 'eval-to-comment))
-#+END_SRC
-
-** vundo
-
-#+BEGIN_SRC emacs-lisp
-
-;;; ### vundo ###
-;;; --- 可视化撤销插件
-(lazy-load-global-keys
- '(
-   ("C-/" . undo)
-   ("M-]" . vundo)
-   )
- "init-vundo")
-#+END_SRC
-
-** Org
-
-*** org capture
-
-#+BEGIN_SRC emacs-lisp
-  ;; org-capture
-
+  ;;; === Markmacro - C-c m 前缀 ===
+  ;; Moved from M-m c to C-c m for consistency
+  
   (lazy-load-global-keys
-   '(
-     ("C-c c" . org-capture)
-     ("C-c l" . org-store-link)
-     ("C-c a" . org-agenda)
-     )
-   "init-capture-hugo")
-#+END_SRC
-
-*** Org Src Edit
-#+BEGIN_SRC emacs-lisp
-  (lazy-load-set-keys
-   '(("C-c e" . org-edit-src-code)
-     )
-   org-mode-map
-   )
-#+END_SRC
-
-** Embark
-
-#+BEGIN_SRC emacs-lisp
-  ;; embark
-
-  (lazy-load-global-keys
-   '(
-     ("C-."     . embark-act)
-     ("C-,"     . embark-dwim)
-     ("C-h b"   . embark-bindings)
-     ("C-h B"   . embark-bindings-at-point)
-     ("C-x n"   . embark-next-symbol)
-     ("C-x p"   . embark-previous-symbol)
-     ("C-x j"   . consult-mark)
-     ("C-c g"   . consult-ripgrep)
-     ("C-c f"   . consult-find)
-     ("C-c b"   . consult-buffer)
-     ("C-c n h" . mcg/consult-find-org-headings)
-     ("C-s"     . consult-line)
-     ("M-s i"   . consult-imenu)
-       )
-    "init-embark")
-#+END_SRC
-
-** Lsp-Bridge
-
-#+BEGIN_SRC emacs-lisp
-  ;;; --- 代码语法补全
-(global-set-key (kbd "M-g d")  'lsp-bridge-find-def)
-(global-set-key (kbd "M-g o")  'lsp-bridge-find-def-other-window)
-(global-set-key (kbd "M-g c")  'lsp-bridge-popup-documentation)
-(global-set-key (kbd "M-g D")    'lsp-bridge-find-def-return)
-(global-set-key (kbd "M-g l")  'lsp-bridge-find-impl)
-(global-set-key (kbd "M-g r")    'lsp-bridge-find-references)
-(global-set-key (kbd "M-g n")    'lsp-bridge-rename)
-(global-set-key (kbd "M-g j n")  'lsp-bridge-diagnostic-jump-next)
-(global-set-key (kbd "M-g j p")  'lsp-bridge-diagnostic-jump-prev)
-(global-set-key (kbd "M-g <up>") 'lsp-bridge-popup-documentation-scroll-up)
-(global-set-key (kbd "M-g <down>") 'lsp-bridge-popup-documentation-scroll-down)
-
-#+END_SRC
-
-** Blink Search
-#+BEGIN_SRC emacs-lisp
-  ;; ### Blink Search ###
-  ;;; --- 最快的搜索框架
-  (lazy-load-global-keys
-   '(
-     ("C-S-y" . blink-search)
-     )
-   "init-blink-search")
-#+END_SRC
-
-** Markmacro
-
-#+BEGIN_SRC emacs-lisp
-  ;;; ### Markmacro ###
-  ;;; --- 标记对象的键盘宏操作
-  (lazy-load-global-keys
-   '(
-     ("M-m c s" . markmacro-rect-set)          ;记录矩形编辑开始的位置
-     ("M-m c d" . markmacro-rect-delete)       ;删除矩形区域
-     ("M-m c r" . markmacro-rect-replace)      ;替换矩形区域的内容
-     ("M-m c i" . markmacro-rect-insert)       ;在矩形区域前插入字符串
-     ("M-m c m" . markmacro-rect-mark-columns) ;转换矩形列为标记对象
-     ("M-m c S" . markmacro-rect-mark-symbols) ;转换矩形列对应的符号为标记对象
-     ("M-m c a" . markmacro-apply-all)         ;应用键盘宏到所有标记对象
-     ("M-m c e" . markmacro-apply-all-except-first) ;应用键盘宏到所有标记对象, 除了第一个， 比如下划线转换的时候
-     )
+   '(;; Rectangle operations
+     ("C-c m s" . markmacro-rect-set)
+     ("C-c m d" . markmacro-rect-delete)
+     ("C-c m r" . markmacro-rect-replace)
+     ("C-c m i" . markmacro-rect-insert)
+     
+     ;; Mark conversion
+     ("C-c m c" . markmacro-rect-mark-columns)
+     ("C-c m S" . markmacro-rect-mark-symbols)
+     
+     ;; Apply macros
+     ("C-c m a" . markmacro-apply-all)
+     ("C-c m e" . markmacro-apply-all-except-first))
    "init-markmacro")
 #+END_SRC
 
-** Color-rg
-
+** Search & Navigation - C-c s and Embark
 #+BEGIN_SRC emacs-lisp
-  ;;; ### Color-Rg ###
-  ;;; --- 搜索重构
+  ;;; === 搜索和导航 ===
+  
+  ;; Embark & Consult (primary search)
   (lazy-load-global-keys
-   '(
-     ("M-m g g" . color-rg-search-symbol)
-     ("M-m g h" . color-rg-search-input)
-     ("M-m g j" . color-rg-search-symbol-in-project)
-     ("M-m g k" . color-rg-search-input-in-project)
-     ("M-m g ," . color-rg-search-symbol-in-current-file)
-     ("M-m g ." . color-rg-search-input-in-current-file)
-     )
+   '(;; Embark
+     ("C-."     . embark-act)
+     ("C-,"     . embark-dwim)
+     ("C-h b"   . embark-bindings)
+     
+     ;; Navigation
+     ("C-c s l" . consult-line)          ; Search lines in buffer
+     ("C-c s i" . consult-imenu)         ; Navigate imenu
+     ("C-c s m" . consult-mark)          ; Navigate marks
+     
+     ;; Project search
+     ("C-c s g" . consult-ripgrep)       ; Grep in project
+     ("C-c s f" . consult-find)          ; Find files
+     
+     ;; Buffer/File
+     ("C-c s b" . consult-buffer)        ; Switch buffer
+     ("C-c s r" . consult-recent-file)   ; Recent files
+     
+     ;; Org specific
+     ("C-c s o" . mcg/consult-find-org-headings))
+   "init-embark")
+  
+  ;; Alternative: Keep C-s for consult-line (optional)
+  ;; Uncomment to replace isearch with consult-line
+  ;; (global-set-key (kbd "C-s") 'consult-line)
+  
+  ;; Blink Search (alternative search framework)
+  (lazy-load-global-keys
+   '(("C-c s S" . blink-search))  ; Capital S for alternative
+   "init-blink-search")
+  
+  ;; Color-rg (project-wide search and replace)
+  (lazy-load-global-keys
+   '(;; Symbol search
+     ("C-c s s" . color-rg-search-symbol)
+     ("C-c s S" . color-rg-search-symbol-in-project)
+     
+     ;; Input search
+     ("C-c s i" . color-rg-search-input)
+     ("C-c s I" . color-rg-search-input-in-project)
+     
+     ;; Current file
+     ("C-c s ." . color-rg-search-symbol-in-current-file)
+     ("C-c s ," . color-rg-search-input-in-current-file))
    "color-rg")
+#+END_SRC
+
+** Org Mode - C-c n
+#+BEGIN_SRC emacs-lisp
+  ;;; === Org Mode - C-c n 前缀 (Notes) ===
+  
+  ;; Capture and Agenda
+  (lazy-load-global-keys
+   '(("C-c n c" . org-capture)
+     ("C-c n a" . org-agenda)
+     ("C-c n l" . org-store-link)
+     ("C-c n t" . org-todo-list))
+   "init-capture-hugo")
+  
+  ;; Org mode specific (in org buffers)
+  (lazy-load-set-keys
+   '(("C-c n e" . org-edit-src-code)
+     ("C-c n v" . mg/org-insert-clipboard-image)
+     ("C-c n h" . org-insert-heading)
+     ("C-c n s" . org-insert-subheading))
+   org-mode-map)
+#+END_SRC
+
+** Yasnippet
+#+BEGIN_SRC emacs-lisp
+  ;;; === Yasnippet ===
+  
+  (global-set-key (kbd "C-c y n") 'yas-new-snippet)
+  (global-set-key (kbd "C-c y v") 'yas-visit-snippet-file)
+  (global-set-key (kbd "C-c y r") 'yas-reload-all)
+#+END_SRC
+
+** Elisp Development
+#+BEGIN_SRC emacs-lisp
+  ;;; === Elisp Development ===
+  
+  (with-eval-after-load 'emacs-lisp-mode
+    (define-key emacs-lisp-mode-map (kbd "C-c C-b") 'eval-buffer)
+    (define-key emacs-lisp-mode-map (kbd "C-c C-c") 'eval-to-comment)
+    (define-key emacs-lisp-mode-map (kbd "C-c C-r") 'eval-region))
+  
+  (with-eval-after-load 'lisp-interaction-mode
+    (define-key lisp-interaction-mode-map (kbd "C-c C-c") 'eval-to-comment))
+#+END_SRC
+
+** Undo/Redo - Vundo
+#+BEGIN_SRC emacs-lisp
+  ;;; === Undo/Redo (Vundo) ===
+  
+  (lazy-load-global-keys
+   '(("C-/"   . undo)
+     ("C-?"   . undo-redo)
+     ("C-c u" . vundo))
+   "init-vundo")
+#+END_SRC
+
+** Recent Files
+#+BEGIN_SRC emacs-lisp
+  ;;; === Recent Files ===
+  
+  (global-set-key (kbd "C-c f r") 'recentf-open-files)
+#+END_SRC
+
+** Which-key Descriptions
+#+BEGIN_SRC emacs-lisp
+  ;;; === Which-key 描述 ===
+  ;; Add descriptive labels for prefix keys
+  
+  (with-eval-after-load 'which-key
+    (which-key-add-key-based-replacements
+      ;; Main prefixes
+      "C-c g"   "git"
+      "C-c m"   "markmacro"
+      "C-c s"   "search"
+      "C-c t"   "tabs"
+      "C-c n"   "notes/org"
+      "C-c r"   "refactor/lsp"
+      "C-c !"   "diagnostics"
+      "C-c y"   "yasnippet"
+      
+      ;; Git subprefixes
+      "C-c g b" "branch"
+      "C-c g r" "remote"
+      "C-c g m" "submodule"
+      "C-c g F" "file"
+      
+      ;; Help prefix
+      "C-h ."   "lsp-doc"
+      "C-h ,"   "lsp-signature"))
+#+END_SRC
+
+** Transient Menus
+#+BEGIN_SRC emacs-lisp
+  ;;; === Transient 菜单 ===
+  ;; Quick access menus for complex commands
+  
+  ;; Search menu
+  (transient-define-prefix mcg-search-menu ()
+    "Search commands"
+    [["Buffer"
+      ("l" "Line" consult-line)
+      ("i" "Imenu" consult-imenu)
+      ("m" "Mark" consult-mark)]
+     ["Project"
+      ("g" "Grep" consult-ripgrep)
+      ("f" "Find" consult-find)
+      ("s" "Symbol" color-rg-search-symbol-in-project)]
+     ["Alternative"
+      ("b" "Blink Search" blink-search)
+      ("r" "Color-rg" color-rg-search-input-in-project)]])
+  
+  (global-set-key (kbd "C-c s ?") 'mcg-search-menu)
+  
+  ;; Git menu (if mcge-magit-menu doesn't exist)
+  (transient-define-prefix mcg-git-menu ()
+    "Git operations"
+    [["Main"
+      ("s" "Status" magit-status)
+      ("l" "Log" magit-log)
+      ("d" "Dispatch" magit-dispatch)]
+     ["Commit"
+      ("c" "Commit" magit-commit)
+      ("a" "Amend" magit-commit-amend)]
+     ["Remote"
+      ("p" "Push" magit-push)
+      ("f" "Pull" magit-pull)]])
+  
+  (global-set-key (kbd "C-c g ?") 'mcg-git-menu)
+#+END_SRC
+
+** Quick Reference
+#+BEGIN_SRC emacs-lisp
+  ;;; === 快捷键速查 ===
+  
+  (defun mcg-show-keybindings ()
+    "Show keybinding quick reference."
+    (interactive)
+    (with-help-window "*Keybindings*"
+      (princ "
+╔═══════════════════════════════════════════════════════════╗
+║           Emacs Keybindings Quick Reference               ║
+╚═══════════════════════════════════════════════════════════╝
+
+┌─────────────────────────────────────────────────────────┐
+│ LSP (Standard)                                           │
+├─────────────────────────────────────────────────────────┤
+│ M-.         Go to definition                             │
+│ M-,         Return from definition                       │
+│ M-?         Find references                              │
+│ C-h .       Show documentation                           │
+│ C-c r r     Rename                                       │
+│ C-c r i     Code action                                  │
+│ C-c r f     Format                                       │
+│ C-c ! n/p   Next/Prev diagnostic                         │
+└─────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────┐
+│ Git (Magit)                                              │
+├─────────────────────────────────────────────────────────┤
+│ C-x g       Magit status (standard)                      │
+│ C-c g s     Magit status                                 │
+│ C-c g l     Magit log                                    │
+│ C-c g p     Push                                         │
+│ C-c g f     Pull                                         │
+│ C-c g ?     Git menu                                     │
+└─────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────┐
+│ Search                                                   │
+├─────────────────────────────────────────────────────────┤
+│ C-c s l     Search lines (consult-line)                 │
+│ C-c s g     Grep in project (ripgrep)                   │
+│ C-c s i     Imenu navigation                            │
+│ C-c s b     Switch buffer                               │
+│ C-c s ?     Search menu                                 │
+└─────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────┐
+│ Tabs                                                     │
+├─────────────────────────────────────────────────────────┤
+│ C-c t n/p   Next/Previous tab                           │
+│ C-c t k     Close tab                                   │
+│ C-c t o     Close other tabs                            │
+└─────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────┐
+│ Org/Notes                                                │
+├─────────────────────────────────────────────────────────┤
+│ C-c n c     Capture                                      │
+│ C-c n a     Agenda                                       │
+│ C-c n l     Store link                                   │
+└─────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────┐
+│ Editing                                                  │
+├─────────────────────────────────────────────────────────┤
+│ C-a         Smart beginning of line                      │
+│ M-n/M-p     Scroll up/down 1/3 window                   │
+│ M-<up/down> Move line up/down                           │
+│ C-c <up>    Insert line above                           │
+│ C-c <down>  Insert line below                           │
+└─────────────────────────────────────────────────────────┘
+
+═══════════════════════════════════════════════════════════
+
+For more info:
+  M-x which-key-show-top-level    Show all prefixes
+  C-h b                           Show all bindings
+  C-c <prefix> ?                  Show prefix menu
+
+")))
+  
+  ;; Quick access to keybindings reference
+  (global-set-key (kbd "C-h K") 'mcg-show-keybindings)
 #+END_SRC
 
 ** Ends
 #+BEGIN_SRC emacs-lisp
 (provide 'init-keymaps)
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; init-keymaps.el ends here
 #+END_SRC
