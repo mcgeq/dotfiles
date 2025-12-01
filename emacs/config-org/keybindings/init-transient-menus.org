@@ -38,8 +38,8 @@
         (propertize "║        " 'face 'font-lock-comment-face)
         (propertize "Emacs Command Center" 'face '(:foreground "cyan" :weight bold))
         (propertize "                             ║\n" 'face 'font-lock-comment-face)
-        (propertize "╚═══════════════════════════════════════════════════════════╝" 'face 'font-lock-comment-face)))
-     [["Development"
+        (propertize "╚═══════════════════════════════════════════════════════════╝" 'face 'font-lock-comment-face))
+     ["Development"
        ("g" "Git" mcg-git-menu :transient t)
        ("r" "Refactor/LSP" mcg-refactor-menu :transient t)
        ("p" "Project" mcg-project-menu :transient t)
