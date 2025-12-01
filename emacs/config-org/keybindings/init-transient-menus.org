@@ -38,31 +38,31 @@
         (propertize "║        " 'face 'font-lock-comment-face)
         (propertize "Emacs Command Center" 'face '(:foreground "cyan" :weight bold))
         (propertize "                             ║\n" 'face 'font-lock-comment-face)
-        (propertize "╚═══════════════════════════════════════════════════════════╝" 'face 'font-lock-comment-face))
-     ["Development"
-       ("g" "Git" mcg-git-menu :transient t)
-       ("r" "Refactor/LSP" mcg-refactor-menu :transient t)
-       ("p" "Project" mcg-project-menu :transient t)
-       ("d" "Debug" mcg-debug-menu :transient t)]
-      ["Navigation"
-       ("s" "Search" mcg-search-menu :transient t)
-       ("f" "Files" mcg-files-menu :transient t)
-       ("t" "Tabs/Windows" mcg-tabs-menu :transient t)
-       ("j" "Jump" mcg-jump-menu :transient t)]
-      ["Editing"
-       ("e" "Edit" mcg-edit-menu :transient t)
-       ("m" "Mark/Macro" mcg-mark-menu :transient t)
-       ("y" "Snippets" mcg-snippet-menu :transient t)
-       ("c" "Comment" comment-or-uncomment)]
-      ["Organization"
-       ("n" "Notes/Org" mcg-org-menu :transient t)
-       ("b" "Bookmarks" bookmark-jump)
-       ("a" "Agenda" org-agenda)]
-      ["Help & Info"
-       ("h" "Help" mcg-help-menu :transient t)
-       ("i" "Info" mcg-info-menu :transient t)
-       ("?" "Keybindings" mcg-show-keybindings)
-       ("q" "Quit" transient-quit-one)]])
+        (propertize "╚═══════════════════════════════════════════════════════════╝" 'face 'font-lock-comment-face))]
+    ["Development"
+     ("g" "Git" mcg-git-menu :transient t)
+     ("r" "Refactor/LSP" mcg-refactor-menu :transient t)
+     ("p" "Project" mcg-project-menu :transient t)
+     ("d" "Debug" mcg-debug-menu :transient t)]
+    ["Navigation"
+     ("s" "Search" mcg-search-menu :transient t)
+     ("f" "Files" mcg-files-menu :transient t)
+     ("t" "Tabs/Windows" mcg-tabs-menu :transient t)
+     ("j" "Jump" mcg-jump-menu :transient t)]
+    ["Editing"
+     ("e" "Edit" mcg-edit-menu :transient t)
+     ("m" "Mark/Macro" mcg-mark-menu :transient t)
+     ("y" "Snippets" mcg-snippet-menu :transient t)
+     ("c" "Comment" comment-or-uncomment)]
+    ["Organization"
+     ("n" "Notes/Org" mcg-org-menu :transient t)
+     ("b" "Bookmarks" bookmark-jump)
+     ("a" "Agenda" org-agenda)]
+    ["Help & Info"
+     ("h" "Help" mcg-help-menu :transient t)
+     ("i" "Info" mcg-info-menu :transient t)
+     ("?" "Keybindings" mcg-show-keybindings)
+     ("q" "Quit" transient-quit-one)])
   
   ;; Bind to easily accessible keys
   (global-set-key (kbd "<f5>") 'mcg-command-center)
