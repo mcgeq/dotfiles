@@ -4,7 +4,7 @@ EE ?= $(EM) -Q --batch --eval "(progn (require 'ob-tangle) (setq org-confirm-bab
 
 
 # 需要加载的目录
-DS = core ui editor completion tools etc org docs lang
+DS = core ui editor completion keybindings search input utils git org docs lang dev
 
 # 编译生成后的*.el 文件存放位置
 DF ?= site-lisp/config
@@ -31,7 +31,20 @@ endef
 init.el: config-org/init.org
 	$(EE) --eval '(org-babel-tangle-publish t "$<" "$(DF)/")'
 
-$(foreach dir,$(DS),$(eval $(call tangle_template,$(dir))))
+# lang 子目录特殊处理
+lang: $(patsubst config-org/lang/%.org, site-lisp/config/lang/%.el, $(wildcard config-org/lang/*.org)) \
+      $(patsubst config-org/lang/backend/%.org, site-lisp/config/lang/backend/%.el, $(wildcard config-org/lang/backend/*.org)) \
+      $(patsubst config-org/lang/frontend/%.org, site-lisp/config/lang/frontend/%.el, $(wildcard config-org/lang/frontend/*.org))
+
+site-lisp/config/lang/backend/%.el: config-org/lang/backend/%.org
+	@mkdir -p site-lisp/config/lang/backend
+	$(EE) --eval '(org-babel-tangle-publish t "$$<" "$(DF)/lang/backend/")'
+
+site-lisp/config/lang/frontend/%.el: config-org/lang/frontend/%.org
+	@mkdir -p site-lisp/config/lang/frontend
+	$(EE) --eval '(org-babel-tangle-publish t "$$<" "$(DF)/lang/frontend/")'
+
+$(foreach dir,$(filter-out lang,$(DS)),$(eval $(call tangle_template,$(dir))))
 
 el: $(DS) init.el
 

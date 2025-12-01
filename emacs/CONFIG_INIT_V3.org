@@ -1,0 +1,282 @@
+* init.el (Version 3.0 - Refactored Structure)
+:PROPERTIES:
+:HEADER-ARGS: :tangle (concat temporary-file-directory "init.el") :lexical t
+:END:
+
+** Headers
+#+BEGIN_SRC emacs-lisp
+  ;;; init.el -- Emacs Configuration Manager V3 -*- lexical-binding: t; -*-
+  
+  ;; Author: mcge <mcgeq@outlook.com>
+  ;; Version: 3.0
+  ;; Keywords: emacs, configuration, modular
+  ;; Compatibility: GNU Emacs 29+
+  
+  ;;; Commentary:
+  ;; 
+  ;; Refactored modular configuration with improved structure:
+  ;; - Reorganized directories (keybindings, search, input, utils, git)
+  ;; - Backend/Frontend language separation
+  ;; - Smart loading strategies
+  ;; - Better performance
+  ;;
+#+END_SRC
+
+** Initialize UI
+#+BEGIN_SRC emacs-lisp
+;;; 初始化界面
+(menu-bar-mode 0)
+(tool-bar-mode 0)
+(scroll-bar-mode 0)
+#+END_SRC
+
+** Phase 0: Startup Performance
+#+BEGIN_SRC emacs-lisp
+;;; Phase 0: 启动性能优化
+
+;; 记录启动时间
+(defvar mcg-startup-start-time (current-time))
+
+;; 提高 GC 阈值加速启动
+(setq gc-cons-threshold most-positive-fixnum
+      gc-cons-percentage 0.6)
+
+;; 启动后恢复正常 GC
+(add-hook 'emacs-startup-hook
+          (lambda ()
+            (setq gc-cons-threshold (* 16 1024 1024)
+                  gc-cons-percentage 0.1)
+            (garbage-collect)))
+#+END_SRC
+
+** Phase 1: Core Infrastructure  
+#+BEGIN_SRC emacs-lisp
+;;; Phase 1: 核心基础设施
+
+(require 'init-paths)
+(require 'init-loadpath)
+(require 'init-verify)
+(require 'init-font)
+(require 'init-function)
+(require 'init-builtin)
+
+(mcg-register-loaded-module 'init-paths)
+(mcg-register-loaded-module 'init-loadpath)
+(mcg-register-loaded-module 'init-verify)
+(mcg-register-loaded-module 'init-font)
+(mcg-register-loaded-module 'init-function)
+(mcg-register-loaded-module 'init-builtin)
+#+END_SRC
+
+** Phase 2: UI and Themes
+#+BEGIN_SRC emacs-lisp
+;;; Phase 2: 用户界面
+
+(require 'init-ui)
+(require 'init-doom-modeline)
+
+(mcg-register-loaded-module 'init-ui)
+(mcg-register-loaded-module 'init-doom-modeline)
+#+END_SRC
+
+** Phase 3: Editor Enhancement
+#+BEGIN_SRC emacs-lisp
+;;; Phase 3: 编辑器增强
+
+(require 'init-line-number)
+(require 'init-indent)
+(require 'init-editor)
+(require 'init-treesit)
+
+(mcg-register-loaded-module 'init-line-number)
+(mcg-register-loaded-module 'init-editor)
+(mcg-register-loaded-module 'init-indent)
+(mcg-register-loaded-module 'init-treesit)
+#+END_SRC
+
+** Phase 4: Completion System
+#+BEGIN_SRC emacs-lisp
+;;; Phase 4: 补全系统
+
+(require 'init-marginalia)
+(require 'init-vertico)
+(require 'init-embark)
+(require 'init-yasnippet)
+
+(mcg-register-loaded-module 'init-marginalia)
+(mcg-register-loaded-module 'init-vertico)
+(mcg-register-loaded-module 'init-embark)
+(mcg-register-loaded-module 'init-yasnippet)
+#+END_SRC
+
+** Phase 5: Utilities
+#+BEGIN_SRC emacs-lisp
+;;; Phase 5: 实用工具
+
+(require 'init-sort-tab)
+(require 'init-auto-save)
+(require 'init-generic)
+(require 'init-symbol-overlay)
+(require 'init-helpful)
+(require 'init-recentf)
+
+(mcg-register-loaded-module 'init-sort-tab)
+(mcg-register-loaded-module 'init-auto-save)
+(mcg-register-loaded-module 'init-generic)
+(mcg-register-loaded-module 'init-symbol-overlay)
+(mcg-register-loaded-module 'init-helpful)
+(mcg-register-loaded-module 'init-recentf)
+#+END_SRC
+
+** Phase 6: Input Methods
+#+BEGIN_SRC emacs-lisp
+;;; Phase 6: 输入增强
+
+(require 'init-rime)
+(require 'init-fingertip)
+(require 'init-wraplish)
+
+(mcg-register-loaded-module 'init-rime)
+(mcg-register-loaded-module 'init-fingertip)
+(mcg-register-loaded-module 'init-wraplish)
+#+END_SRC
+
+** Phase 7: Keybindings
+#+BEGIN_SRC emacs-lisp
+;;; Phase 7: 快捷键配置
+
+(require 'init-keymaps)
+
+(mcg-register-loaded-module 'init-keymaps)
+#+END_SRC
+
+** Phase 8: Git Integration (Delayed)
+#+BEGIN_SRC emacs-lisp
+;;; Phase 8: Git集成（延迟加载）
+
+(defun mcg-load-git-support ()
+  "加载Git支持"
+  (require 'init-magit)
+  (mcg-register-loaded-module 'init-magit))
+
+;; 延迟0.5秒加载Git
+(run-with-idle-timer 0.5 nil #'mcg-load-git-support)
+#+END_SRC
+
+** Phase 9: Search Tools (Delayed)
+#+BEGIN_SRC emacs-lisp
+;;; Phase 9: 搜索工具（延迟加载）
+
+(defun mcg-load-search-tools ()
+  "加载搜索工具"
+  (require 'init-blink-search)
+  (require 'init-color-rg)
+  (mcg-register-loaded-module 'init-blink-search)
+  (mcg-register-loaded-module 'init-color-rg))
+
+;; 延迟1秒加载搜索工具
+(run-with-idle-timer 1.0 nil #'mcg-load-search-tools)
+#+END_SRC
+
+** Phase 10: Language Support (On-Demand)
+#+BEGIN_SRC emacs-lisp
+;;; Phase 10: 语言支持（按需加载）
+
+(defvar mcg-lang-loaded-backend nil
+  "Backend languages loaded flag")
+
+(defvar mcg-lang-loaded-frontend nil
+  "Frontend languages loaded flag")
+
+(defun mcg-load-backend-lang ()
+  "加载后端语言支持"
+  (unless mcg-lang-loaded-backend
+    (require 'init-lsp-bridge)
+    
+    ;; Backend languages
+    (mcg-load-extension "lsp/rust-mode")
+    (mcg-load-extension "lsp/lua-mode")
+    
+    (require 'lang-rust)
+    (require 'lang-lua)
+    (require 'lang-cpp)
+    
+    (mcg-register-loaded-module 'lang-rust)
+    (mcg-register-loaded-module 'lang-lua)
+    (mcg-register-loaded-module 'lang-cpp)
+    
+    (setq mcg-lang-loaded-backend t)
+    (message "Backend language support loaded")))
+
+(defun mcg-load-frontend-lang ()
+  "加载前端语言支持"
+  (unless mcg-lang-loaded-frontend
+    (require 'init-lsp-bridge)
+    
+    ;; Frontend languages
+    (mcg-load-extension "lsp/web-mode")
+    (require 'lang-web-mode)
+    
+    (mcg-register-loaded-module 'lang-web-mode)
+    
+    (setq mcg-lang-loaded-frontend t)
+    (message "Frontend language support loaded")))
+
+;; 延迟2秒加载语言支持（或按需）
+(run-with-idle-timer 2.0 nil #'mcg-load-backend-lang)
+(run-with-idle-timer 2.5 nil #'mcg-load-frontend-lang)
+#+END_SRC
+
+** Phase 11: Org and Docs (Delayed)
+#+BEGIN_SRC emacs-lisp
+;;; Phase 11: Org和文档（延迟加载）
+
+(defun mcg-load-org-support ()
+  "加载Org和文档支持"
+  (require 'init-org)
+  (require 'init-org-agenda)
+  (require 'init-consult-todo)
+  (require 'init-org-numbering)
+  (require 'init-capture-hugo)
+  (require 'init-org-download)
+  (require 'init-markdown)
+  (require 'init-grip-mode)
+  
+  (mcg-register-loaded-module 'init-org)
+  (mcg-register-loaded-module 'init-org-agenda)
+  (mcg-register-loaded-module 'init-consult-todo)
+  (mcg-register-loaded-module 'init-org-numbering)
+  (mcg-register-loaded-module 'init-capture-hugo)
+  (mcg-register-loaded-module 'init-org-download)
+  (mcg-register-loaded-module 'init-markdown)
+  (mcg-register-loaded-module 'init-grip-mode))
+
+;; 延迟3秒加载Org支持
+(run-with-idle-timer 3.0 nil #'mcg-load-org-support)
+#+END_SRC
+
+** Hooks
+#+BEGIN_SRC emacs-lisp
+;;; 钩子配置
+
+(add-hook 'before-save-hook 'mcg/org-update-file-headers)
+#+END_SRC
+
+** Display Startup Time
+#+BEGIN_SRC emacs-lisp
+;;; 显示启动时间
+
+(defun mcg-display-startup-time ()
+  "显示启动时间"
+  (let ((elapsed (float-time (time-subtract (current-time) mcg-startup-start-time))))
+    (message "✨ Emacs loaded in %.2f seconds with %d garbage collections"
+             elapsed gcs-done)))
+
+(add-hook 'emacs-startup-hook #'mcg-display-startup-time)
+#+END_SRC
+
+** Ends
+#+BEGIN_SRC emacs-lisp
+(provide 'init)
+;;; init.el ends here
+#+END_SRC
