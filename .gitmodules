@@ -53,43 +53,43 @@
 	path = vimrc/pack/mcge/start/molokai
 	url = https://github.com/tomasr/molokai.git
 [submodule "emacs-magit"]
-	path = emacs/site-lisp/extensions/magit
+	path = emacs/site-lisp/extensions/git/magit
 	url = https://github.com/magit/magit.git
 [submodule "emacs-dash"]
-	path = emacs/site-lisp/extensions/dash
+	path = emacs/site-lisp/extensions/core/dash
 	url = https://github.com/magnars/dash.el.git
 [submodule "emacs-magit-with-editor"]
-	path = emacs/site-lisp/extensions/with-editor
+	path = emacs/site-lisp/extensions/git/with-editor
 	url = https://github.com/magit/with-editor.git
 [submodule "emacs-lazy-load"]
-	path = emacs/site-lisp/extensions/lazy-load
+	path = emacs/site-lisp/extensions/core/lazy-load
 	url = https://github.com/manateelazycat/lazy-load.git
 [submodule "emacs-nerd-icons"]
-	path = emacs/site-lisp/extensions/themes/nerd-icons
+	path = emacs/site-lisp/extensions/ui/themes/nerd-icons
 	url = https://github.com/rainstormstudio/nerd-icons.el.git
 [submodule "emacs-nerd-icons-completion"]
-	path = emacs/site-lisp/extensions/themes/nerd-icons-completion
+	path = emacs/site-lisp/extensions/ui/themes/nerd-icons-completion
 	url = https://github.com/rainstormstudio/nerd-icons-completion.git
 [submodule "emacs-sort-tab"]
-	path = emacs/site-lisp/extensions/sort-tab
+	path = emacs/site-lisp/extensions/utils/sort-tab
 	url = https://github.com/manateelazycat/sort-tab.git
 [submodule "emacs-consult"]
-	path = emacs/site-lisp/extensions/consult
+	path = emacs/site-lisp/extensions/completion/consult
 	url = https://github.com/minad/consult.git
 [submodule "emacs-marginalia"]
-	path = emacs/site-lisp/extensions/marginalia
+	path = emacs/site-lisp/extensions/completion/marginalia
 	url = https://github.com/minad/marginalia.git
 [submodule "emacs-vertico"]
-	path = emacs/site-lisp/extensions/vertico
+	path = emacs/site-lisp/extensions/completion/vertico
 	url = https://github.com/minad/vertico.git
 [submodule "emacs-orderless"]
-	path = emacs/site-lisp/extensions/orderless
+	path = emacs/site-lisp/extensions/completion/orderless
 	url = https://github.com/oantolin/orderless.git
 [submodule "emacs-embark"]
-	path = emacs/site-lisp/extensions/embark
+	path = emacs/site-lisp/extensions/completion/embark
 	url = https://github.com/oantolin/embark.git
 [submodule "emacs-pinyinlib"]
-	path = emacs/site-lisp/extensions/pinyinlib
+	path = emacs/site-lisp/extensions/completion/pinyinlib
 	url = https://github.com/cute-jumper/pinyinlib.el.git
 [submodule "emacs-yasnippet"]
 	path = emacs/site-lisp/extensions/snippets/yasnippet
@@ -98,7 +98,7 @@
 	path = emacs/site-lisp/extensions/snippets/yasnippet-snippet
 	url = https://github.com/AndreaCrotti/yasnippet-snippets.git
 [submodule "emacs-js2-mode"]
-	path = emacs/site-lisp/extensions/js2-mode
+	path = emacs/site-lisp/extensions/utils/js2-mode
 	url = https://github.com/mooz/js2-mode.git
 [submodule "emacs-lsp-bridge"]
 	path = emacs/site-lisp/extensions/lsp/lsp-bridge
@@ -122,25 +122,25 @@
 	path = emacs/site-lisp/extensions/org/emacs-request
 	url = https://github.com/tkf/emacs-request.git
 [submodule "emacs-vundo"]
-	path = emacs/site-lisp/extensions/vundo
+	path = emacs/site-lisp/extensions/editor/vundo
 	url = https://github.com/casouri/vundo.git
 [submodule "emacs-hydra"]
-	path = emacs/site-lisp/extensions/hydra
+	path = emacs/site-lisp/extensions/utils/hydra
 	url = https://github.com/abo-abo/hydra.git
 [submodule "emacs-markmacro"]
-	path = emacs/site-lisp/extensions/markmacro
+	path = emacs/site-lisp/extensions/editor/markmacro
 	url = https://github.com/manateelazycat/markmacro.git
 [submodule "emacs-wraplish"]
-	path = emacs/site-lisp/extensions/wraplish
+	path = emacs/site-lisp/extensions/editor/wraplish
 	url = https://github.com/manateelazycat/wraplish.git
 [submodule "emacs-fingertip"]
-	path = emacs/site-lisp/extensions/fingertip
+	path = emacs/site-lisp/extensions/editor/fingertip
 	url = https://github.com/manateelazycat/fingertip.git
 [submodule "emacs-beacon"]
-	path = emacs/site-lisp/extensions/beacon
+	path = emacs/site-lisp/extensions/editor/beacon
 	url = https://github.com/Malabarba/beacon.git
 [submodule "emacs-htmlize"]
-	path = emacs/site-lisp/extensions/emacs-htmlize
+	path = emacs/site-lisp/extensions/docs/emacs-htmlize
 	url = https://github.com/hniksic/emacs-htmlize.git
 [submodule "emacs-acm-terminal"]
 	path = emacs/site-lisp/extensions/lsp/acm-terminal
@@ -152,7 +152,7 @@
 	path = emacs/site-lisp/extensions/lsp/lua-mode
 	url = https://github.com/immerrr/lua-mode.git
 [submodule "emacs-ef-themes"]
-	path = emacs/site-lisp/extensions/themes/ef-themes
+	path = emacs/site-lisp/extensions/ui/themes/ef-themes
 	url = https://github.com/protesilaos/ef-themes.git
 [submodule "emacs-modern-cpp-font"]
 	path = emacs/site-lisp/extensions/lsp/modern-cpp-font-lock
@@ -161,10 +161,10 @@
 	path = emacs/site-lisp/extensions/lsp/treesit-auto
 	url = https://github.com/renzmann/treesit-auto.git
 [submodule "emacs-blink-search"]
-	path = emacs/site-lisp/extensions/blink-search
+	path = emacs/site-lisp/extensions/search/blink-search
 	url = https://github.com/manateelazycat/blink-search.git
 [submodule "emacs-color-rg"]
-	path = emacs/site-lisp/extensions/color-rg
+	path = emacs/site-lisp/extensions/search/color-rg
 	url = https://github.com/manateelazycat/color-rg.git
 [submodule "emacs-org-modern"]
 	path = emacs/site-lisp/extensions/org/org-modern
@@ -188,34 +188,34 @@
 	path = emacs/site-lisp/extensions/org/ht
 	url = https://github.com/Wilfred/ht.el.git
 [submodule "emacs-auto-save"]
-	path = emacs/site-lisp/extensions/auto-save
+	path = emacs/site-lisp/extensions/utils/auto-save
 	url = https://github.com/manateelazycat/auto-save.git
 [submodule "emacs-symbol-overlay"]
-	path = emacs/site-lisp/extensions/symbol-overlay
+	path = emacs/site-lisp/extensions/editor/symbol-overlay
 	url = https://github.com/wolray/symbol-overlay.git
 [submodule "emacs-ws-butler"]
-	path = emacs/site-lisp/extensions/ws-butler
+	path = emacs/site-lisp/extensions/editor/ws-butler
 	url = https://github.com/lewang/ws-butler.git
 [submodule "emacs-helpful"]
-	path = emacs/site-lisp/extensions/helpful
+	path = emacs/site-lisp/extensions/utils/helpful
 	url = https://github.com/Wilfred/helpful.git
 [submodule "emacs-elisp-refs"]
-	path = emacs/site-lisp/extensions/elisp-refs
+	path = emacs/site-lisp/extensions/utils/elisp-refs
 	url = https://github.com/Wilfred/elisp-refs.git
 [submodule "emacs-s-el"]
-	path = emacs/site-lisp/extensions/s.el
+	path = emacs/site-lisp/extensions/core/s.el
 	url = https://github.com/magnars/s.el.git
 [submodule "emacs-f-el"]
-	path = emacs/site-lisp/extensions/f.el
+	path = emacs/site-lisp/extensions/core/f.el
 	url = https://github.com/rejeep/f.el.git
 [submodule "emacs-rime"]
-	path = emacs/site-lisp/extensions/emacs-rime
+	path = emacs/site-lisp/extensions/input/emacs-rime
 	url = https://github.com/DogLooksGood/emacs-rime.git
 [submodule "emacs-posframe"]
-	path = emacs/site-lisp/extensions/posframe
+	path = emacs/site-lisp/extensions/input/posframe
 	url = https://github.com/tumashu/posframe.git
 [submodule "emacs-popup-el"]
-	path = emacs/site-lisp/extensions/popup-el
+	path = emacs/site-lisp/extensions/core/popup-el
 	url = https://github.com/auto-complete/popup-el.git
 [submodule "emacs-org-download"]
 	path = emacs/site-lisp/extensions/org/org-download
@@ -227,10 +227,10 @@
 	path = emacs/site-lisp/extensions/org/cal-china-x
 	url = https://github.com/mcgeq/cal-china-x.git
 [submodule "emacs-json-mode"]
-	path = emacs/site-lisp/extensions/json-mode
+	path = emacs/site-lisp/extensions/utils/json-mode
 	url = https://github.com/json-emacs/json-mode.git
 [submodule "emacs-json-snatcher"]
-	path = emacs/site-lisp/extensions/json-snatcher
+	path = emacs/site-lisp/extensions/utils/json-snatcher
 	url = https://github.com/Sterlingg/json-snatcher.git
 [submodule "emacs-clojure-mode"]
 	path = emacs/site-lisp/extensions/lsp/clojure/clojure-mode
@@ -272,47 +272,47 @@
 	path = emacs/site-lisp/extensions/lsp/cloel
 	url = https://github.com/manateelazycat/cloel.git
 [submodule "emacs-consult-todo"]
-	path = emacs/site-lisp/extensions/consult-todo
+	path = emacs/site-lisp/extensions/search/consult-todo
 	url = https://github.com/eki3z/consult-todo.git
 [submodule "emacs-hl-todo"]
-	path = emacs/site-lisp/extensions/hl-todo
+	path = emacs/site-lisp/extensions/search/hl-todo
 	url = https://github.com/tarsius/hl-todo.git
 [submodule "emacs-org-numbering"]
 	path = emacs/site-lisp/extensions/org/org-numbering
 	url = https://github.com/yibie/org-numbering.git
 [submodule "emacs-markdown-ts-mode"]
-	path = emacs/site-lisp/extensions/markdown-ts-mode
+	path = emacs/site-lisp/extensions/docs/markdown-ts-mode
 	url = https://github.com/LionyxML/markdown-ts-mode.git
 [submodule "emacs-flymake-vale"]
-	path = emacs/site-lisp/extensions/flymake-vale
+	path = emacs/site-lisp/extensions/docs/flymake-vale
 	url = https://github.com/tpeacock19/flymake-vale.git
 [submodule "emacs-grip-mode"]
-	path = emacs/site-lisp/extensions/md/grip-mode
+	path = emacs/site-lisp/extensions/docs/grip-mode
 	url = https://github.com/seagle0128/grip-mode.git
 [submodule "emacs-ox-gfm"]
 	path = emacs/site-lisp/extensions/org/ox-gfm
 	url = https://github.com/larstvei/ox-gfm.git
 [submodule "emacs-magit-llama"]
-	path = emacs/site-lisp/extensions/llama
+	path = emacs/site-lisp/extensions/git/llama
 	url = https://github.com/tarsius/llama.git
 [submodule "emacs-web-mode"]
 	path = emacs/site-lisp/extensions/lsp/web-mode
 	url = https://github.com/fxbois/web-mode.git
 [submodule "emacs-jujutsu"]
-	path = emacs/site-lisp/extensions/jujutsu
+	path = emacs/site-lisp/extensions/git/jujutsu
 	url = https://github.com/bennyandresen/jujutsu.el.git
 [submodule "emacs-instant-rename-tag"]
-	path = emacs/site-lisp/extensions/instant-rename-tag
+	path = emacs/site-lisp/extensions/utils/instant-rename-tag
 	url = https://github.com/manateelazycat/instant-rename-tag.git
 [submodule "emacs-highlight-matching-tag"]
-	path = emacs/site-lisp/extensions/highlight-matching-tag
+	path = emacs/site-lisp/extensions/utils/highlight-matching-tag
 	url = https://github.com/manateelazycat/highlight-matching-tag.git
 [submodule "emacs-doom-modeline"]
-	path = emacs/site-lisp/extensions/doom-modeline
+	path = emacs/site-lisp/extensions/ui/doom-modeline
 	url = https://github.com/seagle0128/doom-modeline.git
 [submodule "emacs-modeline-shrink-path"]
-	path = emacs/site-lisp/extensions/shrink-path
+	path = emacs/site-lisp/extensions/ui/shrink-path
 	url = https://gitlab.com/bennya/shrink-path.el.git
 [submodule "emacs-solaire-mode"]
-	path = emacs/site-lisp/extensions/solaire-mode
+	path = emacs/site-lisp/extensions/ui/solaire-mode
 	url = https://github.com/hlissner/emacs-solaire-mode.git
