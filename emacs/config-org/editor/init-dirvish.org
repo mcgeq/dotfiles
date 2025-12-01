@@ -1,0 +1,390 @@
+* init-dirvish.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle (concat temporary-file-directory "init-dirvish.el") :lexical t
+:END:
+
+** Headers
+#+BEGIN_SRC emacs-lisp
+  ;;; init-dirvish.el -- Modern File Manager with Dirvish -*- lexical-binding: t; -*-
+  
+  ;; Author: mcge <mcgeq@outlook.com>
+  ;; Version: 1.0
+  ;; Keywords: dirvish, dired, file-manager
+  
+  ;;; Commentary:
+  ;; Dirvish 是一个现代化的 Dired 增强工具，提供：
+  ;; - 图标支持
+  ;; - 文件预览
+  ;; - 快速过滤
+  ;; - Git 状态显示
+  ;; - 多面板布局
+  ;; - 现代化 UI
+#+END_SRC
+
+** Require
+#+BEGIN_SRC emacs-lisp
+  ;;; Require:
+  (require 'dirvish)
+  (require 'dirvish-icons)
+  (require 'dirvish-preview)
+  (require 'dirvish-side)
+  (require 'dirvish-subtree)
+#+END_SRC
+
+** Basic Configuration
+#+BEGIN_SRC emacs-lisp
+  ;;; === 基础配置 ===
+  
+  ;; Enable dirvish globally (replaces dired)
+  (dirvish-override-dired-mode)
+  
+  ;; Basic settings
+  (setq dirvish-cache-dir (expand-file-name "dirvish" user-emacs-directory))
+  
+  ;; Use the current window for dirvish buffers
+  (setq dirvish-reuse-session t)
+  
+  ;; Hide details by default (toggle with '(')
+  (setq dired-hide-details-mode t)
+  
+  ;; Human readable file sizes
+  (setq dired-listing-switches "-alh --group-directories-first")
+#+END_SRC
+
+** Appearance
+#+BEGIN_SRC emacs-lisp
+  ;;; === 外观设置 ===
+  
+  ;; Attributes to show in dirvish buffer
+  (setq dirvish-attributes
+        '(nerd-icons      ; Icons (requires nerd-icons)
+          file-size       ; File size
+          file-time       ; Modification time
+          subtree-state   ; Subtree state
+          vc-state        ; Git status
+          git-msg))       ; Git commit message
+  
+  ;; Mode line segments
+  (setq dirvish-mode-line-format
+        '(:left (sort file-time " " file-size symlink) :right (omit yank index)))
+  
+  ;; Header line format
+  (setq dirvish-header-line-format
+        '(:left (path) :right (free-space)))
+  
+  ;; Use nerd-icons
+  (setq dirvish-use-header-line t)
+  (setq dirvish-use-mode-line t)
+#+END_SRC
+
+** Preview Configuration
+#+BEGIN_SRC emacs-lisp
+  ;;; === 预览配置 ===
+  
+  ;; Preview window settings
+  (setq dirvish-preview-dispatchers
+        (cl-substitute 'pdf-preface 'pdf dirvish-preview-dispatchers))
+  
+  ;; Media preview (images, videos)
+  (setq dirvish-media-auto-cache-threshold '(500 . 8))
+  
+  ;; Enable preview
+  (setq dirvish-preview-policy 'auto)
+  
+  ;; Preview window size
+  (setq dirvish-preview-window-size 0.35)
+#+END_SRC
+
+** Quick Access (Side Window)
+#+BEGIN_SRC emacs-lisp
+  ;;; === 侧边栏快速访问 ===
+  
+  ;; Side window settings
+  (setq dirvish-side-width 35)
+  (setq dirvish-side-window-parameters
+        '((window-parameters . ((no-delete-other-windows . t)))))
+  
+  ;; Auto-update side window
+  (setq dirvish-side-auto-close t)
+  (setq dirvish-side-follow-mode t)
+#+END_SRC
+
+** File Operations
+#+BEGIN_SRC emacs-lisp
+  ;;; === 文件操作 ===
+  
+  ;; Use rsync for large files
+  (setq dired-rsync-command "rsync")
+  (setq dired-rsync-options "-az --info=progress2")
+  
+  ;; Ask before overwriting
+  (setq dired-recursive-copies 'always)
+  (setq dired-recursive-deletes 'top)
+  
+  ;; Open files externally
+  (setq dired-guess-shell-alist-user
+        '(("\\.pdf\\'" "xdg-open")
+          ("\\.docx?\\'" "xdg-open")
+          ("\\.xlsx?\\'" "xdg-open")
+          ("\\.png\\'" "xdg-open")
+          ("\\.jpe?g\\'" "xdg-open")
+          ("\\.mp4\\'" "xdg-open")
+          ("\\.mkv\\'" "xdg-open")))
+#+END_SRC
+
+** Subtree (Folder Expansion)
+#+BEGIN_SRC emacs-lisp
+  ;;; === 子树展开 ===
+  
+  ;; Subtree settings
+  (setq dirvish-subtree-always-show-state t)
+  (setq dirvish-subtree-state-style 'arrow)
+#+END_SRC
+
+** Git Integration
+#+BEGIN_SRC emacs-lisp
+  ;;; === Git 集成 ===
+  
+  ;; Show git status in dirvish
+  (setq dirvish-vc-state-face-alist
+        '((up-to-date       . font-lock-comment-face)
+          (edited           . font-lock-warning-face)
+          (added            . font-lock-function-name-face)
+          (removed          . font-lock-keyword-face)
+          (missing          . font-lock-constant-face)
+          (conflict         . font-lock-type-face)
+          (ignored          . shadow)
+          (unregistered     . font-lock-string-face)))
+#+END_SRC
+
+** Key Bindings
+#+BEGIN_SRC emacs-lisp
+  ;;; === 快捷键绑定 ===
+  
+  ;; Global bindings
+  (global-set-key (kbd "C-c d d") 'dirvish)
+  (global-set-key (kbd "C-c d s") 'dirvish-side)
+  (global-set-key (kbd "C-c d f") 'dirvish-fd)
+  (global-set-key (kbd "C-c d r") 'dirvish-roam)
+  
+  ;; Dirvish buffer bindings
+  (with-eval-after-load 'dirvish
+    (define-key dirvish-mode-map (kbd "TAB")     'dirvish-subtree-toggle)
+    (define-key dirvish-mode-map (kbd "M-f")     'dirvish-history-go-forward)
+    (define-key dirvish-mode-map (kbd "M-b")     'dirvish-history-go-backward)
+    (define-key dirvish-mode-map (kbd "M-l")     'dirvish-ls-switches-menu)
+    (define-key dirvish-mode-map (kbd "M-m")     'dirvish-mark-menu)
+    (define-key dirvish-mode-map (kbd "M-s")     'dirvish-setup-menu)
+    (define-key dirvish-mode-map (kbd "M-e")     'dirvish-emerge-menu)
+    (define-key dirvish-mode-map (kbd "M-j")     'dirvish-fd-jump)
+    (define-key dirvish-mode-map (kbd "?")       'dirvish-dispatch)
+    (define-key dirvish-mode-map (kbd "q")       'dirvish-quit)
+    (define-key dirvish-mode-map (kbd "a")       'dirvish-quick-access)
+    (define-key dirvish-mode-map (kbd "f")       'dirvish-file-info-menu)
+    (define-key dirvish-mode-map (kbd "y")       'dirvish-yank-menu)
+    (define-key dirvish-mode-map (kbd "N")       'dirvish-narrow)
+    (define-key dirvish-mode-map (kbd "^")       'dirvish-history-last)
+    (define-key dirvish-mode-map (kbd "h")       'dirvish-history-jump)
+    (define-key dirvish-mode-map (kbd "s")       'dirvish-quicksort)
+    (define-key dirvish-mode-map (kbd "v")       'dirvish-vc-menu)
+    (define-key dirvish-mode-map (kbd ".")       'dired-omit-mode)
+    (define-key dirvish-mode-map (kbd "b")       'dirvish-goto-bookmark)
+    (define-key dirvish-mode-map (kbd "z")       'dirvish-show-history)
+    
+    ;; Preview control
+    (define-key dirvish-mode-map (kbd "p")       'dirvish-toggle-preview)
+    (define-key dirvish-mode-map (kbd "C-p")     'dirvish-preview-scroll-down)
+    (define-key dirvish-mode-map (kbd "C-n")     'dirvish-preview-scroll-up)
+    
+    ;; Layout
+    (define-key dirvish-mode-map (kbd "l")       'dired-find-file)
+    (define-key dirvish-mode-map (kbd "i")       'dirvish-subtree-toggle-or-open)
+    
+    ;; Marking
+    (define-key dirvish-mode-map (kbd "SPC")     'dired-mark)
+    (define-key dirvish-mode-map (kbd "u")       'dired-unmark)
+    (define-key dirvish-mode-map (kbd "U")       'dired-unmark-all-marks)
+    (define-key dirvish-mode-map (kbd "t")       'dired-toggle-marks))
+#+END_SRC
+
+** Quick Access Bookmarks
+#+BEGIN_SRC emacs-lisp
+  ;;; === 快速访问书签 ===
+  
+  (setq dirvish-quick-access-entries
+        `(("h" "~/"                          "Home")
+          ("d" "~/Downloads/"                "Downloads")
+          ("D" "~/Documents/"                "Documents")
+          ("p" "~/projects/"                 "Projects")
+          ("e" ,(expand-file-name "config-org" mcgemacs-root-dir) "Emacs Config")
+          ("t" "/tmp/"                       "Temp")
+          ("c" "~/.config/"                  "Config")))
+#+END_SRC
+
+** Helper Functions
+#+BEGIN_SRC emacs-lisp
+  ;;; === 辅助函数 ===
+  
+  (defun mcg/dirvish-open-in-external-app ()
+    "Open file at point with external application."
+    (interactive)
+    (let ((file (dired-get-file-for-visit)))
+      (cond
+       ((eq system-type 'windows-nt)
+        (w32-shell-execute "open" file))
+       ((eq system-type 'darwin)
+        (shell-command (concat "open " (shell-quote-argument file))))
+       (t
+        (shell-command (concat "xdg-open " (shell-quote-argument file)))))))
+  
+  (defun mcg/dirvish-copy-file-path ()
+    "Copy file path at point to kill ring."
+    (interactive)
+    (let ((file (dired-get-filename nil t)))
+      (when file
+        (kill-new file)
+        (message "Copied: %s" file))))
+  
+  (defun mcg/dirvish-copy-file-name ()
+    "Copy file name at point to kill ring."
+    (interactive)
+    (let ((file (dired-get-filename 'no-dir t)))
+      (when file
+        (kill-new file)
+        (message "Copied: %s" file))))
+  
+  ;; Bind helper functions
+  (with-eval-after-load 'dirvish
+    (define-key dirvish-mode-map (kbd "C-c C-o") 'mcg/dirvish-open-in-external-app)
+    (define-key dirvish-mode-map (kbd "C-c y p") 'mcg/dirvish-copy-file-path)
+    (define-key dirvish-mode-map (kbd "C-c y n") 'mcg/dirvish-copy-file-name))
+#+END_SRC
+
+** Performance
+#+BEGIN_SRC emacs-lisp
+  ;;; === 性能优化 ===
+  
+  ;; Cache images
+  (setq image-cache-eviction-delay 300)
+  
+  ;; Lazy count for large directories
+  (setq dirvish-emerge-groups
+        '(("Recent files" (predicate . recent-files-2h))
+          ("Documents"    (extensions "pdf" "tex" "bib" "epub" "org" "md"))
+          ("Video"        (extensions "mp4" "mkv" "webm" "avi"))
+          ("Pictures"     (extensions "jpg" "png" "svg" "gif" "jpeg"))
+          ("Audio"        (extensions "mp3" "flac" "wav" "ape"))
+          ("Archives"     (extensions "gz" "rar" "zip" "7z"))))
+#+END_SRC
+
+** Tips Display
+#+BEGIN_SRC emacs-lisp
+  ;;; === 使用提示 ===
+  
+  (defun mcg-dirvish-tips ()
+    "Show Dirvish usage tips."
+    (interactive)
+    (with-help-window "*Dirvish Tips*"
+      (princ "
+╔═══════════════════════════════════════════════════════════╗
+║              Dirvish Usage Tips                           ║
+╚═══════════════════════════════════════════════════════════╝
+
+┌─────────────────────────────────────────────────────────┐
+│ QUICK START                                              │
+├─────────────────────────────────────────────────────────┤
+│ C-c d d         Open dirvish                             │
+│ C-c d s         Open dirvish side window                 │
+│ C-c d f         Find file with fd                        │
+│ a               Quick access bookmarks                   │
+│ q               Quit dirvish                             │
+└─────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────┐
+│ NAVIGATION                                               │
+├─────────────────────────────────────────────────────────┤
+│ n/p             Next/Previous line                       │
+│ j/k             Down/Up (vim-style)                      │
+│ RET/l           Open file/directory                      │
+│ ^               Go to parent directory                   │
+│ M-b/M-f         History backward/forward                 │
+│ h               Jump to history                          │
+│ b               Go to bookmark                           │
+└─────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────┐
+│ PREVIEW                                                  │
+├─────────────────────────────────────────────────────────┤
+│ p               Toggle preview                           │
+│ C-n/C-p         Scroll preview down/up                   │
+│ TAB             Toggle subtree (expand folder)           │
+└─────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────┐
+│ MARKING & OPERATIONS                                     │
+├─────────────────────────────────────────────────────────┤
+│ SPC/m           Mark file                                │
+│ u               Unmark                                   │
+│ U               Unmark all                               │
+│ t               Toggle marks                             │
+│ M-m             Mark menu (regex, extension, etc.)       │
+│ C               Copy marked files                        │
+│ R               Rename/Move                              │
+│ D               Delete                                   │
+│ +               Create directory                         │
+└─────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────┐
+│ UTILITIES                                                │
+├─────────────────────────────────────────────────────────┤
+│ s               Quick sort                               │
+│ v               VC (git) menu                            │
+│ f               File info menu                           │
+│ y               Yank (copy/paste) menu                   │
+│ N               Narrow (filter)                          │
+│ .               Toggle hidden files (omit mode)          │
+│ M-l             List switches menu                       │
+│ ?               Dispatch (show all commands)             │
+└─────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────┐
+│ CUSTOM FUNCTIONS                                         │
+├─────────────────────────────────────────────────────────┤
+│ C-c C-o         Open with external app                   │
+│ C-c y p         Copy file path                           │
+│ C-c y n         Copy file name                           │
+└─────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────┐
+│ LAYOUTS                                                  │
+├─────────────────────────────────────────────────────────┤
+│ M-e             Emerge menu (group by type)              │
+│ M-s             Setup menu (change layout)               │
+└─────────────────────────────────────────────────────────┘
+
+═══════════════════════════════════════════════════════════
+
+TIP: Press '?' in dirvish buffer for command dispatch menu
+     Press 'a' for quick access to bookmarked directories
+
+")))
+  
+  (global-set-key (kbd "C-c d ?") 'mcg-dirvish-tips)
+#+END_SRC
+
+** Hooks
+#+BEGIN_SRC emacs-lisp
+  ;;; === Hooks ===
+  
+  ;; Auto-update dirvish buffers
+  (add-hook 'dirvish-mode-hook 'auto-revert-mode)
+  
+  ;; Hide details by default
+  (add-hook 'dirvish-mode-hook 'dired-hide-details-mode)
+#+END_SRC
+
+** Ends
+#+BEGIN_SRC emacs-lisp
+(provide 'init-dirvish)
+;;; init-dirvish.el ends here
+#+END_SRC

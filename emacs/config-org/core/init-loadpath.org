@@ -95,6 +95,7 @@
     ("editor/wraplish"        . (:priority 30 :required nil :auto-load nil))
     ("editor/markmacro"       . (:priority 30 :required nil :auto-load nil))
     ("editor/ws-butler"       . (:priority 30 :required nil :auto-load nil))
+    ("editor/dirvish"         . (:priority 30 :required nil :auto-load nil))
 
     ;; === Git === 版本控制
     ("git/magit"       . (:priority 70 :required nil :auto-load nil))

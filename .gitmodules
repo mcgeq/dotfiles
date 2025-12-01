@@ -325,3 +325,6 @@
 [submodule "emac-cond-let"]
 	path = emacs/site-lisp/extensions/core/cond-let
 	url = https://github.com/tarsius/cond-let.git
+[submodule "emacs-dirvish"]
+	path = emacs/site-lisp/extensions/editor/dirvish
+	url = https://github.com/alexluigit/dirvish.git
