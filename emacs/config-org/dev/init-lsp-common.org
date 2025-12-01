@@ -1,0 +1,358 @@
+* init-lsp-common.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle (concat temporary-file-directory "init-lsp-common.el") :lexical t
+:END:
+
+** Headers
+#+BEGIN_SRC emacs-lisp
+  ;;; init-lsp-common.el -- Common LSP Configuration -*- lexical-binding: t; -*-
+  
+  ;; Author: mcge <mcgeq@outlook.com>
+  ;; Version: 1.0
+  ;; Keywords: lsp, language-server, development
+  
+  ;;; Commentary:
+  ;; Unified LSP configuration shared across all languages:
+  ;; - Performance optimization
+  ;; - Common keybindings
+  ;; - Shared utilities
+  ;; - Consistent behavior
+#+END_SRC
+
+** LSP Bridge Performance
+#+BEGIN_SRC emacs-lisp
+;;; LSP Bridge 性能优化
+
+;; 基础性能设置
+(with-eval-after-load 'lsp-bridge
+  ;; 启用诊断
+  (setq lsp-bridge-enable-diagnostics t
+        lsp-bridge-enable-hover-diagnostic t
+        lsp-bridge-enable-search-words t
+        lsp-bridge-enable-auto-import t)
+  
+  ;; 补全性能
+  (setq lsp-bridge-completion-hide-characters '(":" ";" "(" ")" "[" "]" "{" "}" "," "\"")
+        lsp-bridge-completion-popup-predicates '(lsp-bridge-not-match-stop-commands
+                                                  lsp-bridge-not-match-hide-characters
+                                                  lsp-bridge-not-in-string
+                                                  lsp-bridge-not-in-comment))
+  
+  ;; 代码格式化
+  (setq lsp-bridge-enable-signature-help t
+        lsp-bridge-signature-show-function 'lsp-bridge-signature-show-with-frame))
+#+END_SRC
+
+** Common Keybindings
+#+BEGIN_SRC emacs-lisp
+;;; 统一快捷键
+
+(defvar mcg-lsp-keymap (make-sparse-keymap)
+  "Keymap for LSP commands.")
+
+(defun mcg-lsp-setup-keybindings ()
+  "Setup common LSP keybindings."
+  (when (bound-and-p 'lsp-bridge-mode)
+    ;; Navigation
+    (local-set-key (kbd "M-.") #'lsp-bridge-find-def)
+    (local-set-key (kbd "M-,") #'lsp-bridge-find-def-return)
+    (local-set-key (kbd "M-?") #'lsp-bridge-find-references)
+    
+    ;; Documentation
+    (local-set-key (kbd "C-h .") #'lsp-bridge-lookup-documentation)
+    (local-set-key (kbd "C-h ,") #'lsp-bridge-show-signature)
+    
+    ;; Refactoring
+    (local-set-key (kbd "C-c r r") #'lsp-bridge-rename)
+    (local-set-key (kbd "C-c r i") #'lsp-bridge-code-action)
+    (local-set-key (kbd "C-c r f") #'lsp-bridge-code-format)
+    
+    ;; Diagnostics
+    (local-set-key (kbd "C-c ! n") #'lsp-bridge-diagnostic-jump-next)
+    (local-set-key (kbd "C-c ! p") #'lsp-bridge-diagnostic-jump-prev)
+    (local-set-key (kbd "C-c ! l") #'lsp-bridge-diagnostic-list)
+    
+    ;; Workspace
+    (local-set-key (kbd "C-c w r") #'lsp-bridge-workspace-list-symbols)))
+
+;; 自动设置快捷键
+(add-hook 'lsp-bridge-mode-hook #'mcg-lsp-setup-keybindings)
+#+END_SRC
+
+** Shared Utilities
+#+BEGIN_SRC emacs-lisp
+;;; 共享工具函数
+
+(defun mcg-lsp-format-buffer ()
+  "Format current buffer using LSP."
+  (interactive)
+  (if (and (fboundp 'lsp-bridge-mode)
+           lsp-bridge-mode)
+      (lsp-bridge-code-format)
+    (message "LSP not active in current buffer")))
+
+(defun mcg-lsp-organize-imports ()
+  "Organize imports using LSP."
+  (interactive)
+  (when (and (fboundp 'lsp-bridge-code-action)
+             lsp-bridge-mode)
+    (lsp-bridge-code-action "source.organizeImports")))
+
+(defun mcg-lsp-show-diagnostics-summary ()
+  "Show diagnostics summary for current project."
+  (interactive)
+  (when lsp-bridge-mode
+    (lsp-bridge-diagnostic-list)))
+
+(defun mcg-lsp-restart ()
+  "Restart LSP server."
+  (interactive)
+  (when lsp-bridge-mode
+    (lsp-bridge-restart-process)
+    (message "LSP server restarted")))
+#+END_SRC
+
+** Language Detection
+#+BEGIN_SRC emacs-lisp
+;;; 语言检测
+
+(defun mcg-lsp-detect-project-type ()
+  "Detect project type from project root files."
+  (when-let ((project-root (project-root (project-current))))
+    (cond
+     ;; Python
+     ((or (file-exists-p (expand-file-name "setup.py" project-root))
+          (file-exists-p (expand-file-name "pyproject.toml" project-root))
+          (file-exists-p (expand-file-name "requirements.txt" project-root)))
+      'python)
+     
+     ;; JavaScript/TypeScript
+     ((or (file-exists-p (expand-file-name "package.json" project-root))
+          (file-exists-p (expand-file-name "tsconfig.json" project-root)))
+      'javascript)
+     
+     ;; Rust
+     ((file-exists-p (expand-file-name "Cargo.toml" project-root))
+      'rust)
+     
+     ;; Zig
+     ((file-exists-p (expand-file-name "build.zig" project-root))
+      'zig)
+     
+     ;; C/C++
+     ((or (file-exists-p (expand-file-name "CMakeLists.txt" project-root))
+          (file-exists-p (expand-file-name "Makefile" project-root))
+          (file-exists-p (expand-file-name "compile_commands.json" project-root)))
+      'c-cpp)
+     
+     (t 'unknown))))
+
+(defun mcg-lsp-show-project-info ()
+  "Show detected project information."
+  (interactive)
+  (let ((project-type (mcg-lsp-detect-project-type))
+        (project-root (when (project-current)
+                        (project-root (project-current)))))
+    (message "Project: %s | Type: %s" 
+             (or project-root "None")
+             (or project-type "unknown"))))
+#+END_SRC
+
+** Auto-Format on Save
+#+BEGIN_SRC emacs-lisp
+;;; 保存时自动格式化
+
+(defvar mcg-lsp-format-on-save-modes
+  '(python-mode
+    rust-mode
+    zig-mode
+    c-mode
+    c++-mode
+    typescript-mode
+    typescript-ts-mode
+    js-mode
+    js-ts-mode)
+  "Modes where format-on-save is enabled.")
+
+(defvar mcg-lsp-format-on-save-enabled t
+  "Whether format-on-save is globally enabled.")
+
+(defun mcg-lsp-format-on-save ()
+  "Format buffer on save if appropriate."
+  (when (and mcg-lsp-format-on-save-enabled
+             (member major-mode mcg-lsp-format-on-save-modes)
+             (bound-and-p 'lsp-bridge-mode)
+             lsp-bridge-mode)
+    (lsp-bridge-code-format)))
+
+(defun mcg-lsp-toggle-format-on-save ()
+  "Toggle format-on-save globally."
+  (interactive)
+  (setq mcg-lsp-format-on-save-enabled (not mcg-lsp-format-on-save-enabled))
+  (message "Format on save: %s" 
+           (if mcg-lsp-format-on-save-enabled "enabled" "disabled")))
+
+;; 启用保存时格式化
+(add-hook 'before-save-hook #'mcg-lsp-format-on-save)
+#+END_SRC
+
+** Error Checking
+#+BEGIN_SRC emacs-lisp
+;;; 错误检查
+
+(defun mcg-lsp-check-server-available (server-name)
+  "Check if LSP server is available in PATH."
+  (executable-find server-name))
+
+(defun mcg-lsp-show-server-status ()
+  "Show status of all LSP servers."
+  (interactive)
+  (let ((servers '(("Python (pyright)" . "pyright")
+                   ("Python (pylsp)" . "pylsp")
+                   ("TypeScript" . "typescript-language-server")
+                   ("Rust" . "rust-analyzer")
+                   ("Zig" . "zls")
+                   ("C/C++ (clangd)" . "clangd"))))
+    (with-help-window "*LSP Server Status*"
+      (princ "═══════════════════════════════════\n")
+      (princ "   LSP Server Availability\n")
+      (princ "═══════════════════════════════════\n\n")
+      (dolist (server servers)
+        (let ((name (car server))
+              (executable (cdr server)))
+          (princ (format "%-20s %s\n" 
+                         name
+                         (if (mcg-lsp-check-server-available executable)
+                             "✓ Available"
+                           "✗ Not found")))))
+      (princ "\n═══════════════════════════════════\n")
+      (princ "\nInstallation instructions:\n")
+      (princ "  Python:     pip install pyright\n")
+      (princ "  TypeScript: npm install -g typescript-language-server\n")
+      (princ "  Rust:       rustup component add rust-analyzer\n")
+      (princ "  Zig:        Download from github.com/zigtools/zls\n")
+      (princ "  C/C++:      Install clangd from LLVM\n"))))
+#+END_SRC
+
+** Performance Monitoring
+#+BEGIN_SRC emacs-lisp
+;;; 性能监控
+
+(defvar mcg-lsp-response-times nil
+  "List of recent LSP response times.")
+
+(defun mcg-lsp-record-response-time (time)
+  "Record LSP response time."
+  (push time mcg-lsp-response-times)
+  (when (> (length mcg-lsp-response-times) 100)
+    (setq mcg-lsp-response-times (butlast mcg-lsp-response-times))))
+
+(defun mcg-lsp-show-performance ()
+  "Show LSP performance statistics."
+  (interactive)
+  (if (null mcg-lsp-response-times)
+      (message "No LSP performance data collected yet")
+    (let* ((times mcg-lsp-response-times)
+           (avg (/ (apply #'+ times) (float (length times))))
+           (min-time (apply #'min times))
+           (max-time (apply #'max times)))
+      (message "LSP Performance: avg=%.2fms, min=%.2fms, max=%.2fms (n=%d)"
+               avg min-time max-time (length times)))))
+#+END_SRC
+
+** Workspace Management
+#+BEGIN_SRC emacs-lisp
+;;; 工作区管理
+
+(defvar mcg-lsp-workspace-cache (make-hash-table :test 'equal)
+  "Cache for LSP workspace configurations.")
+
+(defun mcg-lsp-cache-workspace (project-root config)
+  "Cache workspace configuration."
+  (puthash project-root config mcg-lsp-workspace-cache))
+
+(defun mcg-lsp-get-workspace-config (project-root)
+  "Get cached workspace configuration."
+  (gethash project-root mcg-lsp-workspace-cache))
+
+(defun mcg-lsp-clear-workspace-cache ()
+  "Clear workspace configuration cache."
+  (interactive)
+  (clrhash mcg-lsp-workspace-cache)
+  (message "LSP workspace cache cleared"))
+#+END_SRC
+
+** Quick Commands
+#+BEGIN_SRC emacs-lisp
+;;; 快速命令
+
+(defalias 'lsp-format #'mcg-lsp-format-buffer)
+(defalias 'lsp-imports #'mcg-lsp-organize-imports)
+(defalias 'lsp-restart #'mcg-lsp-restart)
+(defalias 'lsp-status #'mcg-lsp-show-server-status)
+(defalias 'lsp-perf #'mcg-lsp-show-performance)
+(defalias 'lsp-project #'mcg-lsp-show-project-info)
+#+END_SRC
+
+** Help & Documentation
+#+BEGIN_SRC emacs-lisp
+;;; 帮助文档
+
+(defun mcg-lsp-help ()
+  "Show LSP common keybindings and commands."
+  (interactive)
+  (with-help-window "*LSP Help*"
+    (princ "
+╔═══════════════════════════════════════════╗
+║       LSP Common Keybindings              ║
+╚═══════════════════════════════════════════╝
+
+NAVIGATION:
+  M-.        - Go to definition
+  M-,        - Return from definition
+  M-?        - Find references
+
+DOCUMENTATION:
+  C-h .      - Show documentation
+  C-h ,      - Show signature
+
+REFACTORING:
+  C-c r r    - Rename symbol
+  C-c r i    - Code action
+  C-c r f    - Format buffer
+
+DIAGNOSTICS:
+  C-c ! n    - Next diagnostic
+  C-c ! p    - Previous diagnostic
+  C-c ! l    - List all diagnostics
+
+WORKSPACE:
+  C-c w r    - List symbols
+
+═══════════════════════════════════════════
+
+QUICK COMMANDS:
+  M-x lsp-format    - Format buffer
+  M-x lsp-imports   - Organize imports
+  M-x lsp-restart   - Restart LSP server
+  M-x lsp-status    - Check server availability
+  M-x lsp-perf      - Show performance stats
+  M-x lsp-project   - Show project info
+
+═══════════════════════════════════════════
+
+SETTINGS:
+  M-x mcg-lsp-toggle-format-on-save
+    Toggle automatic formatting on save
+
+Current status:
+  Format on save: ")
+    (princ (if mcg-lsp-format-on-save-enabled "✓ Enabled" "✗ Disabled"))
+    (princ "\n\n═══════════════════════════════════════════\n")))
+#+END_SRC
+
+** Ends
+#+BEGIN_SRC emacs-lisp
+(provide 'init-lsp-common)
+;;; init-lsp-common.el ends here
+#+END_SRC
