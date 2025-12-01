@@ -22,24 +22,17 @@
 ** Require
 #+BEGIN_SRC emacs-lisp
   ;;; Require:
+  (require 'compat)       ; Required for transient (provides cond-let)
   (require 'transient)
 #+END_SRC
 
 ** Main Command Center
 #+BEGIN_SRC emacs-lisp
-  ;;; === 主命令中心 ===
+  ;;; === 主命令中心===
   
   (transient-define-prefix mcg-command-center ()
     "Main command center - your gateway to all Emacs features"
-    [:description
-     (lambda () 
-       (concat
-        (propertize "╔═══════════════════════════════════════════════════════════╗\n" 'face 'font-lock-comment-face)
-        (propertize "║        " 'face 'font-lock-comment-face)
-        (propertize "Emacs Command Center" 'face '(:foreground "cyan" :weight bold))
-        (propertize "                             ║\n" 'face 'font-lock-comment-face)
-        (propertize "╚═══════════════════════════════════════════════════════════╝" 'face 'font-lock-comment-face)))]
-    ["Development"
+    [["Development"
      ("g" "Git" mcg-git-menu :transient t)
      ("r" "Refactor/LSP" mcg-refactor-menu :transient t)
      ("p" "Project" mcg-project-menu :transient t)
@@ -62,7 +55,9 @@
      ("h" "Help" mcg-help-menu :transient t)
      ("i" "Info" mcg-info-menu :transient t)
      ("?" "Keybindings" mcg-show-keybindings)
-     ("q" "Quit" transient-quit-one)])
+     ("q" "Quit" transient-quit-one)]
+     ]
+     )
   
   ;; Bind to easily accessible keys
   (global-set-key (kbd "<f5>") 'mcg-command-center)
@@ -72,7 +67,7 @@
 
 ** Git Menu (Enhanced)
 #+BEGIN_SRC emacs-lisp
-  ;;; === Git 菜单（增强版）===
+  ;;; === Git 菜单（增强版）==
   
   (transient-define-prefix mcg-git-menu ()
     "Git operations menu"
@@ -83,7 +78,7 @@
         (when (and (fboundp 'magit-get-current-branch)
                    (magit-get-current-branch))
           (format "Branch: %s\n" 
-                  (propertize (magit-get-current-branch) 'face '(:foreground "yellow")))))]
+                  (propertize (magit-get-current-branch) 'face '(:foreground "yellow"))))))]
     [["Main"
        ("s" "Status" magit-status)
        ("l" "Log" magit-log)
@@ -141,8 +136,8 @@
         (propertize "LSP & Refactoring\n" 'face '(:foreground "blue" :weight bold))
         (if (and (fboundp 'lsp-bridge-mode) lsp-bridge-mode)
             (propertize "LSP: Active\n" 'face '(:foreground "green"))
-          (propertize "LSP: Inactive\n" 'face '(:foreground "red")))))
-     [["Navigation"
+          (propertize "LSP: Inactive\n" 'face '(:foreground "red")))))]
+    [["Navigation"
        ("d" "Go to definition" lsp-bridge-find-def)
        ("b" "Go back" lsp-bridge-find-def-return)
        ("r" "Find references" lsp-bridge-find-references)
@@ -179,8 +174,8 @@
     "Search and navigation"
     [:description
      (lambda ()
-       (propertize "Search & Navigation\n" 'face '(:foreground "yellow" :weight bold)))
-     [["Buffer"
+       (propertize "Search & Navigation\n" 'face '(:foreground "yellow" :weight bold)))]
+    [["Buffer"
        ("l" "Search line" consult-line)
        ("i" "Imenu" consult-imenu)
        ("m" "Mark" consult-mark)
@@ -234,8 +229,8 @@
     "Tabs and windows management"
     [:description
      (lambda ()
-       (propertize "Tabs & Windows\n" 'face '(:foreground "magenta" :weight bold)))
-     [["Tabs"
+       (propertize "Tabs & Windows\n" 'face '(:foreground "magenta" :weight bold)))]
+    [["Tabs"
        ("n" "Next tab" sort-tab-select-next-tab)
        ("p" "Previous tab" sort-tab-select-prev-tab)
        ("k" "Close tab" sort-tab-close-current-tab)
@@ -272,8 +267,8 @@
     "Editing operations"
     [:description
      (lambda ()
-       (propertize "Editing Operations\n" 'face '(:foreground "cyan" :weight bold)))
-     [["Lines"
+       (propertize "Editing Operations\n" 'face '(:foreground "cyan" :weight bold)))]
+    [["Lines"
        ("k" "Kill line" kill-line)
        ("d" "Duplicate line" duplicate-line)
        ("u" "Move up" move-line-up)
@@ -308,8 +303,8 @@
     "Mark and macro operations"
     [:description
      (lambda ()
-       (propertize "Mark & Macro Operations\n" 'face '(:foreground "orange" :weight bold)))
-     [["Markmacro Rect"
+       (propertize "Mark & Macro Operations\n" 'face '(:foreground "orange" :weight bold)))]
+    [["Markmacro Rect"
        ("s" "Set rect" markmacro-rect-set)
        ("d" "Delete rect" markmacro-rect-delete)
        ("r" "Replace rect" markmacro-rect-replace)
@@ -339,8 +334,8 @@
     "Org mode operations"
     [:description
      (lambda ()
-       (propertize "Org Mode & Notes\n" 'face '(:foreground "green" :weight bold)))
-     [["Capture & Agenda"
+       (propertize "Org Mode & Notes\n" 'face '(:foreground "green" :weight bold)))]
+    [["Capture & Agenda"
        ("c" "Capture" org-capture)
        ("a" "Agenda" org-agenda)
        ("t" "Todo list" org-todo-list)
@@ -394,8 +389,8 @@
     "Help and documentation"
     [:description
      (lambda ()
-       (propertize "Help & Documentation\n" 'face '(:foreground "cyan" :weight bold)))
-     [["Describe"
+       (propertize "Help & Documentation\n" 'face '(:foreground "cyan" :weight bold)))]
+    [["Describe"
        ("f" "Function" helpful-callable)
        ("v" "Variable" helpful-variable)
        ("k" "Key" helpful-key)
@@ -466,8 +461,8 @@
         (propertize "Project Management\n" 'face '(:foreground "blue" :weight bold))
         (when-let ((proj (project-current)))
           (format "Current: %s\n" 
-                  (propertize (project-root proj) 'face '(:foreground "yellow"))))))
-     [["Files"
+                  (propertize (project-root proj) 'face '(:foreground "yellow"))))))]
+    [["Files"
        ("f" "Find file" project-find-file)
        ("d" "Dired" project-dired)
        ("b" "Switch buffer" project-switch-to-buffer)]
@@ -547,48 +542,45 @@
     (interactive)
     (with-help-window "*Transient Tips*"
       (princ "
-╔═══════════════════════════════════════════════════════════╗
-║           Transient Menu System Guide                     ║
-╚═══════════════════════════════════════════════════════════╝
-
+╔═══════════════════════════════════════════════════════════�?�?          Transient Menu System Guide                     �?╚═══════════════════════════════════════════════════════════�?
 🚀 QUICK ACCESS
 
-  F5 or C-c ?  → Main Command Center (all features)
-  M-SPC        → Command Center (Spacemacs-like)
+  F5 or C-c ?  �?Main Command Center (all features)
+  M-SPC        �?Command Center (Spacemacs-like)
 
 📋 CATEGORY MENUS
 
-  C-c g ?      → Git operations
-  C-c r ?      → LSP/Refactoring
-  C-c s ?      → Search & navigation
-  C-c t ?      → Tabs & windows
-  C-c f ?      → Files
-  C-c e ?      → Editing
-  C-c m ?      → Mark & macros
-  C-c n ?      → Org/Notes
-  C-c h ?      → Help
-  C-c p ?      → Project
+  C-c g ?      �?Git operations
+  C-c r ?      �?LSP/Refactoring
+  C-c s ?      �?Search & navigation
+  C-c t ?      �?Tabs & windows
+  C-c f ?      �?Files
+  C-c e ?      �?Editing
+  C-c m ?      �?Mark & macros
+  C-c n ?      �?Org/Notes
+  C-c h ?      �?Help
+  C-c p ?      �?Project
 
-⚡ SUPER QUICK (No C-c prefix)
+�?SUPER QUICK (No C-c prefix)
 
-  M-g          → Git menu
-  M-s          → Search menu
-  M-r          → Refactor menu
+  M-g          �?Git menu
+  M-s          �?Search menu
+  M-r          �?Refactor menu
 
 💡 INSIDE MENUS
 
-  Letter       → Execute command
-  ?            → Show more help
-  q or ESC     → Go back/quit
-  Arrow keys   → Navigate options
+  Letter       �?Execute command
+  ?            �?Show more help
+  q or ESC     �?Go back/quit
+  Arrow keys   �?Navigate options
 
 🎨 FEATURES
 
-  ✅ Shows current state (branch, LSP status, etc.)
-  ✅ Grouped by category
-  ✅ Color-coded
-  ✅ Transient mode (can execute multiple commands)
-  ✅ Nested menus
+  �?Shows current state (branch, LSP status, etc.)
+  �?Grouped by category
+  �?Color-coded
+  �?Transient mode (can execute multiple commands)
+  �?Nested menus
 
 📚 LEARNING STRATEGY
 
@@ -597,13 +589,12 @@
   Week 3: Memorize frequent commands
   Week 4: Mix direct keys + menus
 
-═══════════════════════════════════════════════════════════
-
+══════════════════════════════════════════════════════════�?
 TIP: Press F5 right now to explore all features!
 
 ")))
   
-  (global-set-key (kbd "C-h t ?") 'mcg-transient-tips)
+  (global-set-key (kbd "C-h T") 'mcg-transient-tips)
 #+END_SRC
 
 ** Ends

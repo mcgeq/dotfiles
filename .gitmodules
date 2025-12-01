@@ -322,3 +322,6 @@
 [submodule "emacs/site-lisp/extensions/core/compat"]
 	path = emacs/site-lisp/extensions/core/compat
 	url = https://github.com/emacs-compat/compat.git
+[submodule "emac-cond-let"]
+	path = emacs/site-lisp/extensions/core/cond-let
+	url = https://github.com/tarsius/cond-let.git

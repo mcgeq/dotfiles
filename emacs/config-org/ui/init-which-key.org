@@ -67,6 +67,9 @@
     "C-c y"   "yasnippet"
     "C-c f"   "files"
     "C-c e"   "edit"
+    "C-c E"   "open-init-file"
+    "C-c d"   "debug"
+    "C-c D"   "make-directory"
     "C-c w"   "which-key"
     
     ;; Git subprefixes

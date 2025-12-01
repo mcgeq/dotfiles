@@ -234,47 +234,221 @@ emacs/
 
 * ⌨️ Key Bindings
 
-** Completions (Vertico)
-   - =C-M-r= :: Recent files (consult-recent)
-   - =C-x b= :: Switch buffer
-   - =C-x 4 b= :: Switch buffer in other window
-   - =C-x 5 b= :: Switch buffer in other frame
+本配置采用模块化、符合 Emacs 标准的快捷键设计。所有自定义绑定都使用 =C-c= 前缀（用户保留区），并提供 which-key 描述以便发现。
 
-** Search (Blink-search)
-   - =C-r= :: Blink search menu
-   - =C-f= :: Find file
-   - =C-g= :: Grep
-   - =M-c= :: Search commands
+** 快捷键查询
+   - =C-h K= :: 显示快捷键速查表（完整列表）
+   - =C-c w ?= :: Which-key 使用提示
+   - =C-c w p= :: 显示所有定义的前缀
+   - =C-c w m= :: 显示当前 major mode 的快捷键
+   - =C-h b= :: Emacs 标准：显示所有绑定
 
-** Code Navigation
-   - =M-.= :: Go to definition (Xref)
-   - =M-,= :: Go back (Pop tag mark)
-   - =C-c C-r= :: References
+** LSP / 代码导航 (标准绑定)
 
-** Git (Magit)
-   - =C-x g= :: Magit status
-   - =C-x M-g= :: Magit dispatch
+*** 导航
+    - =M-.= :: 跳转到定义 (lsp-bridge-find-def)
+    - =M-,= :: 返回 (lsp-bridge-find-def-return)
+    - =M-?= :: 查找引用 (lsp-bridge-find-references)
+    - =C-M-.= :: 在另一窗口打开定义
 
-** Org Mode
-   - =C-c a= :: Agenda
-   - =C-c c= :: Capture
-   - =C-c l= :: Store link
-   - =C-c C-l= :: Insert link
+*** 文档
+    - =C-h .= :: 显示文档 (lsp-bridge-popup-documentation)
+    - =C-h ,= :: 显示函数签名 (lsp-bridge-show-signature)
+    - =C-h <up>= :: 文档向上滚动
+    - =C-h <down>= :: 文档向下滚动
 
-** Miscellaneous
-   - =C-c t= :: Toggle sort-tab
-   - =C-/= :: Vundo (visual undo)
-   - =C-c h= :: Helpful
-   - =M-g g= :: Go to line
+*** 重构 (C-c r 前缀)
+    - =C-c r r= :: 重命名符号 (lsp-bridge-rename)
+    - =C-c r i= :: 代码操作 (lsp-bridge-code-action)
+    - =C-c r f= :: 格式化代码 (lsp-bridge-code-format)
+    - =C-c r l= :: 查找实现 (lsp-bridge-find-impl)
+    - =C-c r w= :: 工作区符号列表
 
-** Hydra
+*** 诊断 (C-c ! 前缀)
+    - =C-c ! n= :: 下一个错误
+    - =C-c ! p= :: 上一个错误
+    - =C-c ! l= :: 错误列表
 
-   Some features are available via hydras:
-   
-   - =C-c g= :: Git hydra
-   - =C-c w= :: Window hydra
-   
-   Press the key and follow the on-screen hints.
+** Git / Magit (C-c g 前缀)
+
+*** 主要命令
+    - =C-x g= :: Magit 状态 (标准绑定)
+    - =C-x M-g= :: Magit dispatch
+    - =C-c g s= :: Magit 状态
+    - =C-c g l= :: Git 日志
+    - =C-c g d= :: Magit dispatch
+    - =C-c g ?= :: Git 菜单 (transient)
+
+*** 分支操作 (C-c g b 子前缀)
+    - =C-c g b b= :: 创建分支
+    - =C-c g b r= :: 重命名分支
+    - =C-c g b d= :: 删除分支
+
+*** 远程操作 (C-c g r 子前缀)
+    - =C-c g r a= :: 添加远程
+    - =C-c g r r= :: 重命名远程
+    - =C-c g r d= :: 删除远程
+
+*** 推送/拉取
+    - =C-c g p= :: Push
+    - =C-c g f= :: Pull
+
+*** 子模块 (C-c g m 子前缀)
+    - =C-c g m a= :: 添加子模块
+    - =C-c g m r= :: 删除子模块
+    - =C-c g m u= :: 更新子模块
+
+*** 文件操作 (C-c g F 子前缀)
+    - =C-c g F r= :: 重命名文件
+    - =C-c g F d= :: 删除文件
+
+** 搜索 / Search (C-c s 前缀)
+
+*** Buffer 内搜索
+    - =C-c s l= :: 搜索行 (consult-line)
+    - =C-c s i= :: Imenu 导航
+    - =C-c s m= :: Mark 导航
+
+*** 项目搜索
+    - =C-c s g= :: 项目内 Grep (consult-ripgrep)
+    - =C-c s f= :: 查找文件 (consult-find)
+    - =C-c s s= :: 搜索符号 (color-rg)
+    - =C-c s S= :: 项目内搜索符号
+
+*** Buffer/文件切换
+    - =C-c s b= :: 切换 Buffer
+    - =C-c s r= :: 最近文件
+
+*** 菜单
+    - =C-c s ?= :: 搜索菜单 (transient)
+
+*** Embark (上下文操作)
+    - =C-.= :: Embark act (对当前项执行操作)
+    - =C-,= :: Embark dwim (智能操作)
+
+** 标签页 / Tabs (C-c t 前缀)
+
+*** 导航
+    - =C-c t n= :: 下一个标签页
+    - =C-c t p= :: 上一个标签页
+    - =C-c t f= :: 第一个标签页
+    - =C-c t l= :: 最后一个标签页
+
+*** 管理
+    - =C-c t k= :: 关闭当前标签页
+    - =C-c t o= :: 关闭其他标签页
+    - =C-c t K= :: 关闭所有标签页
+
+*** 快速访问
+    - =C-c t 1/2/3= :: 跳转到标签页 1/2/3
+
+** Org Mode / 笔记 (C-c n 前缀)
+
+*** 捕获和议程
+    - =C-c n c= :: Org capture (快速捕获)
+    - =C-c n a= :: Org agenda (议程视图)
+    - =C-c n l= :: 存储链接
+    - =C-c n t= :: Todo 列表
+
+*** Org Buffer 内
+    - =C-c n e= :: 编辑源代码块
+    - =C-c n v= :: 插入剪贴板图片
+    - =C-c n h= :: 插入标题
+    - =C-c n s= :: 插入子标题
+
+** 多光标 / Markmacro (C-c m 前缀)
+
+*** 矩形操作
+    - =C-c m s= :: 设置矩形
+    - =C-c m d= :: 删除矩形
+    - =C-c m r= :: 替换矩形
+    - =C-c m i= :: 插入矩形
+
+*** Mark 转换
+    - =C-c m c= :: Mark 列
+    - =C-c m S= :: Mark 符号
+
+*** 应用宏
+    - =C-c m a= :: 应用到所有
+    - =C-c m e= :: 应用到除第一个外的所有
+
+** 编辑增强
+
+*** 行操作
+    - =C-a= :: 智能行首 (跳过缩进)
+    - =C-c <up>= :: 在上方插入新行
+    - =C-c <down>= :: 在下方插入新行
+    - =M-<up>= :: 向上移动行
+    - =M-<down>= :: 向下移动行
+
+*** 滚动
+    - =M-n= :: 向下滚动 1/3 窗口
+    - =M-p= :: 向上滚动 1/3 窗口
+
+*** 撤销/重做
+    - =C-/= :: 撤销
+    - =C-?= :: 重做
+    - =C-c u= :: Vundo (可视化撤销树)
+
+*** 替换
+    - =C-c R= :: 替换字符串
+    - =C-c M-r= :: 替换正则表达式
+    - =M-%=  :: 交互式替换 (query-replace，Emacs 标准)
+
+** Yasnippet 代码片段
+
+   - =C-c y n= :: 新建代码片段
+   - =C-c y v= :: 访问代码片段文件
+   - =C-c y r= :: 重新加载所有片段
+
+** Elisp 开发
+
+*** Emacs Lisp Mode
+    - =C-c C-b= :: 执行 Buffer (eval-buffer)
+    - =C-c C-c= :: 执行并注释结果 (eval-to-comment)
+    - =C-c C-r= :: 执行选区 (eval-region)
+
+** 文件和 Buffer
+
+   - =C-c E= :: 打开配置文件
+   - =C-c D= :: 创建目录
+   - =C-c f r= :: 打开最近文件
+
+** 帮助系统 (Helpful 增强)
+
+   - =C-h f= :: 查看函数 (helpful-callable)
+   - =C-h v= :: 查看变量 (helpful-variable)
+   - =C-h k= :: 查看按键 (helpful-key)
+   - =C-h x= :: 查看命令 (helpful-command)
+   - =C-c C-d= :: 查看当前点的文档
+
+** Transient 菜单
+
+某些复杂功能提供了 transient 菜单，按下前缀键后加 =?= 可查看菜单：
+
+   - =C-c g ?= :: Git 菜单
+   - =C-c s ?= :: 搜索菜单
+
+** 标准 Emacs 绑定（保留）
+
+本配置保留了所有标准 Emacs 快捷键：
+
+   - =C-x C-f= :: 打开文件
+   - =C-x C-s= :: 保存文件
+   - =C-x b= :: 切换 Buffer
+   - =C-x k= :: 关闭 Buffer
+   - =M-x= :: 执行命令
+   - =C-g= :: 取消操作
+   - =M-g g= :: 跳转到行
+
+** Which-key 集成
+
+所有前缀键都提供了 which-key 描述。按下任意前缀键（如 =C-c g=）并等待 0.5 秒，which-key 会自动显示所有可用的补全选项。
+
+在 which-key 显示时：
+   - =C-h n= :: 下一页
+   - =C-h p= :: 上一页
+   - =C-h u= :: 撤销/返回
 
 * 🔧 Customization
 

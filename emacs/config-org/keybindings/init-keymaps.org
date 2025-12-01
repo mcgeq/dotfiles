@@ -50,7 +50,7 @@
   (global-set-key (kbd "C-a") 'mcge-smart-move-beginning-of-line)
   
   ;; Quick access to init file
-  (global-set-key (kbd "C-c e") 'mcg/open-init-file)
+  (global-set-key (kbd "C-c E") 'mcg/open-init-file)
   
   ;; Replace string (moved from C-c r to avoid conflict with C-c r prefix for LSP)
   ;; Note: M-% is query-replace (standard), C-c R for replace-string
@@ -58,7 +58,7 @@
   (global-set-key (kbd "C-c M-r") 'replace-regexp)
   
   ;; Make directory
-  (global-set-key (kbd "C-c d") 'make-directory)
+  (global-set-key (kbd "C-c D") 'make-directory)
 #+END_SRC
 
 ** Line Manipulation
