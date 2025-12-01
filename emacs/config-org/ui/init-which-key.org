@@ -207,7 +207,8 @@
     "M-n"         "scroll-down-third"
     "M-p"         "scroll-up-third"
     "C-c d"       "make-directory"
-    "C-c r"       "replace-string"
+    "C-c R"       "replace-string"
+    "C-c M-r"     "replace-regexp"
     "C-c C-i"     "config-info")
 #+END_SRC
 

@@ -52,8 +52,10 @@
   ;; Quick access to init file
   (global-set-key (kbd "C-c e") 'mcg/open-init-file)
   
-  ;; Replace string
-  (global-set-key (kbd "C-c r") 'replace-string)
+  ;; Replace string (moved from C-c r to avoid conflict with C-c r prefix for LSP)
+  ;; Note: M-% is query-replace (standard), C-c R for replace-string
+  (global-set-key (kbd "C-c R") 'replace-string)
+  (global-set-key (kbd "C-c M-r") 'replace-regexp)
   
   ;; Make directory
   (global-set-key (kbd "C-c d") 'make-directory)
