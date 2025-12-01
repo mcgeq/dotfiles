@@ -67,6 +67,7 @@
     "C-c y"   "yasnippet"
     "C-c f"   "files"
     "C-c e"   "edit"
+    "C-c w"   "which-key"
     
     ;; Git subprefixes
     "C-c g b" "branch"
@@ -119,7 +120,12 @@
     "C-h"     "help"
     "C-h ."   "lsp-doc"
     "C-h ,"   "lsp-signature"
-    "C-h K"   "keybindings-ref")
+    "C-h K"   "keybindings-ref"
+    
+    ;; Which-key helper commands
+    "C-c w p" "show-prefixes"
+    "C-c w m" "show-major-mode"
+    "C-c w ?" "which-key-tips")
 #+END_SRC
 
 ** Theme Prefixes
@@ -281,14 +287,15 @@
                        (car replacement) 
                        (cdr replacement))))))
   
-  (global-set-key (kbd "C-h w p") 'mcg-which-key-show-all-prefixes)
+  ;; Use C-c w prefix (user-reserved) instead of C-h w (which is 'where-is')
+  (global-set-key (kbd "C-c w p") 'mcg-which-key-show-all-prefixes)
   
   (defun mcg-which-key-show-major-mode ()
     "Show which-key for current major mode."
     (interactive)
     (which-key-show-major-mode))
   
-  (global-set-key (kbd "C-h w m") 'mcg-which-key-show-major-mode)
+  (global-set-key (kbd "C-c w m") 'mcg-which-key-show-major-mode)
 #+END_SRC
 
 ** Quick Tips
@@ -316,10 +323,10 @@
    - C-h u    Undo/go back
 
 3. MAJOR MODE KEYS
-   - C-h w m  Show keys for current major mode
+   - C-c w m  Show keys for current major mode
 
 4. ALL PREFIXES
-   - C-h w p  Show all defined prefixes
+   - C-c w p  Show all defined prefixes
 
 5. INTEGRATION WITH TRANSIENT
    Which-key shows menu options (? suffix)
@@ -340,7 +347,7 @@ TIP: If which-key doesn't show, check:
 
 ")))
   
-  (global-set-key (kbd "C-h w ?") 'mcg-which-key-tips)
+  (global-set-key (kbd "C-c w ?") 'mcg-which-key-tips)
 #+END_SRC
 
 ** Ends
