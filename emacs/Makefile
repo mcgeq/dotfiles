@@ -13,7 +13,7 @@ DF ?= site-lisp/config
 define tangle_template
 # 检查目录是否存在，不存在就创建
 check_dir.$(1):
-	@mkdir -p site-lisp/config/$(1)
+	@powershell -Command "if (-not (Test-Path 'site-lisp/config/$(1)')) { New-Item -ItemType Directory -Path 'site-lisp/config/$(1)' -Force | Out-Null }"
 
 # 目录作为目标，指示新的编译目标
 $(1): $(patsubst config-org/$(1)/%.org, site-lisp/config/$(1)/%.el, $(wildcard config-org/$(1)/*.org))
@@ -36,13 +36,20 @@ lang: $(patsubst config-org/lang/%.org, site-lisp/config/lang/%.el, $(wildcard c
       $(patsubst config-org/lang/backend/%.org, site-lisp/config/lang/backend/%.el, $(wildcard config-org/lang/backend/*.org)) \
       $(patsubst config-org/lang/frontend/%.org, site-lisp/config/lang/frontend/%.el, $(wildcard config-org/lang/frontend/*.org))
 
-site-lisp/config/lang/backend/%.el: config-org/lang/backend/%.org
-	@mkdir -p site-lisp/config/lang/backend
-	$(EE) --eval '(org-babel-tangle-publish t "$$<" "$(DF)/lang/backend/")'
+# lang 根目录的文件
+site-lisp/config/lang/%.el: config-org/lang/%.org
+	@powershell -Command "if (-not (Test-Path 'site-lisp/config/lang')) { New-Item -ItemType Directory -Path 'site-lisp/config/lang' -Force | Out-Null }"
+	$(EE) --eval '(org-babel-tangle-publish t "$<" "$(DF)/lang/")'
 
+# lang/backend 子目录
+site-lisp/config/lang/backend/%.el: config-org/lang/backend/%.org
+	@powershell -Command "if (-not (Test-Path 'site-lisp/config/lang/backend')) { New-Item -ItemType Directory -Path 'site-lisp/config/lang/backend' -Force | Out-Null }"
+	$(EE) --eval '(org-babel-tangle-publish t "$<" "$(DF)/lang/backend/")'
+
+# lang/frontend 子目录
 site-lisp/config/lang/frontend/%.el: config-org/lang/frontend/%.org
-	@mkdir -p site-lisp/config/lang/frontend
-	$(EE) --eval '(org-babel-tangle-publish t "$$<" "$(DF)/lang/frontend/")'
+	@powershell -Command "if (-not (Test-Path 'site-lisp/config/lang/frontend')) { New-Item -ItemType Directory -Path 'site-lisp/config/lang/frontend' -Force | Out-Null }"
+	$(EE) --eval '(org-babel-tangle-publish t "$<" "$(DF)/lang/frontend/")'
 
 $(foreach dir,$(filter-out lang,$(DS)),$(eval $(call tangle_template,$(dir))))
 

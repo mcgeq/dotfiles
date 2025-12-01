@@ -1,0 +1,350 @@
+* lang-typescript.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle (concat temporary-file-directory "lang-typescript.el") :lexical t
+:END:
+
+** Headers
+#+BEGIN_SRC emacs-lisp
+  ;;; lang-typescript.el -- TypeScript/JavaScript Support -*- lexical-binding: t; -*-
+  
+  ;; Author: mcge <mcgeq@outlook.com>
+  ;; Version: 1.0
+  ;; Keywords: typescript, javascript, tsx, jsx, react
+  
+  ;;; Commentary:
+  ;; Modern TypeScript/JavaScript development with:
+  ;; - LSP (typescript-language-server)
+  ;; - Tree-sitter for syntax
+  ;; - Prettier for formatting
+  ;; - ESLint integration
+  ;; - React/JSX support
+  ;; - Node.js debugging
+#+END_SRC
+
+** TypeScript Mode Configuration
+#+BEGIN_SRC emacs-lisp
+;;; TypeScript基础配置
+
+;; 缩进设置
+(setq typescript-indent-level 2
+      js-indent-level 2
+      js2-basic-offset 2
+      web-mode-markup-indent-offset 2
+      web-mode-css-indent-offset 2
+      web-mode-code-indent-offset 2)
+
+;; TypeScript文件关联
+(add-to-list 'auto-mode-alist '("\\.tsx?\\'" . typescript-mode))
+(add-to-list 'auto-mode-alist '("\\.jsx?\\'" . js-mode))
+#+END_SRC
+
+** Tree-sitter Support
+#+BEGIN_SRC emacs-lisp
+;;; Tree-sitter语法支持
+
+(defun mcg-ts-setup-treesit ()
+  "配置TypeScript tree-sitter"
+  (when (and (fboundp 'treesit-available-p)
+             (treesit-available-p))
+    ;; 使用tree-sitter模式
+    (when (or (eq major-mode 'typescript-mode)
+              (eq major-mode 'tsx-mode))
+      (typescript-ts-mode))
+    (when (or (eq major-mode 'js-mode)
+              (eq major-mode 'jsx-mode))
+      (js-ts-mode))))
+
+;; Tree-sitter自动切换
+(with-eval-after-load 'treesit-auto'
+  (add-to-list 'treesit-auto-langs 'typescript)
+  (add-to-list 'treesit-auto-langs 'tsx)
+  (add-to-list 'treesit-auto-langs 'javascript))
+#+END_SRC
+
+** LSP Configuration
+#+BEGIN_SRC emacs-lisp
+;;; LSP配置
+
+(defun mcg-ts-lsp-setup ()
+  "配置TypeScript/JavaScript LSP"
+  (when (or (derived-mode-p 'typescript-mode)
+            (derived-mode-p 'typescript-ts-mode)
+            (derived-mode-p 'tsx-mode)
+            (derived-mode-p 'js-mode)
+            (derived-mode-p 'js-ts-mode))
+    (lsp-bridge-mode 1)))
+
+(add-hook 'typescript-mode-hook #'mcg-ts-lsp-setup)
+(add-hook 'typescript-ts-mode-hook #'mcg-ts-lsp-setup)
+(add-hook 'js-mode-hook #'mcg-ts-lsp-setup)
+(add-hook 'js-ts-mode-hook #'mcg-ts-lsp-setup)
+#+END_SRC
+
+** Prettier Integration
+#+BEGIN_SRC emacs-lisp
+;;; Prettier格式化
+
+(defun mcg-ts-format-with-prettier ()
+  "使用Prettier格式化代码"
+  (interactive)
+  (if (executable-find "prettier")
+      (let* ((temp-file (make-temp-file "prettier" nil 
+                                        (concat "." (file-name-extension (buffer-file-name)))))
+             (output-buffer (get-buffer-create "*prettier*")))
+        (write-region (point-min) (point-max) temp-file)
+        (if (zerop (call-process "prettier" nil output-buffer nil
+                                 "--write" temp-file))
+            (progn
+              (erase-buffer)
+              (insert-file-contents temp-file)
+              (delete-file temp-file)
+              (message "Formatted with Prettier"))
+          (message "Prettier formatting failed")))
+    (message "Prettier not found. Install with: npm install -g prettier")))
+
+;; 保存时自动格式化
+(defun mcg-ts-format-on-save ()
+  "保存时使用Prettier格式化"
+  (when (and (or (derived-mode-p 'typescript-mode)
+                 (derived-mode-p 'typescript-ts-mode)
+                 (derived-mode-p 'js-mode)
+                 (derived-mode-p 'js-ts-mode))
+             (executable-find "prettier"))
+    (mcg-ts-format-with-prettier)))
+
+;; 取消注释以启用保存时格式化
+;; (add-hook 'before-save-hook #'mcg-ts-format-on-save)
+
+;; 快捷键
+(defun mcg-ts-setup-keys ()
+  "设置TypeScript快捷键"
+  (local-set-key (kbd "C-c f") #'mcg-ts-format-with-prettier))
+
+(add-hook 'typescript-mode-hook #'mcg-ts-setup-keys)
+(add-hook 'typescript-ts-mode-hook #'mcg-ts-setup-keys)
+(add-hook 'js-mode-hook #'mcg-ts-setup-keys)
+(add-hook 'js-ts-mode-hook #'mcg-ts-setup-keys)
+#+END_SRC
+
+** ESLint Integration
+#+BEGIN_SRC emacs-lisp
+;;; ESLint集成
+
+(defun mcg-ts-run-eslint ()
+  "运行ESLint检查"
+  (interactive)
+  (if (executable-find "eslint")
+      (let ((compilation-scroll-output t))
+        (compile (format "eslint %s" (buffer-file-name))))
+    (message "ESLint not found. Install with: npm install -g eslint")))
+
+(defun mcg-ts-fix-eslint ()
+  "自动修复ESLint问题"
+  (interactive)
+  (when (executable-find "eslint")
+    (shell-command (format "eslint --fix %s" (buffer-file-name)))
+    (revert-buffer t t t)
+    (message "ESLint auto-fix applied")))
+
+;; 快捷键
+(defun mcg-ts-setup-eslint-keys ()
+  "设置ESLint快捷键"
+  (local-set-key (kbd "C-c l") #'mcg-ts-run-eslint)
+  (local-set-key (kbd "C-c L") #'mcg-ts-fix-eslint))
+
+(add-hook 'typescript-mode-hook #'mcg-ts-setup-eslint-keys)
+(add-hook 'js-mode-hook #'mcg-ts-setup-eslint-keys)
+#+END_SRC
+
+** Node.js Support
+#+BEGIN_SRC emacs-lisp
+;;; Node.js支持
+
+(defun mcg-ts-run-node ()
+  "使用Node.js运行当前文件"
+  (interactive)
+  (if (executable-find "node")
+      (let ((compilation-scroll-output t))
+        (compile (format "node %s" (buffer-file-name))))
+    (message "Node.js not found")))
+
+(defun mcg-ts-run-npm-script ()
+  "运行npm script"
+  (interactive)
+  (if (executable-find "npm")
+      (let* ((package-json (locate-dominating-file default-directory "package.json"))
+             (default-directory (or package-json default-directory))
+             (scripts (mcg-ts-get-npm-scripts))
+             (script (completing-read "Run npm script: " scripts)))
+        (compile (format "npm run %s" script)))
+    (message "npm not found")))
+
+(defun mcg-ts-get-npm-scripts ()
+  "获取package.json中的scripts"
+  (when-let* ((package-json (locate-dominating-file default-directory "package.json"))
+              (json-file (expand-file-name "package.json" package-json)))
+    (when (file-exists-p json-file)
+      (let* ((json-object-type 'hash-table)
+             (json (json-read-file json-file))
+             (scripts (gethash "scripts" json)))
+        (when scripts
+          (hash-table-keys scripts))))))
+
+;; 快捷键
+(defun mcg-ts-setup-node-keys ()
+  "设置Node.js快捷键"
+  (local-set-key (kbd "C-c r") #'mcg-ts-run-node)
+  (local-set-key (kbd "C-c n") #'mcg-ts-run-npm-script))
+
+(add-hook 'typescript-mode-hook #'mcg-ts-setup-node-keys)
+(add-hook 'js-mode-hook #'mcg-ts-setup-node-keys)
+#+END_SRC
+
+** React/JSX Support
+#+BEGIN_SRC emacs-lisp
+;;; React/JSX支持
+
+;; JSX文件关联
+(add-to-list 'auto-mode-alist '("\\.jsx\\'" . js-mode))
+(add-to-list 'auto-mode-alist '("\\.tsx\\'" . typescript-mode))
+
+;; 启用JSX语法高亮
+(setq js-jsx-syntax t)
+
+(defun mcg-ts-insert-component ()
+  "插入React组件模板"
+  (interactive)
+  (let ((component-name (read-string "Component name: ")))
+    (insert (format "import React from 'react';\n\n"))
+    (insert (format "interface %sProps {\n  \n}\n\n" component-name))
+    (insert (format "export const %s: React.FC<%sProps> = (props) => {\n"
+                    component-name component-name))
+    (insert "  return (\n    <div>\n      \n    </div>\n  );\n};\n")))
+
+;; 快捷键
+(defun mcg-ts-setup-react-keys ()
+  "设置React快捷键"
+  (local-set-key (kbd "C-c c") #'mcg-ts-insert-component))
+
+(add-hook 'typescript-mode-hook #'mcg-ts-setup-react-keys)
+(add-hook 'js-mode-hook #'mcg-ts-setup-react-keys)
+#+END_SRC
+
+** Project Detection
+#+BEGIN_SRC emacs-lisp
+;;; 项目检测
+
+(defun mcg-ts-project-p ()
+  "检测是否为TypeScript/JavaScript项目"
+  (when-let ((project-root (project-root (project-current))))
+    (or (file-exists-p (expand-file-name "package.json" project-root))
+        (file-exists-p (expand-file-name "tsconfig.json" project-root))
+        (file-exists-p (expand-file-name "jsconfig.json" project-root)))))
+
+(defun mcg-ts-is-react-project-p ()
+  "检测是否为React项目"
+  (when-let* ((project-root (project-root (project-current)))
+              (package-json (expand-file-name "package.json" project-root)))
+    (when (file-exists-p package-json)
+      (with-temp-buffer
+        (insert-file-contents package-json)
+        (or (search-forward "\"react\"" nil t)
+            (search-forward "\"next\"" nil t))))))
+#+END_SRC
+
+** Import Management
+#+BEGIN_SRC emacs-lisp
+;;; Import管理
+
+(defun mcg-ts-organize-imports ()
+  "整理imports (需要LSP支持)"
+  (interactive)
+  (when (bound-and-fu'lsp-bridge-code-action)
+    (lsp-bridge-code-action "source.organizeImports")))
+
+;; 快捷键
+(defun mcg-ts-setup-import-keys ()
+  "设置import管理快捷键"
+  (local-set-key (kbd "C-c i") #'mcg-ts-organize-imports))
+
+(add-hook 'typescript-mode-hook #'mcg-ts-setup-import-keys)
+(add-hook 'js-mode-hook #'mcg-ts-setup-import-keys)
+#+END_SRC
+
+** Console Log Helper
+#+BEGIN_SRC emacs-lisp
+;;; Console.log辅助
+
+(defun mcg-ts-insert-console-log ()
+  "插入console.log语句"
+  (interactive)
+  (let ((var-name (if (use-region-p)
+                      (buffer-substring-no-properties (region-beginning) (region-end))
+                    (read-string "Variable to log: "))))
+    (end-of-line)
+    (newline-and-indent)
+    (insert (format "console.log('%s:', %s);" var-name var-name))))
+
+(defun mcg-ts-remove-console-logs ()
+  "删除所有console.log语句"
+  (interactive)
+  (save-excursion
+    (goto-char (point-min))
+    (let ((count 0))
+      (while (re-search-forward "^.*console\\.log.*$" nil t)
+        (delete-region (line-beginning-position) (1+ (line-end-position)))
+        (setq count (1+ count)))
+      (message "Removed %d console.log statement(s)" count))))
+
+;; 快捷键
+(defun mcg-ts-setup-console-keys ()
+  "设置console.log快捷键"
+  (local-set-key (kbd "C-c C-l") #'mcg-ts-insert-console-log)
+  (local-set-key (kbd "C-c C-k") #'mcg-ts-remove-console-logs))
+
+(add-hook 'typescript-mode-hook #'mcg-ts-setup-console-keys)
+(add-hook 'js-mode-hook #'mcg-ts-setup-console-keys)
+#+END_SRC
+
+** Keybindings Summary
+#+BEGIN_SRC emacs-lisp
+;;; 快捷键总结
+
+;; C-c f     - 格式化代码 (Prettier)
+;; C-c l     - 运行ESLint检查
+;; C-c L     - ESLint自动修复
+;; C-c i     - 整理imports
+;; C-c r     - 运行Node.js
+;; C-c n     - 运行npm script
+;; C-c c     - 插入React组件模板
+;; C-c C-l   - 插入console.log
+;; C-c C-k   - 删除所有console.log
+#+END_SRC
+
+** Setup Instructions
+#+BEGIN_SRC emacs-lisp
+;;; 安装说明
+
+;; 1. 安装TypeScript LSP服务器:
+;;    npm install -g typescript typescript-language-server
+;;
+;; 2. 安装格式化工具:
+;;    npm install -g prettier
+;;
+;; 3. 安装linter:
+;;    npm install -g eslint
+;;    # 项目级: npm install --save-dev eslint
+;;
+;; 4. React项目额外配置:
+;;    npm install --save-dev @types/react @types/react-dom
+;;    npm install --save-dev eslint-plugin-react
+;;
+;; 推荐全局安装:
+;;    npm install -g typescript typescript-language-server prettier eslint
+#+END_SRC
+
+** Ends
+#+BEGIN_SRC emacs-lisp
+(provide 'lang-typescript)
+;;; lang-typescript.el ends here
+#+END_SRC
