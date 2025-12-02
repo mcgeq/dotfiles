@@ -169,9 +169,6 @@
 ;; Keybindings configuration
 (require 'init-keymaps)
 
-;; Transient menu system
-(require 'init-transient-menus)
-
 ;; 工具配置（已迁移到tools目录）
 (require 'init-recentf)
 (require 'init-wraplish)
@@ -179,7 +176,6 @@
 
 (mcg-register-loaded-module 'init-which-key)
 (mcg-register-loaded-module 'init-keymaps)
-(mcg-register-loaded-module 'init-transient-menus)
 (mcg-register-loaded-module 'init-recentf)
 (mcg-register-loaded-module 'init-wraplish)
 (mcg-register-loaded-module 'init-fingertip)
