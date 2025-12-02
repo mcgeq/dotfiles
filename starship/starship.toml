@@ -11,6 +11,7 @@ $git_commit\
 $git_state\
 $git_metrics\
 $git_status\
+$jujutsu\
 $fill\
 $c\
 $cmake\
@@ -173,3 +174,9 @@ style = "bg:overlay fg:pine"
 format = "[](fg:overlay)[$symbol$environment]($style)[](fg:overlay) "
 disabled = false
 symbol = '🅒 '
+
+[jujutsu]
+format = "[](fg:overlay)[ $symbol $name ]($style)[](fg:overlay) "
+style = "bg:overlay fg:pine"
+symbol = "jj"
+disabled = false
