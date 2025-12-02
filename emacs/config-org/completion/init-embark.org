@@ -50,96 +50,238 @@
 #+END_SRC
 
 ** Require
-
-
 #+BEGIN_SRC emacs-lisp
   ;;; Require:
   (require 'lazy-load)
   (require 'dired)
   (require 'embark)
   (require 'embark-consult)
-
+  (require 'consult)
 #+END_SRC
 
-
-*** Consult
-
+** Consult Configuration
 #+BEGIN_SRC emacs-lisp
-  ;; consult
-  (add-hook 'completion-list-mode-hook 'consult-preview-at-point-mode)
-  (setq ;register-preview-delay 0.5
-   register-preview-function #'consult-register-format)
+  ;;; === Consult - 咨询式搜索命令 ===
+  ;; Consult provides practical commands based on Emacs completion
+  
+  ;; Preview configuration
+  (setq consult-preview-key 'any)          ; Enable preview for all commands
+  (setq consult-narrow-key "<")            ; Narrow prefix key
+  (setq consult-widen-key ">")             ; Widen key
+  
+  ;; Preview delay (nil for instant preview)
+  (setq consult-preview-max-size 10485760) ; 10 MB max file size for preview
+  (setq consult-preview-max-count 10)      ; Max number of preview buffers
+#+END_SRC
 
+** Consult Register Integration
+#+BEGIN_SRC emacs-lisp
+  ;;; === Register 集成 ===
+  
+  ;; Use consult for register preview
+  (setq register-preview-delay 0.5
+        register-preview-function #'consult-register-format)
+  
+  ;; Override register-preview with consult
   (advice-add #'register-preview :override #'consult-register-window)
+  
+  ;; Tweak register preview window
+  (setq consult-register-preview-width 80)
+#+END_SRC
 
-  ;; Use consult to select xref locations with preview
+** Consult Xref Integration
+#+BEGIN_SRC emacs-lisp
+  ;;; === Xref 集成 ===
+  
+  ;; Use consult for xref with preview
   (setq xref-show-xrefs-function #'consult-xref
         xref-show-definitions-function #'consult-xref)
+  
+  ;; Better xref navigation
+  (setq xref-search-program 'ripgrep)  ; Use ripgrep if available
 #+END_SRC
 
-**** Custom function
+** Consult Buffer Sources
 #+BEGIN_SRC emacs-lisp
+  ;;; === Buffer 源配置 ===
+  
+  ;; Customize buffer sources for consult-buffer
+  (setq consult-buffer-sources
+        '(consult--source-hidden-buffer
+          consult--source-modified-buffer
+          consult--source-buffer
+          consult--source-recent-file
+          consult--source-file-register
+          consult--source-bookmark
+          consult--source-project-buffer-hidden
+          consult--source-project-recent-file-hidden))
+  
+  ;; Optional: Filter buffers
+  (setq consult-buffer-filter
+        '("\\` "
+          "\\`\\*Completions\\*\\'"
+          "\\`\\*Flymake log\\*\\'"
+          "\\`\\*Semantic SymRef\\*\\'"
+          "\\`\\*tramp/.*\\*\\'"))
+#+END_SRC
 
-  ;; custom function
+** Consult Custom Functions
+#+BEGIN_SRC emacs-lisp
+  ;;; === 自定义函数 ===
+  
   (defun mcg/consult-find-org-headings (&optional match)
-    "MATCH find headngs in all org files."
-      (interactive)
-      (consult-org-heading match (directory-files org-directory t "^[0-9]\\{8\\}.+\\.org$")))
-
-  ;; Use `consult-ripgrep' instead of `consult-line' in large buffers
-  (defun consult-line-symbol-at-point ()
-     "Consult line the symbol where the point is."
-      (interactive)
-      (consult-line (thing-at-point 'symbol)))
+    "Find headings in all org files with MATCH."
+    (interactive)
+    (consult-org-heading
+     match
+     (directory-files org-directory t "^[0-9]\\{8\\}.+\\.org$")))
+  
+  (defun mcg/consult-line-symbol-at-point ()
+    "Search for symbol at point in current buffer."
+    (interactive)
+    (consult-line (thing-at-point 'symbol)))
+  
+  (defun mcg/consult-ripgrep-symbol-at-point ()
+    "Search for symbol at point in project."
+    (interactive)
+    (consult-ripgrep nil (thing-at-point 'symbol)))
+  
+  ;; Keybindings for custom functions
+  (global-set-key (kbd "C-c s *") #'mcg/consult-line-symbol-at-point)
+  (global-set-key (kbd "C-c s 8") #'mcg/consult-ripgrep-symbol-at-point)
 #+END_SRC
 
-**** Keymap
-
+** Consult Keybindings
 #+BEGIN_SRC emacs-lisp
-;; keymap
-(lazy-load-set-keys
- '(
-   ("C-c C-j" . consult-outline)
-   )
- prog-mode-map)
-
-
-(lazy-load-set-keys
- '(
-   ("C-r" . consult-history)
-   )
- minibuffer-local-map)
+  ;;; === Consult 键绑定 ===
+  
+  ;; Mode-specific bindings
+  (lazy-load-set-keys
+   '(("C-c C-j" . consult-outline)      ; Jump to outline heading
+     ("C-c C-i" . consult-imenu))       ; Jump to imenu item
+   prog-mode-map)
+  
+  ;; Minibuffer history
+  (lazy-load-set-keys
+   '(("C-r" . consult-history))
+   minibuffer-local-map)
+  
+  ;; Enable preview at point in completion list
+  (add-hook 'completion-list-mode-hook #'consult-preview-at-point-mode)
 #+END_SRC
 
-*** Embark
-
+** Embark Configuration
 #+BEGIN_SRC emacs-lisp
-
-  ;; embark
-
-  (setq embark-quit-after-action nil)
+  ;;; === Embark - 上下文操作 ===
+  ;; Embark provides contextual actions on targets
+  
+  ;; Action behavior
+  (setq embark-quit-after-action nil)     ; Don't quit after action
+  (setq embark-confirm-act-all nil)       ; No confirmation for act-all
+  
+  ;; Indicator settings
+  (setq embark-indicators
+        '(embark-minimal-indicator        ; Minimal UI
+          embark-highlight-indicator      ; Highlight target
+          embark-isearch-highlight-indicator)) ; Isearch highlighting
+  
+  ;; Action keys
+  (setq embark-cycle-key ".")             ; Cycle targets
+  (setq embark-help-key "?")              ; Show actions
+  (setq embark-action-indicator t)        ; Show action indicator
+  
+  ;; Use embark for prefix help
   (setq prefix-help-command #'embark-prefix-help-command)
-  (setq embark-indicators '(embark-minimal-indicator
-                            embark-highlight-indicator
-                            embark-isearch-highlight-indicator))
-  (setq embark-cycle-key ".")
-  (setq embark-help-key "?")
+#+END_SRC
 
+** Embark Candidate Collection
+#+BEGIN_SRC emacs-lisp
+  ;;; === 候选项收集 ===
+  
+  ;; Use sorted candidates
   (setq embark-candidate-collectors
         (cl-substitute 'embark-sorted-minibuffer-candidates
                        'embark-minibuffer-candidates
                        embark-candidate-collectors))
-  (defun dired-open-externally (&optional arg)
-    "Open ARG marked or current file in operating system's default application."
-    (interactive "P")
-    (dired-map-over-marks (embark-open-externally (dired-get-filename)) arg))
+  
+  ;; Pre-action hooks (for cleanup before action)
+  ;; (add-hook 'embark-pre-action-hook #'my-pre-action-function)
+#+END_SRC
 
+** Embark Collect Configuration
+#+BEGIN_SRC emacs-lisp
+  ;;; === Embark Collect 配置 ===
+  
+  ;; Display buffer configuration
   (add-to-list 'display-buffer-alist
                '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
                  nil
                  (window-parameters (mode-line-format . none))))
+  
+  ;; Enable consult preview in embark collect
+  (add-hook 'embark-collect-mode-hook #'consult-preview-at-point-mode)
+  
+  ;; Embark export settings
+  (setq embark-collect-live-initial-delay 0.15)
+  (setq embark-collect-live-update-delay 0.15)
+#+END_SRC
 
-  (add-hook 'embark-collect-mode #'consult-preview-at-point-mode)
+** Embark-Consult Integration
+#+BEGIN_SRC emacs-lisp
+  ;;; === Embark-Consult 集成 ===
+  
+  ;; Integration is automatic when both packages are loaded
+  ;; This enables preview in embark collect buffers
+  
+  ;; Optional: Customize embark-consult behavior
+  ;; (setq embark-consult-async-preview-delay 0.2)
+#+END_SRC
+
+** Custom Embark Actions
+#+BEGIN_SRC emacs-lisp
+  ;;; === 自定义操作 ===
+  
+  (defun mcg/embark-open-externally (&optional arg)
+    "Open ARG marked or current file with system default application."
+    (interactive "P")
+    (dired-map-over-marks
+     (embark-open-externally (dired-get-filename))
+     arg))
+  
+  ;; Add custom actions to embark
+  ;; (define-key embark-file-map "x" #'mcg/embark-open-externally)
+#+END_SRC
+
+** Helper Functions
+#+BEGIN_SRC emacs-lisp
+  ;;; === 辅助函数 ===
+  
+  (defun mcg/embark-which-key-indicator ()
+    "Show embark actions using which-key."
+    (lambda (&optional keymap targets prefix)
+      (if (not (and keymap targets))
+          (which-key--hide-popup-ignore-command)
+        (which-key--show-keymap
+         (if (eq (plist-get (car targets) :type) 'embark-become)
+             "Become"
+           (format "Act on %s '%s'%s"
+                   (plist-get (car targets) :type)
+                   (embark--truncate-target
+                    (plist-get (car targets) :target))
+                   (if (cdr targets) ".." "")))
+         (if prefix
+             (pcase (lookup-key keymap prefix 'accept-default)
+               ((and (pred keymapp) km) km)
+               (_ (key-binding prefix 'accept-default)))
+           keymap)
+         nil nil t (lambda (binding)
+                     (not (string-suffix-p "-argument" (cdr binding))))))))
+  
+  ;; Use which-key indicator for embark (uncomment to enable)
+  ;; (setq embark-indicators
+  ;;       '(mcg/embark-which-key-indicator
+  ;;         embark-highlight-indicator
+  ;;         embark-isearch-highlight-indicator))
 #+END_SRC
 
 
