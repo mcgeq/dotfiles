@@ -25,10 +25,6 @@
 #+BEGIN_SRC emacs-lisp
   ;;; Require:
   (require 'dirvish)
-  (require 'dirvish-icons)
-  (require 'dirvish-preview)
-  (require 'dirvish-side)
-  (require 'dirvish-subtree)
 #+END_SRC
 
 ** Basic Configuration

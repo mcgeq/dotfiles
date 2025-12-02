@@ -126,6 +126,7 @@
   (require 'init-indent)
   (require 'init-editor)
   (require 'init-treesit)
+  (require 'init-dirvish)
   
   ;; 工具配置（已迁移到tools目录）
   (require 'init-sort-tab)
@@ -140,6 +141,7 @@
   (mcg-register-loaded-module 'init-generic)
   (mcg-register-loaded-module 'init-editor)
   (mcg-register-loaded-module 'init-treesit)
+  (mcg-register-loaded-module 'init-dirvish)
   (mcg-register-loaded-module 'init-symbol-overlay)
   (mcg-register-loaded-module 'init-rime))
 #+END_SRC
