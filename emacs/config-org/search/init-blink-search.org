@@ -60,15 +60,129 @@
 
 #+END_SRC
 
-** Code
+** Basic Configuration
 #+BEGIN_SRC emacs-lisp
+  ;;; === 基本配置 ===
+  
+  ;; Common directories for quick access
+  (setq blink-search-common-directory 
+        `(("HOME" "~/")
+          ("REPO" ,(concat mcgemacs-root-dir "/site-lisp/extensions"))
+          ("CONFIG" ,mcgemacs-config-dir)
+          ("BLOG" ,mcgemacs-blog-org-dir)
+          ("DOWNLOADS" "~/Downloads/")
+          ("DOCUMENTS" "~/Documents/")
+          ("DESKTOP" "~/Desktop/")))
+  
+  ;; Python command (ensure correct Python interpreter)
+  (setq blink-search-python-command 
+        (if (memq system-type '(cygwin windows-nt ms-dos)) 
+            "python.exe" 
+          "python3"))
+#+END_SRC
 
-  ;;; Code:
+** Display Settings
+#+BEGIN_SRC emacs-lisp
+  ;;; === 显示设置 ===
+  
+  ;; Enable icons in menu
+  (setq blink-search-enable-icon t)
+  
+  ;; Posframe settings (floating window)
+  (setq blink-search-enable-posframe t)           ; 启用浮动窗口
+  (setq blink-search-posframe-width-ratio 0.8)    ; 宽度比例 (80% 屏幕宽度)
+  (setq blink-search-posframe-height-ratio 0.6)   ; 高度比例 (60% 屏幕高度)
+  (setq blink-search-posframe-standalone nil)     ; 非独立窗口
+  
+  ;; Flash line after navigation
+  (setq blink-search-flash-line-delay 0.3)        ; 导般后闪烁 0.3 秒
+#+END_SRC
 
-  (setq blink-search-common-director '(("REPO" (concat mcgemacs-root-dir "/site-lisp/extensions"))
-                                         ("CONFIG" mcgemacs-config-dir)
-                                         ("BLOG" mcgemacs-blog-org-dir)))
+** Search Backends
+#+BEGIN_SRC emacs-lisp
+  ;;; === 搜索后端 ===
+  
+  ;; Available backends (nil means use all backends)
+  ;; Uncomment and customize if you want to limit backends
+  ;; (setq blink-search-search-backends 
+  ;;       '("Buffer List"           ; 缓冲区列表
+  ;;         "Recent File"           ; 最近文件
+  ;;         "Current Buffer"        ; 当前缓冲区
+  ;;         "Grep File"             ; 文件搜索
+  ;;         "IMenu"                 ; IMenu 导般
+  ;;         "ELisp Symbol"          ; ELisp 符号
+  ;;         "Find File"             ; 查找文件
+  ;;         "Common Directory"))
+#+END_SRC
 
+** File Manager Integration
+#+BEGIN_SRC emacs-lisp
+  ;;; === 文件管理器集成 ===
+  
+  ;; File manager to use (dired or eaf-file-manager)
+  (setq blink-search-file-manager 'dired)
+  
+  ;; Browser function for web search
+  ;; (setq blink-search-browser-function #'browse-url-default-browser)
+#+END_SRC
+
+** Storage and History
+#+BEGIN_SRC emacs-lisp
+  ;;; === 存储和历史 ===
+  
+  ;; History file path
+  (setq blink-search-history-path 
+        (expand-file-name (concat user-emacs-directory 
+                                 (file-name-as-directory "blink-search") 
+                                 "history.txt")))
+  
+  ;; Database path for key-value store
+  (setq blink-search-db-path 
+        (expand-file-name "blink-search.db" user-emacs-directory))
+  
+  ;; Database table name
+  (setq blink-search-db-table "kvstore")
+#+END_SRC
+
+** Debug Settings
+#+BEGIN_SRC emacs-lisp
+  ;;; === 调试设置 ===
+  
+  ;; Debug mode (enable if you encounter issues)
+  (setq blink-search-enable-debug nil)
+  
+  ;; Enable detailed logging
+  (setq blink-search-enable-log nil)
+#+END_SRC
+
+** Helper Functions
+#+BEGIN_SRC emacs-lisp
+  ;;; === 辅助函数 ===
+  
+  (defun mcg/blink-search-grep-current-dir ()
+    "Search files in current directory using blink-search."
+    (interactive)
+    (let ((default-directory (or (when buffer-file-name
+                                   (file-name-directory buffer-file-name))
+                                 default-directory)))
+      (blink-search)))
+  
+  (defun mcg/blink-search-project-root ()
+    "Search files in project root using blink-search."
+    (interactive)
+    (let ((project-root (or (and (fboundp 'projectile-project-root)
+                                 (projectile-project-root))
+                            (and (fboundp 'project-root)
+                                 (when-let ((project (project-current)))
+                                   (project-root project)))
+                            default-directory)))
+      (let ((default-directory project-root))
+        (blink-search))))
+  
+  ;; Global keybindings for helper functions
+  ;; Main entry: C-c s B (defined in init-keymaps.org)
+  (global-set-key (kbd "C-c s D") 'mcg/blink-search-grep-current-dir)
+  (global-set-key (kbd "C-c s P") 'mcg/blink-search-project-root)
 #+END_SRC
 
 

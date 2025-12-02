@@ -299,9 +299,11 @@
   ;; Uncomment to replace isearch with consult-line
   ;; (global-set-key (kbd "C-s") 'consult-line)
   
-  ;; Blink Search (alternative search framework)
+  ;; Blink Search (fast search framework with multiple backends)
   (lazy-load-global-keys
-   '(("C-c s S" . blink-search))  ; Capital S for alternative
+   '(("C-c s B" . blink-search)                      ; Main entry (all backends)
+     ("C-c s D" . mcg/blink-search-grep-current-dir) ; Search in current directory
+     ("C-c s P" . mcg/blink-search-project-root))    ; Search in project root
    "init-blink-search")
   
   ;; Color-rg (project-wide search and replace)
