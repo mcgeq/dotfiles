@@ -202,7 +202,7 @@
 ** Tabs (Sort-tab) - C-c t
 #+BEGIN_SRC emacs-lisp
   ;;; === Tabs (Sort-tab) - C-c t 前缀 ===
-  ;; Moved from M-7/M-8/M-s to avoid conflicts
+  ;; Enhanced tab management with helper functions
   
   ;; Define helper functions for tab selection by index
   (defun mcg-select-tab-1 ()
@@ -222,28 +222,27 @@
   
   (lazy-load-global-keys
    '(;; Navigation
-     ("C-c t n" . sort-tab-select-next-tab)
-     ("C-c t p" . sort-tab-select-prev-tab)
-     ("C-c t f" . sort-tab-select-first-tab)
-     ("C-c t l" . sort-tab-select-last-tab)
+     ("C-c t n" . sort-tab-select-next-tab)         ; Next tab
+     ("C-c t p" . sort-tab-select-prev-tab)         ; Previous tab
+     ("C-c t f" . sort-tab-select-first-tab)        ; First tab
+     ("C-c t l" . sort-tab-select-last-tab)         ; Last tab
      
      ;; Management
-     ("C-c t k" . sort-tab-close-current-tab)
-     ("C-c t o" . sort-tab-close-other-tabs)
-     ("C-c t K" . sort-tab-close-all-tabs)
+     ("C-c t k" . sort-tab-close-current-tab)       ; Close current
+     ("C-c t o" . sort-tab-close-other-tabs)        ; Close others
+     ("C-c t K" . sort-tab-close-all-tabs)          ; Close all
      
      ;; Quick access by number
-     ("C-c t 1" . mcg-select-tab-1)
-     ("C-c t 2" . mcg-select-tab-2)
-     ("C-c t 3" . mcg-select-tab-3))
+     ("C-c t 1" . mcg-select-tab-1)                 ; Select tab 1
+     ("C-c t 2" . mcg-select-tab-2)                 ; Select tab 2
+     ("C-c t 3" . mcg-select-tab-3)                 ; Select tab 3
+     
+     ;; Additional features (defined in init-sort-tab.org)
+     ("C-c t s" . mcg/sort-tab-select-by-name)      ; Select by name (interactive)
+     ("C-c t <" . mcg/sort-tab-move-current-tab-left)  ; Move tab left
+     ("C-c t >" . mcg/sort-tab-move-current-tab-right) ; Move tab right
+     ("C-c t i" . mcg/sort-tab-info))               ; Show tab info
    "sort-tab")
-  
-  ;; Optional: Keep M-7/M-8 for tab navigation if you prefer
-  ;; Uncomment if you want quick access (but conflicts with digit arguments)
-  ;; (lazy-load-global-keys
-  ;;  '(("M-7" . sort-tab-select-prev-tab)
-  ;;    ("M-8" . sort-tab-select-next-tab))
-  ;;  "sort-tab")
 #+END_SRC
 
 ** Markmacro - C-c m
@@ -379,7 +378,8 @@
 #+BEGIN_SRC emacs-lisp
   ;;; === Recent Files ===
   
-  (global-set-key (kbd "C-c f r") 'recentf-open-files)
+  ;; Use consult-recent-file for better UI with icons
+  (global-set-key (kbd "C-c f r") 'consult-recent-file)
 #+END_SRC
 
 ** Transient Menus
