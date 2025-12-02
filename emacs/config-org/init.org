@@ -163,10 +163,7 @@
 #+BEGIN_SRC emacs-lisp
 ;;; Phase 5: 键绑定
 
-;; Which-key - Discovery helper
-(require 'init-which-key)
-
-;; Keybindings configuration
+;; Keybindings configuration (includes which-key)
 (require 'init-keymaps)
 
 ;; 工具配置（已迁移到tools目录）
@@ -174,7 +171,6 @@
 (require 'init-wraplish)
 (require 'init-fingertip)
 
-(mcg-register-loaded-module 'init-which-key)
 (mcg-register-loaded-module 'init-keymaps)
 (mcg-register-loaded-module 'init-recentf)
 (mcg-register-loaded-module 'init-wraplish)
