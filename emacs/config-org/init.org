@@ -163,7 +163,7 @@
 #+BEGIN_SRC emacs-lisp
 ;;; Phase 5: 键绑定
 
-;; Keybindings configuration (includes which-key)
+;; Keybindings configuration
 (require 'init-keymaps)
 
 ;; 工具配置（已迁移到tools目录）

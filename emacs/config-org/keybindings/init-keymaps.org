@@ -16,7 +16,6 @@
   ;; - Standard LSP bindings (M-., M-,, M-?)
   ;; - Organized prefixes (C-c g/m/s/t/n/p)
   ;; - No conflicts with Emacs defaults
-  ;; - Which-key integration
   ;; - Better discoverability
 #+END_SRC
 
@@ -27,41 +26,6 @@
   (require 'transient)
   (require 'markmacro)
   (require 'org)
-  (require 'which-key)
-#+END_SRC
-
-** Which-key Configuration
-#+BEGIN_SRC emacs-lisp
-  ;;; === Which-key 配置 ===
-  
-  ;; Enable which-key mode
-  (which-key-mode)
-  
-  ;; Display settings
-  (setq which-key-idle-delay 0.5           ; Show after 0.5 seconds
-        which-key-idle-secondary-delay 0.05 ; Update quickly
-        which-key-popup-type 'side-window   ; Show in side window
-        which-key-side-window-location 'bottom
-        which-key-side-window-max-width 0.33
-        which-key-side-window-max-height 0.25
-        which-key-show-prefix 'echo        ; Show prefix in echo area
-        which-key-show-remaining-keys t    ; Show count of keys
-        which-key-sort-order 'which-key-key-order-alpha
-        which-key-min-display-lines 6
-        which-key-max-display-columns nil)
-  
-  ;; Lighter mode line display
-  (setq which-key-lighter " WK")
-  
-  ;; Special key replacements for better display
-  (setq which-key-special-keys '("SPC" "TAB" "RET" "ESC" "DEL"))
-  
-  ;; Prefix highlighting
-  (defface which-key-group-description-face-custom
-    '((t :inherit font-lock-keyword-face :bold t))
-    "Face for group descriptions in which-key.")
-  
-  (setq which-key-prefix-face 'which-key-group-description-face-custom)
 #+END_SRC
 
 ** Unset Conflicting Keys
@@ -418,149 +382,6 @@
   (global-set-key (kbd "C-c f r") 'recentf-open-files)
 #+END_SRC
 
-** Which-key Descriptions
-#+BEGIN_SRC emacs-lisp
-  ;;; === Which-key 描述 ===
-  ;; Add descriptive labels for prefix keys
-  
-  (which-key-add-key-based-replacements
-    ;; Top-level C-c prefixes
-    "C-c g"   "git"
-    "C-c m"   "markmacro"
-    "C-c s"   "search"
-    "C-c t"   "tabs"
-    "C-c n"   "notes/org"
-    "C-c r"   "refactor/lsp"
-    "C-c !"   "diagnostics"
-    "C-c y"   "yasnippet"
-    "C-c f"   "files"
-    "C-c e"   "edit"
-    "C-c E"   "open-init-file"
-    "C-c d"   "debug"
-    "C-c D"   "make-directory"
-    "C-c w"   "which-key"
-    "C-c u"   "undo-tree"
-    
-    ;; Git subprefixes
-    "C-c g b" "branch"
-    "C-c g r" "remote"
-    "C-c g m" "submodule"
-    "C-c g F" "file-ops"
-    "C-c g ?" "git-menu"
-    
-    ;; LSP/Refactor subprefixes
-    "C-c r r" "rename"
-    "C-c r i" "code-action"
-    "C-c r f" "format"
-    "C-c r l" "implementation"
-    "C-c r w" "workspace"
-    
-    ;; Diagnostics
-    "C-c ! n" "next-error"
-    "C-c ! p" "prev-error"
-    "C-c ! l" "list-errors"
-    
-    ;; Search subprefixes
-    "C-c s l" "search-line"
-    "C-c s g" "grep-project"
-    "C-c s i" "imenu"
-    "C-c s b" "switch-buffer"
-    "C-c s ?" "search-menu"
-    
-    ;; Tabs
-    "C-c t n" "next-tab"
-    "C-c t p" "prev-tab"
-    "C-c t k" "kill-tab"
-    "C-c t o" "kill-other-tabs"
-    
-    ;; Org/Notes
-    "C-c n c" "capture"
-    "C-c n a" "agenda"
-    "C-c n l" "store-link"
-    "C-c n e" "edit-src"
-    
-    ;; Yasnippet
-    "C-c y n" "new-snippet"
-    "C-c y v" "visit-snippet"
-    "C-c y r" "reload"
-    
-    ;; Standard Emacs prefixes
-    "C-x"     "files/buffers"
-    "C-x g"   "magit-status"
-    "C-x M-g" "magit-dispatch"
-    
-    ;; Help prefixes
-    "C-h"     "help"
-    "C-h ."   "lsp-doc"
-    "C-h ,"   "lsp-signature"
-    "C-h K"   "keybindings-ref"
-    "C-h <up>"   "doc-scroll-up"
-    "C-h <down>" "doc-scroll-down"
-    
-    ;; Which-key helper commands
-    "C-c w p" "show-prefixes"
-    "C-c w m" "show-major-mode"
-    "C-c w ?" "which-key-tips")
-  
-  ;; Markmacro detailed descriptions
-  (which-key-add-key-based-replacements
-    "C-c m s" "rect-set"
-    "C-c m d" "rect-delete"
-    "C-c m r" "rect-replace"
-    "C-c m i" "rect-insert"
-    "C-c m c" "mark-columns"
-    "C-c m S" "mark-symbols"
-    "C-c m a" "apply-all"
-    "C-c m e" "apply-except-first")
-  
-  ;; LSP detailed descriptions
-  (which-key-add-key-based-replacements
-    "M-."     "go-to-definition"
-    "M-,"     "go-back"
-    "M-?"     "find-references"
-    "C-M-."   "def-other-window")
-  
-  ;; Helpful descriptions
-  (which-key-add-key-based-replacements
-    "C-h f"   "helpful-callable"
-    "C-h v"   "helpful-variable"
-    "C-h k"   "helpful-key"
-    "C-h x"   "helpful-command"
-    "C-h F"   "helpful-function"
-    "C-c C-d" "helpful-at-point")
-  
-  ;; Editing descriptions
-  (which-key-add-key-based-replacements
-    "C-a"         "smart-bol"
-    "C-c <up>"    "insert-above"
-    "C-c <down>"  "insert-below"
-    "M-<up>"      "move-line-up"
-    "M-<down>"    "move-line-down"
-    "M-n"         "scroll-down-third"
-    "M-p"         "scroll-up-third"
-    "C-c D"       "make-directory"
-    "C-c R"       "replace-string"
-    "C-c M-r"     "replace-regexp")
-  
-  ;; Major mode specific
-  (which-key-add-major-mode-key-based-replacements 'emacs-lisp-mode
-    "C-c C-b" "eval-buffer"
-    "C-c C-c" "eval-comment"
-    "C-c C-r" "eval-region")
-  
-  (which-key-add-major-mode-key-based-replacements 'org-mode
-    "C-c n e" "edit-src-code"
-    "C-c n v" "insert-image"
-    "C-c n h" "insert-heading"
-    "C-c n s" "insert-subheading")
-  
-  ;; Which-key paging
-  (which-key-add-key-based-replacements
-    "C-h n" "next-page"
-    "C-h p" "previous-page"
-    "C-h u" "undo-key")
-#+END_SRC
-
 ** Transient Menus
 #+BEGIN_SRC emacs-lisp
   ;;; === Transient 菜单 ===
@@ -598,74 +419,6 @@
       ("f" "Pull" magit-pull)]])
   
   (global-set-key (kbd "C-c g ?") 'mcg-git-menu)
-#+END_SRC
-
-** Which-key Helper Functions
-#+BEGIN_SRC emacs-lisp
-  ;;; === Which-key 辅助函数 ===
-  
-  (defun mcg-which-key-show-all-prefixes ()
-    "Show all defined prefix key replacements."
-    (interactive)
-    (with-help-window "*Which-key Prefixes*"
-      (princ "Which-key Defined Prefixes:\n\n")
-      (dolist (replacement (sort (copy-sequence which-key--prefix-title-alist)
-                                 (lambda (a b) (string< (car a) (car b)))))
-        (princ (format "%-20s → %s\n" 
-                       (car replacement) 
-                       (cdr replacement))))))
-  
-  (global-set-key (kbd "C-c w p") 'mcg-which-key-show-all-prefixes)
-  
-  (defun mcg-which-key-show-major-mode ()
-    "Show which-key for current major mode."
-    (interactive)
-    (which-key-show-major-mode))
-  
-  (global-set-key (kbd "C-c w m") 'mcg-which-key-show-major-mode)
-  
-  (defun mcg-which-key-tips ()
-    "Show which-key usage tips."
-    (interactive)
-    (with-help-window "*Which-key Tips*"
-      (princ "
-╔═══════════════════════════════════════════════════════════╗
-║              Which-key Usage Tips                         ║
-╚═══════════════════════════════════════════════════════════╝
-
-1. DISCOVERY
-   - Press any prefix key (e.g., C-c g)
-   - Wait 0.5 seconds
-   - Which-key shows all available completions!
-
-2. PAGING
-   When list is too long:
-   - C-h n    Next page
-   - C-h p    Previous page
-   - C-h u    Undo/go back
-
-3. MAJOR MODE KEYS
-   - C-c w m  Show keys for current major mode
-
-4. ALL PREFIXES
-   - C-c w p  Show all defined prefixes
-
-5. INTEGRATION WITH TRANSIENT
-   Which-key shows menu options (? suffix)
-   Example:
-   - Press C-c g     → See all git keys
-   - Notice C-c g ?  → Press for full menu!
-
-═══════════════════════════════════════════════════════════
-
-TIP: If which-key doesn't show, check:
-     1. (which-key-mode) is enabled
-     2. which-key-idle-delay setting
-     3. Prefix key is actually bound to something
-
-")))
-  
-  (global-set-key (kbd "C-c w ?") 'mcg-which-key-tips)
 #+END_SRC
 
 ** Quick Reference
