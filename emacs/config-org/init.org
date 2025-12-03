@@ -167,6 +167,7 @@
 
 ;; Keybindings configuration
 (require 'init-keymaps)
+(require 'init-vundo)
 
 ;; 工具配置（已迁移到tools目录）
 (require 'init-recentf)
@@ -174,6 +175,7 @@
 (require 'init-fingertip)
 
 (mcg-register-loaded-module 'init-keymaps)
+(mcg-register-loaded-module 'init-vundo)
 (mcg-register-loaded-module 'init-recentf)
 (mcg-register-loaded-module 'init-wraplish)
 (mcg-register-loaded-module 'init-fingertip)

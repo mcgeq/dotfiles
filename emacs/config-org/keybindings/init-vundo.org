@@ -55,6 +55,7 @@
 #+BEGIN_SRC emacs-lisp
 ;;; Require:
 (require 'vundo)
+(require 'hydra)
 
 #+END_SRC
 
@@ -135,6 +136,9 @@
   ;; Bind hydra to vundo-mode
   (define-key vundo-mode-map "." 'hydra-vundo/body)
   (define-key vundo-mode-map "?" 'hydra-vundo/body)
+  
+  ;; Auto-show hydra when vundo opens
+  (add-hook 'vundo-mode-hook #'hydra-vundo/body)
 #+END_SRC
 
 ** Ends
