@@ -5,22 +5,23 @@
 
 ** Headers
 #+BEGIN_SRC emacs-lisp
-  ;;; init-auto-save.el -- Config for AutoSave -*- lexical-binding: t; -*-
+  ;;; init-auto-save.el -- Config for Idle Auto-Save -*- lexical-binding: t; -*-
 
-  ;; Filename: init.el
-  ;; Description: Config for AutoSave
+  ;; Filename: init-auto-save.el
+  ;; Description: Config for Idle Auto-Save
   ;; Author: mcge <mcgeq@outlook.com>
   ;; Copyright (C) 2024, mcge, all rights reserved.
   ;; Create   Date: 2025-01-04 15:00:00
-  ;; Version: 0.1
+  ;; Version: 0.2
   ;; Modified   By:  mcge <mcgeq@outlook.com>
-  ;; Last Modified:  <2025-01-10 Fri 10:14>
-  ;; Keywords:
+  ;; Last Modified:  <2025-12-03 Tue 18:36>
+  ;; Keywords: autosave idle
   ;; Compatibility: GNU Emacs 31.0.50
 
   ;;; Commentary:
   ;;
-  ;; Config for AutoSave
+  ;; Config for idle-auto-save - a custom implementation for auto-saving
+  ;; files when Emacs is idle.
   ;;
 
   ;;; Installation:
@@ -53,19 +54,186 @@
 ** Require
 #+BEGIN_SRC emacs-lisp
   ;;; Require:
-  (require 'auto-save)
-  (require 'ws-butler)
+  ;; No external dependencies required
 
 #+END_SRC
 
-** Code
+** Idle Auto-Save Implementation
 #+BEGIN_SRC emacs-lisp
-  ;;; Code:
-  (auto-save-enable)
-  (setq auto-save-silent t)
+  ;;; Idle Auto-Save Implementation:
+  
+  (defgroup idle-auto-save nil
+    "Auto save files when Emacs is idle."
+    :group 'convenience)
 
-  ;; 保存时删除多余空白字符和行
-  (ws-butler-global-mode)
+  (defcustom idle-auto-save-idle 1
+    "The idle seconds to auto save file."
+    :type 'integer
+    :group 'idle-auto-save)
+
+  (defcustom idle-auto-save-silent nil
+    "Nothing to dirty minibuffer if this option is non-nil."
+    :type 'boolean
+    :group 'idle-auto-save)
+
+  (defcustom idle-auto-save-delete-trailing-whitespace nil
+    "Delete trailing whitespace when save if this option is non-nil.
+Note, this option is non-nil, will delete all trailing whitespace except current line."
+    :type 'boolean
+    :group 'idle-auto-save)
+
+  (defcustom idle-auto-save-format-before-save nil
+    "Format buffer before auto-save using lsp-bridge or other formatters.
+If t, will call formatting functions before saving.
+This is useful when you disable lsp-bridge's auto-format-on-save to avoid double formatting."
+    :type 'boolean
+    :group 'idle-auto-save)
+
+  (defvar idle-auto-save-disable-predicates nil
+    "Disable auto save in these case.")
+
+  (defvar idle-auto-save-timer nil
+    "Auto save timer.")
+
+  ;; Disable Emacs' default auto-save feature
+  (setq make-backup-files nil)
+  (setq auto-save-default nil)
+  (setq create-lockfiles nil)
+
+  (defun idle-auto-save-buffers ()
+    "Auto save all buffers that are modified."
+    (interactive)
+    (let ((autosave-buffer-list))
+      (ignore-errors
+        (save-current-buffer
+          (dolist (buf (buffer-list))
+            (set-buffer buf)
+            (when (and
+                   ;; Buffer associate with a filename?
+                   (or (buffer-file-name)
+                       (idle-auto-save-is-remote-file))
+                   ;; Buffer is modifiable?
+                   (buffer-modified-p)
+                   ;; Yassnippet is not active?
+                   (or (not (boundp 'yas--active-snippets))
+                       (not yas--active-snippets))
+                   ;; Company is not active?
+                   (or (not (boundp 'company-candidates))
+                       (not company-candidates))
+                   ;; Corfu is not active?
+                   (or (not (boundp 'corfu--total))
+                       (zerop corfu--total))
+                   ;; Org-capture is not active?
+                   (not (eq (buffer-base-buffer (get-buffer (concat "CAPTURE-" (buffer-name))))
+                            buf))
+                   ;; Custom disable predicates
+                   (not (seq-some (lambda (predicate)
+                                    (funcall predicate))
+                                  idle-auto-save-disable-predicates)))
+              (push (buffer-name) autosave-buffer-list)
+              (if idle-auto-save-silent
+                  ;; Silent save
+                  (let ((inhibit-message t)
+                        (message-log-max nil))
+                    (idle-auto-save-save-buffer))
+                (idle-auto-save-save-buffer)))))
+      ;; Show save message
+      (unless idle-auto-save-silent
+        (cond
+         ((= (length autosave-buffer-list) 1)
+          (message "# Saved %s" (car autosave-buffer-list)))
+         ((> (length autosave-buffer-list) 1)
+          (message "# Saved %d files: %s"
+                   (length autosave-buffer-list)
+                   (mapconcat 'identity autosave-buffer-list ", ")))))))
+
+  (defun idle-auto-save-save-buffer ()
+    "Save current buffer."
+    (let ((write-region-inhibit-fsync t))
+      ;; Format before save if enabled
+      (when idle-auto-save-format-before-save
+        (ignore-errors
+          (cond
+           ;; lsp-bridge format
+           ((and (fboundp 'lsp-bridge-code-action-format-code)
+                 (boundp 'lsp-bridge-mode)
+                 lsp-bridge-mode)
+            (lsp-bridge-code-action-format-code)))))
+      
+      ;; Save buffer
+      (if (idle-auto-save-is-remote-file)
+          (lsp-bridge-remote-save-buffer)
+        (basic-save-buffer))))
+
+  (defun idle-auto-save-delete-trailing-whitespace-except-current-line ()
+    "Delete trailing whitespace except current line."
+    (interactive)
+    (when idle-auto-save-delete-trailing-whitespace
+      (let ((begin (line-beginning-position))
+            (end (point)))
+        (save-excursion
+          ;; Delete trailing whitespace before current line
+          (when (< (point-min) begin)
+            (save-restriction
+              (narrow-to-region (point-min) (1- begin))
+              (delete-trailing-whitespace)))
+          ;; Delete trailing whitespace after current line
+          (when (> (point-max) end)
+            (save-restriction
+              (narrow-to-region end (point-max))
+              (delete-trailing-whitespace)))))))
+
+  (defun idle-auto-save-set-timer ()
+    "Set the auto-save timer."
+    (idle-auto-save-cancel-timer)
+    (setq idle-auto-save-timer
+          (run-with-idle-timer idle-auto-save-idle t 'idle-auto-save-buffers)))
+
+  (defun idle-auto-save-cancel-timer ()
+    "Cancel the auto-save timer."
+    (when idle-auto-save-timer
+      (cancel-timer idle-auto-save-timer)
+      (setq idle-auto-save-timer nil)))
+
+  (defun idle-auto-save-enable ()
+    "Enable auto save."
+    (interactive)
+    (idle-auto-save-set-timer)
+    (add-hook 'before-save-hook 'idle-auto-save-delete-trailing-whitespace-except-current-line))
+
+  (defun idle-auto-save-disable ()
+    "Disable auto save."
+    (interactive)
+    (idle-auto-save-cancel-timer)
+    (remove-hook 'before-save-hook 'idle-auto-save-delete-trailing-whitespace-except-current-line)
+    (message "idle-auto-save disabled"))
+
+  (defun idle-auto-save-is-remote-file ()
+    "Check if current buffer is a remote file."
+    (and (boundp 'lsp-bridge-remote-file-flag)
+         lsp-bridge-remote-file-flag))
+
+#+END_SRC
+
+** Configuration
+#+BEGIN_SRC emacs-lisp
+  ;;; Configuration:
+  
+  ;; Silent mode - don't show save messages in minibuffer
+  (setq idle-auto-save-silent t)
+  
+  ;; Idle time before auto-save (in seconds)
+  (setq idle-auto-save-idle 1)
+  
+  ;; Enable format before auto-save (recommended when lsp-bridge auto-format is disabled)
+  (setq idle-auto-save-format-before-save t)
+  
+  ;; Enable idle auto-save
+  (idle-auto-save-enable)
+  
+  ;; Optional: delete trailing whitespace on save (preserves current line)
+  ;; (setq idle-auto-save-delete-trailing-whitespace t)
+
 #+END_SRC
 
 ** Ends

@@ -187,9 +187,6 @@
 [submodule "emacs-ht"]
 	path = emacs/site-lisp/extensions/org/ht
 	url = https://github.com/Wilfred/ht.el.git
-[submodule "emacs-auto-save"]
-	path = emacs/site-lisp/extensions/utils/auto-save
-	url = https://github.com/manateelazycat/auto-save.git
 [submodule "emacs-symbol-overlay"]
 	path = emacs/site-lisp/extensions/editor/symbol-overlay
 	url = https://github.com/wolray/symbol-overlay.git

@@ -97,8 +97,9 @@
   ;; Enable semantic tokens for better syntax highlighting
   (setq lsp-bridge-semantic-tokens t)
   (setq-default lsp-bridge-semantic-tokens-ignore-modifier-limit-types ["variable"])
-  ;; Enable auto format on save
-  (setq lsp-bridge-enable-auto-format-code t)
+  ;; Disable auto format on save (handled by idle-auto-save instead)
+  ;; This prevents double formatting and allows idle-auto-save to control when to format
+  (setq lsp-bridge-enable-auto-format-code nil)
   ;; Diagnostic delay (in seconds, default 0.5) - optimize for responsiveness
   (setq lsp-bridge-diagnostic-fetch-idle 0.3)
   ;; Hover diagnostic - show diagnostic tooltip when cursor hovers over error
