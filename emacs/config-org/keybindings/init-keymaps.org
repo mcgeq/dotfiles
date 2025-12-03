@@ -101,18 +101,20 @@
   ;;; === 滚动 ===
   
   (defun mcg-scroll-down-third ()
-    "Scroll down 1/3 of window height."
-    (interactive)
-    (scroll-down (/ (window-body-height) 3)))
-  
-  (defun mcg-scroll-up-third ()
-    "Scroll up 1/3 of window height."
+    "Scroll down 1/3 of window height (view later content)."
     (interactive)
     (scroll-up (/ (window-body-height) 3)))
   
+  (defun mcg-scroll-up-third ()
+    "Scroll up 1/3 of window height (view earlier content)."
+    (interactive)
+    (scroll-down (/ (window-body-height) 3)))
+  
   ;; Fast scrolling with M-n/M-p
-  (global-set-key (kbd "M-n") 'mcg-scroll-up-third)
-  (global-set-key (kbd "M-p") 'mcg-scroll-down-third)
+  ;; M-n (next) scrolls down to view later content
+  ;; M-p (previous) scrolls up to view earlier content
+  (global-set-key (kbd "M-n") 'mcg-scroll-down-third)
+  (global-set-key (kbd "M-p") 'mcg-scroll-up-third)
 #+END_SRC
 
 ** LSP - Standard Bindings

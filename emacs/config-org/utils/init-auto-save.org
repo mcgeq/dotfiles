@@ -13,10 +13,10 @@
   ;; Copyright (C) 2024, mcge, all rights reserved.
   ;; Create   Date: 2025-01-04 15:00:00
   ;; Version: 0.2
-  ;; Modified   By:  mcge <mcgeq@outlook.com>
-  ;; Last Modified:  <2025-12-03 Tue 18:36>
+  ;; Modified   By:  mcgeq <mcgeq@outlook.com>
+  ;; Last Modified:  <2025-12-03 Wed 19:40>
   ;; Keywords: autosave idle
-  ;; Compatibility: GNU Emacs 31.0.50
+  ;; Compatibility: 31.0.50
 
   ;;; Commentary:
   ;;
@@ -145,7 +145,7 @@ This is useful when you disable lsp-bridge's auto-format-on-save to avoid double
          ((> (length autosave-buffer-list) 1)
           (message "# Saved %d files: %s"
                    (length autosave-buffer-list)
-                   (mapconcat 'identity autosave-buffer-list ", ")))))))
+                   (mapconcat 'identity autosave-buffer-list ", "))))))))
 
   (defun idle-auto-save-save-buffer ()
     "Save current buffer."
@@ -153,12 +153,10 @@ This is useful when you disable lsp-bridge's auto-format-on-save to avoid double
       ;; Format before save if enabled
       (when idle-auto-save-format-before-save
         (ignore-errors
-          (cond
-           ;; lsp-bridge format
-           ((and (fboundp 'lsp-bridge-code-action-format-code)
-                 (boundp 'lsp-bridge-mode)
-                 lsp-bridge-mode)
-            (lsp-bridge-code-action-format-code)))))
+          (when (and (fboundp 'lsp-bridge-code-action-format-code)
+                     (boundp 'lsp-bridge-mode)
+                     lsp-bridge-mode)
+            (lsp-bridge-code-action-format-code))))
       
       ;; Save buffer
       (if (idle-auto-save-is-remote-file)
