@@ -68,7 +68,7 @@
   ;;   (load-theme 'ef-summer t))
   ;; ef-arbutus
   ;; ef-tritanopia-light
-  (load-theme 'ef-arbutus t)
+  (load-theme 'ef-dream t)
 
 
 #+END_SRC
