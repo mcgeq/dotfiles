@@ -33,9 +33,18 @@
       web-mode-css-indent-offset 2
       web-mode-code-indent-offset 2)
 
-;; TypeScript文件关联
-(add-to-list 'auto-mode-alist '("\\.tsx?\\'" . typescript-mode))
-(add-to-list 'auto-mode-alist '("\\.jsx?\\'" . js-mode))
+;; TypeScript文件关联 - 优先使用 tree-sitter 版本（Emacs 29+）
+(if (and (fboundp 'typescript-ts-mode) (treesit-available-p))
+    (progn
+      (add-to-list 'auto-mode-alist '("\\.ts\\'" . typescript-ts-mode))
+      (add-to-list 'auto-mode-alist '("\\.tsx\\'" . tsx-ts-mode)))
+  (add-to-list 'auto-mode-alist '("\\.tsx?\\'" . typescript-mode)))
+
+(if (and (fboundp 'js-ts-mode) (treesit-available-p))
+    (progn
+      (add-to-list 'auto-mode-alist '("\\.js\\'" . js-ts-mode))
+      (add-to-list 'auto-mode-alist '("\\.jsx\\'" . js-ts-mode)))
+  (add-to-list 'auto-mode-alist '("\\.jsx?\\'" . js-mode)))
 #+END_SRC
 
 ** Tree-sitter Support
@@ -69,6 +78,7 @@
   "配置TypeScript/JavaScript LSP"
   (when (or (derived-mode-p 'typescript-mode)
             (derived-mode-p 'typescript-ts-mode)
+            (derived-mode-p 'tsx-ts-mode)
             (derived-mode-p 'tsx-mode)
             (derived-mode-p 'js-mode)
             (derived-mode-p 'js-ts-mode))
@@ -76,6 +86,7 @@
 
 (add-hook 'typescript-mode-hook #'mcg-ts-lsp-setup)
 (add-hook 'typescript-ts-mode-hook #'mcg-ts-lsp-setup)
+(add-hook 'tsx-ts-mode-hook #'mcg-ts-lsp-setup)
 (add-hook 'js-mode-hook #'mcg-ts-lsp-setup)
 (add-hook 'js-ts-mode-hook #'mcg-ts-lsp-setup)
 #+END_SRC
@@ -122,6 +133,7 @@
 
 (add-hook 'typescript-mode-hook #'mcg-ts-setup-keys)
 (add-hook 'typescript-ts-mode-hook #'mcg-ts-setup-keys)
+(add-hook 'tsx-ts-mode-hook #'mcg-ts-setup-keys)
 (add-hook 'js-mode-hook #'mcg-ts-setup-keys)
 (add-hook 'js-ts-mode-hook #'mcg-ts-setup-keys)
 #+END_SRC
@@ -153,7 +165,10 @@
   (local-set-key (kbd "C-c L") #'mcg-ts-fix-eslint))
 
 (add-hook 'typescript-mode-hook #'mcg-ts-setup-eslint-keys)
+(add-hook 'typescript-ts-mode-hook #'mcg-ts-setup-eslint-keys)
+(add-hook 'tsx-ts-mode-hook #'mcg-ts-setup-eslint-keys)
 (add-hook 'js-mode-hook #'mcg-ts-setup-eslint-keys)
+(add-hook 'js-ts-mode-hook #'mcg-ts-setup-eslint-keys)
 #+END_SRC
 
 ** Node.js Support
@@ -197,7 +212,10 @@
   (local-set-key (kbd "C-c n") #'mcg-ts-run-npm-script))
 
 (add-hook 'typescript-mode-hook #'mcg-ts-setup-node-keys)
+(add-hook 'typescript-ts-mode-hook #'mcg-ts-setup-node-keys)
+(add-hook 'tsx-ts-mode-hook #'mcg-ts-setup-node-keys)
 (add-hook 'js-mode-hook #'mcg-ts-setup-node-keys)
+(add-hook 'js-ts-mode-hook #'mcg-ts-setup-node-keys)
 #+END_SRC
 
 ** React/JSX Support
@@ -227,7 +245,10 @@
   (local-set-key (kbd "C-c c") #'mcg-ts-insert-component))
 
 (add-hook 'typescript-mode-hook #'mcg-ts-setup-react-keys)
+(add-hook 'typescript-ts-mode-hook #'mcg-ts-setup-react-keys)
+(add-hook 'tsx-ts-mode-hook #'mcg-ts-setup-react-keys)
 (add-hook 'js-mode-hook #'mcg-ts-setup-react-keys)
+(add-hook 'js-ts-mode-hook #'mcg-ts-setup-react-keys)
 #+END_SRC
 
 ** Project Detection
@@ -268,7 +289,10 @@
   (local-set-key (kbd "C-c i") #'mcg-ts-organize-imports))
 
 (add-hook 'typescript-mode-hook #'mcg-ts-setup-import-keys)
+(add-hook 'typescript-ts-mode-hook #'mcg-ts-setup-import-keys)
+(add-hook 'tsx-ts-mode-hook #'mcg-ts-setup-import-keys)
 (add-hook 'js-mode-hook #'mcg-ts-setup-import-keys)
+(add-hook 'js-ts-mode-hook #'mcg-ts-setup-import-keys)
 #+END_SRC
 
 ** Console Log Helper
@@ -303,7 +327,10 @@
   (local-set-key (kbd "C-c C-k") #'mcg-ts-remove-console-logs))
 
 (add-hook 'typescript-mode-hook #'mcg-ts-setup-console-keys)
+(add-hook 'typescript-ts-mode-hook #'mcg-ts-setup-console-keys)
+(add-hook 'tsx-ts-mode-hook #'mcg-ts-setup-console-keys)
 (add-hook 'js-mode-hook #'mcg-ts-setup-console-keys)
+(add-hook 'js-ts-mode-hook #'mcg-ts-setup-console-keys)
 #+END_SRC
 
 ** Keybindings Summary

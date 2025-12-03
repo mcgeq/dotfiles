@@ -192,17 +192,20 @@
   (mcg-load-extension "rust-mode")
   (mcg-load-extension "lua-mode")
   (mcg-load-extension "web-mode")
+  ;; typescript-mode is built-in for Emacs 29+
   
   (require 'lang-rust)
   (require 'lang-lua)
   (require 'lang-web-mode)
   (require 'lang-cpp)
+  (require 'lang-typescript)
   
   (mcg-register-loaded-module 'init-lsp-bridge)
   (mcg-register-loaded-module 'lang-rust)
   (mcg-register-loaded-module 'lang-lua)
   (mcg-register-loaded-module 'lang-web-mode)
-  (mcg-register-loaded-module 'lang-cpp))
+  (mcg-register-loaded-module 'lang-cpp)
+  (mcg-register-loaded-module 'lang-typescript))
 
 ;; 延迟1秒加载语言支持
 (run-with-timer 1 nil #'mcg-load-lang-support)

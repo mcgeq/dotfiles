@@ -70,6 +70,17 @@
   (require 'exec-path-from-shell)
   (exec-path-from-shell-initialize))
 
+;; Associate file extensions with web-mode
+;; Vue files use web-mode for proper syntax highlighting
+(add-to-list 'auto-mode-alist '("\\.vue\\'" . web-mode))
+
+;; HTML files: use html-ts-mode if available (Emacs 29+), fallback to web-mode
+(if (and (fboundp 'html-ts-mode) (treesit-available-p))
+    (add-to-list 'auto-mode-alist '("\\.html\\'" . html-ts-mode))
+  (add-to-list 'auto-mode-alist '("\\.html\\'" . web-mode)))
+
+;; Note: .jsx/.tsx handled by lang-typescript if enabled
+
 (setq web-mode-enable-auto-quoting nil) ;disable automatic insertion of double quotes, not easy to use if cursor in string
 
 (highlight-matching-tag 1)
@@ -89,8 +100,63 @@
 
 (with-eval-after-load 'web-mode
   (setq tab-width 2))
+#+END_SRC
 
-;; We-mode.
+** LSP Configuration
+#+BEGIN_SRC emacs-lisp
+;;; LSP配置 - 为 Vue 文件启用 LSP Bridge
+(defun mcg-web-mode-lsp-setup ()
+  "为 web-mode 启用 lsp-bridge，特别是 Vue 文件"
+  (when (and buffer-file-name
+             (string-match-p "\\.vue\\'" buffer-file-name))
+    (lsp-bridge-mode 1)))
+
+(add-hook 'web-mode-hook #'mcg-web-mode-lsp-setup)
+
+;; 诊断函数：检查 Vue LSP 环境
+(defun mcg-vue-check-lsp-environment ()
+  "检查 Vue LSP 所需的环境配置"
+  (interactive)
+  (let ((results '())
+        (tsdk-path (expand-file-name "~/AppData/Roaming/npm/node_modules/typescript/lib")))
+    ;; 检查 vue-language-server
+    (if (executable-find "vue-language-server")
+        (push "✓ vue-language-server 已安装" results)
+      (push "✗ vue-language-server 未安装 - 运行: npm install -g @vue/language-server" results))
+    
+    ;; 检查 typescript
+    (if (executable-find "tsc")
+        (push "✓ TypeScript 已安装" results)
+      (push "✗ TypeScript 未安装 - 运行: npm install -g typescript" results))
+    
+    ;; 检查 tsdk 路径
+    (if (file-directory-p tsdk-path)
+        (push (format "✓ TypeScript SDK 路径存在: %s" tsdk-path) results)
+      (push (format "✗ TypeScript SDK 路径不存在: %s" tsdk-path) results))
+    
+    ;; 检查当前 buffer
+    (when (eq major-mode 'web-mode)
+      (if lsp-bridge-mode
+          (push "✓ 当前 Vue 文件已启用 lsp-bridge-mode" results)
+        (push "✗ 当前 Vue 文件未启用 lsp-bridge-mode" results)))
+    
+    ;; 显示结果
+    (with-current-buffer (get-buffer-create "*Vue LSP 诊断*")
+      (erase-buffer)
+      (insert "=== Vue LSP 环境检查 ===\n\n")
+      (dolist (result (reverse results))
+        (insert result "\n"))
+      (insert "\n推荐的全局 npm 包:\n")
+      (insert "  npm install -g typescript\n")
+      (insert "  npm install -g @vue/language-server\n")
+      (insert "  npm install -g typescript-language-server\n")
+      (goto-char (point-min))
+      (display-buffer (current-buffer)))))
+#+END_SRC
+
+** Keybindings
+#+BEGIN_SRC emacs-lisp
+;; Web-mode 快捷键
 ;; (lazy-load-set-keys fingertip-key-alist web-mode-map)
 (lazy-load-local-keys
  '(
