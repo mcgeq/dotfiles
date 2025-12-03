@@ -138,9 +138,22 @@
   (global-lsp-bridge-mode)
 
   ;; ===== Multi-Language Server Configuration =====
-  ;; Configure TailwindCSS support for HTML/CSS
+  ;; Configure TailwindCSS support for multiple file types
+  ;; HTML + TailwindCSS
   (add-to-list 'lsp-bridge-multi-lang-server-extension-list '(("html") . "html_tailwindcss"))
+  
+  ;; CSS + TailwindCSS
   (add-to-list 'lsp-bridge-multi-lang-server-extension-list '(("css") . "css_tailwindcss"))
+  
+  ;; JavaScript/TypeScript with TailwindCSS (for JSX/TSX)
+  (add-to-list 'lsp-bridge-multi-lang-server-extension-list '(("js" "jsx") . "javascript_tailwindcss"))
+  (add-to-list 'lsp-bridge-multi-lang-server-extension-list '(("ts" "tsx") . "typescript_tailwindcss"))
+  
+  ;; Vue + TailwindCSS
+  (add-to-list 'lsp-bridge-multi-lang-server-extension-list '(("vue") . "vue_tailwindcss"))
+  
+  ;; Svelte + TailwindCSS
+  (add-to-list 'lsp-bridge-multi-lang-server-extension-list '(("svelte") . "svelte_tailwindcss"))
 
   ;; Custom function to select language server based on project context
   ;; Example: Detect Deno projects by checking for deno.land imports
