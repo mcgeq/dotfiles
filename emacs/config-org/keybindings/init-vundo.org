@@ -75,6 +75,27 @@
   ;; Auto-bury diff window when vundo quits
   (setq vundo-diff-quit 'bury)
   
+  ;; Prevent vundo from making buffer read-only
+  ;; Override the problematic behavior at its source
+  (defun vundo--force-writable-after-command (&rest _)
+    "Force buffer to be writable after any vundo command."
+    (run-with-timer 0.01 nil
+                    (lambda ()
+                      (when (and (not (eq major-mode 'vundo-mode))
+                                 buffer-read-only)
+                        (read-only-mode -1)))))
+  
+  ;; Add advice to all vundo navigation and exit commands
+  (advice-add 'vundo-backward :after #'vundo--force-writable-after-command)
+  (advice-add 'vundo-forward :after #'vundo--force-writable-after-command)
+  (advice-add 'vundo-next :after #'vundo--force-writable-after-command)
+  (advice-add 'vundo-previous :after #'vundo--force-writable-after-command)
+  (advice-add 'vundo-stem-root :after #'vundo--force-writable-after-command)
+  (advice-add 'vundo-stem-end :after #'vundo--force-writable-after-command)
+  (advice-add 'vundo-goto-last-saved :after #'vundo--force-writable-after-command)
+  (advice-add 'vundo-quit :after #'vundo--force-writable-after-command)
+  (advice-add 'vundo-confirm :after #'vundo--force-writable-after-command)
+  
   ;; Popup mode configuration (auto-show vundo on undo/redo)
   ;; Uncomment to enable popup mode
   ;; (vundo-popup-mode 1)
