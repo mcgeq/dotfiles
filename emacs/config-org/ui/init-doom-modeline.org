@@ -190,22 +190,29 @@
       
       ;; 应用 solaire-mode 设置
       (when (bound-and-true-p solaire-global-mode)
-        (let ((bg-alt (if (functionp (plist-get settings :solaire-bg-alt))
-                          (funcall (plist-get settings :solaire-bg-alt) theme)
-                        (plist-get settings :solaire-bg-alt)))
-              (hl-bg (if (functionp (plist-get settings :hl-line-bg))
-                         (funcall (plist-get settings :hl-line-bg) theme)
-                       (plist-get settings :hl-line-bg))))
+        (let ((bg-alt (or (if (functionp (plist-get settings :solaire-bg-alt))
+                              (funcall (plist-get settings :solaire-bg-alt) theme)
+                            (plist-get settings :solaire-bg-alt))
+                          'unspecified))
+              (hl-bg (or (if (functionp (plist-get settings :hl-line-bg))
+                             (funcall (plist-get settings :hl-line-bg) theme)
+                           (plist-get settings :hl-line-bg))
+                         'unspecified)))
           
-          (custom-set-faces
-           `(solaire-default-face 
-             ((t (:background ,bg-alt))))
-           `(solaire-hl-line-face 
-             ((t (:background ,hl-bg)))))
+          ;; Only set faces if values are not 'unspecified
+          (when (not (eq bg-alt 'unspecified))
+            (custom-set-faces
+             `(solaire-default-face 
+               ((t (:background ,bg-alt))))))
           
-          ;; 更新高亮行设置
-          (with-eval-after-load 'hl-line
-            (set-face-background 'hl-line hl-bg))))
+          (when (not (eq hl-bg 'unspecified))
+            (custom-set-faces
+             `(solaire-hl-line-face 
+               ((t (:background ,hl-bg)))))
+            
+            ;; 更新高亮行设置
+            (with-eval-after-load 'hl-line
+              (set-face-background 'hl-line hl-bg)))))
       
       ;; 刷新界面
       (force-mode-line-update)
