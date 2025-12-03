@@ -141,10 +141,10 @@
   (global-set-key (kbd "C-c r i") 'lsp-bridge-code-action)
   (global-set-key (kbd "C-c r f") 'lsp-bridge-code-format)
   
-  ;; Diagnostics (C-c ! prefix for errors)
-  (global-set-key (kbd "C-c ! n") 'lsp-bridge-diagnostic-jump-next)
-  (global-set-key (kbd "C-c ! p") 'lsp-bridge-diagnostic-jump-prev)
-  (global-set-key (kbd "C-c ! l") 'lsp-bridge-diagnostic-list)
+  ;; Diagnostics (M-g prefix - standard Emacs "goto" prefix)
+  (global-set-key (kbd "M-g n") 'lsp-bridge-diagnostic-jump-next)
+  (global-set-key (kbd "M-g p") 'lsp-bridge-diagnostic-jump-prev)
+  (global-set-key (kbd "M-g l") 'lsp-bridge-diagnostic-list)
   
   ;; Implementation
   (global-set-key (kbd "C-c r l") 'lsp-bridge-find-impl)
@@ -448,7 +448,8 @@
 │ C-c r r     Rename                                       │
 │ C-c r i     Code action                                  │
 │ C-c r f     Format                                       │
-│ C-c ! n/p   Next/Prev diagnostic                         │
+│ M-g n/p     Next/Prev diagnostic                         │
+│ M-g l       List diagnostics                             │
 └─────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────┐

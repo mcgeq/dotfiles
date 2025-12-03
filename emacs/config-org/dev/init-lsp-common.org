@@ -67,10 +67,10 @@
     (local-set-key (kbd "C-c r i") #'lsp-bridge-code-action)
     (local-set-key (kbd "C-c r f") #'lsp-bridge-code-format)
     
-    ;; Diagnostics
-    (local-set-key (kbd "C-c ! n") #'lsp-bridge-diagnostic-jump-next)
-    (local-set-key (kbd "C-c ! p") #'lsp-bridge-diagnostic-jump-prev)
-    (local-set-key (kbd "C-c ! l") #'lsp-bridge-diagnostic-list)
+    ;; Diagnostics (M-g prefix - standard Emacs "goto" prefix)
+    (local-set-key (kbd "M-g n") #'lsp-bridge-diagnostic-jump-next)
+    (local-set-key (kbd "M-g p") #'lsp-bridge-diagnostic-jump-prev)
+    (local-set-key (kbd "M-g l") #'lsp-bridge-diagnostic-list)
     
     ;; Workspace
     (local-set-key (kbd "C-c w r") #'lsp-bridge-workspace-list-symbols)))
@@ -322,9 +322,9 @@ REFACTORING:
   C-c r f    - Format buffer
 
 DIAGNOSTICS:
-  C-c ! n    - Next diagnostic
-  C-c ! p    - Previous diagnostic
-  C-c ! l    - List all diagnostics
+  M-g n      - Next diagnostic
+  M-g p      - Previous diagnostic
+  M-g l      - List all diagnostics
 
 WORKSPACE:
   C-c w r    - List symbols
