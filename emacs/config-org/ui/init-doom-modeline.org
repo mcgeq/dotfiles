@@ -169,13 +169,14 @@
 
       ;; 应用 doom-modeline 设置
       (when (bound-and-true-p doom-modeline-mode)
-        (setq doom-modeline-height (plist-get settings :doom-modeline-height))
+        (setq doom-modeline-height (or (plist-get settings :doom-modeline-height) 25))
         (setq doom-modeline-buffer-file-name-style 
-              (plist-get settings :doom-modeline-buffer-file-name-style))
+              (or (plist-get settings :doom-modeline-buffer-file-name-style) 'auto))
 
-        (let ((bar-color (if (functionp (plist-get settings :status-bar-color))
-                             (funcall (plist-get settings :status-bar-color) theme)
-                           (plist-get settings :status-bar-color))))
+        (let ((bar-color (or (if (functionp (plist-get settings :status-bar-color))
+                                 (funcall (plist-get settings :status-bar-color) theme)
+                               (plist-get settings :status-bar-color))
+                             "#5d7fa8")))  ;; Default color if nil
 
           ;; 更新状态条颜色
           (custom-set-faces
@@ -236,8 +237,10 @@
   (doom-modeline-mode 1)
   (solaire-global-mode 1)
   
-  ;; 通用设置
+  ;; 通用设置（添加默认值防止 nil）
   (setq doom-modeline-bar-width 3
+        doom-modeline-height 25
+        doom-modeline-buffer-file-name-style 'auto
         doom-modeline-project-name t
         doom-modeline-enable-word-count nil
         doom-modeline-minor-modes nil))

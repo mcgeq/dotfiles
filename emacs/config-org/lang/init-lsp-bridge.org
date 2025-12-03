@@ -164,7 +164,7 @@
    '(
      ;; Diagnostic commands
      ("C-c C-u d l" . lsp-bridge-diagnostic-list)        ;; List diagnostics
-     ("C-c C-u d w" . lsp-bridge-workspace-diagnostic-list) ;; Workspace diagnostics
+     ;; Note: lsp-bridge-workspace-diagnostic-list is not widely supported
      )
    lsp-bridge-mode-map)
 #+END_SRC
