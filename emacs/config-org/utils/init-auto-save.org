@@ -150,18 +150,9 @@ via before-save-hook, so this option can be set to nil to avoid double formattin
 
   (defun idle-auto-save-save-buffer ()
     "Save current buffer.
-Formatting is handled by lsp-bridge via before-save-hook if enabled."
+Formatting is handled by idle-auto-save-format-buffer in before-save-hook."
     (let ((write-region-inhibit-fsync t))
-      ;; Optional: Format before save if explicitly enabled
-      ;; (Usually not needed as lsp-bridge handles it via before-save-hook)
-      (when idle-auto-save-format-before-save
-        (ignore-errors
-          (when (and (fboundp 'lsp-bridge-code-action-format-code)
-                     (boundp 'lsp-bridge-mode)
-                     lsp-bridge-mode)
-            (lsp-bridge-code-action-format-code))))
-      
-      ;; Save buffer (will trigger before-save-hook including lsp-bridge formatting)
+      ;; Save buffer (before-save-hook will handle formatting)
       (if (idle-auto-save-is-remote-file)
           (lsp-bridge-remote-save-buffer)
         (basic-save-buffer))))
@@ -196,16 +187,41 @@ Formatting is handled by lsp-bridge via before-save-hook if enabled."
       (cancel-timer idle-auto-save-timer)
       (setq idle-auto-save-timer nil)))
 
+  (defun idle-auto-save-format-buffer ()
+    "Format buffer with lsp-bridge if enabled.
+Waits for async formatting to complete."
+    (when (and idle-auto-save-format-before-save
+               (bound-and-true-p lsp-bridge-mode)
+               (fboundp 'lsp-bridge-has-lsp-server-p)
+               (lsp-bridge-has-lsp-server-p))
+      (ignore-errors
+        ;; Trigger async formatting
+        (lsp-bridge-code-format)
+        ;; Wait for formatting to complete (max 1 second)
+        (let ((max-wait 1.0)
+              (wait-interval 0.05)
+              (elapsed 0)
+              (initial-tick (buffer-chars-modified-tick)))
+          ;; Wait for buffer modification (formatting changes it)
+          (while (and (< elapsed max-wait)
+                      (= (buffer-chars-modified-tick) initial-tick))
+            (sleep-for wait-interval)
+            (setq elapsed (+ elapsed wait-interval)))
+          ;; Additional small wait to ensure formatting is complete
+          (sleep-for 0.1)))))
+
   (defun idle-auto-save-enable ()
     "Enable auto save."
     (interactive)
     (idle-auto-save-set-timer)
+    (add-hook 'before-save-hook 'idle-auto-save-format-buffer)
     (add-hook 'before-save-hook 'idle-auto-save-delete-trailing-whitespace-except-current-line))
 
   (defun idle-auto-save-disable ()
     "Disable auto save."
     (interactive)
     (idle-auto-save-cancel-timer)
+    (remove-hook 'before-save-hook 'idle-auto-save-format-buffer)
     (remove-hook 'before-save-hook 'idle-auto-save-delete-trailing-whitespace-except-current-line)
     (message "idle-auto-save disabled"))
 
@@ -226,9 +242,9 @@ Formatting is handled by lsp-bridge via before-save-hook if enabled."
   ;; Idle time before auto-save (in seconds)
   (setq idle-auto-save-idle 1)
   
-  ;; Disable format before auto-save (lsp-bridge handles formatting via before-save-hook)
-  ;; This ensures both auto-save and manual save use the same formatting mechanism
-  (setq idle-auto-save-format-before-save nil)
+  ;; Enable format before auto-save
+  ;; Waits for lsp-bridge async formatting to complete before saving
+  (setq idle-auto-save-format-before-save t)
   
   ;; Enable idle auto-save
   (idle-auto-save-enable)

@@ -97,9 +97,9 @@
   ;; Enable semantic tokens for better syntax highlighting
   (setq lsp-bridge-semantic-tokens t)
   (setq-default lsp-bridge-semantic-tokens-ignore-modifier-limit-types ["variable"])
-  ;; Enable auto format on save
-  ;; Works together with idle-auto-save for consistent formatting
-  (setq lsp-bridge-enable-auto-format-code t)
+  ;; Disable auto format on save (to avoid async formatting issues with auto-save)
+  ;; Format only on manual save via keybinding
+  (setq lsp-bridge-enable-auto-format-code nil)
   ;; Diagnostic delay (in seconds, default 0.5) - optimize for responsiveness
   (setq lsp-bridge-diagnostic-fetch-idle 0.3)
   ;; Hover diagnostic - show diagnostic tooltip when cursor hovers over error
@@ -176,7 +176,14 @@
 
 #+END_SRC
 
-** Update modify file time
+** Save and Format
+#+BEGIN_SRC emacs-lisp
+  ;; Note: Formatting is now handled by idle-auto-save uniformly
+  ;; Both manual save (C-x C-s) and auto-save will format if idle-auto-save-format-before-save is t
+  ;; No need for custom save function, using default save-buffer is fine
+#+END_SRC
+
+** After Save Hook
 #+BEGIN_SRC emacs-lisp
   ;; Auto-update "Last Modified" timestamp in file headers when saving
   ;; 在编程模式下启用保存文件时自动更新 `Last Modified` 时间的功能
