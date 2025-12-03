@@ -58,35 +58,83 @@
 
 #+END_SRC
 
-** Code
+** Configuration
 #+BEGIN_SRC emacs-lisp
+  ;;; Configuration:
+  
+  ;; Use Unicode symbols for better visualization
+  (setq vundo-glyph-alist vundo-unicode-symbols)
+  
+  ;; Don't roll back changes when quitting (commit by default)
+  (setq vundo-roll-back-on-quit nil)
+  
+  ;; Compact display mode for smaller trees
+  (setq vundo-compact-display t)
+  
+  ;; Auto-bury diff window when vundo quits
+  (setq vundo-diff-quit 'bury)
+  
+  ;; Popup mode configuration (auto-show vundo on undo/redo)
+  ;; Uncomment to enable popup mode
+  ;; (vundo-popup-mode 1)
+  ;; (setq vundo-popup-delay 3) ; Auto-hide after 3 seconds
+  
+  ;; Set font for vundo buffer to support Unicode symbols
+  ;; You may need to install Symbola or Unifont font
+  ;; (set-face-attribute 'vundo-default nil :family "Symbola")
 
-;;; Code:
-(defhydra hydra-vundo (:color pink :hint nil)
-  "
-  _l_ forward       _n_ext       _f_ confirm
-  _h_ backward      _p_revious   _i_ inspect
-  _j_ stem root     _d_ debug    _Q_ quit
-  _k_ stem end      _,_ goto last saved
-  "
-  ("l"  vundo-forward)
-  ("h"  vundo-backward)
-  ("n"  vundo-next)
-  ("p"  vundo-previous)
-  ("j"  vundo-stem-root)
-  ("k"  vundo-stem-end)
-  (","  vundo-goto-last-saved)
-  ("Q"  vundo-quit)
-  ;("C-g"  vundo-quit)
-  ("f"  vundo-confirm)
-  ;("C-m"  vundo-confirm)
-  ("i"  vundo--inspect)
-  ("d"  vundo--debug)
-  ("q" nil)
-  ("." nil :color blue)
-  )
+#+END_SRC
 
-(define-key vundo-mode-map "." 'hydra-vundo/body)
+** Keybindings
+#+BEGIN_SRC emacs-lisp
+  ;;; Keybindings:
+  
+  ;; Global keybinding to open vundo
+  (global-set-key (kbd "C-x u") 'vundo)
+  (global-set-key (kbd "C-/") 'vundo)  ; Alternative binding
+  
+  ;; Enhanced hydra with all vundo features
+  (defhydra hydra-vundo (:color pink :hint nil)
+    "
+╭────────^Movement^─────────┬─────^Branch^──────┬──────^Saved^──────┬─────^Diff^────┬───^Actions^───╮
+│ _f_ forward  _b_ backward │ _n_ next branch   │ _l_ last saved    │ _m_ mark      │ _RET_ confirm │
+│ _a_ to branch _w_ forward │ _p_ prev branch   │ _r_ next saved    │ _u_ unmark    │ _q_ quit      │
+│ _e_ to tip               │                   │                   │ _d_ diff      │ _Q_ abort     │
+╰──────────────────────────┴───────────────────┴───────────────────┴───────────────┴───────────────╯
+    "
+    ;; Basic movement
+    ("f" vundo-forward "forward")
+    ("b" vundo-backward "backward")
+    
+    ;; Branch navigation
+    ("n" vundo-next "next branch")
+    ("p" vundo-previous "prev branch")
+    ("a" vundo-stem-root "to branch point")
+    ("w" vundo-stem-end "forward to tip")
+    ("e" vundo-stem-end "to end")
+    
+    ;; Saved state navigation
+    ("l" vundo-goto-last-saved "last saved")
+    ("r" vundo-goto-next-saved "next saved")
+    
+    ;; Diff operations
+    ("m" vundo-diff-mark "mark for diff")
+    ("u" vundo-diff-unmark "unmark")
+    ("d" vundo-diff "show diff")
+    
+    ;; Actions
+    ("RET" vundo-confirm "confirm" :color blue)
+    ("q" vundo-quit "quit" :color blue)
+    ("Q" (progn (setq vundo-roll-back-on-quit t) (vundo-quit)) "abort" :color blue)
+    ("C-g" vundo-quit "quit" :color blue)
+    
+    ;; Debug (hidden)
+    ("i" vundo--inspect)
+    ("D" vundo--debug))
+  
+  ;; Bind hydra to vundo-mode
+  (define-key vundo-mode-map "." 'hydra-vundo/body)
+  (define-key vundo-mode-map "?" 'hydra-vundo/body)
 #+END_SRC
 
 ** Ends
