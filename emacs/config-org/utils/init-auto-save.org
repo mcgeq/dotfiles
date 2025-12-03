@@ -85,7 +85,8 @@ Note, this option is non-nil, will delete all trailing whitespace except current
   (defcustom idle-auto-save-format-before-save nil
     "Format buffer before auto-save using lsp-bridge or other formatters.
 If t, will call formatting functions before saving.
-This is useful when you disable lsp-bridge's auto-format-on-save to avoid double formatting."
+Note: If lsp-bridge-enable-auto-format-code is t, formatting will happen automatically
+via before-save-hook, so this option can be set to nil to avoid double formatting."
     :type 'boolean
     :group 'idle-auto-save)
 
@@ -148,9 +149,11 @@ This is useful when you disable lsp-bridge's auto-format-on-save to avoid double
                    (mapconcat 'identity autosave-buffer-list ", "))))))))
 
   (defun idle-auto-save-save-buffer ()
-    "Save current buffer."
+    "Save current buffer.
+Formatting is handled by lsp-bridge via before-save-hook if enabled."
     (let ((write-region-inhibit-fsync t))
-      ;; Format before save if enabled
+      ;; Optional: Format before save if explicitly enabled
+      ;; (Usually not needed as lsp-bridge handles it via before-save-hook)
       (when idle-auto-save-format-before-save
         (ignore-errors
           (when (and (fboundp 'lsp-bridge-code-action-format-code)
@@ -158,7 +161,7 @@ This is useful when you disable lsp-bridge's auto-format-on-save to avoid double
                      lsp-bridge-mode)
             (lsp-bridge-code-action-format-code))))
       
-      ;; Save buffer
+      ;; Save buffer (will trigger before-save-hook including lsp-bridge formatting)
       (if (idle-auto-save-is-remote-file)
           (lsp-bridge-remote-save-buffer)
         (basic-save-buffer))))
@@ -223,8 +226,9 @@ This is useful when you disable lsp-bridge's auto-format-on-save to avoid double
   ;; Idle time before auto-save (in seconds)
   (setq idle-auto-save-idle 1)
   
-  ;; Enable format before auto-save (recommended when lsp-bridge auto-format is disabled)
-  (setq idle-auto-save-format-before-save t)
+  ;; Disable format before auto-save (lsp-bridge handles formatting via before-save-hook)
+  ;; This ensures both auto-save and manual save use the same formatting mechanism
+  (setq idle-auto-save-format-before-save nil)
   
   ;; Enable idle auto-save
   (idle-auto-save-enable)
