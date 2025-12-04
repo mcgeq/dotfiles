@@ -31,22 +31,8 @@ return {
     },
   },
 
-  -- ===== Vue 开发增强 =====
-  {
-    "volarjs/volar.nvim",
-    ft = "vue",
-    opts = {
-      filetypes = { "vue", "typescript", "javascript" },
-      init_options = {
-        vue = {
-          hybridMode = false,
-        },
-        typescript = {
-          tsdk = vim.fn.expand("$HOME/.npm/node_modules/typescript/lib"),
-        },
-      },
-    },
-  },
+  -- ===== Vue 开发 =====
+  -- 注意：Vue 支持已由 astrocommunity.pack.vue 提供（包含 Volar LSP）
 
   -- ===== Tailwind CSS 智能提示 =====
   {
@@ -109,11 +95,7 @@ return {
   },
 
   -- ===== JSON Schema 支持 =====
-  {
-    "b0o/SchemaStore.nvim",
-    ft = { "json", "jsonc" },
-    version = false,
-  },
+  -- 注意：SchemaStore 已由 astrocommunity.pack.json 提供
 
   -- ===== Package.json 版本显示 =====
   {

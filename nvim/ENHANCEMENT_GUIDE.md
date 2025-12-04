@@ -11,11 +11,13 @@
 | 文件 | 功能 | 插件数量 |
 |------|------|----------|
 | `plugins/markdown.lua` | Markdown 完整工具链 | 5 个 |
-| `plugins/ui-enhanced.lua` | 现代化 UI 主题 | 12 个 |
-| `plugins/frontend-enhanced.lua` | 前端开发增强 | 11 个 |
-| `plugins/backend-enhanced.lua` | 后端开发增强 | 8 个 |
+| `plugins/ui-enhanced.lua` | 现代化 UI 主题 | 11 个 |
+| `plugins/frontend-enhanced.lua` | 前端开发增强 | 8 个 |
+| `plugins/backend-enhanced.lua` | 后端开发增强 | 9 个 |
 
-**总计**: 36 个新插件
+**总计**: 33 个新插件
+
+**注意**：移除了与 AstroNvim pack 重复的插件（alpha-nvim, volar.nvim, SchemaStore.nvim）
 
 ---
 
@@ -103,7 +105,6 @@
 #### TypeScript/JavaScript
 - ✅ **typescript-tools.nvim** - 更好的 TS 支持
 - ✅ **nvim-ts-autotag** - 自动重命名 HTML/JSX 标签
-- ✅ **SchemaStore.nvim** - JSON Schema 智能提示
 - ✅ **Biome** - 统一的格式化和 Linting（配置在 conform.lua）
   - 支持 JS/TS/JSX/TSX/JSON/Vue
   - 使用 `--unsafe` 自动修复代码
@@ -114,7 +115,10 @@
 - ✅ **nvim-colorizer** - CSS 颜色实时预览
 
 #### Vue 开发
-- ✅ **Volar** - Vue3 官方语言服务器
+- ✅ **Volar** - 由 astrocommunity.pack.vue 提供
+
+#### JSON 开发
+- ✅ **SchemaStore** - 由 astrocommunity.pack.json 提供
 
 #### 实用工具
 - ✅ **package-info.nvim** - 显示 package.json 版本信息
