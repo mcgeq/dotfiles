@@ -133,7 +133,6 @@ nvim/
 ├── lua/
 │   ├── lazy_setup.lua         # Plugin specifications
 │   ├── community.lua          # AstroCommunity imports (optimized)
-│   ├── community_backup.lua   # Original community.lua backup
 │   ├── polish.lua             # Final polish and customizations
 │   ├── config/                # Custom configuration modules
 │   │   ├── auto_update_timestamp.lua  # Auto-update timestamps
