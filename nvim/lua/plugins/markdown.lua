@@ -64,8 +64,23 @@ return {
           "Headline5",
           "Headline6",
         },
-        fat_headlines = false, -- 禁用装饰线，只保留标题高亮
+        fat_headlines = false, -- 禁用上下装饰线
+        fat_headline_upper_string = "",
+        fat_headline_lower_string = "",
       },
     },
+    config = function(_, opts)
+      require("headlines").setup(opts)
+      
+      -- 自定义标题背景颜色（类似官方示例）
+      vim.cmd([[
+        highlight Headline1 guibg=#1e2718
+        highlight Headline2 guibg=#21262d
+        highlight Headline3 guibg=#1a1e30
+        highlight Headline4 guibg=#1e2030
+        highlight Headline5 guibg=#1d1f2b
+        highlight Headline6 guibg=#1c1c1c
+      ]])
+    end,
   },
 }
