@@ -92,7 +92,7 @@
   (setq lsp-bridge-enable-with-tramp t)
   ;; Enable org-babel LSP completion
   (setq lsp-bridge-enable-org-babel t)
-  ;; Enable inlay hints (useful for strongly typed languages like Rust)
+  ;; Enable inlay hints (useful for strongly typed languages like Rust/TypeScript)
   (setq lsp-bridge-enable-inlay-hint t)
   ;; Enable semantic tokens for better syntax highlighting
   (setq lsp-bridge-semantic-tokens t)
@@ -111,11 +111,26 @@
   ;; Performance: ensure log level is not debug (avoid performance issues)
   (setq lsp-bridge-log-level 'default)
   (setq lsp-bridge-enable-debug nil)
+  
+  ;; ===== Enhanced Features (lazycat style) =====
+  ;; Code action lightbulb in fringe
+  (setq lsp-bridge-enable-diagnostics t)
+  (setq lsp-bridge-code-action-enable-popup-tip t)
+  ;; Signature help delay (faster response)
+  (setq lsp-bridge-signature-help-fetch-idle 0.5)
+  ;; Completion trigger characters (customize per language if needed)
+  (setq lsp-bridge-completion-popup-predicates
+        '(lsp-bridge-not-only-blank-before-cursor
+          lsp-bridge-not-match-hide-characters
+          lsp-bridge-not-match-stop-commands
+          lsp-bridge-not-complete-manually))
+  ;; Enable rename file feature
+  (setq lsp-bridge-enable-rename-file t)
 
   ;; ===== ACM (Auto Complete Menu) Configuration =====
   ;; Enable capf backend for non-LSP completion
   (setq acm-enable-capf t)
-  ;; Enable quick access for faster navigation
+  ;; Enable quick access for faster navigation (use numbers to select candidates)
   (setq acm-enable-quick-access t)
   ;; Match yasnippet by trigger keyword
   (setq acm-backend-yas-match-by-trigger-keyword t)
@@ -129,10 +144,30 @@
   (setq acm-enable-lsp-workspace-symbol t)
   ;; Enable doc display in completion menu
   (setq acm-enable-doc t)
+  ;; Doc frame position
+  (setq acm-doc-frame-pos 'bottom-right)
   ;; Enable icons in completion menu (set to nil if icons not displaying correctly)
   (setq acm-enable-icon t)
   ;; Async markdown rendering for doc (better performance than sync)
   (setq acm-enable-doc-markdown-render 'async)
+  
+  ;; ===== ACM Advanced Settings (lazycat style) =====
+  ;; Completion candidate display count
+  (setq acm-candidate-match-max-length 60)
+  ;; Enable preview when cycling candidates
+  (setq acm-enable-preview t)
+  ;; Backend merge order (LSP candidates first, then others)
+  (setq acm-backend-lsp-candidate-min-length 0)
+  (setq acm-backend-elisp-candidate-min-length 2)
+  (setq acm-backend-yas-candidate-min-length 2)
+  ;; Enable path completion
+  (setq acm-enable-path t)
+  ;; Enable search file words (better contextual completion)
+  (setq acm-enable-search-file-words t)
+  ;; English helper for Chinese users (set nil if not needed)
+  (setq acm-enable-english-helper nil)
+  ;; Frame max width
+  (setq acm-frame-max-width 100)
 
   ;; Enable global lsp-bridge mode
   (global-lsp-bridge-mode)

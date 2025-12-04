@@ -104,14 +104,20 @@
 
 ** LSP Configuration
 #+BEGIN_SRC emacs-lisp
-;;; LSP配置 - 为 Vue 文件启用 LSP Bridge
+;;; LSP配置 - 为 Web 文件启用 LSP Bridge (lazycat style)
 (defun mcg-web-mode-lsp-setup ()
-  "为 web-mode 启用 lsp-bridge，特别是 Vue 文件"
-  (when (and buffer-file-name
-             (string-match-p "\\.vue\\'" buffer-file-name))
-    (lsp-bridge-mode 1)))
+  "为 web-mode 启用 lsp-bridge，支持 Vue/HTML/JSX 文件"
+  (when buffer-file-name
+    (let ((ext (file-name-extension buffer-file-name)))
+      (when (member ext '("vue" "html" "jsx" "tsx"))
+        (lsp-bridge-mode 1)
+        ;; Enable web-specific features
+        (when (string= ext "vue")
+          (setq-local lsp-bridge-enable-completion-in-string t))))))
 
 (add-hook 'web-mode-hook #'mcg-web-mode-lsp-setup)
+(add-hook 'html-mode-hook #'mcg-web-mode-lsp-setup)
+(add-hook 'html-ts-mode-hook #'mcg-web-mode-lsp-setup)
 
 ;; 诊断函数：检查 Vue LSP 环境
 (defun mcg-vue-check-lsp-environment ()
@@ -156,19 +162,79 @@
 
 ** Keybindings
 #+BEGIN_SRC emacs-lisp
-;; Web-mode 快捷键
+;; Web-mode 快捷键 (lazycat style - 更符合直觉)
 ;; (lazy-load-set-keys fingertip-key-alist web-mode-map)
 (lazy-load-local-keys
  '(
-   ("M-s-SPC" . web-mode-element-content-select)
-   ("C-s-l" . web-mode-element-clone)
-   ("C-M-SPC" . web-mode-mark-and-expand)
-   ("C-:" . web-mode-comment-or-uncomment)
-   ("C-M-SPC" . mark-sexp)
-   ("M-R" . instant-rename-tag)
+   ("M-s-SPC" . web-mode-element-content-select)  ; 选择元素内容
+   ("C-s-l" . web-mode-element-clone)              ; 克隆元素
+   ("C-M-SPC" . web-mode-mark-and-expand)         ; 标记并扩展
+   ("C-:" . web-mode-comment-or-uncomment)         ; 注释/取消注释
+   ("M-R" . instant-rename-tag)                    ; 重命名标签
+   ("C-c C-n" . web-mode-tag-match)                ; 跳转到匹配标签
+   ("C-c C-f" . web-mode-fold-or-unfold)           ; 折叠/展开
+   ("C-c C-j" . web-mode-element-insert)           ; 插入元素
    )
  web-mode-map
  "web-mode-extension")
+#+END_SRC
+
+** Enhanced Web Development Features
+#+BEGIN_SRC emacs-lisp
+;;; 增强的 Web 开发特性 (lazycat style)
+
+;; Auto-pair 特殊处理：在字符串中智能配对
+(defun mcg-web-mode-smartparens-config ()
+  "配置 web-mode 的智能配对"
+  (when (featurep 'smartparens)
+    (sp-with-modes '(web-mode)
+      (sp-local-pair "<" ">")
+      (sp-local-pair "{" "}")
+      (sp-local-pair "{{" "}}")  ; Vue template syntax
+      (sp-local-pair "{%" "%}"))))  ; Jinja/Django template
+
+(with-eval-after-load 'web-mode
+  (mcg-web-mode-smartparens-config))
+
+;; Emmet 智能展开
+(defun mcg-web-mode-emmet-setup ()
+  "配置 Emmet 快速展开"
+  (when (featurep 'emmet-mode)
+    (emmet-mode 1)
+    (setq-local emmet-expand-jsx-className? t)  ; Support JSX className
+    (setq-local emmet-move-cursor-between-quotes t)))
+
+(add-hook 'web-mode-hook #'mcg-web-mode-emmet-setup)
+(add-hook 'html-mode-hook #'mcg-web-mode-emmet-setup)
+
+;; Vue 组件快速插入
+(defun mcg-insert-vue-component ()
+  "插入 Vue 3 组件模板"
+  (interactive)
+  (let ((component-name (read-string "Component name: ")))
+    (insert (format "<script setup lang=\"ts\">\nimport { ref } from 'vue'\n\n</script>\n\n"))
+    (insert (format "<template>\n  <div class=\"%s\">\n    \n  </div>\n</template>\n\n" 
+                    (downcase component-name)))
+    (insert "<style scoped>\n\n</style>\n")))
+
+(defun mcg-insert-react-component ()
+  "插入 React 函数组件模板"
+  (interactive)
+  (let ((component-name (read-string "Component name: ")))
+    (insert (format "import React from 'react';\n\n"))
+    (insert (format "interface %sProps {\n  // Define props here\n}\n\n" component-name))
+    (insert (format "export const %s: React.FC<%sProps> = (props) => {\n" 
+                    component-name component-name))
+    (insert "  return (\n    <div>\n      \n    </div>\n  );\n};\n")))
+
+;; 快捷键绑定
+(lazy-load-local-keys
+ '(
+   ("C-c v" . mcg-insert-vue-component)
+   ("C-c r" . mcg-insert-react-component)
+   )
+ web-mode-map
+ "web-mode-component-templates")
 #+END_SRC
 
 ** Ends
