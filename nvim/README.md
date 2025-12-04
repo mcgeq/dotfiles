@@ -76,29 +76,79 @@ nvim
 
 The first launch will automatically install Lazy.nvim and all configured plugins.
 
+## ⚡ Configuration Optimization System
+
+This configuration includes a powerful optimization system for better maintainability and flexibility:
+
+### 🎯 Key Features
+
+- **Plugin Manager** (`config/plugin_manager.lua`) - Grouped plugin management (15 categories)
+- **Preset System** (`config/presets.lua`) - Quick switching between 5 scenarios
+- **Keymap Manager** (`config/keymaps.lua`) - Centralized keymap management
+- **Config Validator** (`config/validator.lua`) - Auto-check configuration on startup
+- **User Commands** (`config/commands.lua`) - 6 convenient commands
+
+### 📦 Available Presets
+
+| Preset | Description | Use Case |
+|--------|-------------|----------|
+| `fullstack` | All plugins (default) | Full-stack development |
+| `frontend` | ~70% plugins | JS/TS/Vue development |
+| `backend` | ~70% plugins | Rust/Go/Python development |
+| `minimal` | ~50% plugins | Quick editing, config files |
+| `performance` | ~60% plugins | Low-spec machines |
+
+### 🛠️ New Commands
+
+```vim
+:PresetList          " List all presets
+:PresetSwitch <name> " Switch preset (requires restart)
+:ConfigInfo          " Show config information
+:KeymapDocs          " Show all keymaps
+:ConfigValidate      " Validate configuration
+:PluginStats         " Show plugin statistics
+```
+
+### 🔧 Quick Start
+
+**Switch preset:**
+```vim
+:PresetSwitch minimal    " Switch to minimal
+:PresetList              " View current preset
+```
+
+**Check config:**
+```vim
+:ConfigValidate   " Run validation
+:ConfigInfo       " Show full info
+```
+
 ## 🗂️ Configuration Structure
 
 ```
 nvim/
 ├── init.lua                    # Bootstrap file for Lazy.nvim
 ├── lazy-lock.json             # Plugin versions lockfile
-├── neovim.yml                 # Selene linter config
+├── .preset                    # Current preset (fullstack/frontend/etc.)
 ├── lua/
 │   ├── lazy_setup.lua         # Plugin specifications
-│   ├── community.lua          # AstroCommunity imports
+│   ├── community.lua          # AstroCommunity imports (optimized)
+│   ├── community_backup.lua   # Original community.lua backup
 │   ├── polish.lua             # Final polish and customizations
 │   ├── config/                # Custom configuration modules
 │   │   ├── auto_update_timestamp.lua  # Auto-update timestamps
+│   │   ├── plugin_manager.lua # Plugin grouping & management
+│   │   ├── presets.lua        # Preset system
+│   │   ├── keymaps.lua        # Keymap management
+│   │   ├── validator.lua      # Configuration validator
+│   │   ├── commands.lua       # User commands
+│   │   └── ...                # Other utilities
 │   └── plugins/               # Plugin-specific configurations
 │       ├── astrocore.lua      # AstroNvim core options
 │       ├── astrolsp.lua       # LSP configuration
-│       ├── astroui.lua        # UI customization
-│       ├── flash.nvim.lua     # Flash navigation
-│       ├── mason.lua          # Mason LSP installer
-│       ├── none-ls.lua        # None-LS formatters/linters
-│       ├── treesitter.lua     # Tree-sitter config
-│       ├── snacks.nvim.lua    # Snacks picker
-│       └── user.lua           # Additional plugins
+│       ├── conform.lua        # Formatting (Biome with --unsafe)
+│       ├── jujutsu.lua        # Jujutsu VCS support
+│       └── ...
 └── snippets/                  # Custom snippets
     ├── cpp.json
     ├── rust.json
