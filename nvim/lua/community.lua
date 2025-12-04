@@ -39,7 +39,7 @@ return {
   
   -- === 文档 ===
   { import = "astrocommunity.pack.markdown" }, -- Markdown
-  { import = "astrocommunity.note-taking.neorg" }, -- Neorg (现代化笔记系统)
+  -- { import = "astrocommunity.note-taking.neorg" }, -- Neorg (现代化笔记系统) - 暂时禁用，等待 blink-cmp 支持
   
   -- === 版本控制 ===
   { import = "astrocommunity.pack.jj" }, -- Jujutsu VCS
@@ -166,7 +166,7 @@ return {
   
   -- === 工作流优化 ===
   { import = "astrocommunity.workflow.hardtime-nvim" }, -- 培养好习惯（可能影响流畅度）
-  -- { import = "astrocommunity.workflow.precognition-nvim" }, -- 显示可用操作（学习用）
+  { import = "astrocommunity.workflow.precognition-nvim" }, -- 显示可用操作（学习用）
   
   -- === 实用工具 ===
   { import = "astrocommunity.utility.neodim" }, -- 未使用代码变暗（影响性能）
