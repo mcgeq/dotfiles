@@ -148,12 +148,8 @@
   (add-hook 'after-init-hook #'mcg-setup-fonts))
 
 ;; Defer UI elements
-(defun mcg-setup-ui ()
-  "Setup UI elements after init."
-  (require 'init-ui nil t)
-  (require 'init-doom-modeline nil t))
-
-(add-hook 'after-init-hook #'mcg-setup-ui)
+;; Note: init-ui and init-doom-modeline are loaded in Phase 2 of init.org
+;; No need to defer them here as they are essential for startup experience
 #+END_SRC
 
 ** Auto-Compilation

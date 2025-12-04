@@ -235,7 +235,7 @@
 ;; ============================================================
 
 (defun mcg/setup-ui-components ()
-  "设置主题无关的通用UI配置"
+  "设置主题无关的通用UI配置 - 现代化增强版"
   ;; 确保插件已加载
   (require 'doom-modeline)
   (require 'solaire-mode)
@@ -244,16 +244,302 @@
   (doom-modeline-mode 1)
   (solaire-global-mode 1)
   
-  ;; 通用设置（添加默认值防止 nil）
-  (setq doom-modeline-bar-width 3
-        doom-modeline-height 25
-        doom-modeline-buffer-file-name-style 'auto
-        doom-modeline-project-name t
-        doom-modeline-enable-word-count nil
-        doom-modeline-minor-modes nil))
+  ;; ============================================================
+  ;; 现代化通用设置 - 优化视觉和性能
+  ;; ============================================================
+  
+  ;; 基础外观
+  (setq doom-modeline-bar-width 4                    ; 更宽的状态条，更明显
+        doom-modeline-height 32                      ; 更高的modeline，更舒适（类似neo-emacs）
+        doom-modeline-window-width-limit 80          ; 窗口宽度限制
+        doom-modeline-hud t)                         ; 启用 HUD 滚动条效果
+  
+  ;; 图标设置 - 现代化图标显示
+  (setq doom-modeline-icon t                         ; 启用图标
+        doom-modeline-major-mode-icon t              ; 主模式图标
+        doom-modeline-major-mode-color-icon t        ; 彩色主模式图标
+        doom-modeline-buffer-state-icon t            ; 缓冲区状态图标
+        doom-modeline-buffer-modification-icon t     ; 修改状态图标
+        doom-modeline-time-icon t                    ; 时间图标
+        doom-modeline-unicode-fallback nil)          ; 不使用Unicode后备
+  
+  ;; 缓冲区信息显示 - neo-emacs 风格
+  (setq doom-modeline-buffer-name t                  ; 显示缓冲区名称
+        doom-modeline-buffer-file-name-style 'truncate-upto-project  ; 智能截断
+        doom-modeline-highlight-modified-buffer-name t  ; 高亮修改的缓冲区
+        doom-modeline-buffer-encoding-explicit t)    ; 明确显示编码
+  
+  ;; 编码和文件信息 - 简化显示
+  (setq doom-modeline-buffer-encoding t              ; 显示编码
+        doom-modeline-indent-info t                  ; 显示缩进信息
+        doom-modeline-total-line-number t)           ; 显示总行数
+  
+  ;; 项目和VCS - 增强Git集成（neo-emacs风格）
+  (setq doom-modeline-project-detection 'auto        ; 自动检测项目
+        doom-modeline-buffer-file-name-style 'truncate-upto-project
+        doom-modeline-vcs-max-length 18              ; VCS信息最大长度（更宽）
+        doom-modeline-check-simple-format t          ; 简化格式检查
+        doom-modeline-vcs-icon t)                    ; 显示VCS图标
+  
+  ;; Git/VCS集成
+  (setq doom-modeline-enable-word-count nil          ; 禁用字数统计（性能）
+        doom-modeline-continuous-word-count-modes    ; 特定模式启用字数
+        '(markdown-mode gfm-mode org-mode))
+  
+  ;; LSP集成 - 现代开发体验
+  (setq doom-modeline-lsp t                          ; 显示LSP状态
+        doom-modeline-lsp-icon t)                    ; LSP图标
+  
+  ;; 环境信息
+  (setq doom-modeline-env-version t                  ; 显示环境版本
+        doom-modeline-env-enable-python t            ; Python环境
+        doom-modeline-env-enable-ruby t              ; Ruby环境
+        doom-modeline-env-enable-perl t              ; Perl环境
+        doom-modeline-env-enable-go t)               ; Go环境
+  
+  ;; 性能优化设置
+  (setq doom-modeline-minor-modes nil                ; 隐藏minor modes（减少视觉噪音）
+        doom-modeline-check-simple-format t          ; 简化语法检查显示
+        doom-modeline-number-limit 99                ; 数字显示限制
+        doom-modeline-persp-name t                   ; 显示透视图名称
+        doom-modeline-display-default-persp-name nil ; 不显示默认透视图
+        doom-modeline-persp-icon t                   ; 透视图图标
+        doom-modeline-workspace-name t)              ; 显示工作区名称（neo-emacs风格）
+  
+  ;; 模态编辑状态 (Evil/Meow) - neo-emacs 风格
+  (setq doom-modeline-modal t                        ; 显示模态状态
+        doom-modeline-modal-icon t                   ; 模态图标
+        doom-modeline-modal-modern-icon t)           ; 使用现代图标样式
+  
+  ;; 其他增强功能
+  (setq doom-modeline-mu4e t                         ; mu4e邮件集成
+        doom-modeline-gnus t                         ; Gnus集成
+        doom-modeline-github t                       ; GitHub通知
+        doom-modeline-github-interval (* 30 60))     ; GitHub检查间隔(30分钟)
+  
+  ;; 时间显示 - 可选
+  (setq doom-modeline-time t                         ; 显示时间
+        doom-modeline-time-icon t)                   ; 时间图标
+  
+  ;; IBuffer集成
+  (setq doom-modeline-irc nil                        ; 禁用IRC
+        doom-modeline-irc-stylize 'identity))
 
 ;; 在启动时加载
 (mcg/setup-ui-components)
+
+;; ============================================================
+;; 现代化增强功能
+;; ============================================================
+
+;; 自定义modeline段的颜色和样式
+(defun mcg/enhance-modeline-faces ()
+  "增强modeline的视觉效果"
+  (custom-set-faces
+   ;; 更柔和的modeline背景
+   '(mode-line 
+     ((t (:height 1.0 :box (:line-width 4 :color nil :style flat-button)))))
+   '(mode-line-inactive 
+     ((t (:height 1.0 :box (:line-width 4 :color nil :style flat-button)))))
+   
+   ;; 增强的buffer名称显示
+   '(doom-modeline-buffer-file 
+     ((t (:inherit mode-line-buffer-id :weight semi-bold))))
+   '(doom-modeline-buffer-modified 
+     ((t (:inherit error :weight bold))))
+   
+   ;; Git分支显示优化
+   '(doom-modeline-vcs-info 
+     ((t (:inherit font-lock-keyword-face :weight semi-bold))))
+   
+   ;; LSP状态优化
+   '(doom-modeline-lsp-success 
+     ((t (:inherit success :weight semi-bold))))
+   '(doom-modeline-lsp-warning 
+     ((t (:inherit warning :weight semi-bold))))
+   '(doom-modeline-lsp-error 
+     ((t (:inherit error :weight bold))))
+   
+   ;; 项目名称
+   '(doom-modeline-project-dir 
+     ((t (:inherit font-lock-constant-face :weight semi-bold))))))
+
+;; 应用视觉增强
+(add-hook 'doom-modeline-mode-hook #'mcg/enhance-modeline-faces)
+
+;; ============================================================
+;; 类似 neo-emacs 的箭头效果配置
+;; ============================================================
+
+;; 增强 mode-line 的边框效果，模拟箭头视觉
+(defun mcg/enhance-modeline-appearance ()
+  "增强 modeline 外观，使其更像 neo-emacs 风格"
+  (custom-set-faces
+   ;; 更明显的边框，创造箭头般的视觉效果
+   '(mode-line
+     ((t (:box (:line-width 6 :style flat-button)
+          :overline nil
+          :underline nil))))
+   '(mode-line-inactive
+     ((t (:box (:line-width 6 :style flat-button)
+          :overline nil
+          :underline nil))))
+   
+   ;; 增强 doom-modeline-bar 的视觉效果（左侧状态指示器）
+   '(doom-modeline-bar
+     ((t (:inherit doom-modeline-project-dir :weight bold))))
+   
+   ;; 使 evil 状态更明显（如果使用 evil-mode）
+   '(doom-modeline-evil-normal-state
+     ((t (:inherit font-lock-builtin-face :weight bold))))
+   '(doom-modeline-evil-insert-state
+     ((t (:inherit font-lock-keyword-face :weight bold))))
+   '(doom-modeline-evil-visual-state
+     ((t (:inherit font-lock-variable-name-face :weight bold))))
+   '(doom-modeline-evil-replace-state
+     ((t (:inherit font-lock-type-face :weight bold))))
+   '(doom-modeline-evil-operator-state
+     ((t (:inherit font-lock-function-name-face :weight bold))))
+   '(doom-modeline-evil-emacs-state
+     ((t (:inherit font-lock-constant-face :weight bold))))))
+
+(add-hook 'doom-modeline-mode-hook #'mcg/enhance-modeline-appearance)
+
+;; ============================================================
+;; 智能显示切换 - 根据窗口大小自动调整
+;; ============================================================
+
+(defvar mcg/modeline-compact-threshold 100
+  "窗口宽度小于此值时启用紧凑模式")
+
+(defun mcg/modeline-adapt-to-window-size ()
+  "根据窗口大小调整modeline显示"
+  (let ((width (window-total-width)))
+    (if (< width mcg/modeline-compact-threshold)
+        (progn
+          ;; 紧凑模式
+          (setq doom-modeline-buffer-file-name-style 'file-name
+                doom-modeline-vcs-max-length 10
+                doom-modeline-time nil))
+      ;; 完整模式
+      (setq doom-modeline-buffer-file-name-style 'truncate-upto-project
+            doom-modeline-vcs-max-length 15
+            doom-modeline-time t))))
+
+;; 窗口配置变化时自动调整
+(add-hook 'window-configuration-change-hook #'mcg/modeline-adapt-to-window-size)
+
+;; ============================================================
+;; 性能优化 - 智能更新
+;; ============================================================
+
+;; 减少不必要的更新
+(defun mcg/optimize-modeline-update ()
+  "优化modeline更新频率"
+  ;; 仅在实际变化时更新
+  (setq doom-modeline-update-interval 0.3)  ; 300ms更新间隔
+  
+  ;; 非活动窗口减少更新
+  (setq inhibit-compacting-font-caches t))  ; 减少字体缓存压缩
+
+(mcg/optimize-modeline-update)
+
+;; ============================================================
+;; 自定义段落 - 额外的信息显示
+;; ============================================================
+
+;; 显示当前位置百分比的优雅指示器
+(doom-modeline-def-segment mcg/buffer-position-custom
+  "A more elegant buffer position indicator with percentage."
+  (concat
+   (propertize
+    (format-mode-line '("" mode-line-percent-position))
+    'face 'doom-modeline-buffer-minor-mode
+    'help-echo "Buffer position")
+   " "
+   (propertize
+    (format "%d:%d" (line-number-at-pos) (current-column))
+    'face 'doom-modeline-buffer-minor-mode
+    'help-echo "Line:Column")))
+
+;; 增强的文件大小显示
+(doom-modeline-def-segment mcg/buffer-size-custom
+  "Display buffer size in a modern format."
+  (when (and buffer-file-name (not (file-remote-p buffer-file-name)))
+    (let ((size (buffer-size)))
+      (propertize
+       (cond
+        ((> size 1048576) (format "%.1fM" (/ size 1048576.0)))
+        ((> size 1024) (format "%.1fK" (/ size 1024.0)))
+        (t (format "%dB" size)))
+       'face 'doom-modeline-buffer-minor-mode
+       'help-echo (format "Buffer size: %d bytes" size)))))
+
+;; 优雅的文件类型指示器
+(doom-modeline-def-segment mcg/file-type-custom
+  "Show file type with icon in a modern way."
+  (when buffer-file-name
+    (concat
+     " "
+     (if-let ((type (file-name-extension buffer-file-name)))
+         (propertize
+          (upcase type)
+          'face 'doom-modeline-buffer-minor-mode
+          'help-echo (format "File type: %s" type))
+       ""))))
+
+;; 当前函数/类名显示（使用which-function-mode）
+(doom-modeline-def-segment mcg/which-function-custom
+  "Display current function name elegantly."
+  (when (and (bound-and-true-p which-function-mode)
+             which-func-mode)
+    (let ((current-func (which-function)))
+      (when (and current-func (not (string= current-func "n/a")))
+        (propertize
+         (concat " ⊢ " (truncate-string-to-width current-func 30 nil nil "…"))
+         'face 'font-lock-function-name-face
+         'help-echo (format "Current function: %s" current-func))))))
+
+;; ============================================================
+;; 智能modeline布局系统
+;; ============================================================
+
+(defvar mcg/modeline-format-alist
+  '((minimal . ((bar workspace-name window-number modals matches buffer-info)
+                (vcs)))
+    (balanced . ((bar workspace-name window-number modals matches buffer-info remote-host)
+                 (misc-info minor-modes check vcs)))
+    (maximal . ((bar workspace-name window-number modals matches buffer-info-simple buffer-directory remote-host)
+                (major-mode process mcg/which-function-custom vcs check misc-info minor-modes input-method buffer-position-custom word-count parrot selection-info))))
+  "Predefined modeline layouts for different use cases.")
+
+(defvar mcg/current-modeline-style 'balanced
+  "Current modeline style.")
+
+(defun mcg/switch-modeline-style (style)
+  "Switch to a predefined modeline STYLE."
+  (interactive
+   (list (intern (completing-read "Modeline style: "
+                                  '("minimal" "balanced" "maximal")
+                                  nil t))))
+  (setq mcg/current-modeline-style style)
+  (let ((format (alist-get style mcg/modeline-format-alist)))
+    (when format
+      (doom-modeline-set-modeline style t)
+      (message "Switched to %s modeline style" style))))
+
+;; 定义自定义modeline布局
+(doom-modeline-def-modeline 'minimal
+  '(bar workspace-name window-number modals matches buffer-info remote-host)
+  '(vcs check))
+
+(doom-modeline-def-modeline 'balanced
+  '(bar workspace-name window-number modals matches buffer-info remote-host)
+  '(misc-info minor-modes check vcs))
+
+(doom-modeline-def-modeline 'maximal
+  '(bar workspace-name window-number modals matches buffer-info buffer-position remote-host)
+  '(major-mode process vcs check misc-info battery time))
 
 ;; ============================================================
 ;; 主题加载助手
@@ -353,6 +639,84 @@
             (princ "\n"))))))) 
 
 (global-set-key (kbd "C-c t i") #'mcg/show-theme-settings)
+
+;; ============================================================
+;; 快捷键绑定 - 现代化modeline管理
+;; ============================================================
+
+(global-set-key (kbd "C-c m s") #'mcg/switch-modeline-style)
+(global-set-key (kbd "C-c m r") #'doom-modeline-mode)  ; 重启modeline
+(global-set-key (kbd "C-c m i") #'mcg/show-modeline-info)
+
+;; ============================================================
+;; Modeline信息面板
+;; ============================================================
+
+(defun mcg/show-modeline-info ()
+  "显示当前modeline配置信息"
+  (interactive)
+  (let ((buf (get-buffer-create "*Modeline Info*")))
+    (with-current-buffer buf
+      (erase-buffer)
+      (insert (propertize "═══════════════════════════════════════════════\n" 'face 'bold))
+      (insert (propertize " Doom Modeline 配置信息\n" 
+                          'face '(:foreground "#51afef" :weight bold :height 1.2)))
+      (insert (propertize "═══════════════════════════════════════════════\n\n" 'face 'bold))
+      
+      ;; 基础设置
+      (insert (propertize "【基础设置】\n" 'face '(:foreground "#98be65" :weight bold)))
+      (insert (format "  高度: %s\n" doom-modeline-height))
+      (insert (format "  状态条宽度: %s\n" doom-modeline-bar-width))
+      (insert (format "  文件名样式: %s\n" doom-modeline-buffer-file-name-style))
+      (insert "\n")
+      
+      ;; 功能开关
+      (insert (propertize "【功能开关】\n" 'face '(:foreground "#c678dd" :weight bold)))
+      (insert (format "  图标: %s\n" (if doom-modeline-icon "✓ 启用" "✗ 禁用")))
+      (insert (format "  LSP: %s\n" (if doom-modeline-lsp "✓ 启用" "✗ 禁用")))
+      (insert (format "  Git: %s\n" (if (bound-and-true-p vc-mode) "✓ 启用" "✗ 禁用")))
+      (insert (format "  项目检测: %s\n" doom-modeline-project-detection))
+      (insert (format "  环境版本: %s\n" (if doom-modeline-env-version "✓ 启用" "✗ 禁用")))
+      (insert "\n")
+      
+      ;; 性能设置
+      (insert (propertize "【性能设置】\n" 'face '(:foreground "#ECBE7B" :weight bold)))
+      (insert (format "  更新间隔: %s ms\n" (* doom-modeline-update-interval 1000)))
+      (insert (format "  Minor modes: %s\n" (if doom-modeline-minor-modes "显示" "隐藏")))
+      (insert (format "  字数统计: %s\n" (if doom-modeline-enable-word-count "启用" "禁用")))
+      (insert "\n")
+      
+      ;; 当前样式
+      (insert (propertize "【当前样式】\n" 'face '(:foreground "#46D9FF" :weight bold)))
+      (insert (format "  Modeline样式: %s\n" mcg/current-modeline-style))
+      (insert (format "  主题: %s\n" (car custom-enabled-themes)))
+      (insert "\n")
+      
+      ;; 快捷键
+      (insert (propertize "【快捷键】\n" 'face '(:foreground "#ff6c6b" :weight bold)))
+      (insert "  C-c m s  - 切换modeline样式\n")
+      (insert "  C-c m r  - 重启modeline\n")
+      (insert "  C-c m i  - 显示此信息\n")
+      (insert "  C-c t s  - 主题选择器\n")
+      (insert "  C-c t i  - 主题信息\n")
+      (insert "\n")
+      
+      (insert (propertize "═══════════════════════════════════════════════\n" 'face 'bold))
+      
+      (special-mode)
+      (goto-char (point-min)))
+    (display-buffer buf)))
+
+;; ============================================================
+;; 启动消息
+;; ============================================================
+
+(defun mcg/modeline-startup-message ()
+  "显示modeline配置加载成功消息"
+  (message "✓ Doom Modeline 现代化配置已加载 | 按 C-c m i 查看详情"))
+
+;; 延迟显示启动消息
+(run-with-timer 2 nil #'mcg/modeline-startup-message)
 
 #+END_SRC
 
