@@ -13,16 +13,17 @@
 | `plugins/markdown.lua` | Markdown 工具（表格/图片/TOC） | 4 个 |
 | `plugins/ui-enhanced.lua` | 现代化 UI 主题 | 9 个 |
 | `plugins/frontend-enhanced.lua` | 前端开发增强 | 8 个 |
-| `plugins/backend-enhanced.lua` | 后端开发增强 | 7 个 |
+| `plugins/backend-enhanced.lua` | 后端开发增强 | 6 个 |
 
-**总计**: 28 个新插件
+**总计**: 27 个新插件
 
-**注意**：移除了与 AstroCommunity 重复的插件（8个）：
+**注意**：移除了与 AstroCommunity 重复的插件（9个）：
 - alpha-nvim (使用 Snacks Dashboard)
 - volar.nvim (pack.vue 已提供)
 - SchemaStore.nvim (pack.json 已提供)
 - zig.vim (pack.zig 已提供)
 - clangd_extensions.nvim (pack.cpp 已提供)
+- crates.nvim (pack.rust 已提供)
 - markdown-preview.nvim (pack.markdown 已提供)
 - todo-comments.nvim (editing-support 已提供)
 - nvim-treesitter-context (editing-support 已提供)
@@ -187,8 +188,10 @@ Content-Type: application/json
 - ✅ **Zig LSP + zig.vim** - 由 astrocommunity.pack.zig 提供
 
 #### Rust
-- ✅ **crates.nvim** - Cargo.toml 依赖管理
-- 快捷键：`<leader>cu`（更新crate）、`<leader>cH`（打开主页）
+- ✅ **Rust 工具链** - 由 astrocommunity.pack.rust 提供
+  - rust-analyzer LSP
+  - crates.nvim (Cargo.toml 依赖管理)
+  - rustaceanvim (Rust 工具集成)
 
 #### Go
 - ✅ **go.nvim** - 完整的 Go 工具链

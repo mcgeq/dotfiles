@@ -1,44 +1,14 @@
 -- 后端开发增强配置
 -- 提供更好的后端开发体验
--- 支持：Rust, Go, Python
+-- 支持：Go, Python
 
--- 注意：C/C++, Zig 支持已由 AstroNvim pack 提供
+-- 注意：以下语言支持已由 AstroNvim pack 提供
 --  - astrocommunity.pack.cpp (包含 clangd LSP)
 --  - astrocommunity.pack.zig (包含 zls LSP + zig.vim)
+--  - astrocommunity.pack.rust (包含 rust-analyzer + crates.nvim + rustaceanvim)
 
 ---@type LazySpec
 return {
-  -- ===== Rust 工具增强 =====
-  {
-    "Saecki/crates.nvim",
-    event = { "BufRead Cargo.toml" },
-    dependencies = { "nvim-lua/plenary.nvim" },
-    opts = {
-      popup = {
-        autofocus = true,
-        border = "rounded",
-        show_version_date = true,
-      },
-      null_ls = {
-        enabled = true,
-        name = "crates.nvim",
-      },
-      lsp = {
-        enabled = true,
-        actions = true,
-        completion = true,
-        hover = true,
-      },
-    },
-    keys = {
-      { "<leader>cu", function() require("crates").update_crate() end, desc = "Update crate" },
-      { "<leader>cU", function() require("crates").upgrade_crate() end, desc = "Upgrade crate" },
-      { "<leader>ca", function() require("crates").update_all_crates() end, desc = "Update all crates" },
-      { "<leader>cA", function() require("crates").upgrade_all_crates() end, desc = "Upgrade all crates" },
-      { "<leader>cH", function() require("crates").open_homepage() end, desc = "Open crate homepage" },
-      { "<leader>cD", function() require("crates").open_documentation() end, desc = "Open crate documentation" },
-    },
-  },
 
   -- ===== Go 工具增强 =====
   {
