@@ -22,7 +22,7 @@ require("lazy").setup({
   },
   
   -- ===== 导入配置模块 =====
-  { import = "community" }, -- 社区插件
+  { import = "community_v2" }, -- 社区插件（优化版，支持预设系统）
   { import = "plugins" }, -- 自定义插件
 } --[[@as LazySpec]], {
   -- ===== Lazy.nvim 全局配置 =====
