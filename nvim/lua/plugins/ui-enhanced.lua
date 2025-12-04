@@ -90,43 +90,8 @@ return {
     },
   },
 
-  -- ===== 启动画面美化 =====
-  {
-    "goolord/alpha-nvim",
-    enabled = false, -- 与 snacks dashboard 冲突，按需启用
-    event = "VimEnter",
-    opts = function()
-      local dashboard = require("alpha.themes.dashboard")
-      
-      -- 自定义 ASCII 艺术（可选）
-      dashboard.section.header.val = {
-        [[                                                     ]],
-        [[  ███╗   ██╗███████╗ ██████╗ ██╗   ██╗██╗███╗   ███╗ ]],
-        [[  ████╗  ██║██╔════╝██╔═══██╗██║   ██║██║████╗ ████║ ]],
-        [[  ██╔██╗ ██║█████╗  ██║   ██║██║   ██║██║██╔████╔██║ ]],
-        [[  ██║╚██╗██║██╔══╝  ██║   ██║╚██╗ ██╔╝██║██║╚██╔╝██║ ]],
-        [[  ██║ ╚████║███████╗╚██████╔╝ ╚████╔╝ ██║██║ ╚═╝ ██║ ]],
-        [[  ╚═╝  ╚═══╝╚══════╝ ╚═════╝   ╚═══╝  ╚═╝╚═╝     ╚═╝ ]],
-        [[                                                     ]],
-      }
-      
-      dashboard.section.buttons.val = {
-        dashboard.button("f", "  Find file", ":Telescope find_files <CR>"),
-        dashboard.button("n", "  New file", ":ene <BAR> startinsert <CR>"),
-        dashboard.button("r", "  Recent files", ":Telescope oldfiles <CR>"),
-        dashboard.button("p", "  Find project", ":Telescope projects <CR>"),
-        dashboard.button("c", "  Configuration", ":e $MYVIMRC <CR>"),
-        dashboard.button("q", "  Quit", ":qa<CR>"),
-      }
-      
-      return dashboard
-    end,
-    config = function(_, dashboard)
-      require("alpha").setup(dashboard.opts)
-    end,
-  },
-
-  -- ===== 更好的通知系统 =====
+  -- ===== 通知系统 =====
+  -- 注意：使用 Snacks Dashboard 作为启动画面（已在 snacks.nvim.lua 配置）
   {
     "rcarriga/nvim-notify",
     opts = {
