@@ -14,6 +14,7 @@ M.categories = {
   lsp = "LSP",
   debug = "Debugging",
   terminal = "Terminal",
+  rust = "Rust Development",
   util = "Utilities",
 }
 
@@ -56,6 +57,19 @@ M.edit = {
 -- 终端操作
 M.terminal = {
   ["<Esc><Esc>"] = { cmd = "<C-\\><C-n>", desc = "Exit terminal mode", modes = { "t" } },
+}
+
+-- Rust 开发 (crates.nvim)
+-- 注意：插件由 astrocommunity.pack.rust 提供
+-- 使用 <leader>R 前缀避免与 <leader>c (close buffer) 冲突
+M.rust = {
+  ["<leader>Ru"] = { func = function() require("crates").update_crate() end, desc = "Update crate" },
+  ["<leader>RU"] = { func = function() require("crates").upgrade_crate() end, desc = "Upgrade crate" },
+  ["<leader>Ra"] = { func = function() require("crates").update_all_crates() end, desc = "Update all crates" },
+  ["<leader>RA"] = { func = function() require("crates").upgrade_all_crates() end, desc = "Upgrade all crates" },
+  ["<leader>Rh"] = { func = function() require("crates").open_homepage() end, desc = "Open crate homepage" },
+  ["<leader>Rd"] = { func = function() require("crates").open_documentation() end, desc = "Open crate docs" },
+  ["<leader>Rr"] = { func = function() require("crates").open_repository() end, desc = "Open crate repository" },
 }
 
 --- 构建 AstroCore 兼容的 mappings 表

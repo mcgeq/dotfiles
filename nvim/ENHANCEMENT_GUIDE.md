@@ -14,6 +14,7 @@
 | `plugins/ui-enhanced.lua` | 现代化 UI 主题 | 9 个 |
 | `plugins/frontend-enhanced.lua` | 前端开发增强 | 8 个 |
 | `plugins/backend-enhanced.lua` | 后端开发增强 | 6 个 |
+| `config/keymaps.lua` | 统一的快捷键管理（含 Rust） | - |
 
 **总计**: 27 个新插件
 
@@ -192,6 +193,14 @@ Content-Type: application/json
   - rust-analyzer LSP
   - crates.nvim (Cargo.toml 依赖管理)
   - rustaceanvim (Rust 工具集成)
+- ✅ **crates.nvim 快捷键** - 自定义快捷键配置（使用 `<leader>R` 前缀，避免与 `<leader>c` 冲突）
+  - `<leader>Ru` - 更新 crate
+  - `<leader>RU` - 升级 crate
+  - `<leader>Ra` - 更新所有 crates
+  - `<leader>RA` - 升级所有 crates
+  - `<leader>Rh` - 打开 crate 主页
+  - `<leader>Rd` - 打开 crate 文档
+  - `<leader>Rr` - 打开 crate 仓库
 
 #### Go
 - ✅ **go.nvim** - 完整的 Go 工具链
