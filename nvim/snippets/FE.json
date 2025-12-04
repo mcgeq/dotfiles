@@ -188,7 +188,7 @@
     "description": "Creates and returns a new Promise in the standard ES7 syntax",
     "scope": "typescript,typescriptreact,javascript,javascriptreact"
   },
-  "------------------------------------------------------------------------": {
+  "separator-console": {
     "body": "console.xxx()"
   },
   "Console Assert": {
@@ -251,7 +251,7 @@
     "body": "console.info(${1:object})",
     "description": "Displays a message in the console but also displays a blue information icon along with the logged message"
   },
-  "------------------------------------------------------------------------": {
+  "separator-react-hooks": {
     "body": "react hooks"
   },
   "typescriptReactFunctionalExportComponent": {
@@ -375,7 +375,7 @@
       "const dispatch = useDispatch(${1:function})"
     ]
   },
-  "------------------------------------------------------------------------": {
+  "separator-jest": {
     "body": "jest - test"
   },
   "describeBlock": {
@@ -446,7 +446,7 @@
     "description": "Testing `afterAll` block",
     "scope": "typescript,typescriptreact,javascript,javascriptreact"
   },
-  "------------------------------------------------------------------------": {
+  "separator-nextjs": {
     "body": "Next.js"
   },
   "page": {
