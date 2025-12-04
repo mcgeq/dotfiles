@@ -10,19 +10,22 @@
 
 | 文件 | 功能 | 插件数量 |
 |------|------|----------|
-| `plugins/markdown.lua` | Markdown 完整工具链 | 5 个 |
-| `plugins/ui-enhanced.lua` | 现代化 UI 主题 | 11 个 |
+| `plugins/markdown.lua` | Markdown 工具（表格/图片/TOC） | 4 个 |
+| `plugins/ui-enhanced.lua` | 现代化 UI 主题 | 9 个 |
 | `plugins/frontend-enhanced.lua` | 前端开发增强 | 8 个 |
 | `plugins/backend-enhanced.lua` | 后端开发增强 | 7 个 |
 
-**总计**: 31 个新插件
+**总计**: 28 个新插件
 
-**注意**：移除了与 AstroNvim pack 重复的插件：
+**注意**：移除了与 AstroCommunity 重复的插件（8个）：
 - alpha-nvim (使用 Snacks Dashboard)
 - volar.nvim (pack.vue 已提供)
 - SchemaStore.nvim (pack.json 已提供)
 - zig.vim (pack.zig 已提供)
 - clangd_extensions.nvim (pack.cpp 已提供)
+- markdown-preview.nvim (pack.markdown 已提供)
+- todo-comments.nvim (editing-support 已提供)
+- nvim-treesitter-context (editing-support 已提供)
 
 ---
 
@@ -30,21 +33,22 @@
 
 ### 1. ⭐ Markdown 写作增强
 
-#### 新增功能
-- ✅ **实时预览** - markdown-preview.nvim（浏览器预览）
+#### 核心功能
+- ✅ **实时预览** - 由 astrocommunity.markdown-and-latex.markdown-preview-nvim 提供
 - ✅ **表格编辑** - vim-table-mode（快速创建表格）
 - ✅ **图片粘贴** - img-clip.nvim（剪贴板图片直接粘贴）
 - ✅ **目录生成** - vim-markdown-toc（自动生成TOC）
-- ✅ **标题导航** - headlines.nvim（美化标题显示）
+- ✅ **标题美化** - headlines.nvim（视觉增强）
 
 #### 快捷键
 ```vim
-<leader>mp  " Markdown Preview Toggle
-<leader>ms  " Markdown Preview Start
-<leader>mx  " Markdown Preview Stop
 <leader>mt  " Toggle Table Mode
 <leader>mi  " Paste Image from clipboard
 <leader>mT  " Generate TOC (GitHub style)
+
+" Markdown Preview (由 AstroCommunity 提供)
+:MarkdownPreview       " 启动预览
+:MarkdownPreviewStop   " 停止预览
 ```
 
 #### 使用示例
@@ -87,16 +91,16 @@
 #### UI 增强
 - ✅ **通知系统** - nvim-notify（更漂亮的通知）
 - ✅ **平滑滚动** - neoscroll.nvim（流畅滚动体验）
-- ✅ **缩进线** - 增强版彩虹缩进
-- ✅ **TODO 高亮** - todo-comments.nvim
-- ✅ **上下文显示** - treesitter-context
+- ✅ **增强版彩虹缩进线** - indent-blankline
+- ✅ **TODO 高亮** - 由 astrocommunity.editing-support.todo-comments-nvim 提供
+- ✅ **上下文显示** - 由 astrocommunity.editing-support.nvim-treesitter-context 提供
 
 #### 使用示例
 ```vim
 " 查看所有主题
 <leader>uC  " 打开主题选择器
 
-" TODO 注释会自动高亮
+" TODO 注释会自动高亮（由 AstroCommunity 提供）
 // TODO: 这是一个待办事项
 // FIXME: 需要修复
 // NOTE: 重要说明

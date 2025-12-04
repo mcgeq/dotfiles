@@ -1,56 +1,12 @@
 -- Markdown 增强配置
 -- 提供完整的 Markdown 写作和预览体验
 
+-- 注意：Markdown 预览已由 AstroCommunity 提供
+--  - astrocommunity.markdown-and-latex.markdown-preview-nvim
+-- 如需自定义配置，可以在 polish.lua 中覆盖 vim.g.mkdp_* 选项
+
 ---@type LazySpec
 return {
-  -- ===== Markdown 预览 =====
-  {
-    "iamcco/markdown-preview.nvim",
-    ft = "markdown",
-    build = function()
-      vim.fn["mkdp#util#install"]()
-    end,
-    keys = {
-      { "<leader>mp", "<cmd>MarkdownPreviewToggle<cr>", desc = "Markdown Preview Toggle" },
-      { "<leader>ms", "<cmd>MarkdownPreview<cr>", desc = "Markdown Preview Start" },
-      { "<leader>mx", "<cmd>MarkdownPreviewStop<cr>", desc = "Markdown Preview Stop" },
-    },
-    config = function()
-      vim.g.mkdp_auto_start = 0
-      vim.g.mkdp_auto_close = 1
-      vim.g.mkdp_refresh_slow = 0
-      vim.g.mkdp_command_for_global = 0
-      vim.g.mkdp_open_to_the_world = 0
-      vim.g.mkdp_open_ip = ""
-      vim.g.mkdp_browser = "" -- 使用系统默认浏览器
-      vim.g.mkdp_echo_preview_url = 1
-      vim.g.mkdp_browserfunc = ""
-      
-      -- 主题：github(亮), dark(暗)
-      vim.g.mkdp_theme = "dark"
-      
-      -- 预览选项
-      vim.g.mkdp_preview_options = {
-        mkit = {},
-        katex = {},
-        uml = {},
-        maid = {},
-        disable_sync_scroll = 0,
-        sync_scroll_type = "middle",
-        hide_yaml_meta = 1,
-        sequence_diagrams = {},
-        flowchart_diagrams = {},
-        content_editable = false,
-        disable_filename = 0,
-        toc = {},
-      }
-      
-      -- 端口范围
-      vim.g.mkdp_port = ""
-      vim.g.mkdp_page_title = "「${name}」"
-      vim.g.mkdp_filetypes = { "markdown" }
-    end,
-  },
 
   -- ===== Markdown 表格助手 =====
   {
@@ -93,7 +49,7 @@ return {
     },
   },
 
-  -- ===== Markdown 标题导航 =====
+  -- ===== Markdown 标题美化 =====
   {
     "lukas-reineke/headlines.nvim",
     ft = "markdown",
@@ -108,9 +64,7 @@ return {
           "Headline5",
           "Headline6",
         },
-        fat_headlines = true,
-        fat_headline_upper_string = "▃",
-        fat_headline_lower_string = "🬂",
+        fat_headlines = false, -- 禁用装饰线，只保留标题高亮
       },
     },
   },
