@@ -13,11 +13,16 @@
 | `plugins/markdown.lua` | Markdown 完整工具链 | 5 个 |
 | `plugins/ui-enhanced.lua` | 现代化 UI 主题 | 11 个 |
 | `plugins/frontend-enhanced.lua` | 前端开发增强 | 8 个 |
-| `plugins/backend-enhanced.lua` | 后端开发增强 | 9 个 |
+| `plugins/backend-enhanced.lua` | 后端开发增强 | 7 个 |
 
-**总计**: 33 个新插件
+**总计**: 31 个新插件
 
-**注意**：移除了与 AstroNvim pack 重复的插件（alpha-nvim, volar.nvim, SchemaStore.nvim）
+**注意**：移除了与 AstroNvim pack 重复的插件：
+- alpha-nvim (使用 Snacks Dashboard)
+- volar.nvim (pack.vue 已提供)
+- SchemaStore.nvim (pack.json 已提供)
+- zig.vim (pack.zig 已提供)
+- clangd_extensions.nvim (pack.cpp 已提供)
 
 ---
 
@@ -172,12 +177,10 @@ Content-Type: application/json
 ### 4. 🔧 后端开发增强
 
 #### C/C++
-- ✅ **clangd_extensions.nvim** - Clangd LSP 增强
-- 快捷键：`<leader>ch`（切换源文件/头文件）
+- ✅ **Clangd LSP** - 由 astrocommunity.pack.cpp 提供
 
 #### Zig
-- ✅ **zig.vim** - Zig 语言支持
-- 自动格式化和语法高亮
+- ✅ **Zig LSP + zig.vim** - 由 astrocommunity.pack.zig 提供
 
 #### Rust
 - ✅ **crates.nvim** - Cargo.toml 依赖管理

@@ -1,24 +1,13 @@
 -- 后端开发增强配置
 -- 提供更好的后端开发体验
--- 支持：Rust, Go, Python, C/C++, Zig
+-- 支持：Rust, Go, Python
+
+-- 注意：C/C++, Zig 支持已由 AstroNvim pack 提供
+--  - astrocommunity.pack.cpp (包含 clangd LSP)
+--  - astrocommunity.pack.zig (包含 zls LSP + zig.vim)
 
 ---@type LazySpec
 return {
-  -- ===== C/C++ 工具增强 =====
-  {
-    "p00f/clangd_extensions.nvim",
-    ft = { "c", "cpp", "objc", "objcpp" },
-    opts = {},
-    keys = {
-      { "<leader>ch", "<cmd>ClangdSwitchSourceHeader<cr>", desc = "Switch Source/Header" },
-    },
-  },
-
-  -- ===== Zig 工具 =====
-  {
-    "ziglang/zig.vim",
-    ft = "zig",
-  },
   -- ===== Rust 工具增强 =====
   {
     "Saecki/crates.nvim",
