@@ -7,6 +7,21 @@
 --  - astrocommunity.pack.zig (包含 zls LSP + zig.vim)
 --  - astrocommunity.pack.rust (包含 rust-analyzer + crates.nvim + rustaceanvim)
 
+-- 读取预设，仅在 backend 或 fullstack 预设时加载（带错误处理）
+local preset = "fullstack"
+local ok, presets = pcall(require, "config.presets")
+if ok and presets and presets.read_preset_file then
+  local success, result = pcall(presets.read_preset_file)
+  if success and result then
+    preset = result
+  end
+end
+local should_load = preset == "backend" or preset == "fullstack"
+
+if not should_load then
+  return {}
+end
+
 ---@type LazySpec
 return {
 

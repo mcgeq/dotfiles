@@ -60,7 +60,7 @@ return {
         sidescrolloff = 8, -- 水平滚动时保持 8 列上下文
 
         -- 性能优化
-        updatetime = 200, -- 更快的 CursorHold 触发（ms）
+        updatetime = 250, -- CursorHold 触发时间（ms）- 平衡性能和响应速度
         timeoutlen = 300, -- 快捷键等待时间（ms）
         
         -- 搜索

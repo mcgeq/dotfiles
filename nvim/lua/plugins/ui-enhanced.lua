@@ -4,11 +4,14 @@
 ---@type LazySpec
 return {
   -- ===== 现代主题集合 =====
-  -- Catppuccin - 柔和优雅
+  -- 注意：只有当前使用的主题需要 lazy = false
+  -- 其他主题设置为 lazy = true 以提升启动速度
+  
+  -- Catppuccin - 柔和优雅（备用主题，lazy 加载）
   {
     "catppuccin/nvim",
     name = "catppuccin",
-    lazy = false,
+    lazy = true, -- 优化：按需加载
     priority = 1000,
     opts = {
       flavour = "mocha", -- latte, frappe, macchiato, mocha
@@ -40,10 +43,10 @@ return {
     },
   },
 
-  -- Tokyo Night - 清爽现代
+  -- Tokyo Night - 清爽现代（备用主题，lazy 加载）
   {
     "folke/tokyonight.nvim",
-    lazy = false,
+    lazy = true, -- 优化：按需加载
     priority = 1000,
     opts = {
       style = "night", -- storm, moon, night, day
@@ -66,10 +69,10 @@ return {
     },
   },
 
-  -- Kanagawa - 日式美学
+  -- Kanagawa - 日式美学（备用主题，lazy 加载）
   {
     "rebelot/kanagawa.nvim",
-    lazy = false,
+    lazy = true, -- 优化：按需加载
     priority = 1000,
     opts = {
       compile = false,

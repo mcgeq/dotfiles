@@ -6,20 +6,51 @@
 return {
   "nvim-treesitter/nvim-treesitter",
   opts = function(_, opts)
-    -- ===== 自动安装的解析器 =====
+    -- ===== 自动安装的解析器（根据预设动态配置）=====
     -- 注意：Windows 需要 C/C++ 编译器才能安装解析器
     -- 如果遇到编译错误，请安装 Visual Studio Build Tools 或 MinGW
     
-    opts.ensure_installed = {
-      -- ===== 核心 =====
+    -- 读取当前预设（带错误处理）
+    local preset = "fullstack"
+    local ok, presets = pcall(require, "config.presets")
+    if ok and presets and presets.read_preset_file then
+      local success, result = pcall(presets.read_preset_file)
+      if success and result then
+        preset = result
+      end
+    end
+    
+    -- 核心解析器（所有预设都需要）
+    local core_parsers = {
       "lua",
       "vim",
       "vimdoc",
       "query",
       "regex",
       "comment",
-      
-      -- ===== 前端开发 =====
+      "markdown",
+      "markdown_inline",
+    }
+    
+    -- 配置和脚本解析器（几乎所有预设都需要）
+    local config_parsers = {
+      "bash",
+      "yaml",
+      "toml",
+      "json",
+      "jsonc",
+    }
+    
+    -- Git 相关解析器
+    local git_parsers = {
+      "git_config",
+      "gitignore",
+      "gitcommit",
+      "git_rebase",
+    }
+    
+    -- 前端解析器
+    local frontend_parsers = {
       "html",
       "css",
       "scss",
@@ -27,10 +58,10 @@ return {
       "typescript",
       "tsx",
       "vue",
-      "json",
-      "jsonc",
-      
-      -- ===== 后端开发 =====
+    }
+    
+    -- 后端解析器
+    local backend_parsers = {
       "rust",
       "go",
       "python",
@@ -38,29 +69,45 @@ return {
       "cpp",
       "zig",
       "cmake",
-      
-      -- ===== 脚本和配置 =====
-      "bash",
-      "yaml",
-      "toml",
-      "markdown",
-      "markdown_inline",
-      
-      -- ===== DevOps =====
-      "dockerfile",
-      "git_config",
-      "gitignore",
-      "gitcommit",
-      "git_rebase",
-      
-      -- ===== 其他可选 =====
-      -- "java",
-      -- "kotlin",
-      -- "swift",
-      -- "xml",
-      -- "sql",
-      -- "graphql",
     }
+    
+    -- DevOps 解析器
+    local devops_parsers = {
+      "dockerfile",
+    }
+    
+    -- 根据预设组合解析器列表
+    local parsers = vim.deepcopy(core_parsers)
+    
+    if preset == "minimal" then
+      -- 最小化预设：只安装核心解析器
+      vim.list_extend(parsers, config_parsers)
+    elseif preset == "frontend" then
+      -- 前端预设：核心 + 配置 + Git + 前端
+      vim.list_extend(parsers, config_parsers)
+      vim.list_extend(parsers, git_parsers)
+      vim.list_extend(parsers, frontend_parsers)
+      vim.list_extend(parsers, devops_parsers)
+    elseif preset == "backend" then
+      -- 后端预设：核心 + 配置 + Git + 后端
+      vim.list_extend(parsers, config_parsers)
+      vim.list_extend(parsers, git_parsers)
+      vim.list_extend(parsers, backend_parsers)
+      vim.list_extend(parsers, devops_parsers)
+    elseif preset == "performance" then
+      -- 性能预设：核心 + 配置
+      vim.list_extend(parsers, config_parsers)
+      vim.list_extend(parsers, git_parsers)
+    else
+      -- fullstack 或其他：安装所有
+      vim.list_extend(parsers, config_parsers)
+      vim.list_extend(parsers, git_parsers)
+      vim.list_extend(parsers, frontend_parsers)
+      vim.list_extend(parsers, backend_parsers)
+      vim.list_extend(parsers, devops_parsers)
+    end
+    
+    opts.ensure_installed = parsers
     
     -- ===== 功能配置 =====
     opts.highlight = {

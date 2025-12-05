@@ -35,8 +35,7 @@ return {
         },
       },
       disabled = { -- disable formatting capabilities for the listed language servers
-        -- disable lua_ls formatting capability if you want to use StyLua to format your lua code
-        -- "lua_ls",
+        "lua_ls", -- 禁用 lua_ls 格式化，使用 stylua 代替
         "biome", -- 禁用 biome LSP 格式化，使用 conform.nvim 代替（支持 --unsafe）
       },
       timeout_ms = 1000, -- default format timeout

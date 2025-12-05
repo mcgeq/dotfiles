@@ -33,7 +33,7 @@ return {
     -- 保存时自动格式化
     format_on_save = {
       -- 这些选项将传递给 conform.format()
-      timeout_ms = 3000,
+      timeout_ms = 1000, -- 优化：减少超时时间，提升响应速度
       lsp_fallback = true,
     },
   },

@@ -1,6 +1,21 @@
 -- 前端开发增强配置
 -- 提供更好的前端开发体验
 
+-- 读取预设，仅在 frontend 或 fullstack 预设时加载（带错误处理）
+local preset = "fullstack"
+local ok, presets = pcall(require, "config.presets")
+if ok and presets and presets.read_preset_file then
+  local success, result = pcall(presets.read_preset_file)
+  if success and result then
+    preset = result
+  end
+end
+local should_load = preset == "frontend" or preset == "fullstack"
+
+if not should_load then
+  return {}
+end
+
 ---@type LazySpec
 return {
   -- ===== TypeScript 工具增强 =====
