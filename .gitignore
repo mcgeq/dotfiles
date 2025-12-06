@@ -5,6 +5,8 @@ vimrc/pack/mcge/start/ultisnips/tags
 
 emacs/site-lisp/config/*
 emacs/config-org/**/*.md
+emacs/custom.el
+emacs/site-lisp/packages-lock.el
 
 # nushell
 nushell/history.*

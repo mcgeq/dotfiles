@@ -77,6 +77,9 @@
 (require 'init-loadpath)   ; Load-path管理
 (require 'init-verify)     ; 配置验证
 
+;; 🆕 加载模块声明系统（可选，用于声明式配置）
+(require 'init-modules)    ; 模块声明系统
+
 ;; 核心常量和函数
 (require 'init-font)       ; 字体配置
 (require 'init-function)   ; 自定义函数
@@ -86,6 +89,7 @@
 (mcg-register-loaded-module 'init-paths)
 (mcg-register-loaded-module 'init-loadpath)
 (mcg-register-loaded-module 'init-verify)
+(mcg-register-loaded-module 'init-modules)    ; 🆕
 (mcg-register-loaded-module 'init-font)
 (mcg-register-loaded-module 'init-function)
 (mcg-register-loaded-module 'init-builtin)

@@ -69,22 +69,32 @@ LSP integration, and productivity features.
 
 *** Step 2: Initialize Git Submodules
     #+begin_src bash
+    # Using make (recommended)
+    make init
+    
+    # Or directly
     git submodule update --init --recursive
     #+end_src
 
-*** Step 3: Generate Configuration
+*** Step 3: Create User Configuration
+    #+begin_src bash
+    # Copy template to custom.el
+    cp custom-example.el custom.el
+    
+    # Edit your settings (optional)
+    # emacs custom.el
+    #+end_src
+
+*** Step 4: Generate Configuration
     #+begin_src bash
     # Generate Emacs Lisp from Org files
     make generate
-    
-    # Or on Windows (PowerShell)
-    make -f Makefile generate
     #+end_src
     
     This compiles the Org Mode files in =config-org/= to Emacs Lisp files in
     =site-lisp/config/=.
 
-*** Step 4: Link to Emacs
+*** Step 5: Link to Emacs
 
 **** Option A: Symlink (Recommended)
      #+begin_src bash
@@ -101,7 +111,7 @@ LSP integration, and productivity features.
      (load-file "~/dotfiles/emacs/site-lisp/config/init.el")
      #+end_src
 
-*** Step 5: First Launch
+*** Step 6: First Launch
     #+begin_src bash
     emacs
     #+end_src
@@ -113,14 +123,18 @@ LSP integration, and productivity features.
    If you encounter issues:
    
    #+begin_src bash
-   # Clean generated files
-   make clean
+   # Check package status
+   make st
    
-   # Regenerate
+   # Clean and regenerate
+   make clean
    make generate
    
    # Check Emacs version
    emacs --version  # Should be 28+ (29+ recommended)
+   
+   # View all commands
+   make h
    #+end_src
 
 * 🗂️ Configuration Structure
@@ -164,16 +178,54 @@ emacs/
 
 ** Makefile Commands
 
-   #+begin_src bash
-   # Generate all configuration files
-   make generate
-   
-   # Clean generated files
-   make clean
-   
-   # Generate and byte-compile (optional)
-   make generate-elc
-   #+end_src
+*** Configuration
+    #+begin_src bash
+    make generate        # Generate config from Org files
+    make clean           # Clean generated files
+    make generate-elc    # Generate and byte-compile
+    #+end_src
+
+*** Package Management
+    #+begin_src bash
+    make init            # Initialize Git Submodules (first time)
+    make st              # Check package status (with remote check)
+    make up              # Update packages safely (with branch check)
+    make lock-packages   # Lock current package versions
+    make restore-packages # Restore to locked versions
+    #+end_src
+
+*** Quick Reference
+    #+begin_src bash
+    make h               # Show help (all commands)
+    #+end_src
+
+    Shortcuts: =init=, =st=, =up=, =h=
+
+** User Configuration
+
+*** Custom Settings
+    All user-specific settings should go in =custom.el= (automatically loaded):
+
+    #+begin_src emacs-lisp
+    ;; Copy template
+    ;; make init
+    ;; cp custom-example.el custom.el
+    
+    ;; Then edit custom.el with your settings:
+    
+    ;; Module declarations (optional, declarative style)
+    (mcg! 
+     :core                    ; Core modules
+     :ui doom-modeline        ; UI
+     :completion vertico embark
+     :lang lsp-bridge (rust lua typescript))
+    
+    ;; Custom settings
+    (setq mcg-theme 'doom-one)
+    (setq mcg-font-size 14)
+    #+end_src
+
+    Note: =custom.el= is gitignored (personal settings)
 
 ** Module System
 
