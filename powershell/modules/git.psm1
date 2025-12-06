@@ -193,13 +193,13 @@ function Update-GitSubmoduleBranches {
     
     Write-Host "Step 2: Switching all submodules to main branch..." -ForegroundColor Cyan
     
+    # 使用 sh/bash 语法（git submodule foreach 使用 sh 执行）
     $branchChecks = $Branches | ForEach-Object {
-        "if (git show-ref --verify --quiet refs/remotes/origin/$_) { git checkout $_; exit 0; }"
-    } | Join-String -Separator " elseif "
+        "git show-ref --verify --quiet refs/remotes/origin/$_ && { git checkout $_ && exit 0; }"
+    } | Join-String -Separator " || "
     
     git submodule foreach "
-        $branchChecks
-        else { Write-Host '⚠ No suitable branch found for `$name' -ForegroundColor Yellow; }
+        $branchChecks || echo '⚠ No suitable branch found for' `$name
     "
     
     Write-Host "✓ Submodules branch switched!" -ForegroundColor Green
@@ -211,7 +211,7 @@ function Update-GitSubmodules {
         更新所有子模块
     #>
     Write-Host "Step 3: Pulling latest updates for all submodules..." -ForegroundColor Cyan
-    git submodule foreach 'git pull --rebase 2>$null || Write-Host "⚠ Failed to pull $name" -ForegroundColor Yellow'
+    git submodule foreach 'git pull --rebase 2>/dev/null || echo "⚠ Failed to pull $name"'
     Write-Host "✓ All submodules updated!" -ForegroundColor Green
 }
 

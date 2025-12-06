@@ -111,9 +111,9 @@ Set-Alias -Name gcz -Value Invoke-ConventionalCommit
 # Git 分支与 Submodule
 Set-Alias -Name gab -Value Sync-AllBranches
 Set-Alias -Name gpha -Value Push-AllGitBranches
-Set-Alias -Name gsub -Value Reset-GitSubmodules
-Set-Alias -Name gsi -Value Initialize-GitSubmodules
 Set-Alias -Name gsub -Value Update-GitSubmoduleBranches
+Set-Alias -Name grst -Value Reset-GitSubmodules
+Set-Alias -Name gsi -Value Initialize-GitSubmodules
 Set-Alias -Name gspl -Value Update-GitSubmodules
 Set-Alias -Name gsync -Value Sync-GitSubmodules
 
