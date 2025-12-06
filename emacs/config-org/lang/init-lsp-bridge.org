@@ -108,9 +108,9 @@
   (setq lsp-bridge-find-def-select-in-open-windows t)
   ;; Enable search words indexing for better completion
   (setq lsp-bridge-enable-search-words t)
-  ;; Performance: ensure log level is not debug (avoid performance issues)
-  (setq lsp-bridge-log-level 'default)
-  (setq lsp-bridge-enable-debug nil)
+  ;; Debug mode: enable for troubleshooting
+  ;; (setq lsp-bridge-enable-log t)
+  ;; (setq lsp-bridge-enable-debug t)
   
   ;; ===== Enhanced Features (lazycat style) =====
   ;; Code action lightbulb in fringe
@@ -169,26 +169,69 @@
   ;; Frame max width
   (setq acm-frame-max-width 100)
 
+  ;; ===== Disable ESLint, use Biome instead =====
+  ;; Biome is faster and supports Vue, TS, JS, TSX, JSX, JSON
+  ;; ESLint is disabled by creating an empty config in langservers/vscode-eslint-language-server.json
+  
+  ;; Use Biome for formatting and linting
+  ;; Install: npm install -g @biomejs/biome
+  ;; or: bun add -g @biomejs/biome
+  
+  ;; Explicitly disable ESLint language server for JS/TS files
+  (with-eval-after-load 'lsp-bridge
+    (setq lsp-bridge-disable-langserver-by-project
+          (lambda (project-path filepath)
+            (let ((filename (file-name-nondirectory filepath)))
+              (when (string-match-p "\\.\\(ts\\|tsx\\|js\\|jsx\\|vue\\)$" filename)
+                '("vscode-eslint-language-server")))))
+  
+  ;; Use Biome with TypeScript/JavaScript (multi-server configuration)
+  ;; Enable Biome alongside TypeScript Language Server:
+  (with-eval-after-load 'lsp-bridge
+    (add-to-list 'lsp-bridge-multi-lang-server-extension-list '(("ts") . "typescript-biome"))
+    (add-to-list 'lsp-bridge-multi-lang-server-extension-list '(("tsx") . "typescript-biome"))
+    (add-to-list 'lsp-bridge-multi-lang-server-extension-list '(("js") . "typescript-biome"))
+    (add-to-list 'lsp-bridge-multi-lang-server-extension-list '(("jsx") . "typescript-biome"))
+    ;; Vue with full stack: Volar + TypeScript + Biome + Emmet + TailwindCSS + CSS
+    ;; 选择跳转方式：
+    ;; - "vue-full" = TypeScript 跳转（准确但需要按两次 M-.）
+    ;; - "vue-full-volar" = Volar 跳转（可能直接跳转）
+    (add-to-list 'lsp-bridge-multi-lang-server-extension-list '(("vue") . "vue-full-volar"))))
+  
   ;; Enable global lsp-bridge mode
   (global-lsp-bridge-mode)
 
   ;; ===== Multi-Language Server Configuration =====
-  ;; Configure TailwindCSS support for multiple file types
+  ;; Configure TailwindCSS support for files with HTML/JSX templates
+  ;; Note: Requires @tailwindcss/language-server to be installed
+  ;; Install: npm install -g @tailwindcss/language-server
+  
+  ;; TailwindCSS is ONLY needed for files with HTML/JSX templates:
+  ;; - .tsx (TypeScript + JSX)
+  ;; - .jsx (JavaScript + JSX) 
+  ;; - .vue (Vue components)
+  ;; - .svelte (Svelte components)
+  ;; - .html (HTML files)
+  ;; 
+  ;; Pure .ts/.js files DON'T need TailwindCSS support
+  
+  ;; Uncomment if you use TailwindCSS:
+  
   ;; HTML + TailwindCSS
-  (add-to-list 'lsp-bridge-multi-lang-server-extension-list '(("html") . "html_tailwindcss"))
+  ;; (add-to-list 'lsp-bridge-multi-lang-server-extension-list '(("html") . "html_tailwindcss"))
   
   ;; CSS + TailwindCSS
-  (add-to-list 'lsp-bridge-multi-lang-server-extension-list '(("css") . "css_tailwindcss"))
+  ;; (add-to-list 'lsp-bridge-multi-lang-server-extension-list '(("css") . "css_tailwindcss"))
   
-  ;; JavaScript/TypeScript with TailwindCSS (for JSX/TSX)
-  (add-to-list 'lsp-bridge-multi-lang-server-extension-list '(("js" "jsx") . "javascript_tailwindcss"))
-  (add-to-list 'lsp-bridge-multi-lang-server-extension-list '(("ts" "tsx") . "typescript_tailwindcss"))
+  ;; JSX/TSX with TailwindCSS (React/JSX only, not plain JS/TS)
+  ;; (add-to-list 'lsp-bridge-multi-lang-server-extension-list '(("jsx") . "javascript_tailwindcss"))
+  ;; (add-to-list 'lsp-bridge-multi-lang-server-extension-list '(("tsx") . "typescript_tailwindcss"))
   
   ;; Vue + TailwindCSS
-  (add-to-list 'lsp-bridge-multi-lang-server-extension-list '(("vue") . "vue_tailwindcss"))
+  ;; (add-to-list 'lsp-bridge-multi-lang-server-extension-list '(("vue") . "vue_tailwindcss"))
   
   ;; Svelte + TailwindCSS
-  (add-to-list 'lsp-bridge-multi-lang-server-extension-list '(("svelte") . "svelte_tailwindcss"))
+  ;; (add-to-list 'lsp-bridge-multi-lang-server-extension-list '(("svelte") . "svelte_tailwindcss"))
 
   ;; Custom function to select language server based on project context
   ;; Example: Detect Deno projects by checking for deno.land imports
@@ -215,6 +258,16 @@
      ;; Note: lsp-bridge-workspace-diagnostic-list is not widely supported
      )
    lsp-bridge-mode-map)
+
+  ;; Fix ACM completion keybindings
+  ;; Ensure Return key works in completion menu
+  (with-eval-after-load 'acm
+    (define-key acm-mode-map (kbd "RET") #'acm-complete)
+    (define-key acm-mode-map (kbd "<return>") #'acm-complete)
+    (define-key acm-mode-map (kbd "C-m") #'acm-complete)
+    ;; Alternative: use TAB if Return still doesn't work
+    (define-key acm-mode-map (kbd "TAB") #'acm-complete)
+    (define-key acm-mode-map (kbd "<tab>") #'acm-complete))
 #+END_SRC
 
 ** flymake bridge

@@ -1,0 +1,11 @@
+{
+  "name": "html_tailwindcss",
+  "languageId": "html",
+  "support_features": [
+    "completion",
+    "hover",
+    "formatting"
+  ],
+  "command": ["vscode-html-language-server", "--stdio"],
+  "command1": ["tailwindcss-language-server", "--stdio"]
+}

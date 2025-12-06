@@ -33,18 +33,24 @@
       web-mode-css-indent-offset 2
       web-mode-code-indent-offset 2)
 
-;; TypeScript文件关联 - 优先使用 tree-sitter 版本（Emacs 29+）
-(if (and (fboundp 'typescript-ts-mode) (treesit-available-p))
-    (progn
-      (add-to-list 'auto-mode-alist '("\\.ts\\'" . typescript-ts-mode))
-      (add-to-list 'auto-mode-alist '("\\.tsx\\'" . tsx-ts-mode)))
-  (add-to-list 'auto-mode-alist '("\\.tsx?\\'" . typescript-mode)))
-
-(if (and (fboundp 'js-ts-mode) (treesit-available-p))
-    (progn
-      (add-to-list 'auto-mode-alist '("\\.js\\'" . js-ts-mode))
-      (add-to-list 'auto-mode-alist '("\\.jsx\\'" . js-ts-mode)))
-  (add-to-list 'auto-mode-alist '("\\.jsx?\\'" . js-mode)))
+;; 强制使用 tree-sitter 版本，避免 mode 继承警告
+(when (treesit-available-p)
+  ;; Mode remapping - 将旧 mode 重定向到 tree-sitter 版本
+  (add-to-list 'major-mode-remap-alist '(typescript-mode . typescript-ts-mode))
+  (add-to-list 'major-mode-remap-alist '(js-mode . js-ts-mode))
+  (add-to-list 'major-mode-remap-alist '(tsx-mode . tsx-ts-mode))
+  
+  ;; TypeScript文件关联
+  (add-to-list 'auto-mode-alist '("\\.ts\\'" . typescript-ts-mode))
+  (add-to-list 'auto-mode-alist '("\\.tsx\\'" . tsx-ts-mode))
+  (add-to-list 'auto-mode-alist '("\\.mts\\'" . typescript-ts-mode))
+  (add-to-list 'auto-mode-alist '("\\.cts\\'" . typescript-ts-mode))
+  
+  ;; JavaScript 文件关联
+  (add-to-list 'auto-mode-alist '("\\.js\\'" . js-ts-mode))
+  (add-to-list 'auto-mode-alist '("\\.jsx\\'" . js-ts-mode))
+  (add-to-list 'auto-mode-alist '("\\.mjs\\'" . js-ts-mode))
+  (add-to-list 'auto-mode-alist '("\\.cjs\\'" . js-ts-mode)))
 #+END_SRC
 
 ** Tree-sitter Support
@@ -91,9 +97,38 @@
 (add-hook 'js-ts-mode-hook #'mcg-ts-lsp-setup)
 #+END_SRC
 
-** Prettier Integration
+** Biome Integration (Recommended)
 #+BEGIN_SRC emacs-lisp
-;;; Prettier格式化
+;;; Biome格式化 - 更快、支持 Vue/TS/JS/TSX/JSX/JSON
+
+(defun mcg-ts-format-with-biome ()
+  "使用Biome格式化代码"
+  (interactive)
+  (if (executable-find "biome")
+      (let ((output-buffer (get-buffer-create "*biome*")))
+        (if (zerop (call-process-region (point-min) (point-max) "biome" nil output-buffer nil
+                                        "format" "--stdin-file-path" (buffer-file-name)))
+            (progn
+              (erase-buffer)
+              (insert-buffer-substring output-buffer)
+              (message "Formatted with Biome"))
+          (message "Biome formatting failed. Check *biome* buffer")))
+    (message "Biome not found. Install with: npm install -g @biomejs/biome")))
+
+;; Biome check (lint + format)
+(defun mcg-ts-check-with-biome ()
+  "使用Biome检查代码"
+  (interactive)
+  (if (executable-find "biome")
+      (let ((compilation-scroll-output t))
+        (compile (format "biome check %s" (buffer-file-name))))
+    (message "Biome not found. Install with: npm install -g @biomejs/biome")))
+
+#+END_SRC
+
+** Prettier Integration (Fallback)
+#+BEGIN_SRC emacs-lisp
+;;; Prettier格式化 (如果不使用 Biome)
 
 (defun mcg-ts-format-with-prettier ()
   "使用Prettier格式化代码"
@@ -113,15 +148,16 @@
           (message "Prettier formatting failed")))
     (message "Prettier not found. Install with: npm install -g prettier")))
 
-;; 保存时自动格式化
+;; 保存时自动格式化 - 优先使用 Biome
 (defun mcg-ts-format-on-save ()
-  "保存时使用Prettier格式化"
-  (when (and (or (derived-mode-p 'typescript-mode)
-                 (derived-mode-p 'typescript-ts-mode)
-                 (derived-mode-p 'js-mode)
-                 (derived-mode-p 'js-ts-mode))
-             (executable-find "prettier"))
-    (mcg-ts-format-with-prettier)))
+  "保存时使用 Biome 或 Prettier 格式化"
+  (when (or (derived-mode-p 'typescript-mode)
+            (derived-mode-p 'typescript-ts-mode)
+            (derived-mode-p 'js-mode)
+            (derived-mode-p 'js-ts-mode))
+    (cond
+     ((executable-find "biome") (mcg-ts-format-with-biome))
+     ((executable-find "prettier") (mcg-ts-format-with-prettier)))))
 
 ;; 取消注释以启用保存时格式化
 ;; (add-hook 'before-save-hook #'mcg-ts-format-on-save)
@@ -129,7 +165,11 @@
 ;; 快捷键
 (defun mcg-ts-setup-keys ()
   "设置TypeScript快捷键"
-  (local-set-key (kbd "C-c f") #'mcg-ts-format-with-prettier))
+  (local-set-key (kbd "C-c C-f")  ; 改为 C-c C-f，避免覆盖 C-c f 前缀
+                 (if (executable-find "biome")
+                     #'mcg-ts-format-with-biome
+                   #'mcg-ts-format-with-prettier))
+  (local-set-key (kbd "C-c b") #'mcg-ts-check-with-biome))
 
 (add-hook 'typescript-mode-hook #'mcg-ts-setup-keys)
 (add-hook 'typescript-ts-mode-hook #'mcg-ts-setup-keys)
@@ -138,9 +178,20 @@
 (add-hook 'js-ts-mode-hook #'mcg-ts-setup-keys)
 #+END_SRC
 
-** ESLint Integration
+** Biome Check (Replaces ESLint)
 #+BEGIN_SRC emacs-lisp
-;;; ESLint集成
+;;; Biome检查 - 替代 ESLint，更快且支持更多文件类型
+
+;; Biome check 已在上面定义
+;; 快捷键: C-c b
+
+;; 注意: Biome 比 ESLint 更快，支持 Vue/TS/JS/TSX/JSX/JSON
+;; 如果项目使用 biome.json 配置，Biome 会自动读取
+#+END_SRC
+
+** ESLint Integration (Deprecated, use Biome instead)
+#+BEGIN_SRC emacs-lisp :tangle no
+;;; ESLint集成 (已弃用，建议使用 Biome)
 
 (defun mcg-ts-run-eslint ()
   "运行ESLint检查"
@@ -222,12 +273,11 @@
 #+BEGIN_SRC emacs-lisp
 ;;; React/JSX支持
 
-;; JSX文件关联
-(add-to-list 'auto-mode-alist '("\\.jsx\\'" . js-mode))
-(add-to-list 'auto-mode-alist '("\\.tsx\\'" . typescript-mode))
-
 ;; 启用JSX语法高亮
 (setq js-jsx-syntax t)
+
+;; JSX/TSX 已在上面的文件关联中处理
+;; 使用 tree-sitter 版本：tsx-ts-mode 和 js-ts-mode
 
 (defun mcg-ts-insert-component ()
   "插入React组件模板"
@@ -273,9 +323,9 @@
             (search-forward "\"next\"" nil t))))))
 #+END_SRC
 
-** Import Management
+** Import Management & Code Actions
 #+BEGIN_SRC emacs-lisp
-;;; Import管理
+;;; Import管理和代码动作
 
 (defun mcg-ts-organize-imports ()
   "整理imports (需要LSP支持)"
@@ -283,16 +333,37 @@
   (when (fboundp 'lsp-bridge-code-action)
     (lsp-bridge-code-action "source.organizeImports")))
 
-;; 快捷键
-(defun mcg-ts-setup-import-keys ()
-  "设置import管理快捷键"
-  (local-set-key (kbd "C-c i") #'mcg-ts-organize-imports))
+(defun mcg-ts-remove-unused ()
+  "删除未使用的 imports 和 variables"
+  (interactive)
+  (when (fboundp 'lsp-bridge-code-action)
+    (lsp-bridge-code-action "source.removeUnused")))
 
-(add-hook 'typescript-mode-hook #'mcg-ts-setup-import-keys)
-(add-hook 'typescript-ts-mode-hook #'mcg-ts-setup-import-keys)
-(add-hook 'tsx-ts-mode-hook #'mcg-ts-setup-import-keys)
-(add-hook 'js-mode-hook #'mcg-ts-setup-import-keys)
-(add-hook 'js-ts-mode-hook #'mcg-ts-setup-import-keys)
+(defun mcg-ts-fix-all ()
+  "自动修复所有可修复的问题"
+  (interactive)
+  (when (fboundp 'lsp-bridge-code-action)
+    (lsp-bridge-code-action "source.fixAll")))
+
+(defun mcg-ts-quick-fix ()
+  "显示快速修复菜单"
+  (interactive)
+  (when (fboundp 'lsp-bridge-code-action)
+    (lsp-bridge-code-action)))
+
+;; 快捷键
+(defun mcg-ts-setup-code-action-keys ()
+  "设置代码动作快捷键"
+  (local-set-key (kbd "C-c i") #'mcg-ts-organize-imports)
+  (local-set-key (kbd "C-c u") #'mcg-ts-remove-unused)
+  (local-set-key (kbd "C-c x") #'mcg-ts-fix-all)
+  (local-set-key (kbd "C-c a") #'mcg-ts-quick-fix))
+
+(add-hook 'typescript-mode-hook #'mcg-ts-setup-code-action-keys)
+(add-hook 'typescript-ts-mode-hook #'mcg-ts-setup-code-action-keys)
+(add-hook 'tsx-ts-mode-hook #'mcg-ts-setup-code-action-keys)
+(add-hook 'js-mode-hook #'mcg-ts-setup-code-action-keys)
+(add-hook 'js-ts-mode-hook #'mcg-ts-setup-code-action-keys)
 #+END_SRC
 
 ** Console Log Helper
@@ -337,12 +408,21 @@
 #+BEGIN_SRC emacs-lisp
 ;;; 快捷键总结
 
-;; C-c f     - 格式化代码 (Prettier)
-;; C-c l     - 运行ESLint检查
-;; C-c L     - ESLint自动修复
+;; === 格式化和检查 ===
+;; C-c C-f   - 格式化代码 (Biome 或 Prettier)
+;; C-c b     - Biome 检查 (lint + format)
+
+;; === 代码动作 (Code Actions) ===
 ;; C-c i     - 整理imports
+;; C-c u     - 删除未使用的 imports/variables
+;; C-c x     - 自动修复所有问题
+;; C-c a     - 显示快速修复菜单
+
+;; === 运行和调试 ===
 ;; C-c r     - 运行Node.js
 ;; C-c n     - 运行npm script
+
+;; === 代码生成 ===
 ;; C-c c     - 插入React组件模板
 ;; C-c C-l   - 插入console.log
 ;; C-c C-k   - 删除所有console.log

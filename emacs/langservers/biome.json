@@ -1,0 +1,23 @@
+{
+  "name": "biome",
+  "languageId": "javascript",
+  "command": ["biome", "lsp-proxy"],
+  "support_features": [
+    "diagnostics",
+    "formatting",
+    "code_action",
+    "code_lens",
+    "hover",
+    "rename",
+    "prepare_rename",
+    "completion",
+    "semantic_tokens"
+  ],
+  "initializationOptions": {
+    "biome": {
+      "lintOnSave": true,
+      "organizeImportsOnSave": true,
+      "fixOnSave": true
+    }
+  }
+}

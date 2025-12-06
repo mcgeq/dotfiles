@@ -265,7 +265,7 @@
   
   ;; 缓冲区信息显示 - neo-emacs 风格
   (setq doom-modeline-buffer-name t                  ; 显示缓冲区名称
-        doom-modeline-buffer-file-name-style 'truncate-upto-project  ; 智能截断
+        doom-modeline-buffer-file-name-style 'file-name  ; 只显示文件名（tab已显示完整信息）
         doom-modeline-highlight-modified-buffer-name t  ; 高亮修改的缓冲区
         doom-modeline-buffer-encoding-explicit t)    ; 明确显示编码
   
@@ -276,7 +276,7 @@
   
   ;; 项目和VCS - 增强Git集成（neo-emacs风格）
   (setq doom-modeline-project-detection 'auto        ; 自动检测项目
-        doom-modeline-buffer-file-name-style 'truncate-upto-project
+        doom-modeline-buffer-file-name-style 'file-name  ; 只显示文件名
         doom-modeline-vcs-max-length 18              ; VCS信息最大长度（更宽）
         doom-modeline-check-simple-format t          ; 简化格式检查
         doom-modeline-vcs-icon t)                    ; 显示VCS图标

@@ -275,8 +275,7 @@ The test for presence of the car of ELT-CONS is done with `equal'."
                     ("\\.l$" . flex-mode)
                     ("\\.y$" . bison-mode)
                     ("\\.pdf$" . pdf-view-mode)
-                    ("\\.ts$" . typescript-mode)
-                    ("\\.tsx$" . typescript-mode)
+                    ;; TypeScript uses tree-sitter modes (configured in lang-typescript.org)
                     ("\\.cpp$" . c++-mode)
                     ("\\.h$" . c++-mode)
                     ("\\.ll$" . llvm-mode)
@@ -329,7 +328,7 @@ The test for presence of the car of ELT-CONS is done with `equal'."
 (autoload 'flex-mode "flex")
 (autoload 'bison-mode "bison")
 (autoload 'llvm-mode "llvm-mode")
-(autoload 'typescript-mode "typescript-mode")
+;; typescript-ts-mode is built-in, no need to autoload
 (autoload 'elixir-mode "elixir-mode")
 (autoload 'json-mode "json-mode")
 (autoload 'clojure-ts-mode "clojure-ts-mode")
