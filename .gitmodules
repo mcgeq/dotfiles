@@ -322,3 +322,12 @@
 [submodule "emac-cond-let"]
 	path = emacs/site-lisp/extensions/core/cond-let
 	url = https://github.com/tarsius/cond-let.git
+[submodule "emacs-zig-mode"]
+	path = emacs/site-lisp/extensions/lsp/zig-mode
+	url = https://codeberg.org/ziglang/zig-mode.git
+[submodule "emacs-reformatter"]
+	path = emacs/site-lisp/extensions/lsp/zig/emacs-reformatter
+	url = https://github.com/purcell/emacs-reformatter.git
+[submodule "emacs-zig-mode1"]
+	path = emacs/site-lisp/extensions/lsp/zig/zig-mode
+	url = https://codeberg.org/ziglang/zig-mode.git
