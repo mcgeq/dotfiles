@@ -6,67 +6,76 @@
 ** Headers
 
 #+BEGIN_SRC emacs-lisp
-  ;;; init-org.el -- Config for Emacs Font -*- lexical-binding: t; -*-
+  ;;; init-org.el -- Org Mode Core Configuration -*- lexical-binding: t; -*-
 
   ;; Filename: init-org.el
-  ;; Description: Config for Emacs Font
+  ;; Description: Org Mode Core Configuration - Modular and Extensible
   ;; Author: mcge <mcgeq@outlook.com>
-  ;; Copyright (C) 2024, mcge, all rights reserved.
+  ;; Copyright (C) 2024-2025, mcge, all rights reserved.
   ;; Create   Date: 2025-01-04 15:00:00
-  ;; Version: 0.1
-  ;; Modified   By:  mcgeq <mcgeq@outlook.com>
-  ;; Last Modified:  <2025-02-16 Sun 11:48>
-  ;; Keywords:
-  ;; Compatibility: 31.0.50
+  ;; Version: 2.0
+  ;; Modified   By: mcgeq <mcgeq@outlook.com>
+  ;; Last Modified: <2025-02-16 Sun 12:00>
+  ;; Keywords: org, configuration, modular
+  ;; Compatibility: GNU Emacs 31.0.50+
 
   ;;; Commentary:
   ;;
-  ;; Config for Font
+  ;; Org Mode 核心配置文件。
+  ;;
+  ;; 本文件包含:
+  ;; 1. 基础设置 - Org mode 基本行为配置
+  ;; 2. TODO 关键词 - 任务状态和触发器
+  ;; 3. 外观美化 - 字体、图标、符号美化
+  ;; 4. 日历集成 - 中文日历和节假日
+  ;; 5. 导出功能 - 支持多种导出格式
+  ;;
+  ;; 使用方法:
+  ;; (require 'init-org-vars)  ; 先加载变量定义
+  ;; (require 'init-org)       ; 再加载核心配置
   ;;
 
-  ;;; Installation:
-  ;;
-  ;; Put init-org.el to your load-path.
-  ;; The load-path is usually ~/elisp/.
-  ;; It's set in your ~/.emacs like this:
-  ;; (add-to-list 'load-path (expand-file-name "~/elisp"))
-  ;;
-  ;; And the following to your ~/.emacs startup file.
-  ;;
-  ;; (require 'init-org)
-  ;;
-  ;; No need more.
-
-  ;;; Customize:
-  ;;
-  ;;
-  ;;
-  ;; All of the above can customize by:
-  ;;      M-x customize-group RET init-aider RET
-  ;;
-
-  ;;; Change log:
-  ;;
-
+  ;;; Code:
 #+END_SRC
 
 ** Require
 
 #+BEGIN_SRC emacs-lisp
-  ;;; Require:
-  (require 'visual-fill-column)
-  (require 'mixed-pitch)
+  ;;; Dependencies:
+  ;; 加载配置变量
+  (require 'init-org-vars)
+  
+  ;; 核心依赖
+  (require 'org)
+  (require 'ox)                    ; Org export
+  
+  ;; 外观增强（按需加载）
+  (when mcg-org-enable-visual-fill
+    (require 'visual-fill-column))
+  
+  (when mcg-org-enable-mixed-pitch
+    (require 'mixed-pitch))
+  
   (require 'org-superstar)
   (require 'org-appear)
-  (require 'cal-china-x)
-  (require 'ox)
+  
+  ;; 日历支持
+  (when mcg-org-enable-chinese-calendar
+    (require 'cal-china-x))
+  
+  ;; 导出支持
+  (with-eval-after-load 'ox
+    (require 'ox-gfm nil t))       ; GitHub Flavored Markdown
 
 #+END_SRC
 
 ** Code
-*** Org
+
+*** 1. Basic Settings
 #+BEGIN_SRC emacs-lisp
-  ;;; Code:
+  ;;; ====================================================================
+  ;;; 1. Org Mode 基础设置
+  ;;; ====================================================================
 
   (setq org-ellipsis " ⭍"
         org-tags-column 0
@@ -79,10 +88,18 @@
         org-startup-with-inline-images t
         org-indent-mode-turns-on-hiding-stars nil)
 
-  ;; done close time
+  ;; 完成任务时记录时间
   (setq org-log-done 'time)
 
-  ;; TOOD 的关键词设置，可以设置不同的组
+#+END_SRC
+
+*** 2. TODO Keywords and States
+#+BEGIN_SRC emacs-lisp
+  ;;; ====================================================================
+  ;;; 2. TODO 关键词和状态配置
+  ;;; ====================================================================
+
+  ;; TODO 的关键词设置，可以设置不同的组
   (setq org-todo-keywords '((sequence
                              "TODO(t)"
                              "HOLD(h!)"
@@ -124,17 +141,22 @@
                 ("TODO" ("WAIT") ("CANCELLED") ("HOLD"))
                 ("DONE" ("WAIT") ("CANCELLED") ("HOLD")))))
 
-  ;; 重复执行时加上时间戳
-  (setq org-log-repeat 'time)
-  ;; Deadline 修改时加上一条记录
-  (setq org-log-redeadline 'note)
-  ;; Schedule 修改时加上一条记录
-  (setq org-log-reschedule 'note)
-  ;; 以抽屉的方式记录
-  (setq org-log-into-drawer t)
-  ;; 紧接着标题行或者计划/截止时间戳后加上记录抽屉
-  (setq org-log-state-notes-insert-after-drawers nil)
+  ;; 日志记录配置
+  (setq org-log-repeat 'time                                  ; 重复执行时记录时间戳
+        org-log-redeadline 'note                              ; Deadline 修改时记录
+        org-log-reschedule 'note                              ; Schedule 修改时记录
+        org-log-into-drawer t                                 ; 以抽屉方式记录
+        org-log-state-notes-insert-after-drawers nil)         ; 记录位置
 
+#+END_SRC
+
+*** 3. Appearance and Typography
+#+BEGIN_SRC emacs-lisp
+  ;;; ====================================================================
+  ;;; 3. 外观和字体配置
+  ;;; ====================================================================
+
+  ;; 标题层级字体大小
   (custom-set-faces
    '(org-level-1 ((t (:height 1.15))))
    '(org-level-2 ((t (:height 1.13))))
@@ -154,10 +176,11 @@
    '(org-special-keyword ((t (:inherit 'fixed-pitch))))
    '(org-headline-done ((t (:inherit 'variable-pitch)))))
 
-  ;; visual-fill-column
-  (setq visual-fill-column-width 88)
+  ;; Visual fill column 配置
+  (when mcg-org-enable-visual-fill
+    (setq visual-fill-column-width 88))
 
-  ;; mixed-pitch (with font availability check)
+  ;; Mixed-pitch 字体配置（with font availability check)
   (when (display-graphic-p)
     (let ((mono-font (if (find-font (font-spec :name "FiraCode Nerd Font Mono"))
                          "FiraCode Nerd Font Mono"
@@ -177,21 +200,34 @@
   ;; org-superstar
   (setq org-superstar-leading-bullet ?\s
         org-superstar-special-todo-items t
-        org-superstar-item-bullet-alist '((43 . "⬧") (45 . "⬨"))
-        org-superstar-headline-bullets-list '("☰" "☱" "☲" "☳" "☴" "☵" "☶" "☷"))
+        org-superstar-item-bullet-alist '((43 . "◆") (45 . "▸"))
+        org-superstar-headline-bullets-list '("◉" "○" "✸" "✿" "✤" "✜" "◆" "▶"))
 
   (custom-set-faces
    '(org-superstar-item ((t (:inherit 'fixed-pitch))))
    '(org-superstar-header-bullet ((t (:height 232 :inherit 'fixed-pitch)))))
 
-  (add-hook 'org-mode-hook
-            (lambda ()
-              (setq-local line-spacing 2)
-              (visual-line-mode)
-              (visual-fill-column-mode)
-              (mixed-pitch-mode)
-              (org-superstar-mode)
-              (org-appear-mode)))
+  ;; Org mode hook 配置
+  (defun mcg-org-mode-setup ()
+    "Org mode 初始化设置。"
+    (setq-local line-spacing 2)
+    (visual-line-mode 1)
+    
+    ;; 按需启用功能
+    (when mcg-org-enable-visual-fill
+      (visual-fill-column-mode 1))
+    
+    (when mcg-org-enable-mixed-pitch
+      (mixed-pitch-mode 1))
+    
+    (org-superstar-mode 1)
+    (org-appear-mode 1)
+    
+    ;; 美化符号
+    (when mcg-org-enable-pretty-symbols
+      (mcg/org-prettify-symbols)))
+  
+  (add-hook 'org-mode-hook #'mcg-org-mode-setup)
 
   (defun mg/org-font-lock-drawer (limit)
     (when (or (re-search-forward "SCHEDULED:\\(\\(.\\|\n\\)+:\s*\n\\)" limit t)
@@ -202,21 +238,22 @@
         (put-text-property (match-beginning 0) (match-end 0) 'font-lock-multiline 't)
         (goto-char end))))
 
-  (font-lock-add-keywords 'org-mode
-                          '(mg/org-font-lock-drawer))
-
+  ;; Font lock 增强
+  (font-lock-add-keywords 'org-mode '(mg/org-font-lock-drawer))
   (font-lock-add-keywords 'org-mode
                           '(("\\cc\\( \\)[/+*_=~][^a-zA-Z0-9/+*_=~\n]+?[/+*_=~]\\( \\)?\\cc?"
                              (1 (prog1 () (compose-region (match-beginning 1) (match-end 1) ""))))))
 
-
 #+END_SRC
 
-*** Calendar
+*** 4. Calendar Integration
 #+begin_src emacs-lisp
-  ;; calendar
-  ;; 配置 calendar
-  (with-eval-after-load 'calendar
+  ;;; ====================================================================
+  ;;; 4. 日历集成配置
+  ;;; ====================================================================
+
+  (when mcg-org-enable-chinese-calendar
+    (with-eval-after-load 'calendar
     ;; 设置标记今天
     (add-hook 'calendar-today-visible-hook 'calendar-mark-today)
 
@@ -242,10 +279,10 @@
     (setq calendar-day-name-array
           ["日" "一" "二" "三" "四" "五" "六"])
     ;; 设置周一为一周的第一天
-    (setq calendar-week-start-day 1))
+    (setq calendar-week-start-day 1)))
 #+end_src
 
-*** ParseTime
+*** 5. Parse Time
 #+begin_src emacs-lisp
   ;; parse time
   ;; 时间解析增加中文拼音
@@ -271,10 +308,11 @@
                   parse-time-weekdays)))
 #+end_src
 
-*** Holiday
+*** 6. Chinese Holidays
 #+begin_src emacs-lisp
-  ;; cal-china-x
-  ;; 中国节日设置
+  ;;; ====================================================================
+  ;;; 6. 中国节日配置
+  ;;; ====================================================================
   (with-eval-after-load 'cal-china-x
     ;; 设置重要节日
     (setq calendar-mark-holidays-flag t)
@@ -344,18 +382,20 @@
   (add-hook 'after-init-hook 'cal-china-x-setup)
 #+end_src
 
-*** ox-gfm
+*** 7. Export Configuration
 #+begin_src emacs-lisp
+  ;;; ====================================================================
+  ;;; 7. 导出配置
+  ;;; ====================================================================
 
-  ;; viewer
-  (eval-after-load "org"
-    '(require 'ox-gfm nil t))
-  (add-to-list 'org-export-backends 'md)
-  (add-to-list 'org-export-backends 'gfm)
+  ;; 启用 GitHub Flavored Markdown 导出
+  (with-eval-after-load 'org
+    (require 'ox-gfm nil t)
+    (add-to-list 'org-export-backends 'md)
+    (add-to-list 'org-export-backends 'gfm))
 #+end_src
 
-
-*** 行间距
+*** 8. List and Spacing
 #+begin_src emacs-lisp
   ;; 当 org 模块加载完毕后设置行间距
   (with-eval-after-load 'org
@@ -369,11 +409,12 @@
 #+end_src
 
 
-*** 美化org
+*** 9. Prettify Symbols
 #+begin_src emacs-lisp
-  ;; ================================
-  ;; 在 org mode 里美化字符串
-  ;; ================================
+  ;;; ====================================================================
+  ;;; 9. 符号美化配置
+  ;;; ====================================================================
+
   (defun mcg/org-prettify-symbols ()
     (setq prettify-symbols-alist
           (mapcan (lambda (x) (list x (cons (upcase (car x)) (cdr x))))
@@ -409,13 +450,15 @@
     (setq prettify-symbols-unprettify-at-point t)
     (prettify-symbols-mode 1))
 
-  (add-hook 'org-mode-hook 'mcg/org-prettify-symbols)
+  ;; Hook 设置在前面的 mcg-org-mode-setup 函数中
 #+end_src
 
-
-*** 中英文前后空格
+*** 10. Chinese-English Spacing
 #+begin_src emacs-lisp
-  ;; https://emacs-china.org/t/org-mode/22313?u=vagrantjoker
+  ;;; ====================================================================
+  ;;; 10. 中英文混排空格处理
+  ;;; ====================================================================
+  ;; 参考: https://emacs-china.org/t/org-mode/22313?u=vagrantjoker
   ;; 解决中文标记前后空格的问题
   (font-lock-add-keywords 'org-mode
                           '(("\\cc\\( \\)[/+*_=~][^a-zA-Z0-9]*?[/+*_=~]\\( \\)?\\cc?"

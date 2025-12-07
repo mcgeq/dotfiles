@@ -72,6 +72,34 @@
   ;; Preview delay (nil for instant preview)
   (setq consult-preview-max-size 10485760) ; 10 MB max file size for preview
   (setq consult-preview-max-count 10)      ; Max number of preview buffers
+  
+  ;; Async commands configuration
+  (setq consult-async-refresh-delay 0.15)  ; Delay before async search starts
+  (setq consult-async-input-throttle 0.2)  ; Throttle input for async commands
+  (setq consult-async-input-debounce 0.1)  ; Debounce async input
+  
+  ;; === 已移除 consult-ripgrep 和 consult-find 配置 ===
+  ;; 这些功能已被 color-rg 和 blink-search 替代
+  ;; - consult-ripgrep → color-rg-search-input (C-c s g)
+  ;; - consult-find → blink-search (C-c s D/P)
+  ;; 
+  ;; 优势：
+  ;; - 避免 Windows 中文编码问题
+  ;; - 更好的性能和用户体验
+  ;; - 立即显示结果，无需等待
+  
+  ;; === Windows UTF-8 全局配置（保留用于其他工具）===
+  (when (eq system-type 'windows-nt)
+    ;; 确保全局 UTF-8 编码
+    (setq locale-coding-system 'utf-8)
+    (set-default-coding-systems 'utf-8)
+    (prefer-coding-system 'utf-8)
+    
+    ;; 进程编码配置（用于 grep、rg 等）
+    (setq process-coding-system-alist
+          (append '(("grep" . (utf-8 . utf-8))
+                    ("rg" . (utf-8 . utf-8)))
+                  process-coding-system-alist)))
 #+END_SRC
 
 ** Consult Register Integration
@@ -141,14 +169,13 @@
     (interactive)
     (consult-line (thing-at-point 'symbol)))
   
-  (defun mcg/consult-ripgrep-symbol-at-point ()
-    "Search for symbol at point in project."
-    (interactive)
-    (consult-ripgrep nil (thing-at-point 'symbol)))
-  
-  ;; Keybindings for custom functions
+  ;; Keybinding for buffer symbol search
   (global-set-key (kbd "C-c s *") #'mcg/consult-line-symbol-at-point)
-  (global-set-key (kbd "C-c s 8") #'mcg/consult-ripgrep-symbol-at-point)
+  
+  ;; === 已移除的函数（已被 color-rg 和 blink-search 替代）===
+  ;; - mcg/consult-ripgrep-symbol-at-point → 使用 color-rg-search-symbol
+  ;; - mcg/consult-ripgrep-with-input → 使用 color-rg-search-input
+  ;; - mcg/consult-find-with-input → 使用 blink-search (C-c s D/P)
 #+END_SRC
 
 ** Consult Keybindings

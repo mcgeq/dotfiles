@@ -1,0 +1,343 @@
+* init-org-loader.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle (concat temporary-file-directory "init-org-loader.el") :lexical t
+:END:
+
+** Headers
+#+BEGIN_SRC emacs-lisp
+  ;;; init-org-loader.el -- Org Mode Configuration Loader -*- lexical-binding: t; -*-
+
+  ;; Filename: init-org-loader.el
+  ;; Description: Unified Org Mode Configuration Loader
+  ;; Author: mcge <mcgeq@outlook.com>
+  ;; Copyright (C) 2024-2025, mcge, all rights reserved.
+  ;; Create   Date: 2025-02-16 12:00:00
+  ;; Version: 2.0
+  ;; Modified   By: mcgeq <mcgeq@outlook.com>
+  ;; Last Modified: <2025-02-16 Sun 12:00>
+  ;; Keywords: org, configuration, loader
+  ;; Compatibility: GNU Emacs 31.0.50+
+
+  ;;; Commentary:
+  ;;
+  ;; Org Mode 配置统一加载器。
+  ;;
+  ;; 本文件提供了一个统一的入口点来加载所有 Org mode 相关配置。
+  ;; 支持按需加载、错误处理和性能优化。
+  ;;
+  ;; 使用方法:
+  ;; (require 'init-org-loader)
+  ;; (mcg-org-load-all)  ; 加载所有配置
+  ;;
+  ;; 或者按需加载:
+  ;; (mcg-org-load-module 'core)    ; 只加载核心配置
+  ;; (mcg-org-load-module 'agenda)  ; 只加载 agenda 配置
+  ;;
+
+  ;;; Code:
+#+END_SRC
+
+** Configuration
+
+#+BEGIN_SRC emacs-lisp
+  ;;; ====================================================================
+  ;;; 配置模块定义
+  ;;; ====================================================================
+
+  (defvar mcg-org-modules
+    '((vars
+       :file "init-org-vars"
+       :description "配置变量和常量"
+       :required t
+       :load-order 1)
+      
+      (core
+       :file "init-org"
+       :description "Org mode 核心配置"
+       :required t
+       :load-order 2
+       :depends (vars))
+      
+      (agenda
+       :file "init-org-agenda"
+       :description "Org agenda 配置"
+       :required nil
+       :load-order 3
+       :depends (vars))
+      
+      (capture
+       :file "init-capture-hugo"
+       :description "Org capture 和 Hugo 集成"
+       :required nil
+       :load-order 4
+       :depends (vars))
+      
+      (numbering
+       :file "init-org-numbering"
+       :description "Org 标题编号"
+       :required nil
+       :load-order 5
+       :depends (core))
+      
+      (download
+       :file "init-org-download"
+       :description "Org 图片下载"
+       :required nil
+       :load-order 6
+       :depends (core))
+      
+      (consult-todo
+       :file "init-consult-todo"
+       :description "Consult TODO 集成"
+       :required nil
+       :load-order 7
+       :depends (core)))
+    "Org mode 配置模块列表。
+每个模块包含:
+  :file         - 模块文件名（不含 .el 扩展名）
+  :description  - 模块描述
+  :required     - 是否必需
+  :load-order   - 加载顺序
+  :depends      - 依赖的模块")
+
+  (defvar mcg-org-loaded-modules nil
+    "已加载的 Org mode 模块列表。")
+
+  (defvar mcg-org-load-errors nil
+    "加载过程中的错误列表。")
+#+END_SRC
+
+** Helper Functions
+
+#+BEGIN_SRC emacs-lisp
+  ;;; ====================================================================
+  ;;; 辅助函数
+  ;;; ====================================================================
+
+  (defun mcg-org-module-get-property (module property)
+    "获取模块 MODULE 的属性 PROPERTY。"
+    (plist-get (cdr (assq module mcg-org-modules)) property))
+
+  (defun mcg-org-module-loaded-p (module)
+    "检查模块 MODULE 是否已加载。"
+    (memq module mcg-org-loaded-modules))
+
+  (defun mcg-org-get-load-order ()
+    "按加载顺序返回所有模块。"
+    (sort (mapcar #'car mcg-org-modules)
+          (lambda (a b)
+            (< (or (mcg-org-module-get-property a :load-order) 999)
+               (or (mcg-org-module-get-property b :load-order) 999)))))
+
+  (defun mcg-org-check-dependencies (module)
+    "检查模块 MODULE 的依赖是否已加载。
+返回未加载的依赖列表。"
+    (let ((depends (mcg-org-module-get-property module :depends))
+          (missing nil))
+      (dolist (dep depends)
+        (unless (mcg-org-module-loaded-p dep)
+          (push dep missing)))
+      (nreverse missing)))
+#+END_SRC
+
+** Core Loading Functions
+
+#+BEGIN_SRC emacs-lisp
+  ;;; ====================================================================
+  ;;; 核心加载函数
+  ;;; ====================================================================
+
+  (defun mcg-org-load-module (module &optional force)
+    "加载 Org mode 模块 MODULE。
+如果 FORCE 为 t，则重新加载已加载的模块。
+返回 t 表示加载成功，nil 表示失败。"
+    (interactive
+     (list (intern (completing-read "Load module: "
+                                     (mapcar #'car mcg-org-modules)
+                                     nil t))))
+    
+    ;; 如果已加载且不强制，直接返回
+    (if (and (mcg-org-module-loaded-p module) (not force))
+        (progn
+          (message "Module %s already loaded" module)
+          t)  ; 返回 t
+      
+      ;; 否则加载模块
+      (progn
+        ;; 检查模块是否存在
+        (unless (assq module mcg-org-modules)
+          (error "Unknown module: %s" module))
+        
+        ;; 检查依赖
+        (let ((missing-deps (mcg-org-check-dependencies module)))
+          (when missing-deps
+            (message "Loading dependencies for %s: %s" module missing-deps)
+            (dolist (dep missing-deps)
+              (unless (mcg-org-load-module dep)
+                (error "Failed to load dependency %s for module %s" dep module)))))
+        
+        ;; 加载模块
+        (let* ((file (mcg-org-module-get-property module :file))
+               (description (mcg-org-module-get-property module :description))
+               (start-time (current-time)))
+          
+          (message "Loading Org module: %s (%s)..." module description)
+          
+          (condition-case err
+              (progn
+                (require (intern file))
+                (add-to-list 'mcg-org-loaded-modules module)
+                (let ((elapsed (float-time (time-subtract (current-time) start-time))))
+                  (message "Loaded %s in %.3f seconds" module elapsed))
+                t)
+            (error
+             (let ((error-msg (format "Failed to load module %s: %s" module (error-message-string err))))
+               (push (cons module error-msg) mcg-org-load-errors)
+               (message "%s" error-msg)
+               nil)))))))
+
+  (defun mcg-org-load-all (&optional modules-list)
+    "加载所有 Org mode 配置模块。
+如果提供 MODULES-LIST，则只加载指定的模块。
+返回加载成功的模块数量。"
+    (interactive)
+    
+    (let ((modules (or modules-list (mcg-org-get-load-order)))
+          (success-count 0)
+          (start-time (current-time)))
+      
+      (message "Starting Org mode configuration loading...")
+      (setq mcg-org-load-errors nil)
+      
+      (dolist (module modules)
+        (when (mcg-org-load-module module)
+          (cl-incf success-count)))
+      
+      (let ((elapsed (float-time (time-subtract (current-time) start-time))))
+        (message "Loaded %d/%d Org modules in %.3f seconds"
+                 success-count (length modules) elapsed))
+      
+      ;; 报告错误
+      (when mcg-org-load-errors
+        (message "Errors occurred during loading:")
+        (dolist (err mcg-org-load-errors)
+          (message "  - %s" (cdr err))))
+      
+      success-count))
+
+  (defun mcg-org-load-required ()
+    "只加载必需的 Org mode 模块。"
+    (interactive)
+    (let ((required-modules
+           (cl-loop for (module . props) in mcg-org-modules
+                    when (plist-get props :required)
+                    collect module)))
+      (mcg-org-load-all required-modules)))
+
+  (defun mcg-org-reload-module (module)
+    "重新加载模块 MODULE。"
+    (interactive
+     (list (intern (completing-read "Reload module: "
+                                     mcg-org-loaded-modules
+                                     nil t))))
+    (setq mcg-org-loaded-modules
+          (delq module mcg-org-loaded-modules))
+    (mcg-org-load-module module t))
+#+END_SRC
+
+** Status and Diagnostics
+
+#+BEGIN_SRC emacs-lisp
+  ;;; ====================================================================
+  ;;; 状态和诊断
+  ;;; ====================================================================
+
+  (defun mcg-org-show-status ()
+    "显示 Org mode 配置状态。"
+    (interactive)
+    (let ((total (length mcg-org-modules))
+          (loaded (length mcg-org-loaded-modules)))
+      
+      (with-current-buffer (get-buffer-create "*Org Config Status*")
+        (erase-buffer)
+        (insert (format "Org Mode Configuration Status\n"))
+        (insert (format "==============================\n\n"))
+        (insert (format "Total modules:  %d\n" total))
+        (insert (format "Loaded modules: %d\n" loaded))
+        (insert (format "Load errors:    %d\n\n" (length mcg-org-load-errors)))
+        
+        (insert "Module Status:\n")
+        (insert "--------------\n")
+        (dolist (module (mcg-org-get-load-order))
+          (let* ((props (cdr (assq module mcg-org-modules)))
+                 (loaded-p (mcg-org-module-loaded-p module))
+                 (required (plist-get props :required))
+                 (description (plist-get props :description))
+                 (status (if loaded-p "✓" "✗")))
+            (insert (format "%s [%s] %s - %s%s\n"
+                            status
+                            (if required "R" " ")
+                            module
+                            description
+                            (if loaded-p "" " (not loaded)")))))
+        
+        (when mcg-org-load-errors
+          (insert "\nLoad Errors:\n")
+          (insert "------------\n")
+          (dolist (err mcg-org-load-errors)
+            (insert (format "- %s: %s\n" (car err) (cdr err)))))
+        
+        (goto-char (point-min))
+        (special-mode))
+      
+      (display-buffer "*Org Config Status*")))
+
+  (defun mcg-org-list-modules ()
+    "列出所有可用的 Org mode 模块。"
+    (interactive)
+    (message "Available Org modules:")
+    (dolist (module (mcg-org-get-load-order))
+      (let ((description (mcg-org-module-get-property module :description))
+            (required (mcg-org-module-get-property module :required)))
+        (message "  - %s: %s%s"
+                 module
+                 description
+                 (if required " [required]" "")))))
+#+END_SRC
+
+** Auto-load Setup
+
+#+BEGIN_SRC emacs-lisp
+  ;;; ====================================================================
+  ;;; 自动加载设置
+  ;;; ====================================================================
+
+  (defun mcg-org-setup-autoload ()
+    "设置 Org mode 的自动加载。
+这个函数可以在 init.el 中调用，延迟加载非必需模块。"
+    ;; 立即加载必需模块
+    (mcg-org-load-required)
+    
+    ;; 延迟加载可选模块
+    (run-with-idle-timer
+     2 nil
+     (lambda ()
+       (message "Loading optional Org modules...")
+       (mcg-org-load-all))))
+
+  ;; 提供快捷命令
+  ;;;###autoload
+  (defun mcg-org-init ()
+    "初始化 Org mode 配置。
+这是推荐的初始化入口点。"
+    (interactive)
+    (mcg-org-setup-autoload))
+#+END_SRC
+
+** Ends
+
+#+BEGIN_SRC emacs-lisp
+  (provide 'init-org-loader)
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;;; init-org-loader.el ends here
+#+END_SRC

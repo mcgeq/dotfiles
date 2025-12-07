@@ -5,62 +5,55 @@
 
 ** Headers
 #+BEGIN_SRC emacs-lisp
-  ;;; init-org-agenda.el -- Config for Org Agenda -*- lexical-binding: t; -*-
+  ;;; init-org-agenda.el -- Org Agenda Configuration -*- lexical-binding: t; -*-
 
   ;; Filename: init-org-agenda.el
-  ;; Description: Config for Org Agenda
+  ;; Description: Org Agenda Configuration - Enhanced and Modular
   ;; Author: mcge <mcgeq@outlook.com>
-  ;; Copyright (C) 2024, mcge, all rights reserved.
+  ;; Copyright (C) 2024-2025, mcge, all rights reserved.
   ;; Create   Date: 2025-01-04 15:00:00
-  ;; Version: 0.1
-  ;; Modified   By:  mcge <mcgeq@outlook.com>
-  ;; Last Modified:  <2025-01-10 Fri 10:14>
-  ;; Keywords:
-  ;; Compatibility: GNU Emacs 31.0.50
+  ;; Version: 2.0
+  ;; Modified   By: mcgeq <mcgeq@outlook.com>
+  ;; Last Modified: <2025-02-16 Sun 12:00>
+  ;; Keywords: org, agenda, calendar
+  ;; Compatibility: GNU Emacs 31.0.50+
 
   ;;; Commentary:
   ;;
-  ;; Config for Org Agenda
+  ;; Org Agenda 配置文件。
+  ;;
+  ;; 本文件包含:
+  ;; 1. Agenda 文件和视图配置
+  ;; 2. 时间网格和日程显示
+  ;; 3. 日期格式化（包含农历支持）
+  ;; 4. 日出日落函数
+  ;;
+  ;; 使用方法:
+  ;; (require 'init-org-vars)     ; 先加载变量定义
+  ;; (require 'init-org-agenda)   ; 再加载 agenda 配置
   ;;
 
-  ;;; Installation:
-  ;;
-  ;; Put init-org-agenda.el to your load-path.
-  ;; The load-path is usually ~/elisp/.
-  ;; It's set in your ~/.emacs like this:
-  ;; (add-to-list 'load-path (expand-file-name "~/elisp"))
-  ;;
-  ;; And the following to your ~/.emacs startup file.
-  ;;
-  ;; (require 'init-org-agenda)
-  ;;
-  ;; No need more.
-
-  ;;; Customize:
-  ;;
-  ;;
-  ;;
-  ;; All of the above can customize by:
-  ;;      M-x customize-group RET init-aider RET
-  ;;
-
-  ;;; Change log:
-  ;;
-
+  ;;; Code:
 #+END_SRC
 
 ** Require
 #+BEGIN_SRC emacs-lisp
-  ;;; Require:
+  ;;; Dependencies:
+  (require 'init-org-vars)
   (require 'org-agenda)
 
 #+END_SRC
 
 ** Code
+
+*** 1. Agenda Files Configuration
 #+BEGIN_SRC emacs-lisp
-  ;;; Code:
+  ;;; ====================================================================
+  ;;; 1. Agenda 文件和基础配置
+  ;;; ====================================================================
+
   ;; 设置 org agenda 展示的文件
-  (setq org-agenda-files (list mcgemacs-org-agenda-files))
+  (setq org-agenda-files mcg-org-agenda-files)
 
   (setq agenda-used-time-grid t)
   (setq org-agenda-use-time-grid t)
@@ -107,7 +100,15 @@
       (format "%04d-%02d-%02d 星期%s%s\n"
               year month day dayname extra)))
 
-  ;; or-agenda-time-grid 八分图
+#+END_SRC
+
+*** 2. Time Grid Configuration
+#+BEGIN_SRC emacs-lisp
+  ;;; ====================================================================
+  ;;; 2. 时间网格配置
+  ;;; ====================================================================
+
+  ;; org-agenda-time-grid 八分图
   ;; #+tblname: 八分图时间段的概念命名
   ;; |----+-----------+----------+------------------|
   ;; | No | 时间段    | 维基命名 | 自定义命名       |
@@ -134,11 +135,20 @@
                                        "-----------------------------------------------------"
                                        )))
 
-    (setq org-agenda-include-diary t)
-    (setq org-agenda-diary-file mcgeamcs-org-agenda-diary-file)
-    (setq diary-file mcgeamcs-org-agenda-diary-file)
+#+END_SRC
 
-      ;; 日程视图的前缀设置
+*** 3. Display and Format Settings
+#+BEGIN_SRC emacs-lisp
+  ;;; ====================================================================
+  ;;; 3. 显示和格式设置
+  ;;; ====================================================================
+
+  ;; 日记集成
+  (setq org-agenda-include-diary t
+        org-agenda-diary-file mcg-org-agenda-diary-file
+        diary-file mcg-org-agenda-diary-file)
+
+  ;; 日程视图的前缀设置
       (setq org-agenda-prefix-format '((agenda . " %i %-25:c %5t %s")
                                        (todo   . " %i %-25:c ")
                                        (tags   . " %i %-25:c ")
@@ -161,15 +171,22 @@
     (setq org-agenda-time-leading-zero t)
     ;; 标签显示的位置，第 80 列往前右对齐
     (setq org-agenda-tags-column -80)
-    ;; 提前 3 天截止日期到期告警
-    (setq org-deadline-warning-days 3)
+  ;; 提前 3 天截止日期到期告警
+  (setq org-deadline-warning-days 3)
 
-    ;; 设置本地坐标
-    (setq calendar-longitude 116.9962)
-    (setq calendar-latitude 39.91)
+#+END_SRC
 
-    ;;Sunrise and Sunset
-    ;;日出而作, 日落而息
+*** 4. Location and Sunrise/Sunset
+#+BEGIN_SRC emacs-lisp
+  ;;; ====================================================================
+  ;;; 4. 地理位置和日出日落
+  ;;; ====================================================================
+
+  ;; 设置本地坐标（从配置变量读取）
+  (setq calendar-longitude mcg-calendar-location-longitude
+        calendar-latitude mcg-calendar-location-latitude)
+
+  ;; 日出而作, 日落而息
     (defun diary-sunrise ()
       (let ((dss (diary-sunrise-sunset)))
         (with-temp-buffer
@@ -198,13 +215,14 @@
           (capitalize-word 1)
           (buffer-substring start end))))
 
-    (setq calendar-chinese-celestial-stem
-          ["甲" "乙" "丙" "丁" "戊" "己" "庚" "辛" "壬" "癸"])
-    (setq calendar-chinese-terrestrial-branch
-          ["子" "丑" "寅" "卯" "辰" "巳" "午" "未" "申" "酉" "戌" "亥"])
+  ;; 天干地支配置
+  (setq calendar-chinese-celestial-stem
+        ["甲" "乙" "丙" "丁" "戊" "己" "庚" "辛" "壬" "癸"]
+        calendar-chinese-terrestrial-branch
+        ["子" "丑" "寅" "卯" "辰" "巳" "午" "未" "申" "酉" "戌" "亥"])
 #+END_SRC
 
-*** Standard Diary
+*** 5. Standard Diary Entries
 #+begin_src emacs-lisp
   ;;Day info
   ;; 日出而作, 日落而息

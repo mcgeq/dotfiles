@@ -42,7 +42,7 @@
   ;;
   ;;
   ;; All of the above can customize by:
-  ;;      M-x customize-group RET init-aider RET
+  ;;      M-x customize-group RET blink-search RET
   ;;
 
   ;;; Change log:
@@ -53,10 +53,22 @@
 ** Require
 
 *** Custom const variable and function
-
 #+BEGIN_SRC emacs-lisp
   ;;; Require:
   (require 'blink-search)
+  
+  ;; Python 依赖检查
+  ;; blink-search 需要 Python 3 和以下包：
+  ;;   - epc
+  ;;   - orjson
+  ;;   - rapidfuzz
+  ;; 
+  ;; 安装命令：
+  ;;   pip3 install epc orjson rapidfuzz
+  ;;
+  ;; 确保 Python 在 PATH 中可以找到
+  (when (not (executable-find "python3"))
+    (message "Warning: python3 not found. blink-search requires Python 3."))
 
 #+END_SRC
 
@@ -69,7 +81,10 @@
         `(("HOME" "~/")
           ("REPO" ,(concat mcgemacs-root-dir "/site-lisp/extensions"))
           ("CONFIG" ,mcgemacs-config-dir)
-          ("BLOG" ,mcgemacs-blog-org-dir)
+          ;; 博客目录：使用新的 Org 配置变量
+          ("BLOG" ,(if (featurep 'init-org-vars)
+                       mcg-org-blog-directory
+                     (concat mcgemacs-blog-dir "/content-org")))
           ("DOWNLOADS" "~/Downloads/")
           ("DOCUMENTS" "~/Documents/")
           ("DESKTOP" "~/Desktop/")))
@@ -95,7 +110,7 @@
   (setq blink-search-posframe-standalone nil)     ; 非独立窗口
   
   ;; Flash line after navigation
-  (setq blink-search-flash-line-delay 0.3)        ; 导般后闪烁 0.3 秒
+  (setq blink-search-flash-line-delay 0.3)        ; 导航后闪烁 0.3 秒
 #+END_SRC
 
 ** Search Backends
@@ -103,13 +118,16 @@
   ;;; === 搜索后端 ===
   
   ;; Available backends (nil means use all backends)
-  ;; Uncomment and customize if you want to limit backends
+  ;; 默认启用所有后端，确保 blink-search 有内容显示
+  (setq blink-search-search-backends nil)  ; nil = 使用所有后端
+  
+  ;; 如果需要限制后端，可以取消下面的注释并定制：
   ;; (setq blink-search-search-backends 
   ;;       '("Buffer List"           ; 缓冲区列表
   ;;         "Recent File"           ; 最近文件
   ;;         "Current Buffer"        ; 当前缓冲区
   ;;         "Grep File"             ; 文件搜索
-  ;;         "IMenu"                 ; IMenu 导般
+  ;;         "IMenu"                 ; IMenu 导航
   ;;         "ELisp Symbol"          ; ELisp 符号
   ;;         "Find File"             ; 查找文件
   ;;         "Common Directory"))
@@ -170,19 +188,36 @@
   (defun mcg/blink-search-project-root ()
     "Search files in project root using blink-search."
     (interactive)
-    (let ((project-root (or (and (fboundp 'projectile-project-root)
-                                 (projectile-project-root))
-                            (and (fboundp 'project-root)
-                                 (when-let ((project (project-current)))
-                                   (project-root project)))
-                            default-directory)))
-      (let ((default-directory project-root))
-        (blink-search))))
+    (let* ((project-root (or (and (fboundp 'projectile-project-root)
+                                  (projectile-project-root))
+                             (and (fboundp 'project-root)
+                                  (when-let ((project (project-current)))
+                                    (project-root project)))
+                             default-directory))
+           (default-directory project-root))
+      (blink-search)))
   
-  ;; Global keybindings for helper functions
-  ;; Main entry: C-c s B (defined in init-keymaps.org)
-  (global-set-key (kbd "C-c s D") 'mcg/blink-search-grep-current-dir)
-  (global-set-key (kbd "C-c s P") 'mcg/blink-search-project-root)
+  (defun mcg/blink-search-buffers ()
+    "Search and switch between open buffers.
+Tip: Type to filter buffers, or press TAB to see all backends."
+    (interactive)
+    (blink-search))
+  
+  (defun mcg/blink-search-recent-files ()
+    "Search recent files.
+Tip: Type to filter, or press TAB to see all backends."
+    (interactive)
+    (blink-search))
+  
+  (defun mcg/blink-search-imenu ()
+    "Navigate using IMenu in current buffer."
+    (interactive)
+    (blink-search))
+  
+  ;; Note: Global keybindings are defined in init-keymaps.org:
+  ;;   C-c s B - blink-search (main entry, all backends)
+  ;;   C-c s D - mcg/blink-search-grep-current-dir (current dir files)
+  ;;   C-c s P - mcg/blink-search-project-root (project files)
 #+END_SRC
 
 

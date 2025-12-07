@@ -42,10 +42,11 @@
   ;;
   ;;
   ;; All of the above can customize by:
-  ;;      M-x customize-group RET init-aider RET
+  ;;      M-x customize-group RET color-rg RET
   ;;
 
   ;;; Change log:
+  ;;  2025-02-16: 添加基础配置和辅助函数
   ;;
 
 #+END_SRC
@@ -58,10 +59,82 @@
 
 #+END_SRC
 
+** Basic Configuration
+#+BEGIN_SRC emacs-lisp
+  ;;; === 基础配置 ===
+  
+  ;; Enable search file regexp
+  (setq color-rg-search-file-regexp nil)  ; 不限制文件类型，搜索所有文件
+  
+  ;; Search ignore directories
+  (setq color-rg-search-ignore-dirs
+        '(".git" ".svn" ".hg" "node_modules" "dist" "build" ".cache"
+          "target" ".idea" ".vscode" "__pycache__" ".pytest_cache"))
+  
+  ;; Search ignore files
+  (setq color-rg-search-ignore-files
+        '("*.pyc" "*.o" "*.elc" "*.class" "*.jar" "*.war" "*.ear"
+          "*.min.js" "*.min.css" "*.log" "*.lock" "package-lock.json"))
+  
+  ;; Kill process on quit (faster cleanup)
+  (setq color-rg-kill-temp-buffer-p t)
+  
+  ;; Mac specific: use GNU grep if available
+  (when (eq system-type 'darwin)
+    (when (executable-find "ggrep")
+      (setq color-rg-mac-grep "ggrep")))
+#+END_SRC
+
+** Display Settings
+#+BEGIN_SRC emacs-lisp
+  ;;; === 显示设置 ===
+  
+  ;; Window height (rows)
+  (setq color-rg-window-height 15)
+  
+  ;; Show line numbers in results
+  (add-hook 'color-rg-mode-hook
+            (lambda ()
+              (when (fboundp 'display-line-numbers-mode)
+                (display-line-numbers-mode 1))))
+#+END_SRC
+
+** Performance Optimization
+#+BEGIN_SRC emacs-lisp
+  ;;; === 性能优化 ===
+  
+  ;; Limit results for better performance
+  (setq color-rg-regexp-match-limit 10000)  ; 限制匹配数量
+  
+  ;; Use faster search tool if available
+  (when (executable-find "rg")
+    ;; ripgrep is faster than grep
+    (setq color-rg-search-command "rg"))
+#+END_SRC
+
 ** Code
 #+BEGIN_SRC emacs-lisp
-
-  ;;; Code:
+  ;;; === 辅助函数 ===
+  
+  (defun mcg/color-rg-search-project-with-type ()
+    "Search in project with file type filter."
+    (interactive)
+    (let ((file-type (completing-read "File type: "
+                                      '("*.el" "*.org" "*.js" "*.py" "*.go" 
+                                        "*.rs" "*.java" "*.c" "*.cpp" "*.h"
+                                        "*.md" "*.txt" "*.json" "*.yaml"))))
+      (let ((color-rg-search-file-regexp file-type))
+        (call-interactively 'color-rg-search-input-in-project))))
+  
+  (defun mcg/color-rg-search-in-org-directory ()
+    "Search in org directory."
+    (interactive)
+    (let ((org-dir (if (boundp 'mcg-org-directory)
+                       mcg-org-directory
+                     (expand-file-name "~/org"))))
+      (when (file-directory-p org-dir)
+        (let ((default-directory org-dir))
+          (call-interactively 'color-rg-search-input)))))
 
 #+END_SRC
 

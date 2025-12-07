@@ -1,0 +1,300 @@
+* init-org-vars.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle (concat temporary-file-directory "init-org-vars.el") :lexical t
+:END:
+
+** Headers
+#+BEGIN_SRC emacs-lisp
+  ;;; init-org-vars.el -- Org Mode Configuration Variables -*- lexical-binding: t; -*-
+
+  ;; Filename: init-org-vars.el
+  ;; Description: Centralized Org mode configuration variables and constants
+  ;; Author: mcge <mcgeq@outlook.com>
+  ;; Copyright (C) 2024-2025, mcge, all rights reserved.
+  ;; Create   Date: 2025-01-04 15:00:00
+  ;; Version: 2.0
+  ;; Modified   By: mcgeq <mcgeq@outlook.com>
+  ;; Last Modified: <2025-02-16 Sun 12:00>
+  ;; Keywords: org, configuration, variables
+  ;; Compatibility: GNU Emacs 31.0.50+
+
+  ;;; Commentary:
+  ;;
+  ;; 这个文件定义了所有 Org mode 相关的配置变量和常量。
+  ;; 集中管理可以提高可维护性和可扩展性。
+  ;;
+  ;; 使用方法：
+  ;; (require 'init-org-vars)
+  ;;
+  ;; 然后就可以使用所有预定义的变量了。
+  ;;
+
+  ;;; Code:
+#+END_SRC
+
+** Group Definition
+#+BEGIN_SRC emacs-lisp
+  (defgroup mcg-org nil
+    "Org mode configuration variables."
+    :group 'org
+    :prefix "mcg-org-")
+#+END_SRC
+
+** Base Directories
+#+BEGIN_SRC emacs-lisp
+  ;;; 基础目录配置
+  ;; ====================================================================
+
+  (defcustom mcg-org-directory
+    (expand-file-name "~/org")
+    "Org mode 文件的根目录。"
+    :type 'directory
+    :group 'mcg-org)
+
+  (defcustom mcg-org-agenda-directory
+    (expand-file-name "agenda" mcg-org-directory)
+    "Org agenda 文件目录。"
+    :type 'directory
+    :group 'mcg-org)
+
+  (defcustom mcg-org-notes-directory
+    (expand-file-name "notes" mcg-org-directory)
+    "Org 笔记文件目录。"
+    :type 'directory
+    :group 'mcg-org)
+
+  (defcustom mcg-org-blog-directory
+    (expand-file-name "blog" mcg-org-directory)
+    "博客相关 Org 文件目录。"
+    :type 'directory
+    :group 'mcg-org)
+
+  (defcustom mcg-org-archive-directory
+    (expand-file-name "archive" mcg-org-directory)
+    "Org 归档文件目录。"
+    :type 'directory
+    :group 'mcg-org)
+#+END_SRC
+
+** Main Files
+#+BEGIN_SRC emacs-lisp
+  ;;; 主要文件路径
+  ;; ====================================================================
+
+  (defcustom mcg-org-default-notes-file
+    (expand-file-name "notes.org" mcg-org-notes-directory)
+    "默认笔记文件。"
+    :type 'file
+    :group 'mcg-org)
+
+  (defcustom mcg-org-task-file
+    (expand-file-name "tasks.org" mcg-org-agenda-directory)
+    "任务文件。"
+    :type 'file
+    :group 'mcg-org)
+
+  (defcustom mcg-org-diary-file
+    (expand-file-name "diary.org" mcg-org-agenda-directory)
+    "日记文件。"
+    :type 'file
+    :group 'mcg-org)
+
+  (defcustom mcg-org-journal-file
+    (expand-file-name "journal.org" mcg-org-notes-directory)
+    "日志文件。"
+    :type 'file
+    :group 'mcg-org)
+
+  (defcustom mcg-org-billing-file
+    (expand-file-name "billing.org" mcg-org-notes-directory)
+    "账单文件。"
+    :type 'file
+    :group 'mcg-org)
+
+  (defcustom mcg-org-password-file
+    (expand-file-name "passwords.org" mcg-org-notes-directory)
+    "密码管理文件（建议加密）。"
+    :type 'file
+    :group 'mcg-org)
+#+END_SRC
+
+** Agenda Configuration
+#+BEGIN_SRC emacs-lisp
+  ;;; Org Agenda 配置
+  ;; ====================================================================
+
+  (defcustom mcg-org-agenda-files
+    (list mcg-org-agenda-directory)
+    "Org agenda 扫描的文件列表或目录。"
+    :type '(repeat (choice file directory))
+    :group 'mcg-org)
+
+  (defcustom mcg-org-agenda-diary-file
+    (expand-file-name "diary.org" mcg-org-agenda-directory)
+    "Org agenda 日记文件。"
+    :type 'file
+    :group 'mcg-org)
+#+END_SRC
+
+** Blog/Hugo Configuration
+#+BEGIN_SRC emacs-lisp
+  ;;; 博客和 Hugo 配置
+  ;; ====================================================================
+
+  (defcustom mcg-blog-base-directory
+    (expand-file-name "~/blog")
+    "Hugo 博客的根目录。"
+    :type 'directory
+    :group 'mcg-org)
+
+  (defcustom mcg-org-blog-emacs-file
+    (expand-file-name "emacs.org" mcg-org-blog-directory)
+    "Emacs 相关博客文章。"
+    :type 'file
+    :group 'mcg-org)
+
+  (defcustom mcg-org-blog-development-file
+    (expand-file-name "development.org" mcg-org-blog-directory)
+    "开发相关博客文章。"
+    :type 'file
+    :group 'mcg-org)
+
+  (defcustom mcg-org-blog-mcu-file
+    (expand-file-name "mcu.org" mcg-org-blog-directory)
+    "MCU 相关博客文章。"
+    :type 'file
+    :group 'mcg-org)
+
+  (defcustom mcg-org-blog-prattle-file
+    (expand-file-name "prattle.org" mcg-org-blog-directory)
+    "随笔类博客文章。"
+    :type 'file
+    :group 'mcg-org)
+
+  (defcustom mcg-org-blog-tools-file
+    (expand-file-name "tools.org" mcg-org-blog-directory)
+    "工具类博客文章。"
+    :type 'file
+    :group 'mcg-org)
+#+END_SRC
+
+** Calendar Configuration
+#+BEGIN_SRC emacs-lisp
+  ;;; 日历配置
+  ;; ====================================================================
+
+  (defcustom mcg-calendar-location-longitude 116.9962
+    "当前位置的经度（用于日出日落计算）。"
+    :type 'float
+    :group 'mcg-org)
+
+  (defcustom mcg-calendar-location-latitude 39.91
+    "当前位置的纬度（用于日出日落计算）。"
+    :type 'float
+    :group 'mcg-org)
+#+END_SRC
+
+** Feature Flags
+#+BEGIN_SRC emacs-lisp
+  ;;; 功能开关
+  ;; ====================================================================
+
+  (defcustom mcg-org-enable-pretty-symbols t
+    "是否启用 Org mode 美化符号。"
+    :type 'boolean
+    :group 'mcg-org)
+
+  (defcustom mcg-org-enable-mixed-pitch t
+    "是否启用混合字体（衬线+等宽）。"
+    :type 'boolean
+    :group 'mcg-org)
+
+  (defcustom mcg-org-enable-visual-fill t
+    "是否启用视觉填充列。"
+    :type 'boolean
+    :group 'mcg-org)
+
+  (defcustom mcg-org-enable-chinese-calendar t
+    "是否启用中文日历。"
+    :type 'boolean
+    :group 'mcg-org)
+
+  (defcustom mcg-org-enable-hugo-integration t
+    "是否启用 Hugo 博客集成。"
+    :type 'boolean
+    :group 'mcg-org)
+#+END_SRC
+
+** Helper Functions
+#+BEGIN_SRC emacs-lisp
+  ;;; 辅助函数
+  ;; ====================================================================
+
+  (defun mcg-org-ensure-directory (dir)
+    "确保目录 DIR 存在，如果不存在则创建。"
+    (unless (file-exists-p dir)
+      (make-directory dir t)
+      (message "Created directory: %s" dir)))
+
+  (defun mcg-org-ensure-file (file &optional template)
+    "确保文件 FILE 存在，如果不存在则创建。
+  可选参数 TEMPLATE 是文件的初始内容。"
+    (unless (file-exists-p file)
+      (mcg-org-ensure-directory (file-name-directory file))
+      (with-temp-buffer
+        (when template
+          (insert template))
+        (write-file file))
+      (message "Created file: %s" file)))
+
+  (defun mcg-org-initialize-directories ()
+    "初始化所有 Org mode 目录。"
+    (interactive)
+    (mapc #'mcg-org-ensure-directory
+          (list mcg-org-directory
+                mcg-org-agenda-directory
+                mcg-org-notes-directory
+                mcg-org-blog-directory
+                mcg-org-archive-directory)))
+
+  (defun mcg-org-get-config-value (symbol)
+    "获取配置变量 SYMBOL 的值，如果未设置则返回 nil。"
+    (when (boundp symbol)
+      (symbol-value symbol)))
+
+  (defun mcg-org-validate-config ()
+    "验证 Org mode 配置是否正确。"
+    (interactive)
+    (let ((errors nil))
+      ;; 检查必需的目录
+      (dolist (dir (list mcg-org-directory
+                         mcg-org-agenda-directory))
+        (unless (file-directory-p dir)
+          (push (format "Directory does not exist: %s" dir) errors)))
+      
+      ;; 报告结果
+      (if errors
+          (progn
+            (message "Org configuration validation failed:")
+            (dolist (err errors)
+              (message "  - %s" err))
+            nil)
+        (message "Org configuration validation passed.")
+        t)))
+#+END_SRC
+
+** Initialization
+#+BEGIN_SRC emacs-lisp
+  ;;; 初始化
+  ;; ====================================================================
+
+  ;; 初始化所有必需的目录
+  (mcg-org-initialize-directories)
+#+END_SRC
+
+** Ends
+#+BEGIN_SRC emacs-lisp
+  (provide 'init-org-vars)
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;;; init-org-vars.el ends here
+#+END_SRC

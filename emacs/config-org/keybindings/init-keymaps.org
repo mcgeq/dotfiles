@@ -280,16 +280,12 @@
      ("C-,"     . embark-dwim)
      ("C-h b"   . embark-bindings)
      
-     ;; Navigation
+     ;; Buffer 内搜索和导航 (保留 consult 优势)
      ("C-c s l" . consult-line)          ; Search lines in buffer
      ("C-c s i" . consult-imenu)         ; Navigate imenu
      ("C-c s m" . consult-mark)          ; Navigate marks
      
-     ;; Project search
-     ("C-c s g" . consult-ripgrep)       ; Grep in project
-     ("C-c s f" . consult-find)          ; Find files
-     
-     ;; Buffer/File
+     ;; Buffer/File 切换
      ("C-c s b" . consult-buffer)        ; Switch buffer
      ("C-c s r" . consult-recent-file)   ; Recent files
      
@@ -308,19 +304,19 @@
      ("C-c s P" . mcg/blink-search-project-root))    ; Search in project root
    "init-blink-search")
   
-  ;; Color-rg (project-wide search and replace)
+  ;; Color-rg (项目内容搜索和符号搜索，替代 consult-ripgrep)
   (lazy-load-global-keys
-   '(;; Symbol search
-     ("C-c s s" . color-rg-search-symbol)
-     ("C-c s S" . color-rg-search-symbol-in-project)
+   '(;; 项目内容搜索 (替代 consult-ripgrep/find)
+     ("C-c s g" . color-rg-search-input)                ; 搜索内容
+     ("C-c s G" . color-rg-search-input-in-project)     ; 项目内搜索
      
-     ;; Input search
-     ("C-c s i" . color-rg-search-input)
-     ("C-c s I" . color-rg-search-input-in-project)
+     ;; 符号搜索
+     ("C-c s s" . color-rg-search-symbol)               ; 搜索符号
+     ("C-c s S" . color-rg-search-symbol-in-project)    ; 项目内搜索符号
      
-     ;; Current file
-     ("C-c s ." . color-rg-search-symbol-in-current-file)
-     ("C-c s ," . color-rg-search-input-in-current-file))
+     ;; 当前文件
+     ("C-c s ." . color-rg-search-symbol-in-current-file)  ; 当前文件符号
+     ("C-c s ," . color-rg-search-input-in-current-file))  ; 当前文件内容
    "color-rg")
 #+END_SRC
 

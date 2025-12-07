@@ -50,6 +50,7 @@ LSP integration, and productivity features.
    - [[https://github.com/manateelazycat/color-rg][Color-rg]]: Fast grep
    - [[https://github.com/doomemacs/doom-modeline][Doom Modeline]]: Status line
    - [[https://github.com/manateelazycat/emacs-rime][Rime]]: Chinese input
+   - *Org Mode V2.1*: 新模块化配置系统（统一变量、智能加载）⭐
 
 * 📦 Installation
 
@@ -158,7 +159,12 @@ emacs/
 │   ├── completion/              # Completions
 │   ├── tools/                   # Tools
 │   ├── lang/                    # Language support
-│   ├── org/                     # Org Mode
+│   ├── org/                     # Org Mode (新模块化系统 V2.1)
+│   │   ├── init-org-vars.org    # 变量定义
+│   │   ├── init-org-loader.org  # 配置加载器
+│   │   ├── init-org.org         # 核心配置
+│   │   ├── init-org-agenda.org  # Agenda
+│   │   └── init-capture-hugo.org # Capture & Hugo
 │   ├── docs/                    # Documentation
 │   └── etc/                     # Miscellaneous
 ├── site-lisp/                   # Generated: Compiled EL files
@@ -263,7 +269,8 @@ emacs/
       - Language-specific configs
    
    7. *Phase 7*: Org and Docs* (delayed)
-      - Org Mode
+      - Org Mode (新模块化加载器)
+      - init-org-loader (智能依赖管理)
       - Markdown
       - Documentation tools
 
@@ -316,20 +323,21 @@ emacs/
     - =C-c r l= :: 查找实现 (lsp-bridge-find-impl)
     - =C-c r w= :: 工作区符号列表
 
-*** 诊断 (C-c ! 前缀)
-    - =C-c ! n= :: 下一个错误
-    - =C-c ! p= :: 上一个错误
-    - =C-c ! l= :: 错误列表
+*** 诊断 (M-g 前缀 - Emacs 标准)
+    - =M-g n= :: 下一个错误 (lsp-bridge-diagnostic-jump-next)
+    - =M-g p= :: 上一个错误 (lsp-bridge-diagnostic-jump-prev)
+    - =M-g l= :: 错误列表 (lsp-bridge-diagnostic-list)
 
 ** Git / Magit (C-c g 前缀)
 
 *** 主要命令
     - =C-x g= :: Magit 状态 (标准绑定)
     - =C-x M-g= :: Magit dispatch
-    - =C-c g s= :: Magit 状态
-    - =C-c g l= :: Git 日志
-    - =C-c g d= :: Magit dispatch
-    - =C-c g ?= :: Git 菜单 (transient)
+    - =C-c g s= :: Magit 状态 (magit-status)
+    - =C-c g l= :: Git 日志 (magit-log)
+    - =C-c g d= :: Magit dispatch (magit-dispatch)
+    - =C-c g f= :: 文件操作 (magit-file-dispatch)
+    - =C-c g ?= :: Git 菜单 (mcg-git-menu)
 
 *** 分支操作 (C-c g b 子前缀)
     - =C-c g b b= :: 创建分支
@@ -342,8 +350,8 @@ emacs/
     - =C-c g r d= :: 删除远程
 
 *** 推送/拉取
-    - =C-c g p= :: Push
-    - =C-c g f= :: Pull
+    - =C-c g p= :: Push (magit-push)
+    - =C-c g f= :: Pull (magit-pull)
 
 *** 子模块 (C-c g m 子前缀)
     - =C-c g m a= :: 添加子模块
@@ -358,18 +366,26 @@ emacs/
 
 *** Buffer 内搜索
     - =C-c s l= :: 搜索行 (consult-line)
-    - =C-c s i= :: Imenu 导航
-    - =C-c s m= :: Mark 导航
+    - =C-c s i= :: Imenu 导航 (consult-imenu)
+    - =C-c s m= :: Mark 导航 (consult-mark)
 
-*** 项目搜索
-    - =C-c s g= :: 项目内 Grep (consult-ripgrep)
-    - =C-c s f= :: 查找文件 (consult-find)
-    - =C-c s s= :: 搜索符号 (color-rg)
-    - =C-c s S= :: 项目内搜索符号
+*** 项目搜索（color-rg - 无中文编码问题）
+    - =C-c s g= :: 搜索内容 (color-rg-search-input)
+    - =C-c s G= :: 项目内搜索内容 (color-rg-search-input-in-project)
+    - =C-c s s= :: 搜索符号 (color-rg-search-symbol)
+    - =C-c s S= :: 项目内搜索符号 (color-rg-search-symbol-in-project)
+    - =C-c s .= :: 当前文件搜索符号 (color-rg-search-symbol-in-current-file)
+    - =C-c s ,= :: 当前文件搜索内容 (color-rg-search-input-in-current-file)
+
+*** Blink Search（快速搜索）
+    - =C-c s B= :: 多后端搜索（主入口）
+    - =C-c s D= :: 当前目录文件（立即显示）
+    - =C-c s P= :: 项目文件（立即显示）
 
 *** Buffer/文件切换
-    - =C-c s b= :: 切换 Buffer
-    - =C-c s r= :: 最近文件
+    - =C-c s b= :: 切换 Buffer (consult-buffer)
+    - =C-c s r= :: 最近文件 (consult-recent-file)
+    - =C-c s o= :: Org 标题导航 (mcg/consult-find-org-headings)
 
 *** 菜单
     - =C-c s ?= :: 搜索菜单 (transient)
@@ -377,6 +393,30 @@ emacs/
 *** Embark (上下文操作)
     - =C-.= :: Embark act (对当前项执行操作)
     - =C-,= :: Embark dwim (智能操作)
+
+*** 💡 搜索使用提示
+
+**** 工具选择（方案 B：混合配置）
+    - *Buffer 内搜索*：使用 =consult-line/imenu= （最佳体验）
+    - *文件查找*：使用 =blink-search= （立即显示，无编码问题）
+    - *内容/符号搜索*：使用 =color-rg= （专业搜索，UTF-8 友好）
+
+**** Color-rg 使用说明
+    - 交互式搜索界面，支持实时编辑结果
+    - 智能符号识别，自动高亮匹配
+    - 支持项目范围和文件范围搜索
+    - *完美的中文支持*，无编码问题
+
+**** Blink Search 使用说明
+    - =C-c s B= 打开后，按 =TAB= 切换不同后端
+    - 立即显示文件列表，无需等待输入
+    - Python 后端，UTF-8 原生支持
+    - 需要 Python 3 和依赖：~pip3 install epc orjson rapidfuzz~
+
+**** 依赖工具
+    - =color-rg= 和 =blink-search= 需要 =ripgrep= : ~scoop install ripgrep~
+    - =blink-search= 需要 Python 3 环境
+    - *已移除*：=consult-find= （Windows 编码问题）和 =consult-ripgrep= （color-rg 更好）
 
 ** 标签页 / Tabs (C-c t 前缀)
 
@@ -399,14 +439,26 @@ emacs/
 *** 捕获和议程
     - =C-c n c= :: Org capture (快速捕获)
     - =C-c n a= :: Org agenda (议程视图)
-    - =C-c n l= :: 存储链接
-    - =C-c n t= :: Todo 列表
+    - =C-c n l= :: 存储链接 (org-store-link)
+    - =C-c n t= :: Todo 列表 (org-todo-list)
 
-*** Org Buffer 内
-    - =C-c n e= :: 编辑源代码块
-    - =C-c n v= :: 插入剪贴板图片
-    - =C-c n h= :: 插入标题
-    - =C-c n s= :: 插入子标题
+*** Org Buffer 内（标准快捷键）
+    - =C-c C-w= :: Org refile (重新归档)
+    - =C-c C-t= :: 切换 TODO 状态
+    - =C-c C-s= :: 设置计划时间
+    - =C-c C-d= :: 设置截止日期
+    - =C-c C-c= :: 执行代码块 / 更新复选框
+    - =C-c C-e= :: 导出 (Export dispatcher)
+    - =C-c C-l= :: 插入/编辑链接
+    - =C-c C-o= :: 打开链接
+    - =TAB= :: 折叠/展开标题
+    - =S-TAB= :: 全局折叠/展开
+
+*** 配置管理（新增）
+    - =M-x mcg-org-show-status= :: 显示配置状态
+    - =M-x mcg-org-list-modules= :: 列出所有模块
+    - =M-x mcg-org-load-module= :: 加载指定模块
+    - =M-x mcg-org-reload-module= :: 重新加载模块
 
 ** 多光标 / Markmacro (C-c m 前缀)
 
@@ -543,28 +595,84 @@ emacs/
 
 * 📝 Org Mode
 
-** Features
-    This configuration is optimized for Org Mode:
-    
-    - *Agenda* :: Task management and scheduling
-    - *Capture* :: Quick note-taking
-    - *Export* :: Multiple formats (HTML, Markdown, etc.)
-    - *Babel* :: Code execution within documents
-    - *Hugo* :: Blog publishing integration
+** 新的模块化配置系统 ⭐
 
-** Snippets
-    Custom snippets in =snippets/org-mode/=:
-    
-    - Header templates
-    - TODO templates
-    - Code block templates
+   本配置采用全新的模块化 Org mode 配置系统（Version 2.1）：
+   
+   - *统一变量管理* :: 所有变量使用 =mcg-org-*= 命名空间
+   - *模块化加载* :: 按需加载，智能依赖管理
+   - *功能开关* :: 通过变量轻松启用/禁用功能
+   - *错误诊断* :: 内置状态查看和验证工具
+
+** 配置结构
+
+   #+begin_src text
+   config-org/org/
+   ├── init-org-vars.org          # 🔧 变量定义（必需）
+   ├── init-org-loader.org        # 🚀 配置加载器
+   ├── init-org.org               # 📝 核心配置
+   ├── init-org-agenda.org        # 📅 Agenda 配置
+   ├── init-capture-hugo.org      # ✍️ Capture & Hugo 集成
+   ├── README-ORG-CONFIG.org      # 📖 完整文档
+   └── HOWTO-USE-NEW-CONFIG.org   # 💡 使用指南
+   #+end_src
+
+** Features
+
+   核心功能：
+   
+   - *Agenda* :: 任务管理和日程安排
+   - *Capture* :: 快速笔记捕获（多种模板）
+   - *Export* :: 多格式导出 (HTML, Markdown, PDF)
+   - *Babel* :: 文档内代码执行
+   - *Hugo* :: 博客发布集成（可选）
+   - *中文日历* :: 农历、节气、日出日落
+
+** 配置变量
+
+   主要可自定义变量：
+   
+   #+begin_src emacs-lisp
+   mcg-org-directory                # Org 根目录
+   mcg-org-agenda-directory         # Agenda 目录
+   mcg-blog-base-directory          # 博客根目录
+   mcg-org-enable-hugo-integration  # Hugo 集成开关
+   mcg-org-enable-chinese-calendar  # 中文日历开关
+   mcg-calendar-location-longitude  # 地理位置（经度）
+   mcg-calendar-location-latitude   # 地理位置（纬度）
+   #+end_src
+
+** 管理命令
+
+   新增的配置管理命令：
+   
+   #+begin_src emacs-lisp
+   M-x mcg-org-show-status      # 显示配置状态（推荐）
+   M-x mcg-org-list-modules     # 列出所有模块
+   M-x mcg-org-load-module      # 加载指定模块
+   M-x mcg-org-reload-module    # 重新加载模块
+   M-x mcg-org-validate-config  # 验证配置
+   #+end_src
 
 ** Capture Templates
-    Configured in =config-org/org/init-org.org=:
-    
-    - Task capture
-    - Note capture
-    - Ideas capture
+
+   配置在 =config-org/org/init-capture-hugo.org=:
+   
+   - *任务* :: 工作任务、阅读任务
+   - *日记* :: 每日 TODO、随笔
+   - *笔记* :: 快速笔记、灵感
+   - *日志* :: 工作日志
+   - *账单* :: 财务记录
+   - *密码* :: 密码管理（加密）
+   - *博客* :: Hugo 博客文章（多分类）
+
+** 文档
+
+   完整文档位于 =config-org/org/=:
+   
+   - =README-ORG-CONFIG.org= :: 完整配置文档
+   - =HOWTO-USE-NEW-CONFIG.org= :: 快速使用指南 ⭐
+   - =CHANGELOG-VAR-MIGRATION.org= :: 变更日志
 
 * 🔍 Debugging
 

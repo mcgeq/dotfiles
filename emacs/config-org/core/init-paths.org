@@ -114,33 +114,18 @@
 
 ** Additional Path Variables
 #+BEGIN_SRC emacs-lisp
-;;; 其他路径变量（向后兼容）
-
-(defvar mcgeamcs-org-agenda-diary-file (expand-file-name "standard-diary"
-                                                          (concat mcgemacs-org-dir "/mcge/")))
-(defvar org-file-note     (expand-file-name "notes.org"
-                                            (concat mcgemacs-org-dir "/notes")))
-(defvar org-file-task     (expand-file-name "tasks.org"
-                                            mcgemacs-org-dir))
-(defvar org-file-calendar (expand-file-name "calendar.org"  mcgemacs-org-dir))
-(defvar org-file-finished (expand-file-name "finished.org"  mcgemacs-org-dir))
-(defvar org-file-canceled (expand-file-name "canceled.org"  mcgemacs-org-dir))
-(defvar org-file-diary    (expand-file-name (format-time-string "diary_%Y%m.org")
-                                            mcgemacs-org-agenda-files))
-(defvar org-file-journal  (expand-file-name "inbox.org"
-                                            (concat mcgemacs-org-dir "/journal")))
-(defvar org-file-billing  (expand-file-name "billing.org"
-                                            (concat mcgemacs-org-dir "/billing")))
-(defvar org-file-password (expand-file-name "passwords.org.cpt"
-                                            (concat mcgemacs-org-dir "/private")))
-(defvar org-file-blog   (expand-file-name "all-posts.org" mcgemacs-blog-org-dir))
-;; custom
-(defvar org-emacs-blog   (expand-file-name "all-about-emacs.org" mcgemacs-blog-org-dir))
-(defvar org-prattle-blog   (expand-file-name "all-about-prattle.org" mcgemacs-blog-org-dir))
-(defvar org-tools-blog   (expand-file-name "all-about-tools.org" mcgemacs-blog-org-dir))
-(defvar org-development-blog   (expand-file-name "all-about-development.org"
-                                                 mcgemacs-blog-org-dir))
-(defvar org-mcu-blog     (expand-file-name "all-about-mcu-blog.org" mcgemacs-blog-org-dir))
+;;; 其他路径变量
+;;
+;; ⚠️ 注意：Org mode 路径变量已迁移到独立的配置系统
+;; 
+;; 新的 Org mode 配置使用统一的 mcg-org-* 命名空间
+;; 所有 Org 相关变量现在定义在: org/init-org-vars.org
+;;
+;; 使用方法:
+;;   (require 'init-org-loader)
+;;   (mcg-org-init)
+;;
+;; 完整文档: org/README-ORG-CONFIG.org
 #+END_SRC
 
 ** Font Configuration
