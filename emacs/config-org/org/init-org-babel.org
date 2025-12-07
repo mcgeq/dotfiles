@@ -1,0 +1,308 @@
+* init-org-babel.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle (concat temporary-file-directory "init-org-babel.el") :lexical t
+:END:
+
+** Headers
+#+BEGIN_SRC emacs-lisp
+  ;;; init-org-babel.el -- Org Babel Configuration for Literate Programming -*- lexical-binding: t; -*-
+  
+  ;; Filename: init-org-babel.el
+  ;; Description: Org Babel code execution and literate programming support
+  ;; Author: mcge <mcgeq@outlook.com>
+  ;; Copyright (C) 2024-2025, mcge, all rights reserved.
+  ;; Create Date: 2025-02-16
+  ;; Version: 1.0
+  ;; Keywords: org, babel, literate-programming
+  ;; Compatibility: GNU Emacs 31.0.50+
+  
+  ;;; Commentary:
+  ;;
+  ;; Org Babel 配置文件，支持文学编程和代码块执行。
+  ;;
+  ;; 功能特性:
+  ;; 1. 多语言代码块执行支持
+  ;; 2. 自定义语言扩展（如 Zig）
+  ;; 3. 代码块结果处理和导出
+  ;; 4. 安全性和性能优化
+  ;;
+  ;; 使用方法:
+  ;; 在 Org 文件中编写代码块:
+  ;;   #+begin_src python
+  ;;   print("Hello World")
+  ;;   #+end_src
+  ;;
+  ;; 按 C-c C-c 执行代码块
+  ;;
+  
+  ;;; Code:
+#+END_SRC
+
+** Dependencies
+#+BEGIN_SRC emacs-lisp
+  ;;; 依赖项
+  (require 'org)
+  (require 'ob-core)
+  (require 'ob-tangle)
+#+END_SRC
+
+** Basic Configuration
+#+BEGIN_SRC emacs-lisp
+  ;;; ====================================================================
+  ;;; 1. Org Babel 基础配置
+  ;;; ====================================================================
+  
+  ;; 执行代码块前的确认设置
+  (setq org-confirm-babel-evaluate nil  ; 不需要每次都确认（可根据安全需要调整）
+        org-src-fontify-natively t      ; 代码块语法高亮
+        org-src-tab-acts-natively t     ; TAB 键在代码块中正常工作
+        org-src-preserve-indentation t  ; 保持代码块缩进
+        org-edit-src-content-indentation 0) ; 编辑时不额外缩进
+  
+  ;; 代码块编辑窗口设置
+  (setq org-src-window-setup 'current-window) ; 在当前窗口编辑代码块
+  
+  ;; 代码块导出设置
+  (setq org-export-use-babel t           ; 导出时执行代码块
+        org-export-babel-evaluate t)      ; 允许导出时求值
+#+END_SRC
+
+** Language Support
+#+BEGIN_SRC emacs-lisp
+  ;;; ====================================================================
+  ;;; 2. 语言支持配置
+  ;;; ====================================================================
+  
+  ;; 加载常用语言支持
+  (org-babel-do-load-languages
+   'org-babel-load-languages
+   '((emacs-lisp . t)    ; Emacs Lisp（核心）
+     (shell . t)         ; Shell/Bash
+     (python . t)        ; Python
+     (js . t)            ; JavaScript
+     (C . t)             ; C/C++
+     (css . t)           ; CSS
+     (dot . t)           ; Graphviz
+     (org . t)           ; Org（用于嵌套）
+     (plantuml . t)      ; PlantUML
+     (sql . t)           ; SQL
+     ))
+  
+  ;; 提示：其他语言需要额外包支持
+  ;; - Rust: 需要 ob-rust
+  ;; - Go: 需要 ob-go
+  ;; - TypeScript: 需要 ob-typescript
+  ;; - Zig: 使用自定义 ob-zig（见下方）
+#+END_SRC
+
+** Default Header Arguments
+#+BEGIN_SRC emacs-lisp
+  ;;; ====================================================================
+  ;;; 3. 默认代码块参数
+  ;;; ====================================================================
+  
+  ;; 全局默认参数
+  (setq org-babel-default-header-args
+        '((:session . "none")      ; 不使用持久化会话
+          (:results . "replace")   ; 替换之前的结果
+          (:exports . "code")      ; 只导出代码，不导出结果
+          (:cache . "no")          ; 不缓存结果
+          (:noweb . "no")          ; 不使用 noweb 引用
+          (:hlines . "no")         ; 不处理水平线
+          (:tangle . "no")))       ; 不自动 tangle
+  
+  ;; 特定语言的默认参数
+  (setq org-babel-default-header-args:python
+        '((:results . "output")))
+  
+  (setq org-babel-default-header-args:shell
+        '((:results . "output")))
+#+END_SRC
+
+** Zig Language Support
+#+BEGIN_SRC emacs-lisp
+  ;;; ====================================================================
+  ;;; 4. Zig 语言支持
+  ;;; ====================================================================
+  
+  ;; 自定义 ob-zig 支持
+  (defvar org-babel-default-header-args:zig '())
+  
+  (defun org-babel-execute:zig (body params)
+    "Execute Zig code BODY with Babel parameters PARAMS.
+  This function is called by `org-babel-execute-src-block'."
+    (let* ((tmp-src-file (org-babel-temp-file "zig-src-" ".zig"))
+           (tmp-bin-file (org-babel-temp-file "zig-bin-"))
+           (cmdline (cdr (assq :cmdline params)))
+           (flags (cdr (assq :flags params)))
+           (full-body (org-babel-expand-body:generic body params)))
+      
+      ;; 检查 Zig 是否安装
+      (unless (executable-find "zig")
+        (error "Zig compiler not found. Please install Zig from https://ziglang.org"))
+      
+      ;; 写入源文件
+      (with-temp-file tmp-src-file
+        (insert full-body))
+      
+      ;; 编译并运行
+      (let ((compile-command
+             (format "zig build-exe %s %s -femit-bin=%s"
+                     (or flags "")
+                     (org-babel-process-file-name tmp-src-file)
+                     (org-babel-process-file-name tmp-bin-file)))
+            (run-command
+             (format "%s %s"
+                     (org-babel-process-file-name tmp-bin-file)
+                     (or cmdline ""))))
+        
+        ;; 先编译
+        (let ((compile-result (org-babel-eval compile-command "")))
+          (if (string-match-p "error" compile-result)
+              ;; 编译失败，返回错误信息
+              (concat "Compilation failed:\n" compile-result)
+            ;; 编译成功，运行程序
+            (org-babel-eval run-command ""))))))
+  
+  ;; 注册 Zig 语言
+  (add-to-list 'org-babel-load-languages '(zig . t))
+  
+  ;; Zig 特定的默认参数
+  (setq org-babel-default-header-args:zig
+        '((:results . "output")
+          (:exports . "both")))  ; 导出代码和结果
+#+END_SRC
+
+** PlantUML Configuration
+#+BEGIN_SRC emacs-lisp
+  ;;; ====================================================================
+  ;;; 5. PlantUML 配置（可选）
+  ;;; ====================================================================
+  
+  ;; 如果使用 PlantUML，需要配置 jar 文件路径
+  ;; (setq org-plantuml-jar-path
+  ;;       (expand-file-name "~/tools/plantuml.jar"))
+  
+  ;; 或者使用在线服务器
+  (setq org-plantuml-exec-mode 'plantuml) ; 使用命令行工具
+#+END_SRC
+
+** Helper Functions
+#+BEGIN_SRC emacs-lisp
+  ;;; ====================================================================
+  ;;; 6. 辅助函数
+  ;;; ====================================================================
+  
+  (defun mcg/org-babel-execute-buffer ()
+    "执行当前 buffer 中的所有代码块。"
+    (interactive)
+    (org-babel-execute-buffer)
+    (message "Executed all code blocks in buffer"))
+  
+  (defun mcg/org-babel-tangle-and-compile ()
+    "Tangle 当前文件并编译生成的代码。"
+    (interactive)
+    (org-babel-tangle)
+    (message "Tangled file"))
+  
+  (defun mcg/org-babel-remove-all-results ()
+    "移除当前 buffer 中所有代码块的结果。"
+    (interactive)
+    (org-babel-remove-result-one-or-many t)
+    (message "Removed all results"))
+  
+  (defun mcg/org-insert-src-block (lang)
+    "插入指定语言的代码块。"
+    (interactive
+     (list (completing-read "Language: "
+                           '("emacs-lisp" "python" "shell" "zig" 
+                             "C" "js" "css" "sql")
+                           nil nil)))
+    (insert (format "#+begin_src %s\n\n#+end_src" lang))
+    (forward-line -1))
+#+END_SRC
+
+** Keybindings
+#+BEGIN_SRC emacs-lisp
+  ;;; ====================================================================
+  ;;; 7. 快捷键绑定
+  ;;; ====================================================================
+  
+  (with-eval-after-load 'org
+    ;; 代码块相关快捷键已由 org-mode 提供:
+    ;; C-c C-c   - 执行当前代码块
+    ;; C-c C-v t - Tangle 当前文件
+    ;; C-c C-v b - 执行 buffer 中所有代码块
+    ;; C-c C-v s - 执行子树中的代码块
+    ;; C-c '     - 编辑代码块
+    
+    ;; 自定义快捷键
+    (define-key org-mode-map (kbd "C-c C-v C-b") #'mcg/org-babel-execute-buffer)
+    (define-key org-mode-map (kbd "C-c C-v C-r") #'mcg/org-babel-remove-all-results)
+    (define-key org-mode-map (kbd "C-c C-v i") #'mcg/org-insert-src-block))
+#+END_SRC
+
+** Usage Guide
+#+BEGIN_SRC emacs-lisp
+  ;;; ====================================================================
+  ;;; 8. 使用指南
+  ;;; ====================================================================
+  
+  ;; 在 Org 文件中使用代码块的示例:
+  ;;
+  ;; 1. Python 示例:
+  ;;    #+begin_src python :results output
+  ;;    print("Hello from Python!")
+  ;;    for i in range(3):
+  ;;        print(f"Count: {i}")
+  ;;    #+end_src
+  ;;
+  ;; 2. Shell 示例:
+  ;;    #+begin_src shell :results output
+  ;;    echo "Current directory:"
+  ;;    pwd
+  ;;    ls -la
+  ;;    #+end_src
+  ;;
+  ;; 3. Zig 示例:
+  ;;    #+begin_src zig :results output
+  ;;    const std = @import("std");
+  ;;    
+  ;;    pub fn main() !void {
+  ;;        const stdout = std.io.getStdOut().writer();
+  ;;        try stdout.print("Hello from Zig!\n", .{});
+  ;;    }
+  ;;    #+end_src
+  ;;
+  ;; 4. Emacs Lisp 示例:
+  ;;    #+begin_src emacs-lisp :results value
+  ;;    (+ 1 2 3 4 5)
+  ;;    #+end_src
+  ;;
+  ;; 常用参数说明:
+  ;; - :results output  - 捕获标准输出
+  ;; - :results value   - 返回最后一个表达式的值
+  ;; - :exports code    - 只导出代码
+  ;; - :exports results - 只导出结果
+  ;; - :exports both    - 导出代码和结果
+  ;; - :exports none    - 都不导出
+  ;; - :session NAME    - 使用命名会话（持久化环境）
+  ;; - :cache yes       - 缓存结果
+  ;; - :file OUTPUT.png - 将结果保存到文件
+  ;;
+  ;; 快捷键总结:
+  ;; - C-c C-c         执行当前代码块
+  ;; - C-c C-v b       执行整个 buffer
+  ;; - C-c C-v s       执行当前子树
+  ;; - C-c C-v t       Tangle 文件
+  ;; - C-c '           编辑代码块
+  ;; - C-c C-v C-r     移除所有结果
+  ;; - C-c C-v i       插入代码块
+#+END_SRC
+
+** Ends
+#+BEGIN_SRC emacs-lisp
+  (provide 'init-org-babel)
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;;; init-org-babel.el ends here
+#+END_SRC

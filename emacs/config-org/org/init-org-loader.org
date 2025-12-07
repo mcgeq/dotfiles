@@ -58,39 +58,46 @@
        :load-order 2
        :depends (vars))
       
+      (babel
+       :file "init-org-babel"
+       :description "Org Babel 文学编程和代码执行"
+       :required nil
+       :load-order 3
+       :depends (core))
+      
       (agenda
        :file "init-org-agenda"
        :description "Org agenda 配置"
        :required nil
-       :load-order 3
+       :load-order 4
        :depends (vars))
       
       (capture
        :file "init-capture-hugo"
        :description "Org capture 和 Hugo 集成"
        :required nil
-       :load-order 4
+       :load-order 5
        :depends (vars))
       
       (numbering
        :file "init-org-numbering"
        :description "Org 标题编号"
        :required nil
-       :load-order 5
+       :load-order 6
        :depends (core))
       
       (download
        :file "init-org-download"
        :description "Org 图片下载"
        :required nil
-       :load-order 6
+       :load-order 7
        :depends (core))
       
       (consult-todo
        :file "init-consult-todo"
        :description "Consult TODO 集成"
        :required nil
-       :load-order 7
+       :load-order 8
        :depends (core)))
     "Org mode 配置模块列表。
 每个模块包含:

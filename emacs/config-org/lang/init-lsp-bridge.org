@@ -156,10 +156,25 @@
   (setq acm-candidate-match-max-length 60)
   ;; Enable preview when cycling candidates
   (setq acm-enable-preview t)
-  ;; Backend merge order (LSP candidates first, then others)
-  (setq acm-backend-lsp-candidate-min-length 0)
-  (setq acm-backend-elisp-candidate-min-length 2)
-  (setq acm-backend-yas-candidate-min-length 2)
+  
+  ;; ===== Completion Trigger Configuration =====
+  ;; 补全触发字符数配置
+  ;; 0 = 立即触发（可能太频繁）
+  ;; 1 = 输入 1 个字符后触发（推荐）
+  ;; 2 = 输入 2 个字符后触发（默认）
+  
+  ;; LSP 补全（主要补全源，最激进）
+  (setq acm-backend-lsp-candidate-min-length 0)  ; LSP 立即触发，获得最快响应
+  
+  ;; Elisp 补全（Emacs Lisp 代码）
+  (setq acm-backend-elisp-candidate-min-length 1)  ; 1 字符触发，平衡性能和体验
+  
+  ;; YaSnippet 补全（代码片段）
+  (setq acm-backend-yas-candidate-min-length 1)  ; 1 字符触发，快速访问代码片段
+  
+  ;; Search File Words 补全（当前文件词汇）
+  (setq acm-backend-search-file-words-candidate-min-length 2)  ; 2 字符，避免干扰
+  
   ;; Enable path completion
   (setq acm-enable-path t)
   ;; Enable search file words (better contextual completion)

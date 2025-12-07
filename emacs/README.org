@@ -624,9 +624,79 @@ emacs/
    - *Agenda* :: 任务管理和日程安排
    - *Capture* :: 快速笔记捕获（多种模板）
    - *Export* :: 多格式导出 (HTML, Markdown, PDF)
-   - *Babel* :: 文档内代码执行
+   - *Babel* :: 文档内代码执行（支持 Zig！）✨
    - *Hugo* :: 博客发布集成（可选）
    - *中文日历* :: 农历、节气、日出日落
+
+** Org Babel 文学编程 ✨
+
+   本配置支持 Org Babel 文学编程，可以在 Org 文件中执行代码块。
+
+*** 支持的语言
+    
+    - ✅ *Emacs Lisp* - Emacs 配置和脚本
+    - ✅ *Python* - 数据分析、脚本
+    - ✅ *Shell/Bash* - 系统命令
+    - ✅ *Zig* - 系统编程（自定义支持！）🦎
+    - ✅ *JavaScript* - 前端脚本
+    - ✅ *C/C++* - 系统编程
+    - ✅ *SQL* - 数据库查询
+    - ✅ *CSS* - 样式表
+    - ✅ *PlantUML* - 图表绘制
+
+*** 快捷键
+    
+    #+begin_example
+    C-c C-c         执行当前代码块
+    C-c C-v b       执行整个 buffer
+    C-c C-v t       Tangle 文件（提取代码）
+    C-c '           编辑代码块（专用窗口）
+    C-c C-v C-r     移除所有结果
+    C-c C-v i       插入新代码块
+    #+end_example
+
+*** 使用示例
+
+    **** Zig 示例
+    #+begin_example
+    #+begin_src zig :results output
+    const std = @import("std");
+    
+    pub fn main() !void {
+        const stdout = std.io.getStdOut().writer();
+        try stdout.print("Hello from Zig!\n", .{});
+    }
+    #+end_src
+    #+end_example
+
+    **** Python 示例
+    #+begin_example
+    #+begin_src python :results output
+    for i in range(5):
+        print(f"Count: {i}")
+    #+end_src
+    #+end_example
+
+    **** Shell 示例
+    #+begin_example
+    #+begin_src shell :results output
+    echo "Current directory:"
+    pwd
+    ls -la
+    #+end_src
+    #+end_example
+
+*** 常用参数
+
+    - =:results output= :: 捕获标准输出
+    - =:results value= :: 返回最后一个表达式的值
+    - =:exports both= :: 导出代码和结果
+    - =:session NAME= :: 使用持久化会话
+    - =:file OUTPUT.png= :: 将结果保存到文件
+
+*** 配置位置
+
+    Babel 配置文件：=config-org/org/init-org-babel.org=
 
 ** 配置变量
 
