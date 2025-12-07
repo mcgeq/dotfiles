@@ -133,7 +133,8 @@
 
 #### 实用工具
 - ✅ **package-info.nvim** - 显示 package.json 版本信息
-- ✅ **rest.nvim** - REST API 测试（替代 Postman）
+- ❌ **rest.nvim** - ~~REST API 测试~~（已移除，需要 lua5.1 依赖）
+  - 替代方案：curl / VS Code REST Client / Postman
 - ✅ **live-server** - 浏览器实时预览
 
 #### 快捷键
@@ -142,10 +143,6 @@
 <leader>ns  " Show package versions
 <leader>nu  " Update package
 <leader>ni  " Install package
-
-" REST API 测试
-<leader>rr  " Run request under cursor
-<leader>rp  " Preview request
 
 " Live Server
 <leader>ls  " Start live server

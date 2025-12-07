@@ -144,41 +144,11 @@ return {
   },
 
   -- ===== REST API 测试 =====
-  {
-    "rest-nvim/rest.nvim",
-    ft = "http",
-    dependencies = { "nvim-lua/plenary.nvim" },
-    keys = {
-      { "<leader>rr", "<Plug>RestNvim", desc = "Run request under cursor" },
-      { "<leader>rp", "<Plug>RestNvimPreview", desc = "Preview request" },
-      { "<leader>rl", "<Plug>RestNvimLast", desc = "Re-run last request" },
-    },
-    opts = {
-      result_split_horizontal = false,
-      result_split_in_place = false,
-      skip_ssl_verification = false,
-      encode_url = true,
-      highlight = {
-        enabled = true,
-        timeout = 150,
-      },
-      result = {
-        show_url = true,
-        show_http_info = true,
-        show_headers = true,
-        formatters = {
-          json = "jq",
-          html = function(body)
-            return vim.fn.system({ "tidy", "-i", "-q", "-" }, body)
-          end,
-        },
-      },
-      jump_to_request = false,
-      env_file = ".env",
-      custom_dynamic_variables = {},
-      yank_dry_run = true,
-    },
-  },
+  -- 已移除 rest.nvim（需要 lua5.1 依赖）
+  -- 替代方案：
+  --   1. 使用 curl 命令行
+  --   2. 使用 VS Code REST Client 插件
+  --   3. 使用 Postman/Insomnia 等独立工具
 
   -- ===== Live Server（浏览器实时预览）=====
   {
