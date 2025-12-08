@@ -53,4 +53,34 @@ return {
       -- npairs.add_rules({ Rule("$", "$", { "tex", "latex" }) })
     end,
   },
+
+  -- Neorg 工作区自定义配置
+  {
+    "nvim-neorg/neorg",
+    opts = function(_, opts)
+      -- 自定义工作区配置
+      opts.load = opts.load or {}
+      opts.load["core.dirman"] = opts.load["core.dirman"] or {}
+      opts.load["core.dirman"].config = opts.load["core.dirman"].config or {}
+      
+      -- 定义你的工作区
+      opts.load["core.dirman"].config.workspaces = {
+        notes = "~/notes",           -- 通用笔记
+        work = "~/work",             -- 工作笔记
+        personal = "~/personal",     -- 个人笔记
+        projects = "~/projects",     -- 项目笔记
+      }
+      
+      -- 设置默认工作区
+      opts.load["core.dirman"].config.default_workspace = "notes"
+      
+      -- 如果需要，也可以自定义日记工作区
+      if opts.load["core.journal"] then
+        opts.load["core.journal"].config = opts.load["core.journal"].config or {}
+        opts.load["core.journal"].config.workspace = "notes" -- 日记保存在哪个工作区
+      end
+      
+      return opts
+    end,
+  },
 }

@@ -4,6 +4,7 @@
 
 local constants = require("config.constants")
 local headers = require("config.snippets.headers")
+local neorg_snippets = require("config.snippets.neorg")
 
 local M = {}
 
@@ -43,6 +44,9 @@ M.html = { headers.create_block_comment_header("<!--", "-->") }
 -- CSS/SCSS 使用块注释
 M.css = { headers.create_block_comment_header("/*", "*/") }
 M.scss = { headers.create_block_comment_header("/*", "*/") }
+
+-- Neorg snippets
+M.norg = neorg_snippets.snippets
 
 return M
 

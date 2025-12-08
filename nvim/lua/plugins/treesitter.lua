@@ -30,6 +30,7 @@ return {
       "comment",
       "markdown",
       "markdown_inline",
+      "norg", -- neorg 笔记支持
     }
     
     -- 配置和脚本解析器（几乎所有预设都需要）

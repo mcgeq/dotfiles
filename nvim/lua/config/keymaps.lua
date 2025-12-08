@@ -15,6 +15,7 @@ M.categories = {
   debug = "Debugging",
   terminal = "Terminal",
   rust = "Rust Development",
+  neorg = "Neorg Note-taking",
   util = "Utilities",
 }
 
@@ -70,6 +71,18 @@ M.rust = {
   ["<leader>Rh"] = { func = function() require("crates").open_homepage() end, desc = "Open crate homepage" },
   ["<leader>Rd"] = { func = function() require("crates").open_documentation() end, desc = "Open crate docs" },
   ["<leader>Rr"] = { func = function() require("crates").open_repository() end, desc = "Open crate repository" },
+}
+
+-- Neorg 笔记管理
+-- 使用 <leader>n 前缀
+M.neorg = {
+  ["<leader>nw"] = { cmd = ":Neorg workspace notes<CR>", desc = "Open notes workspace" },
+  ["<leader>nt"] = { cmd = ":Neorg journal today<CR>", desc = "Open today's journal" },
+  ["<leader>ny"] = { cmd = ":Neorg journal yesterday<CR>", desc = "Open yesterday's journal" },
+  ["<leader>nm"] = { cmd = ":Neorg journal tomorrow<CR>", desc = "Open tomorrow's journal" },
+  ["<leader>ni"] = { cmd = ":Neorg index<CR>", desc = "Open workspace index" },
+  ["<leader>nr"] = { cmd = ":Neorg return<CR>", desc = "Close all norg buffers" },
+  ["<leader>nc"] = { cmd = ":Neorg toc<CR>", desc = "Show table of contents" },
 }
 
 --- 构建 AstroCore 兼容的 mappings 表
