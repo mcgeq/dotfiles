@@ -304,15 +304,12 @@
 [submodule "emacs-highlight-matching-tag"]
 	path = emacs/site-lisp/extensions/utils/highlight-matching-tag
 	url = https://github.com/manateelazycat/highlight-matching-tag.git
-[submodule "emacs-doom-modeline"]
-	path = emacs/site-lisp/extensions/ui/doom-modeline
-	url = https://github.com/seagle0128/doom-modeline.git
+[submodule "emacs-awesome-tray"]
+	path = emacs/site-lisp/extensions/ui/awesome-tray
+	url = https://github.com/manateelazycat/awesome-tray.git
 [submodule "emacs-modeline-shrink-path"]
 	path = emacs/site-lisp/extensions/ui/shrink-path
 	url = https://gitlab.com/bennya/shrink-path.el.git
-[submodule "emacs-solaire-mode"]
-	path = emacs/site-lisp/extensions/ui/solaire-mode
-	url = https://github.com/hlissner/emacs-solaire-mode.git
 [submodule "emacs/site-lisp/extensions/ui/themes/modus-themes"]
 	path = emacs/site-lisp/extensions/ui/themes/modus-themes
 	url = https://github.com/protesilaos/modus-themes.git

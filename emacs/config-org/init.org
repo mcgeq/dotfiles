@@ -101,10 +101,15 @@
 
 ;; 加载UI配置
 (require 'init-ui)
-(require 'init-doom-modeline)
+;; 使用 awesome-tray，不再使用 doom-modeline
+;; (require 'init-doom-modeline)
+
+;; 立即加载 awesome-tray，避免启动时显示 mode-line
+(require 'init-awesome-tray)
 
 (mcg-register-loaded-module 'init-ui)
-(mcg-register-loaded-module 'init-doom-modeline)
+(mcg-register-loaded-module 'init-awesome-tray)
+;; (mcg-register-loaded-module 'init-doom-modeline)
 #+END_SRC
 
 ** Phase 3: Editor Enhancement (Priority 2)

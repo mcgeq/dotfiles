@@ -48,10 +48,10 @@
      :description "核心基础设施")
     
     (ui
-     :modules (ui doom-modeline)
+     :modules (ui)
      :priority 1
      :required nil
-     :description "用户界面和主题")
+     :description "用户界面和主题 (使用 awesome-tray)")
     
     (editor
      :modules (line-number indent editor treesit)

@@ -48,7 +48,7 @@ LSP integration, and productivity features.
    - [[https://magit.vc/][Magit]]: Git interface
    - [[https://github.com/manateelazycat/blink-search][Blink-search]]: Universal search
    - [[https://github.com/manateelazycat/color-rg][Color-rg]]: Fast grep
-   - [[https://github.com/doomemacs/doom-modeline][Doom Modeline]]: Status line
+   - [[https://github.com/manateelazycat/awesome-tray][Awesome-tray]]: Lightweight status display
    - [[https://github.com/manateelazycat/emacs-rime][Rime]]: Chinese input
    - *Org Mode V2.1*: 新模块化配置系统（统一变量、智能加载）⭐
 
@@ -222,7 +222,7 @@ emacs/
     ;; Module declarations (optional, declarative style)
     (mcg! 
      :core                    ; Core modules
-     :ui doom-modeline        ; UI
+     :ui                      ; UI (awesome-tray enabled by default)
      :completion vertico embark
      :lang lsp-bridge (rust lua typescript))
     

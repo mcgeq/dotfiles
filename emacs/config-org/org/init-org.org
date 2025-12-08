@@ -308,6 +308,24 @@
                   parse-time-weekdays)))
 #+end_src
 
+*** 5.5 Time Stamp Format
+#+begin_src emacs-lisp
+  ;;; ====================================================================
+  ;;; 时间戳格式配置 - 显示中文星期和秒数
+  ;;; ====================================================================
+  
+  ;; 设置时间戳格式为 [2025-12-08 周一 10:21:23]
+  ;; 第一个格式用于不带时间的时间戳，第二个用于带时间的时间戳
+  (setq org-time-stamp-custom-formats
+        '("<%Y-%m-%d %A %H:%M:%S>" . "<%Y-%m-%d %A %H:%M:%S>"))
+  
+  ;; 设置中文星期显示
+  (setq system-time-locale "zh_CN.UTF-8")
+  
+  ;; 使用自定义时间格式
+  (setq org-display-custom-times t)
+#+end_src
+
 *** 6. Chinese Holidays
 #+begin_src emacs-lisp
   ;;; ====================================================================

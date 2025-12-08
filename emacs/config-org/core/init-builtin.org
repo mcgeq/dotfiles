@@ -63,6 +63,22 @@
 #+END_SRC
 
 ** Code
+
+** Warning Suppression
+#+BEGIN_SRC emacs-lisp
+;;; Warning 配置 - 禁用不必要的警告
+;; ====================================================================
+
+;; 抑制第三方包缺少 lexical-binding cookie 的警告
+(setq warning-suppress-types
+      '((lexical-binding)      ; 抑制 lexical-binding 警告
+        (files)))              ; 抑制文件相关的警告
+
+;; 或者只显示更严重的警告（可选）
+;; (setq warning-minimum-level :error)  ; 只显示错误级别
+
+#+END_SRC
+
 ** savehist
 #+BEGIN_SRC emacs-lisp
 
