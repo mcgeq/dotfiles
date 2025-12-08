@@ -93,15 +93,16 @@
   ;; Enable org-babel LSP completion
   (setq lsp-bridge-enable-org-babel t)
   ;; Enable inlay hints (useful for strongly typed languages like Rust/TypeScript)
-  (setq lsp-bridge-enable-inlay-hint t)
+  ;; 性能优化：inlay hints 可能影响性能，大文件时考虑禁用
+  (setq lsp-bridge-enable-inlay-hint nil)  ; 禁用以提升性能，需要时再启用
   ;; Enable semantic tokens for better syntax highlighting
-  (setq lsp-bridge-semantic-tokens t)
-  (setq-default lsp-bridge-semantic-tokens-ignore-modifier-limit-types ["variable"])
+  ;; 性能优化：语义token会增加渲染负担
+  (setq lsp-bridge-semantic-tokens nil)  ; 禁用以提升性能
   ;; Disable auto format on save (to avoid async formatting issues with auto-save)
   ;; Format only on manual save via keybinding
   (setq lsp-bridge-enable-auto-format-code nil)
-  ;; Diagnostic delay (in seconds, default 0.5) - optimize for responsiveness
-  (setq lsp-bridge-diagnostic-fetch-idle 0.3)
+  ;; Diagnostic delay (in seconds, default 0.5) - 性能优化：增加延迟减少频繁刷新
+  (setq lsp-bridge-diagnostic-fetch-idle 0.5)  ; 从 0.3 增加到 0.5，减少卡顿
   ;; Hover diagnostic - show diagnostic tooltip when cursor hovers over error
   (setq lsp-bridge-enable-hover-diagnostic t)
   ;; Find definition in open windows when possible (better multi-window workflow)
@@ -116,8 +117,8 @@
   ;; Code action lightbulb in fringe
   (setq lsp-bridge-enable-diagnostics t)
   (setq lsp-bridge-code-action-enable-popup-tip t)
-  ;; Signature help delay (faster response)
-  (setq lsp-bridge-signature-help-fetch-idle 0.5)
+  ;; Signature help delay - 性能优化：增加延迟减少频繁请求
+  (setq lsp-bridge-signature-help-fetch-idle 0.8)  ; 从 0.5 增加到 0.8
   ;; Completion trigger characters (customize per language if needed)
   (setq lsp-bridge-completion-popup-predicates
         '(lsp-bridge-not-only-blank-before-cursor
@@ -136,14 +137,15 @@
   (setq acm-backend-yas-match-by-trigger-keyword t)
   ;; Disable TabNine (high CPU usage, only enable if needed)
   (setq acm-enable-tabnine nil)
-  ;; Use orderless-flex for flexible candidate matching
-  (setq acm-candidate-match-function 'orderless-flex)
+  ;; 性能优化：使用更快的匹配函数
+  ;; orderless-flex 灵活但较慢，改为 regexp-quote 提升性能
+  (setq acm-candidate-match-function 'regexp-quote)  ; 更快的匹配
   ;; Disable Codeium (enable if needed)
   (setq acm-enable-codeium nil)
-  ;; Enable LSP workspace symbol for symbol search
-  (setq acm-enable-lsp-workspace-symbol t)
-  ;; Enable doc display in completion menu
-  (setq acm-enable-doc t)
+  ;; 性能优化：禁用 workspace symbol 搜索（较消耗资源）
+  (setq acm-enable-lsp-workspace-symbol nil)  ; 需要时可改为 t
+  ;; 性能优化：延迟显示文档以减少卡顿
+  (setq acm-enable-doc nil)  ; 禁用自动文档，需要时用 C-M-. 手动查看
   ;; Doc frame position
   (setq acm-doc-frame-pos 'bottom-right)
   ;; Enable icons in completion menu (set to nil if icons not displaying correctly)
@@ -152,10 +154,12 @@
   (setq acm-enable-doc-markdown-render 'async)
   
   ;; ===== ACM Advanced Settings (lazycat style) =====
-  ;; Completion candidate display count
-  (setq acm-candidate-match-max-length 60)
-  ;; Enable preview when cycling candidates
-  (setq acm-enable-preview t)
+  ;; 性能优化：减少候选项长度限制
+  (setq acm-candidate-match-max-length 50)  ; 从 60 减少到 50
+  ;; 性能优化：禁用预览功能，这是导致卡顿的主要原因之一
+  (setq acm-enable-preview nil)  ; 禁用预览以提升流畅度
+  ;; 性能优化：限制显示的候选项数量
+  (setq acm-menu-length 8)  ; 默认10，减少到8提升性能
   
   ;; ===== Completion Trigger Configuration =====
   ;; 补全触发字符数配置
@@ -164,7 +168,7 @@
   ;; 2 = 输入 2 个字符后触发（默认）
   
   ;; LSP 补全（主要补全源，最激进）
-  (setq acm-backend-lsp-candidate-min-length 0)  ; LSP 立即触发，获得最快响应
+  (setq acm-backend-lsp-candidate-min-length 1)  ; 输入 1 个字符后触发，避免无输入时弹出补全
   
   ;; Elisp 补全（Emacs Lisp 代码）
   (setq acm-backend-elisp-candidate-min-length 1)  ; 1 字符触发，平衡性能和体验
@@ -177,8 +181,8 @@
   
   ;; Enable path completion
   (setq acm-enable-path t)
-  ;; Enable search file words (better contextual completion)
-  (setq acm-enable-search-file-words t)
+  ;; 性能优化：大文件时禁用文件词搜索
+  (setq acm-enable-search-file-words nil)  ; 禁用以提升性能，特别是大文件
   ;; English helper for Chinese users (set nil if not needed)
   (setq acm-enable-english-helper nil)
   ;; Frame max width
