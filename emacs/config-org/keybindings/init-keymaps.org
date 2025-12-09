@@ -39,6 +39,7 @@
   ;; Note: Keep M-m and M-l free for user bindings
   ;; M-g is reserved for goto commands (Emacs default)
   ;; M-s is reserved for search commands (Emacs default)
+  ;; C-c w is reserved for window operations (ace-window)
 #+END_SRC
 
 ** Basic Editing
@@ -149,8 +150,8 @@
   ;; Implementation
   (global-set-key (kbd "C-c r l") 'lsp-bridge-find-impl)
   
-  ;; Workspace
-  (global-set-key (kbd "C-c r w") 'lsp-bridge-workspace-list-symbols)
+  ;; Workspace symbols
+  (global-set-key (kbd "C-c r s") 'lsp-bridge-workspace-list-symbols)
   
   ;; Note: These align with init-lsp-common.org configuration
 #+END_SRC

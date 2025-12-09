@@ -72,8 +72,8 @@
     (local-set-key (kbd "M-g p") #'lsp-bridge-diagnostic-jump-prev)
     (local-set-key (kbd "M-g l") #'lsp-bridge-diagnostic-list)
     
-    ;; Workspace
-    (local-set-key (kbd "C-c w r") #'lsp-bridge-workspace-list-symbols)))
+    ;; Workspace symbols (避免占用 C-c w 前缀)
+    (local-set-key (kbd "C-c r s") #'lsp-bridge-workspace-list-symbols)))
 
 ;; 自动设置快捷键
 (add-hook 'lsp-bridge-mode-hook #'mcg-lsp-setup-keybindings)
@@ -327,7 +327,7 @@ DIAGNOSTICS:
   M-g l      - List all diagnostics
 
 WORKSPACE:
-  C-c w r    - List symbols
+  C-c r s    - List workspace symbols
 
 ═══════════════════════════════════════════
 

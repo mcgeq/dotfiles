@@ -328,3 +328,9 @@
 [submodule "emacs-zig-mode1"]
 	path = emacs/site-lisp/extensions/lsp/zig/zig-mode
 	url = https://codeberg.org/ziglang/zig-mode.git
+[submodule "emacs-avy"]
+	path = emacs/site-lisp/extensions/editor/avy
+	url = https://github.com/abo-abo/avy.git
+[submodule "emacs-avy-window"]
+	path = emacs/site-lisp/extensions/editor/avy-window
+	url = https://github.com/abo-abo/ace-window.git

@@ -1,0 +1,142 @@
+* init-ace-window.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle (concat temporary-file-directory "init-ace-window.el") :lexical t
+:END:
+
+** Headers
+
+#+BEGIN_SRC emacs-lisp
+  ;;; init-ace-window.el -- Config for Ace Window -*- lexical-binding: t; -*-
+
+  ;; Filename: init-ace-window.el
+  ;; Description: Config for Ace Window - 快速窗口切换
+  ;; Author: mcge <mcgeq@outlook.com>
+  ;; Copyright (C) 2024-2025, mcge, all rights reserved.
+  ;; Create   Date: 2025-12-09 20:00:00
+  ;; Version: 1.0
+  ;; Modified   By: mcgeq <mcgeq@outlook.com>
+  ;; Last Modified: <2025-12-09 Mon 20:00>
+  ;; Keywords: window, navigation
+  ;; Compatibility: GNU Emacs 31.0.50
+
+  ;;; Commentary:
+  ;;
+  ;; Ace-window 提供快速窗口切换功能
+  ;; 使用字母标签快速选择目标窗口
+  ;;
+
+#+END_SRC
+
+** Require
+#+BEGIN_SRC emacs-lisp
+;;; Require:
+(require 'ace-window)
+
+#+END_SRC
+
+** Configuration
+#+BEGIN_SRC emacs-lisp
+;;; Code:
+
+;; 使用更容易按的键作为窗口标签
+(setq aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l))
+
+;; 窗口标签字体大小
+(setq aw-char-position 'top-left)
+
+;; 显示窗口标签的背景
+(setq aw-background t)
+
+;; 忽略某些 buffer
+(setq aw-ignored-buffers '("*Calc Trail*" "*LV*"))
+
+;; 当只有两个窗口时直接切换，不显示标签
+(setq aw-dispatch-always nil)
+
+;; 窗口标签样式
+(custom-set-faces
+ '(aw-leading-char-face
+   ((t (:inherit ace-jump-face-foreground :height 2.0)))))
+
+#+END_SRC
+
+** Dispatch Actions
+#+BEGIN_SRC emacs-lisp
+;;; 窗口操作命令
+
+;; 在 ace-window 中可用的操作:
+;; x - 删除窗口
+;; m - 交换窗口
+;; M - 移动窗口
+;; c - 复制窗口
+;; j - 选择 buffer
+;; n - 选择上一个窗口
+;; u - 选择 buffer 在另一个窗口
+;; c - 分割窗口并选择
+;; v - 垂直分割
+;; b - 水平分割
+;; o - 删除其他窗口
+;; ? - 显示帮助
+
+;; 自定义 dispatch alist
+(setq aw-dispatch-alist
+      '((?x aw-delete-window "Delete Window")
+        (?m aw-swap-window "Swap Windows")
+        (?M aw-move-window "Move Window")
+        (?c aw-copy-window "Copy Window")
+        (?j aw-switch-buffer-in-window "Select Buffer")
+        (?n aw-flip-window "Flip Window")
+        (?u aw-switch-buffer-other-window "Switch Buffer Other Window")
+        (?v aw-split-window-vert "Split Vertically")
+        (?b aw-split-window-horz "Split Horizontally")
+        (?o delete-other-windows "Delete Other Windows")
+        (?? aw-show-dispatch-help)))
+
+#+END_SRC
+
+** Keybindings
+#+BEGIN_SRC emacs-lisp
+;;; 快捷键
+
+;; 主要快捷键 - 使用 M-O (Shift+M-o) 避免与 fingertip 冲突
+(global-set-key (kbd "M-O") 'ace-window)
+
+;; 备用快捷键 - 替换默认的 other-window
+(global-set-key (kbd "C-x o") 'ace-window)
+
+;; 窗口操作前缀 C-c w (LSP 不再占用此前缀)
+(global-set-key (kbd "C-c w w") 'ace-window)
+(global-set-key (kbd "C-c w d") 'ace-delete-window)
+(global-set-key (kbd "C-c w s") 'ace-swap-window)
+(global-set-key (kbd "C-c w m") 'ace-swap-window)      ; m = move
+(global-set-key (kbd "C-c w o") 'delete-other-windows)  ; o = only
+(global-set-key (kbd "C-c w v") 'split-window-right)    ; v = vertical split
+(global-set-key (kbd "C-c w h") 'split-window-below)    ; h = horizontal split
+
+;; 快速删除窗口
+(global-set-key (kbd "C-x 0") 'ace-delete-window)
+
+;; 快速交换窗口
+(global-set-key (kbd "C-x 4 s") 'ace-swap-window)
+
+#+END_SRC
+
+** Winner Mode
+#+BEGIN_SRC emacs-lisp
+;;; Winner Mode - 窗口布局撤销
+
+;; 启用 winner-mode (内置)
+(add-hook 'after-init-hook #'winner-mode)
+
+;; winner-mode 快捷键:
+;; C-c <left>  - 撤销窗口布局变化
+;; C-c <right> - 重做窗口布局变化
+
+#+END_SRC
+
+** Ends
+#+BEGIN_SRC emacs-lisp
+(provide 'init-ace-window)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; init-ace-window.el ends here
+#+END_SRC

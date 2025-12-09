@@ -1,0 +1,153 @@
+* init-avy.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle (concat temporary-file-directory "init-avy.el") :lexical t
+:END:
+
+** Headers
+
+#+BEGIN_SRC emacs-lisp
+  ;;; init-avy.el -- Config for Avy -*- lexical-binding: t; -*-
+
+  ;; Filename: init-avy.el
+  ;; Description: Config for Avy - 快速跳转
+  ;; Author: mcge <mcgeq@outlook.com>
+  ;; Copyright (C) 2024-2025, mcge, all rights reserved.
+  ;; Create   Date: 2025-12-09 20:00:00
+  ;; Version: 1.0
+  ;; Modified   By: mcgeq <mcgeq@outlook.com>
+  ;; Last Modified: <2025-12-09 Mon 20:00>
+  ;; Keywords: navigation, jump
+  ;; Compatibility: GNU Emacs 31.0.50
+
+  ;;; Commentary:
+  ;;
+  ;; Avy 提供快速跳转到可见文本的功能
+  ;; 类似 Vim 的 EasyMotion
+  ;;
+
+#+END_SRC
+
+** Require
+#+BEGIN_SRC emacs-lisp
+;;; Require:
+(require 'avy)
+
+#+END_SRC
+
+** Configuration
+#+BEGIN_SRC emacs-lisp
+;;; Code:
+
+;; 使用更容易按的键
+(setq avy-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l ?q ?w ?e ?r ?u ?i ?o ?p))
+
+;; 跳转样式: at, at-full, post, pre, de-bruijn, words
+(setq avy-style 'at-full)
+
+;; 背景变暗以突出跳转标签
+(setq avy-background t)
+
+;; 所有窗口都可以跳转
+(setq avy-all-windows t)
+
+;; 跳转后不改变当前窗口
+(setq avy-all-windows-alt nil)
+
+;; 超时时间 (秒)
+(setq avy-timeout-seconds 0.5)
+
+;; 高亮第一个字符
+(setq avy-highlight-first t)
+
+;; 忽略大小写
+(setq avy-case-fold-search t)
+
+#+END_SRC
+
+** Keybindings
+#+BEGIN_SRC emacs-lisp
+;;; 快捷键
+
+;; 跳转到字符 (输入一个字符)
+(global-set-key (kbd "C-;") 'avy-goto-char)
+
+;; 跳转到字符 (输入两个字符，更精确)
+(global-set-key (kbd "C-'") 'avy-goto-char-2)
+
+;; 跳转到单词
+(global-set-key (kbd "M-g w") 'avy-goto-word-1)
+
+;; 跳转到行
+(global-set-key (kbd "M-g g") 'avy-goto-line)
+
+;; 定时跳转 (输入字符后自动跳转)
+(global-set-key (kbd "M-g c") 'avy-goto-char-timer)
+
+;; 跳转到当前行的字符
+(global-set-key (kbd "M-g j") 'avy-goto-char-in-line)
+
+#+END_SRC
+
+** Advanced Commands
+#+BEGIN_SRC emacs-lisp
+;;; 高级命令
+
+;; 复制跳转位置的内容
+(global-set-key (kbd "M-g y") 'avy-copy-line)
+
+;; 移动跳转位置的行
+(global-set-key (kbd "M-g m") 'avy-move-line)
+
+;; 删除跳转位置的行
+(global-set-key (kbd "M-g k") 'avy-kill-whole-line)
+
+;; 复制区域 (从当前位置到跳转位置)
+(global-set-key (kbd "M-g Y") 'avy-copy-region)
+
+;; 删除区域
+(global-set-key (kbd "M-g K") 'avy-kill-region)
+
+#+END_SRC
+
+** Isearch Integration
+#+BEGIN_SRC emacs-lisp
+;;; 与 isearch 集成
+
+;; 在 isearch 中使用 avy 跳转到匹配项
+(define-key isearch-mode-map (kbd "C-;") 'avy-isearch)
+
+#+END_SRC
+
+** Custom Functions
+#+BEGIN_SRC emacs-lisp
+;;; 自定义函数
+
+(defun mcg/avy-goto-word-or-subword ()
+  "跳转到单词或子词 (驼峰命名中的部分)"
+  (interactive)
+  (if (bound-and-true-p subword-mode)
+      (avy-goto-subword-1)
+    (avy-goto-word-1)))
+
+(defun mcg/avy-goto-open-paren ()
+  "跳转到开括号"
+  (interactive)
+  (avy-goto-char ?\())
+
+(defun mcg/avy-goto-close-paren ()
+  "跳转到闭括号"
+  (interactive)
+  (avy-goto-char ?\)))
+
+;; 绑定自定义函数
+(global-set-key (kbd "M-g (") 'mcg/avy-goto-open-paren)
+(global-set-key (kbd "M-g )") 'mcg/avy-goto-close-paren)
+
+#+END_SRC
+
+** Ends
+#+BEGIN_SRC emacs-lisp
+(provide 'init-avy)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; init-avy.el ends here
+#+END_SRC

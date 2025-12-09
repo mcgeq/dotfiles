@@ -50,7 +50,10 @@ LSP integration, and productivity features.
    - [[https://github.com/manateelazycat/color-rg][Color-rg]]: Fast grep
    - [[https://github.com/manateelazycat/awesome-tray][Awesome-tray]]: Lightweight status display
    - [[https://github.com/manateelazycat/emacs-rime][Rime]]: Chinese input
-   - *Org Mode V2.1*: 新模块化配置系统（统一变量、智能加载）⭐
+   - [[https://github.com/justbur/emacs-which-key][Which-key]]: 快捷键提示 ⭐
+   - [[https://github.com/abo-abo/ace-window][Ace-window]]: 快速窗口切换 ⭐
+   - [[https://github.com/abo-abo/avy][Avy]]: 快速跳转导航 ⭐
+   - *Org Mode V2.1*: 新模块化配置系统（统一变量、智能加载）
 
 * 📦 Installation
 
@@ -253,6 +256,9 @@ emacs/
       - Indentation
       - Tree-sitter
       - Auto-save
+      - Ace-window (窗口切换)
+      - Avy (快速跳转)
+      - Which-key (快捷键提示)
    
    4. *Phase 4*: Completions
       - Vertico
@@ -321,12 +327,48 @@ emacs/
     - =C-c r i= :: 代码操作 (lsp-bridge-code-action)
     - =C-c r f= :: 格式化代码 (lsp-bridge-code-format)
     - =C-c r l= :: 查找实现 (lsp-bridge-find-impl)
-    - =C-c r w= :: 工作区符号列表
+    - =C-c r s= :: 工作区符号列表
 
 *** 诊断 (M-g 前缀 - Emacs 标准)
     - =M-g n= :: 下一个错误 (lsp-bridge-diagnostic-jump-next)
     - =M-g p= :: 上一个错误 (lsp-bridge-diagnostic-jump-prev)
     - =M-g l= :: 错误列表 (lsp-bridge-diagnostic-list)
+
+** 窗口操作 / Window (C-c w 前缀) ⭐
+
+*** 窗口切换 (Ace-window)
+    - =M-O= :: 快速切换窗口 (Shift+M-o)
+    - =C-x o= :: 切换窗口 (替换默认)
+    - =C-c w w= :: 切换窗口
+    - =C-c w d= :: 删除窗口
+    - =C-c w s= :: 交换窗口
+    - =C-c w m= :: 移动窗口
+    - =C-c w o= :: 只保留当前窗口
+    - =C-c w v= :: 垂直分割
+    - =C-c w h= :: 水平分割
+
+*** 窗口布局撤销 (Winner-mode)
+    - =C-c <left>= :: 撤销窗口布局
+    - =C-c <right>= :: 重做窗口布局
+
+** 快速跳转 / Avy (M-g 前缀) ⭐
+
+*** 基础跳转
+    - =C-;= :: 跳转到字符 (输入1个字符)
+    - =C-'= :: 跳转到字符 (输入2个字符，更精确)
+    - =M-g w= :: 跳转到单词
+    - =M-g g= :: 跳转到行
+    - =M-g c= :: 定时跳转
+    - =M-g j= :: 跳转到当前行字符
+
+*** 高级操作
+    - =M-g y= :: 复制跳转位置的行
+    - =M-g m= :: 移动跳转位置的行
+    - =M-g k= :: 删除跳转位置的行
+    - =M-g Y= :: 复制区域 (当前位置到跳转位置)
+    - =M-g K= :: 删除区域
+    - =M-g (= :: 跳转到开括号
+    - =M-g )= :: 跳转到闭括号
 
 ** Git / Magit (C-c g 前缀)
 
@@ -543,11 +585,28 @@ emacs/
    - =C-x k= :: 关闭 Buffer
    - =M-x= :: 执行命令
    - =C-g= :: 取消操作
-   - =M-g g= :: 跳转到行
+   - =M-g g= :: 跳转到行 (avy-goto-line)
+   - =M-g M-g= :: 跳转到行号 (goto-line, Emacs 默认)
 
-** Which-key 集成
+** Which-key 集成 ⭐
 
-所有前缀键都提供了 which-key 描述。按下任意前缀键（如 =C-c g=）并等待 0.5 秒，which-key 会自动显示所有可用的补全选项。
+所有前缀键都提供了 which-key 描述。按下任意前缀键（如 =C-c g=）并等待 0.3 秒，which-key 会自动显示所有可用的补全选项。
+
+*** 美化特性
+    - 图标前缀描述 (📁 Files, 🔍 Search, 🪟 Window 等)
+    - 符号替换 (←↑→↓, ⏎, ⇥, ␣ 等)
+    - 自定义颜色方案 (Tokyo Night 风格)
+    - 分组显示，清晰易读
+
+*** 主要前缀
+    - =C-c= :: ⚙ User (用户自定义)
+    - =C-c g= ::  Git
+    - =C-c w= :: 🪟 Window
+    - =C-c s= :: 🔍 Search
+    - =C-c r= :: 🔧 Refactor
+    - =C-c t= :: 📑 Tabs
+    - =C-c n= :: 📝 Notes/Org
+    - =M-g= :: ➡ Goto (Avy 跳转)
 
 在 which-key 显示时：
    - =C-h n= :: 下一页

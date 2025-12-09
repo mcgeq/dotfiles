@@ -136,12 +136,17 @@
   (require 'init-editor)
   (require 'init-treesit)
   
+  ;; 🆕 窗口和跳转增强
+  (require 'init-ace-window)  ; 快速窗口切换
+  (require 'init-avy)         ; 快速跳转
+  
   ;; 工具配置（已迁移到tools目录）
   (require 'init-sort-tab)
   (require 'init-auto-save)
   (require 'init-generic)
   (require 'init-symbol-overlay)
   (require 'init-rime)
+  (require 'init-which-key)   ; 🆕 快捷键提示
   
   (mcg-register-loaded-module 'init-sort-tab)
   (mcg-register-loaded-module 'init-auto-save)
@@ -150,7 +155,10 @@
   (mcg-register-loaded-module 'init-editor)
   (mcg-register-loaded-module 'init-treesit)
   (mcg-register-loaded-module 'init-symbol-overlay)
-  (mcg-register-loaded-module 'init-rime))
+  (mcg-register-loaded-module 'init-rime)
+  (mcg-register-loaded-module 'init-ace-window)  ; 🆕
+  (mcg-register-loaded-module 'init-avy)         ; 🆕
+  (mcg-register-loaded-module 'init-which-key))  ; 🆕
 #+END_SRC
 
 ** Phase 4: Completion and Search (Priority 3)
@@ -206,13 +214,15 @@
   (require 'lang-web-mode)
   (require 'lang-cpp)
   (require 'lang-typescript)
+  (require 'lang-python)      ; 🆕 Python 支持
   
   (mcg-register-loaded-module 'init-lsp-bridge)
   (mcg-register-loaded-module 'lang-rust)
   (mcg-register-loaded-module 'lang-lua)
   (mcg-register-loaded-module 'lang-web-mode)
   (mcg-register-loaded-module 'lang-cpp)
-  (mcg-register-loaded-module 'lang-typescript))
+  (mcg-register-loaded-module 'lang-typescript)
+  (mcg-register-loaded-module 'lang-python))     ; 🆕
 
 ;; 延迟1秒加载语言支持
 (run-with-timer 1 nil #'mcg-load-lang-support)
