@@ -144,9 +144,6 @@ M.workflow_tools = {
     { import = "astrocommunity.markdown-and-latex.markdown-preview-nvim" },
   },
   
-  note_taking = {
-    { import = "astrocommunity.note-taking.neorg" },
-  },
 }
 
 --- 构建完整的插件列表
