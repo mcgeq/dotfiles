@@ -19,14 +19,10 @@ return {
     -- 自定义 Biome 格式化器配置
     formatters = {
       biome = {
-        -- 添加 --unsafe 标志以启用不安全的代码修复
-        args = {
-          "check",
-          "--write",
-          "--unsafe",
-          "--stdin-file-path",
-          "$FILENAME",
-        },
+        -- 禁用 stdin，直接操作文件（Vue 文件 stdin 模式有 bug）
+        command = "biome",
+        args = { "check", "--write", "--unsafe", "$FILENAME" },
+        stdin = false,
       },
     },
 
