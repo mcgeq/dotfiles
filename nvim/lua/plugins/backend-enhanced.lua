@@ -84,33 +84,10 @@ return {
   },
 
   -- ===== Python 工具增强 =====
-  {
-    "linux-cultist/venv-selector.nvim",
-    ft = "python",
-    branch = "regexp",
-    dependencies = {
-      "neovim/nvim-lspconfig",
-      "nvim-telescope/telescope.nvim",
-      "mfussenegger/nvim-dap-python",
-    },
-    opts = {
-      auto_refresh = true,
-      search_venv_managers = true,
-      search_workspace = true,
-      search = true,
-      dap_enabled = true,
-      name = {
-        "venv",
-        ".venv",
-        "env",
-        ".env",
-      },
-    },
-    keys = {
-      { "<leader>vs", "<cmd>VenvSelect<cr>", desc = "Select Python venv" },
-      { "<leader>vc", "<cmd>VenvSelectCached<cr>", desc = "Select cached venv" },
-    },
-  },
+  -- 注意：Python 虚拟环境自动检测已移至 python-venv-auto.lua
+  -- 使用简单的自动检测脚本，不依赖外部插件
+  -- 自动检测并激活项目目录下的 .venv 或 venv
+
 
   -- ===== 数据库客户端 =====
   {
