@@ -18,7 +18,6 @@ M.language_packs = {
   backend = {
     { import = "astrocommunity.pack.rust" },
     { import = "astrocommunity.pack.go" },
-    { import = "astrocommunity.pack.python-ruff" },
     { import = "astrocommunity.pack.cpp" },
     { import = "astrocommunity.pack.zig" },
   },

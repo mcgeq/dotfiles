@@ -39,14 +39,26 @@ return {
                     -- 设置 Python 路径
                     vim.g.python3_host_prog = python_path
                     
-                    -- 设置环境变量（用于 LSP 和其他工具）
-                    vim.env.VIRTUAL_ENV = venv_path
+                    -- 保存完整路径到另一个变量（供 LSP 使用）
+                    vim.env.VIRTUAL_ENV_FULL = venv_path
+                    
+                    -- 配置虚拟环境显示格式（可自定义）
+                    -- 选项 1: " .venv"  (Python 图标)
+                    -- 选项 2: "🐍 .venv"  (Emoji)
+                    -- 选项 3: "[.venv]"  (方括号) ✓ 当前
+                    local venv_display = "[" .. venv_name .. "]"  -- 方括号
+                    
+                    -- 设置简短的虚拟环境名称到 VIRTUAL_ENV（供状态栏显示）
+                    vim.env.VIRTUAL_ENV = venv_display
+                    
+                    -- 设置 PATH
                     vim.env.PATH = (is_windows 
                       and venv_path .. "\\Scripts;" 
                       or venv_path .. "/bin:") .. vim.env.PATH
                     
-                    -- 在状态栏显示（可选）
+                    -- 在状态栏显示简短名称
                     vim.b.venv_name = venv_name
+                    vim.g.venv_display_name = venv_name
                     
                     return
                   end

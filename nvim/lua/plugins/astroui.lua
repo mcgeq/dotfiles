@@ -51,8 +51,36 @@ return {
 
     -- ===== 状态行配置 =====
     status = {
-      -- 可以在这里配置状态行的各个组件
-      -- 参考: `:h astroui.status`
+      -- 覆盖默认的虚拟环境显示组件
+      components = {
+        -- 自定义 Python 虚拟环境显示（覆盖默认的 env 组件）
+        env = function()
+          -- 检查是否在 Python 文件中
+          if vim.bo.filetype ~= "python" then
+            return ""
+          end
+          
+          -- 优先使用全局变量（由 python-venv-auto.lua 设置）
+          if vim.g.venv_display_name then
+            return " " .. vim.g.venv_display_name
+          end
+          
+          -- 次选：使用 buffer 变量
+          if vim.b.venv_name then
+            return " " .. vim.b.venv_name
+          end
+          
+          -- 备用：从 VIRTUAL_ENV 环境变量提取名称
+          local venv = vim.env.VIRTUAL_ENV
+          if venv and venv ~= "" then
+            -- 提取虚拟环境名称（最后一个目录）
+            local venv_name = venv:match("[\\/]([^\\/]+)$") or "venv"
+            return " " .. venv_name
+          end
+          
+          return ""
+        end,
+      },
     },
   },
 }

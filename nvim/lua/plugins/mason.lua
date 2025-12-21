@@ -56,8 +56,7 @@ return {
       local backend_tools = {
         "rust-analyzer", -- Rust
         "gopls", -- Go
-        "pyright", -- Python（类型检查）
-        "ruff-lsp", -- Python（快速 linter + formatter）
+        -- Python 工具由 python-ty-ruff.lua 管理 (ty + ruff)
         "clangd", -- C/C++
         "zls", -- Zig
         "cmake-language-server", -- CMake
