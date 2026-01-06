@@ -68,10 +68,22 @@ elc:
 	$(EM) --batch -l ./init.el -L "site-lisp/config" --eval '(byte-recompile-directory "site-lisp/config/lang" 0)'
 
 
-.PHONY: clean generate generate-elc init-packages update-packages update-package status-packages lock-packages restore-packages help init up upp st h
+.PHONY: clean generate generate-elc init-packages update-packages update-package status-packages lock-packages restore-packages help init up upp st h test test-verbose
 
 generate: el
 generate-elc: el elc
+
+# =============================================================================
+# Testing
+# =============================================================================
+
+# Run all tests
+test:
+	$(EM) -Q --batch -l test/run-tests.el -f ert-run-tests-batch-and-exit
+
+# Run tests with verbose output
+test-verbose:
+	$(EM) -Q --batch -l test/run-tests.el --eval "(ert-run-tests-batch-and-exit t)"
 
 clean:
 	-powershell -Command "if (Test-Path 'site-lisp/config') { Remove-Item -Recurse -Force 'site-lisp/config' }"
@@ -145,6 +157,10 @@ help:
 	@echo "  make generate        - Generate config from Org files"
 	@echo "  make generate-elc    - Generate and byte-compile config"
 	@echo "  make clean           - Clean generated config files"
+	@echo ""
+	@echo "Testing:"
+	@echo "  make test            - Run all tests"
+	@echo "  make test-verbose    - Run tests with verbose output"
 	@echo ""
 	@echo "Package Management:"
 	@echo "  make init-packages (init)  - Initialize all Git Submodules"

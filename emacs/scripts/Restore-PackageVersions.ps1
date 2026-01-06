@@ -1,5 +1,8 @@
 #!/usr/bin/env pwsh
-# restore-packages.ps1 - Restore to Locked Versions
+# Restore-PackageVersions.ps1 - Restore to Locked Versions (V2 Format)
+#
+# This script restores Git Submodules to their locked versions
+# using the V2 format packages-lock.el file.
 
 param(
     [switch]$Force
@@ -15,7 +18,7 @@ if (-not (Test-Path $lockFile)) {
     Write-Host ""
     Write-Host "[X] Lock file not found: $lockFile" -ForegroundColor Red
     Write-Host ""
-    Write-Host "Tip: Run 'make lock-packages' first to create lock file" -ForegroundColor Yellow
+    Write-Host "Tip: Run 'make lock-packages' or Save-PackageVersions.ps1 first" -ForegroundColor Yellow
     Write-Host ""
     Pop-Location
     exit 1
@@ -23,16 +26,27 @@ if (-not (Test-Path $lockFile)) {
 
 Write-Host ""
 Write-Host "===============================================================" -ForegroundColor Cyan
-Write-Host "  Restore to Locked Versions" -ForegroundColor Cyan
+Write-Host "  Restore to Locked Versions (V2 Format)" -ForegroundColor Cyan
 Write-Host "===============================================================" -ForegroundColor Cyan
 Write-Host ""
 
-# Parse lock file
+# Parse lock file - V2 format with :commit and optional :branch
 $content = Get-Content $lockFile -Raw
-$matches = [regex]::Matches($content, '\("([^"]+)"\s+\.\s+"([^"]+)"\)')
+
+# Extract metadata
+$lockedAt = if ($content -match ':locked-at\s+"([^"]+)"') { $matches[1] } else { "unknown" }
+$platform = if ($content -match ':platform\s+"([^"]+)"') { $matches[1] } else { "unknown" }
+
+Write-Host "Lock file info:" -ForegroundColor Cyan
+Write-Host "  Locked at: $lockedAt"
+Write-Host "  Platform:  $platform"
+Write-Host ""
+
+# Parse package entries - V2 format: ("path" :commit "hash" :branch "branch")
+$matches = [regex]::Matches($content, '\("([^"]+)"\s+:commit\s+"([^"]+)"(?:\s+:branch\s+"([^"]+)")?\)')
 
 if ($matches.Count -eq 0) {
-    Write-Host "[X] Cannot parse lock file" -ForegroundColor Red
+    Write-Host "[X] Cannot parse lock file or no packages found" -ForegroundColor Red
     Pop-Location
     exit 1
 }
@@ -58,6 +72,7 @@ if (-not $Force) {
 foreach ($match in $matches) {
     $path = $match.Groups[1].Value
     $commit = $match.Groups[2].Value
+    $branch = if ($match.Groups[3].Success) { $match.Groups[3].Value } else { $null }
     
     $fullPath = "emacs/site-lisp/extensions/$path"
     
@@ -74,7 +89,7 @@ foreach ($match in $matches) {
     $currentCommit = git rev-parse HEAD 2>$null
     
     if ($currentCommit -eq $commit) {
-        Write-Host "[OK] $path" -ForegroundColor Green -NoNewline
+        Write-Host "[=] $path" -ForegroundColor Green -NoNewline
         Write-Host " (already at target)" -ForegroundColor Gray
         $skipped++
     }
@@ -113,7 +128,7 @@ Write-Host "===============================================================" -Fo
 Write-Host ""
 Write-Host "Total:       $total packages"
 Write-Host "[OK] Restored: $restored" -ForegroundColor Green
-Write-Host "[!]  Skipped:  $skipped" -ForegroundColor Yellow
+Write-Host "[=]  Skipped:  $skipped" -ForegroundColor Yellow
 Write-Host "[X]  Failed:   $failed" -ForegroundColor Red
 Write-Host ""
 

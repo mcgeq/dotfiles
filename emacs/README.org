@@ -203,6 +203,12 @@ emacs/
     make restore-packages # Restore to locked versions
     #+end_src
 
+*** Testing
+    #+begin_src bash
+    make test            # Run all tests
+    make test-verbose    # Run tests with verbose output
+    #+end_src
+
 *** Quick Reference
     #+begin_src bash
     make h               # Show help (all commands)
@@ -296,6 +302,153 @@ emacs/
    3. Add (require 'module-name) to the appropriate phase in init.org
    4. Run make generate
    #+end_example
+
+** Extension Registry V2 ⭐
+
+   本配置采用增强的扩展注册表系统（V2），提供依赖管理、版本追踪和元数据支持。
+
+*** 特性
+
+    - *依赖管理* :: 自动解析和加载扩展依赖
+    - *版本追踪* :: 记录扩展版本和上游信息
+    - *分类组织* :: 按功能分类管理扩展
+    - *延迟加载* :: 非核心扩展延迟加载以提升启动速度
+    - *循环依赖检测* :: 自动检测并警告循环依赖
+
+*** 扩展类别
+
+    | 类别       | 描述                 | 加载阶段 |
+    |------------+----------------------+----------|
+    | core       | 核心库和基础设施     | 立即     |
+    | ui         | 用户界面和主题       | 立即     |
+    | completion | 补全和选择框架       | 立即     |
+    | editor     | 编辑器功能增强       | 立即     |
+    | search     | 搜索和导航工具       | 立即     |
+    | utils      | 通用实用工具         | 立即     |
+    | snippets   | 代码片段系统         | 立即     |
+    | input      | 输入法和输入增强     | 立即     |
+    | git        | 版本控制工具         | 延迟     |
+    | lsp        | LSP和语言支持        | 延迟     |
+    | org        | Org Mode生态系统     | 延迟     |
+    | docs       | 文档编辑和预览       | 延迟     |
+
+*** 管理命令
+
+    #+begin_src emacs-lisp
+    ;; 查询扩展信息
+    M-x mcg-info-extension       ; 交互式查看扩展详情
+    
+    ;; 搜索扩展
+    M-x mcg-search-extension     ; 模糊搜索扩展（按名称或类别）
+    
+    ;; 查看分类状态
+    M-x mcg-display-categories-status  ; 显示所有类别的加载状态
+    
+    ;; 验证配置
+    M-x mcg-validate-all         ; 执行完整配置验证
+    M-x mcg-validate-extensions  ; 验证扩展目录存在
+    M-x mcg-validate-dependencies ; 验证依赖关系
+    
+    ;; 检查循环依赖
+    M-x mcg-check-circular-dependencies
+    #+end_src
+
+** Version Management (版本管理) ⭐
+
+   支持锁定和恢复 Git Submodule 版本，确保配置可复现。
+
+*** 锁定版本
+
+    #+begin_src bash
+    # 使用 Makefile
+    make lock-packages
+    
+    # 或使用 PowerShell 脚本
+    powershell -File scripts/Save-PackageVersions.ps1
+    #+end_src
+
+    这会生成 =site-lisp/packages-lock.el= 文件，包含：
+    - 所有 submodule 的 commit hash
+    - 分支信息
+    - 锁定时间戳
+    - Emacs 版本和平台信息
+
+*** 恢复版本
+
+    #+begin_src bash
+    # 使用 Makefile
+    make restore-packages
+    
+    # 或使用 PowerShell 脚本
+    powershell -File scripts/Restore-PackageVersions.ps1
+    #+end_src
+
+*** Emacs 内命令
+
+    #+begin_src emacs-lisp
+    ;; 锁定当前版本
+    M-x mcg-lock-packages
+    
+    ;; 恢复到锁定版本
+    M-x mcg-restore-packages
+    
+    ;; 回滚单个包
+    M-x mcg-rollback-package
+    
+    ;; 比较当前版本与锁定版本
+    M-x mcg-compare-versions
+    #+end_src
+
+** Cross-Platform Support (跨平台支持) ⭐
+
+   配置自动检测运行平台并适配相应设置。
+
+*** 支持的平台
+
+    - Windows (PowerShell/CMD)
+    - macOS
+    - Linux
+    - BSD
+
+*** 平台检测
+
+    #+begin_src emacs-lisp
+    ;; 检测当前平台
+    M-x mcg-display-platform-info
+    
+    ;; 平台判断函数
+    (mcg-platform-windows-p)  ; 是否 Windows
+    (mcg-platform-macos-p)    ; 是否 macOS
+    (mcg-platform-linux-p)    ; 是否 Linux
+    (mcg-platform-unix-like-p) ; 是否类 Unix
+    #+end_src
+
+*** 外部工具检测
+
+    #+begin_src emacs-lisp
+    ;; 检测外部工具
+    M-x mcg-detect-external-tools
+    
+    ;; 检查工具是否可用
+    (mcg-tool-available-p 'git)
+    (mcg-tool-available-p 'ripgrep)
+    (mcg-tool-available-p 'python)
+    
+    ;; 获取工具路径
+    (mcg-get-tool-path 'git)
+    #+end_src
+
+*** 优雅降级
+
+    当平台特定功能不可用时，系统会：
+    1. 显示警告信息
+    2. 提供替代方案建议
+    3. 继续加载其他功能
+
+    #+begin_src emacs-lisp
+    ;; 查看降级警告
+    M-x mcg-display-degradation-warnings
+    #+end_src
 
 * ⌨️ Key Bindings
 
@@ -804,6 +957,199 @@ emacs/
    - =CHANGELOG-VAR-MIGRATION.org= :: 变更日志
 
 * 🔍 Debugging
+
+** Common Errors and Solutions ⭐
+
+*** Extension Loading Errors
+
+**** Error: Required extension not found
+     #+begin_example
+     Error: Required extension core/dash failed: Directory not found
+     Suggestion: Run 'make init' to initialize submodules
+     #+end_example
+
+     *Solution:*
+     #+begin_src bash
+     # Initialize all submodules
+     make init
+     
+     # Or manually
+     git submodule update --init --recursive
+     #+end_src
+
+**** Error: Circular dependency detected
+     #+begin_example
+     Warning: Circular dependency detected: pkg-a -> pkg-b -> pkg-a
+     #+end_example
+
+     *Solution:*
+     1. Run =M-x mcg-check-circular-dependencies= to identify the cycle
+     2. Review the extension registry in =init-loadpath.el=
+     3. Remove or restructure the circular dependency
+
+**** Error: Extension dependency failed
+     #+begin_example
+     Warning: Failed to load dependency core/dash for completion/vertico
+     #+end_example
+
+     *Solution:*
+     #+begin_src bash
+     # Check if the dependency exists
+     ls site-lisp/extensions/core/dash
+     
+     # If missing, reinitialize
+     make init
+     #+end_src
+
+*** Git Submodule Errors
+
+**** Error: Submodule not initialized
+     #+begin_example
+     fatal: no submodule mapping found in .gitmodules for path 'site-lisp/extensions/...'
+     #+end_example
+
+     *Solution:*
+     #+begin_src bash
+     git submodule update --init --recursive
+     #+end_src
+
+**** Error: Submodule has conflicts
+     #+begin_example
+     error: Your local changes to the following files would be overwritten by checkout
+     #+end_example
+
+     *Solution:*
+     #+begin_src bash
+     # Option 1: Stash changes
+     cd site-lisp/extensions/[package]
+     git stash
+     cd ../../..
+     make up
+     
+     # Option 2: Force update (loses local changes)
+     git submodule update --force [path]
+     #+end_src
+
+**** Error: Detached HEAD in submodule
+     #+begin_example
+     HEAD detached at abc1234
+     #+end_example
+
+     *Note:* This is normal for submodules. If you need to make changes:
+     #+begin_src bash
+     cd site-lisp/extensions/[package]
+     git checkout main  # or master
+     #+end_src
+
+*** Version Lock Errors
+
+**** Error: Lock file not found
+     #+begin_example
+     Warning: packages-lock.el not found
+     #+end_example
+
+     *Solution:*
+     #+begin_src bash
+     # Create a new lock file
+     make lock-packages
+     #+end_src
+
+**** Error: Cannot restore to locked version
+     #+begin_example
+     error: pathspec 'abc1234' did not match any file(s) known to git
+     #+end_example
+
+     *Solution:*
+     #+begin_src bash
+     # Fetch latest from remote first
+     cd site-lisp/extensions/[package]
+     git fetch --all
+     cd ../../..
+     make restore-packages
+     #+end_src
+
+*** Configuration Validation Errors
+
+**** Error: Invalid Elisp syntax
+     #+begin_example
+     Syntax error in generated file: site-lisp/config/core/init-loadpath.el
+     #+end_example
+
+     *Solution:*
+     1. Check the source Org file for syntax errors
+     2. Regenerate the configuration:
+        #+begin_src bash
+        make clean
+        make generate
+        #+end_src
+
+**** Error: Missing required feature
+     #+begin_example
+     Cannot open load file: No such file or directory, some-feature
+     #+end_example
+
+     *Solution:*
+     1. Check if the extension providing the feature is registered
+     2. Verify the extension directory exists
+     3. Run =M-x mcg-validate-extensions=
+
+*** Platform-Specific Errors
+
+**** Windows: PowerShell execution policy
+     #+begin_example
+     File cannot be loaded because running scripts is disabled on this system
+     #+end_example
+
+     *Solution:*
+     #+begin_src powershell
+     # Run as Administrator
+     Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+     #+end_src
+
+**** Windows: Path too long
+     #+begin_example
+     Filename too long
+     #+end_example
+
+     *Solution:*
+     #+begin_src powershell
+     # Enable long paths (requires Windows 10 1607+)
+     git config --system core.longpaths true
+     #+end_src
+
+**** Unix: Permission denied
+     #+begin_example
+     Permission denied: scripts/some-script.sh
+     #+end_example
+
+     *Solution:*
+     #+begin_src bash
+     chmod +x scripts/*.sh
+     #+end_src
+
+*** Diagnostic Commands
+
+    Use these commands to diagnose issues:
+
+    #+begin_src emacs-lisp
+    ;; Validate all configuration
+    M-x mcg-validate-all
+    
+    ;; Check extension status
+    M-x mcg-display-categories-status
+    
+    ;; View platform info
+    M-x mcg-display-platform-info
+    
+    ;; Check external tools
+    M-x mcg-detect-external-tools
+    
+    ;; View degradation warnings
+    M-x mcg-display-degradation-warnings
+    
+    ;; Check load status
+    M-x mcg-load-status
+    #+end_src
 
 ** Enable Debug Mode
    #+begin_src emacs-lisp

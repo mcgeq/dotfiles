@@ -45,3 +45,4 @@ dist-ssr
 *.sw?
 .lsp/
 .clj-kondo/
+.kiro
