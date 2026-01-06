@@ -1,9 +1,9 @@
 {
   "completion": ["volar", "emmet-ls", "tailwindcss", "vscode-css-language-server"],
   "completion_item_resolve": ["volar"],
-  "diagnostics": ["volar", "typescript", "biome", "vscode-css-language-server"],
-  "code_action": ["volar", "typescript", "biome", "vscode-css-language-server"],
-  "execute_command": ["volar", "typescript", "biome"],
+  "diagnostics": ["volar", "biome"],
+  "code_action": ["volar", "biome"],
+  "execute_command": ["volar", "biome"],
   "find_define": "typescript",
   "find_type_define": "typescript",
   "find_implementation": "typescript",

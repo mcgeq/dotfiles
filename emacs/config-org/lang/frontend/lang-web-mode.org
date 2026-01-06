@@ -179,6 +179,89 @@
  "web-mode-extension")
 #+END_SRC
 
+** Vue SFC Block Reorder
+#+BEGIN_SRC emacs-lisp
+;;; Vue 单文件组件块排序 - 排序为 script -> template -> style
+
+(defvar mcg-vue-block-order '("script" "template" "style")
+  "Vue SFC 块的期望顺序。")
+
+(defun mcg-vue--find-block-bounds (block-name)
+  "查找 Vue 块的起止位置，返回 (start . end) 或 nil。"
+  (save-excursion
+    (goto-char (point-min))
+    ;; 匹配 <script>, <script setup>, <script lang="ts"> 等
+    (let ((start-regex (format "^[ \t]*<%s\\(?:[ \t\n][^>]*\\)?>" block-name))
+          (end-regex (format "^[ \t]*</%s>" block-name)))
+      (when (re-search-forward start-regex nil t)
+        (let ((start (match-beginning 0)))
+          (when (re-search-forward end-regex nil t)
+            (cons start (point))))))))
+
+(defun mcg-vue--extract-block (block-name)
+  "提取 Vue 块内容，返回字符串或 nil。"
+  (when-let ((bounds (mcg-vue--find-block-bounds block-name)))
+    (buffer-substring-no-properties (car bounds) (cdr bounds))))
+
+(defun mcg-vue--get-block-positions ()
+  "获取所有块的位置，返回 ((name . start-pos) ...) 按位置排序。"
+  (let (positions)
+    (dolist (name mcg-vue-block-order)
+      (when-let ((bounds (mcg-vue--find-block-bounds name)))
+        (push (cons name (car bounds)) positions)))
+    (sort positions (lambda (a b) (< (cdr a) (cdr b))))))
+
+(defun mcg-vue-reorder-blocks ()
+  "重新排序 Vue SFC 块为: script -> template -> style。"
+  (interactive)
+  (unless (and buffer-file-name
+               (string-match-p "\\.vue\\'" buffer-file-name))
+    (user-error "Not a Vue file"))
+  
+  (let* ((positions (mcg-vue--get-block-positions))
+         (current-order (mapcar #'car positions))
+         (expected-order (seq-filter (lambda (b) (member b current-order))
+                                     mcg-vue-block-order)))
+    
+    (if (equal current-order expected-order)
+        (message "Vue blocks already in correct order: %s"
+                 (string-join current-order " -> "))
+      ;; 提取所有块内容
+      (let ((blocks (mapcar (lambda (name)
+                              (cons name (mcg-vue--extract-block name)))
+                            expected-order)))
+        ;; 删除所有内容
+        (erase-buffer)
+        ;; 按正确顺序插入
+        (dolist (block blocks)
+          (when (cdr block)
+            (unless (bobp)
+              (insert "\n\n"))
+            (insert (cdr block))))
+        (insert "\n")
+        (message "Vue blocks reordered: %s" (string-join expected-order " -> "))))))
+
+;; 保存 Vue 文件前自动排序块
+(defun mcg-vue-reorder-before-save ()
+  "保存前重排序 Vue 块。"
+  (when (and (eq major-mode 'web-mode)
+             buffer-file-name
+             (string-match-p "\\.vue\\'" buffer-file-name))
+    (mcg-vue-reorder-blocks)))
+
+;; 启用保存时自动排序（仅对 .vue 文件生效）
+(add-hook 'before-save-hook #'mcg-vue-reorder-before-save)
+
+;; 手动排序快捷键
+(defun mcg-vue-setup-reorder-keys ()
+  "设置 Vue 块排序快捷键"
+  (when (and buffer-file-name
+             (string-match-p "\\.vue\\'" buffer-file-name))
+    (local-set-key (kbd "C-c C-o") #'mcg-vue-reorder-blocks)))
+
+(add-hook 'web-mode-hook #'mcg-vue-setup-reorder-keys)
+#+END_SRC
+
 ** Enhanced Web Development Features
 #+BEGIN_SRC emacs-lisp
 ;;; 增强的 Web 开发特性 (lazycat style)

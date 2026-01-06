@@ -73,6 +73,27 @@
 
 #+END_SRC
 
+** TypeScript SDK Path
+#+BEGIN_SRC emacs-lisp
+;;; 为 Volar 提供 TypeScript SDK 路径
+(defun get-user-tsdk-path ()
+  "返回 TypeScript SDK 路径，优先使用项目本地，否则使用全局。"
+  (let* ((project-root (when (project-current)
+                         (project-root (project-current))))
+         (local-tsdk (when project-root
+                       (expand-file-name "node_modules/typescript/lib" project-root)))
+         (global-tsdk (expand-file-name "~/AppData/Roaming/npm/node_modules/typescript/lib")))
+    (cond
+     ;; 优先使用项目本地的 TypeScript
+     ((and local-tsdk (file-directory-p local-tsdk))
+      local-tsdk)
+     ;; 否则使用全局安装的 TypeScript
+     ((file-directory-p global-tsdk)
+      global-tsdk)
+     ;; 都没有则返回空字符串
+     (t ""))))
+#+END_SRC
+
 ** Config bridge
 
 #+BEGIN_SRC emacs-lisp
@@ -213,9 +234,9 @@
     (add-to-list 'lsp-bridge-multi-lang-server-extension-list '(("jsx") . "typescript-biome"))
     ;; Vue with full stack: Volar + TypeScript + Biome + Emmet + TailwindCSS + CSS
     ;; 选择跳转方式：
-    ;; - "vue-full" = TypeScript 跳转（准确但需要按两次 M-.）
-    ;; - "vue-full-volar" = Volar 跳转（可能直接跳转）
-    (add-to-list 'lsp-bridge-multi-lang-server-extension-list '(("vue") . "vue-full-volar"))))
+    ;; - "vue-full" = TypeScript 跳转（更可靠）
+    ;; - "vue-full-volar" = Volar 跳转（需要正确配置 tsdk）
+    (add-to-list 'lsp-bridge-multi-lang-server-extension-list '(("vue") . "vue-full"))))
   
   ;; Enable global lsp-bridge mode
   (global-lsp-bridge-mode)
