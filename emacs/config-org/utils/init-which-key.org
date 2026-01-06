@@ -187,6 +187,19 @@
 ;; 减少更新频率
 (setq which-key-compute-remaps nil)
 
+;; 修复 C-g 取消后 which-key 窗口不关闭的问题
+(defun mcg/which-key-abort-and-hide ()
+  "取消命令并隐藏 which-key 窗口。"
+  (interactive)
+  (which-key--hide-popup)
+  (keyboard-quit))
+
+;; 在 which-key 显示时，C-g 同时关闭 which-key 窗口
+(advice-add 'keyboard-quit :before
+            (lambda (&rest _)
+              (when (which-key--popup-showing-p)
+                (which-key--hide-popup))))
+
 #+END_SRC
 
 ** Ends
