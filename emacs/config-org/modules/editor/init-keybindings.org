@@ -1,0 +1,737 @@
+* init-keybindings.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle init-keybindings.el :lexical t
+:END:
+
+** Headers
+#+BEGIN_SRC emacs-lisp
+;;; init-keybindings.el --- Keybindings for MCG Emacs -*- lexical-binding: t; -*-
+
+;; Filename: init-keybindings.el
+;; Description: 全局快捷键配置模块
+;; Author: mcge <mcgeq@outlook.com>
+;; Copyright (C) 2024-2026, mcge, all rights reserved.
+;; Create   Date: 2026-01-07
+;; Version: 3.0
+;; Keywords: keybindings, keyboard
+;; Compatibility: GNU Emacs 29.0+
+
+;;; Commentary:
+;;
+;; MCG Emacs 配置架构的快捷键模块，负责：
+;; - 全局快捷键设置
+;; - Markmacro 多光标编辑
+;; - Vundo 可视化撤销
+;; - 快捷键速查
+;;
+
+#+END_SRC
+
+** Dependencies
+#+BEGIN_SRC emacs-lisp
+;;; Dependencies
+
+(require 'core-lib)
+
+#+END_SRC
+
+** Unset Conflicting Keys
+#+BEGIN_SRC emacs-lisp
+;;; Unset Conflicting Keys
+
+;; 解除不常用或冲突的快捷键
+(global-unset-key (kbd "C-z"))   ; suspend-frame (rarely used)
+(global-unset-key (kbd "s-q"))   ; save-buffers-kill-emacs (dangerous)
+
+#+END_SRC
+
+** Basic Editing Keys
+#+BEGIN_SRC emacs-lisp
+;;; Basic Editing Keys
+
+(defun mcg/smart-beginning-of-line ()
+  "智能行首移动：在行首和第一个非空白字符之间切换。"
+  (interactive)
+  (let ((orig-point (point)))
+    (back-to-indentation)
+    (when (= orig-point (point))
+      (beginning-of-line))))
+
+(defun mcg/open-init-file ()
+  "打开配置入口文件。"
+  (interactive)
+  (find-file (expand-file-name "init.el" mcg-config-dir)))
+
+;; 基础编辑
+(global-set-key (kbd "C-a") 'mcg/smart-beginning-of-line)
+(global-set-key (kbd "C-c E") 'mcg/open-init-file)
+(global-set-key (kbd "C-c R") 'replace-string)
+(global-set-key (kbd "C-c M-r") 'replace-regexp)
+(global-set-key (kbd "C-c D") 'make-directory)
+
+#+END_SRC
+
+** Line Manipulation
+#+BEGIN_SRC emacs-lisp
+;;; Line Manipulation
+
+;; 在下方插入新行
+(global-set-key (kbd "C-c <down>")
+                (lambda ()
+                  (interactive)
+                  (end-of-line)
+                  (newline-and-indent)))
+
+;; 在上方插入新行
+(global-set-key (kbd "C-c <up>")
+                (lambda ()
+                  (interactive)
+                  (beginning-of-line)
+                  (newline)
+                  (forward-line -1)
+                  (indent-according-to-mode)))
+
+;; 向上移动行
+(global-set-key (kbd "M-<up>")
+                (lambda ()
+                  (interactive)
+                  (transpose-lines 1)
+                  (forward-line -2)
+                  (indent-according-to-mode)))
+
+;; 向下移动行
+(global-set-key (kbd "M-<down>")
+                (lambda ()
+                  (interactive)
+                  (forward-line 1)
+                  (transpose-lines 1)
+                  (forward-line -1)
+                  (indent-according-to-mode)))
+
+#+END_SRC
+
+** Scrolling
+#+BEGIN_SRC emacs-lisp
+;;; Scrolling
+
+(defun mcg/scroll-down-third ()
+  "向下滚动 1/3 窗口高度。"
+  (interactive)
+  (scroll-up (/ (window-body-height) 3)))
+
+(defun mcg/scroll-up-third ()
+  "向上滚动 1/3 窗口高度。"
+  (interactive)
+  (scroll-down (/ (window-body-height) 3)))
+
+(global-set-key (kbd "M-n") 'mcg/scroll-down-third)
+(global-set-key (kbd "M-p") 'mcg/scroll-up-third)
+
+#+END_SRC
+
+** Markmacro Configuration
+#+BEGIN_SRC emacs-lisp
+;;; Markmacro Configuration
+
+(defun mcg--setup-markmacro ()
+  "设置 Markmacro 多光标编辑。"
+  (when (mcg-require-extension "editor/markmacro" 'markmacro)
+    ;; C-c m 前缀
+    (global-set-key (kbd "C-c m s") 'markmacro-rect-set)
+    (global-set-key (kbd "C-c m d") 'markmacro-rect-delete)
+    (global-set-key (kbd "C-c m r") 'markmacro-rect-replace)
+    (global-set-key (kbd "C-c m i") 'markmacro-rect-insert)
+    (global-set-key (kbd "C-c m c") 'markmacro-rect-mark-columns)
+    (global-set-key (kbd "C-c m S") 'markmacro-rect-mark-symbols)
+    (global-set-key (kbd "C-c m a") 'markmacro-apply-all)
+    (global-set-key (kbd "C-c m e") 'markmacro-apply-all-except-first)
+    
+    ;; Super 键快捷方式
+    (global-set-key (kbd "s-/") 'markmacro-mark-words)
+    (global-set-key (kbd "s-?") 'markmacro-mark-lines)
+    (global-set-key (kbd "s-:") 'markmacro-mark-chars)
+    (global-set-key (kbd "s-L") 'markmacro-mark-imenus)
+    
+    (mcg-log "Markmacro configured")))
+
+#+END_SRC
+
+** Vundo Configuration
+#+BEGIN_SRC emacs-lisp
+;;; Vundo Configuration
+
+(defun mcg--setup-vundo ()
+  "设置 Vundo 可视化撤销。"
+  (when (mcg-require-extension "editor/vundo" 'vundo)
+    ;; 使用 Unicode 符号
+    (setq vundo-glyph-alist vundo-unicode-symbols)
+    (setq vundo-roll-back-on-quit nil)
+    (setq vundo-compact-display t)
+    (setq vundo-diff-quit 'bury)
+    
+    ;; 修复 vundo 退出后 buffer 变为只读的问题
+    (defun mcg--vundo-force-writable (&rest _)
+      "Force buffer to be writable after vundo command."
+      (run-with-timer 0.01 nil
+                      (lambda ()
+                        (when (and (not (eq major-mode 'vundo-mode))
+                                   buffer-read-only)
+                          (read-only-mode -1)))))
+    
+    ;; 添加 advice 到所有 vundo 命令
+    (advice-add 'vundo-backward :after #'mcg--vundo-force-writable)
+    (advice-add 'vundo-forward :after #'mcg--vundo-force-writable)
+    (advice-add 'vundo-next :after #'mcg--vundo-force-writable)
+    (advice-add 'vundo-previous :after #'mcg--vundo-force-writable)
+    (advice-add 'vundo-stem-root :after #'mcg--vundo-force-writable)
+    (advice-add 'vundo-stem-end :after #'mcg--vundo-force-writable)
+    (advice-add 'vundo-goto-last-saved :after #'mcg--vundo-force-writable)
+    (advice-add 'vundo-quit :after #'mcg--vundo-force-writable)
+    (advice-add 'vundo-confirm :after #'mcg--vundo-force-writable)
+    
+    ;; 快捷键
+    (global-set-key (kbd "C-x u") 'vundo)
+    (global-set-key (kbd "C-c u") 'vundo)
+    (global-set-key (kbd "C-/") 'undo)
+    (global-set-key (kbd "C-?") 'undo-redo)
+    
+    (mcg-log "Vundo configured")))
+
+#+END_SRC
+
+** Vundo Hydra
+#+BEGIN_SRC emacs-lisp
+;;; Vundo Hydra
+
+(defun mcg--setup-vundo-hydra ()
+  "设置 Vundo Hydra 菜单。"
+  (when (and (featurep 'vundo)
+             (mcg-require-extension "utils/hydra" 'hydra))
+    
+    (defhydra hydra-vundo (:color pink :hint nil)
+      "
+╭────────^Movement^─────────┬─────^Branch^──────┬──────^Saved^──────┬─────^Diff^────┬───^Actions^───╮
+│ _f_ forward  _b_ backward │ _n_ next branch   │ _l_ last saved    │ _m_ mark      │ _RET_ confirm │
+│ _a_ to branch _e_ to tip  │ _p_ prev branch   │ _r_ next saved    │ _u_ unmark    │ _q_ quit      │
+│                          │                   │                   │ _d_ diff      │ _Q_ abort     │
+╰──────────────────────────┴───────────────────┴───────────────────┴───────────────┴───────────────╯
+      "
+      ;; Basic movement
+      ("f" vundo-forward "forward")
+      ("b" vundo-backward "backward")
+      
+      ;; Branch navigation
+      ("n" vundo-next "next branch")
+      ("p" vundo-previous "prev branch")
+      ("a" vundo-stem-root "to branch point")
+      ("e" vundo-stem-end "to end")
+      
+      ;; Saved state navigation
+      ("l" vundo-goto-last-saved "last saved")
+      ("r" vundo-goto-next-saved "next saved")
+      
+      ;; Diff operations
+      ("m" vundo-diff-mark "mark for diff")
+      ("u" vundo-diff-unmark "unmark")
+      ("d" vundo-diff "show diff")
+      
+      ;; Actions
+      ("RET" vundo-confirm "confirm" :color blue)
+      ("q" vundo-quit "quit" :color blue)
+      ("Q" (progn (setq vundo-roll-back-on-quit t) (vundo-quit)) "abort" :color blue)
+      ("C-g" vundo-quit "quit" :color blue)
+      
+      ;; Debug (hidden)
+      ("i" vundo--inspect)
+      ("D" vundo--debug))
+    
+    ;; Bind hydra to vundo-mode
+    (define-key vundo-mode-map (kbd ".") 'hydra-vundo/body)
+    (define-key vundo-mode-map (kbd "?") 'hydra-vundo/body)
+    
+    ;; Auto-show hydra when vundo opens
+    (add-hook 'vundo-mode-hook #'hydra-vundo/body)
+    
+    (mcg-log "Vundo hydra configured")))
+
+;; 延迟加载 hydra
+(with-eval-after-load 'vundo
+  (mcg--setup-vundo-hydra))
+
+#+END_SRC
+
+** Yasnippet Keys
+#+BEGIN_SRC emacs-lisp
+;;; Yasnippet Keys
+
+(global-set-key (kbd "C-c y n") 'yas-new-snippet)
+(global-set-key (kbd "C-c y v") 'yas-visit-snippet-file)
+(global-set-key (kbd "C-c y r") 'yas-reload-all)
+
+#+END_SRC
+
+** Sort-tab Keys
+#+BEGIN_SRC emacs-lisp
+;;; Sort-tab Keys (C-c t 前缀)
+
+;; Tab 数字选择辅助函数
+(defun mcg-select-tab-1 ()
+  "Select tab 1."
+  (interactive)
+  (when (fboundp 'sort-tab-select-by-index)
+    (sort-tab-select-by-index 0)))
+
+(defun mcg-select-tab-2 ()
+  "Select tab 2."
+  (interactive)
+  (when (fboundp 'sort-tab-select-by-index)
+    (sort-tab-select-by-index 1)))
+
+(defun mcg-select-tab-3 ()
+  "Select tab 3."
+  (interactive)
+  (when (fboundp 'sort-tab-select-by-index)
+    (sort-tab-select-by-index 2)))
+
+(defun mcg--setup-sort-tab-keys ()
+  "设置 sort-tab 快捷键。"
+  (with-eval-after-load 'sort-tab
+    ;; 导航
+    (global-set-key (kbd "C-c t n") 'sort-tab-select-next-tab)
+    (global-set-key (kbd "C-c t p") 'sort-tab-select-prev-tab)
+    (global-set-key (kbd "C-c t f") 'sort-tab-select-first-tab)
+    (global-set-key (kbd "C-c t l") 'sort-tab-select-last-tab)
+    
+    ;; 管理
+    (global-set-key (kbd "C-c t k") 'sort-tab-close-current-tab)
+    (global-set-key (kbd "C-c t o") 'sort-tab-close-other-tabs)
+    (global-set-key (kbd "C-c t K") 'sort-tab-close-all-tabs)
+    
+    ;; 数字快速选择
+    (global-set-key (kbd "C-c t 1") 'mcg-select-tab-1)
+    (global-set-key (kbd "C-c t 2") 'mcg-select-tab-2)
+    (global-set-key (kbd "C-c t 3") 'mcg-select-tab-3)
+    
+    (mcg-log "Sort-tab keybindings configured")))
+
+#+END_SRC
+
+** Search Keys
+#+BEGIN_SRC emacs-lisp
+;;; Search Keys (C-c s 前缀)
+
+(defun mcg--setup-search-keys ()
+  "设置搜索相关快捷键。"
+  ;; Consult 搜索
+  (with-eval-after-load 'consult
+    (global-set-key (kbd "C-c s l") 'consult-line)
+    (global-set-key (kbd "C-c s i") 'consult-imenu)
+    (global-set-key (kbd "C-c s m") 'consult-mark)
+    (global-set-key (kbd "C-c s b") 'consult-buffer)
+    (global-set-key (kbd "C-c s r") 'consult-recent-file))
+  
+  ;; Embark
+  (with-eval-after-load 'embark
+    (global-set-key (kbd "C-.") 'embark-act)
+    (global-set-key (kbd "C-,") 'embark-dwim))
+  
+  ;; Color-rg 搜索
+  (with-eval-after-load 'color-rg
+    (global-set-key (kbd "C-c s g") 'color-rg-search-input)
+    (global-set-key (kbd "C-c s G") 'color-rg-search-input-in-project)
+    (global-set-key (kbd "C-c s s") 'color-rg-search-symbol)
+    (global-set-key (kbd "C-c s S") 'color-rg-search-symbol-in-project)
+    (global-set-key (kbd "C-c s .") 'color-rg-search-symbol-in-current-file)
+    (global-set-key (kbd "C-c s ,") 'color-rg-search-input-in-current-file))
+  
+  ;; Blink-search
+  (with-eval-after-load 'blink-search
+    (global-set-key (kbd "C-c s B") 'blink-search))
+  
+  (mcg-log "Search keybindings configured"))
+
+#+END_SRC
+
+** File Keys
+#+BEGIN_SRC emacs-lisp
+;;; File Keys (C-c f 前缀)
+
+(defun mcg--setup-file-keys ()
+  "设置文件相关快捷键。"
+  ;; Recent files
+  (with-eval-after-load 'consult
+    (global-set-key (kbd "C-c f r") 'consult-recent-file))
+  
+  ;; 如果 consult 未加载，使用 recentf
+  (unless (featurep 'consult)
+    (global-set-key (kbd "C-c f r") 'recentf-open-files))
+  
+  (mcg-log "File keybindings configured"))
+
+#+END_SRC
+
+** Git Keys
+#+BEGIN_SRC emacs-lisp
+;;; Git Keys (C-c g 前缀)
+
+(defun mcg--setup-git-keys ()
+  "设置 Git 相关快捷键。"
+  (with-eval-after-load 'magit
+    ;; 主要命令
+    (global-set-key (kbd "C-x g") 'magit-status)
+    (global-set-key (kbd "C-x M-g") 'magit-dispatch)
+    (global-set-key (kbd "C-c g s") 'magit-status)
+    (global-set-key (kbd "C-c g l") 'magit-log)
+    (global-set-key (kbd "C-c g d") 'magit-dispatch)
+    (global-set-key (kbd "C-c g f") 'magit-file-dispatch)
+    
+    ;; 推送/拉取
+    (global-set-key (kbd "C-c g p") 'magit-push)
+    (global-set-key (kbd "C-c g P") 'magit-pull)
+    
+    ;; 分支
+    (global-set-key (kbd "C-c g b b") 'magit-branch-create)
+    (global-set-key (kbd "C-c g b r") 'magit-branch-rename)
+    (global-set-key (kbd "C-c g b d") 'magit-branch-delete)
+    
+    ;; Submodules
+    (global-set-key (kbd "C-c g m a") 'magit-submodule-add)
+    (global-set-key (kbd "C-c g m r") 'magit-submodule-remove)
+    (global-set-key (kbd "C-c g m u") 'magit-submodule-update)
+    
+    (mcg-log "Git keybindings configured")))
+
+#+END_SRC
+
+** LSP Keys
+#+BEGIN_SRC emacs-lisp
+;;; LSP Keys (标准绑定)
+
+(defun mcg--setup-lsp-keys ()
+  "设置 LSP 相关快捷键（标准绑定）。"
+  (with-eval-after-load 'lsp-bridge
+    ;; Navigation (standard LSP bindings)
+    (global-set-key (kbd "M-.") 'lsp-bridge-find-def)
+    (global-set-key (kbd "M-,") 'lsp-bridge-find-def-return)
+    (global-set-key (kbd "M-?") 'lsp-bridge-find-references)
+    (global-set-key (kbd "C-M-.") 'lsp-bridge-find-def-other-window)
+    
+    ;; Documentation (C-h prefix for help)
+    (global-set-key (kbd "C-h .") 'lsp-bridge-popup-documentation)
+    (global-set-key (kbd "C-h ,") 'lsp-bridge-show-signature)
+    (global-set-key (kbd "C-h <up>") 'lsp-bridge-popup-documentation-scroll-up)
+    (global-set-key (kbd "C-h <down>") 'lsp-bridge-popup-documentation-scroll-down)
+    
+    ;; Code actions (C-c r prefix for refactoring)
+    (global-set-key (kbd "C-c r r") 'lsp-bridge-rename)
+    (global-set-key (kbd "C-c r a") 'lsp-bridge-code-action)
+    (global-set-key (kbd "C-c r f") 'lsp-bridge-code-format)
+    (global-set-key (kbd "C-c r l") 'lsp-bridge-find-impl)
+    (global-set-key (kbd "C-c r s") 'lsp-bridge-workspace-list-symbols)
+    
+    ;; Diagnostics (M-g prefix - standard Emacs "goto" prefix)
+    (global-set-key (kbd "M-g n") 'lsp-bridge-diagnostic-jump-next)
+    (global-set-key (kbd "M-g p") 'lsp-bridge-diagnostic-jump-prev)
+    (global-set-key (kbd "M-g l") 'lsp-bridge-diagnostic-list))
+  
+  (mcg-log "LSP keybindings configured"))
+
+#+END_SRC
+
+** Org Keys
+#+BEGIN_SRC emacs-lisp
+;;; Org Keys (C-c n 前缀)
+
+(defun mcg--setup-org-keys ()
+  "设置 Org 相关快捷键。"
+  (with-eval-after-load 'org
+    (global-set-key (kbd "C-c n c") 'org-capture)
+    (global-set-key (kbd "C-c n a") 'org-agenda)
+    (global-set-key (kbd "C-c n l") 'org-store-link)
+    (global-set-key (kbd "C-c n t") 'org-todo-list))
+  
+  (mcg-log "Org keybindings configured"))
+
+#+END_SRC
+
+** Elisp Development Keys
+#+BEGIN_SRC emacs-lisp
+;;; Elisp Development Keys
+
+(with-eval-after-load 'elisp-mode
+  (define-key emacs-lisp-mode-map (kbd "C-c C-b") 'eval-buffer)
+  (define-key emacs-lisp-mode-map (kbd "C-c C-r") 'eval-region))
+
+#+END_SRC
+
+** Transient Menus
+#+BEGIN_SRC emacs-lisp
+;;; Transient Menus
+
+(defun mcg--setup-transient-menus ()
+  "设置 Transient 菜单。"
+  (when (require 'transient nil t)
+    ;; 搜索菜单
+    (transient-define-prefix mcg-search-menu ()
+      "搜索命令菜单"
+      [["Buffer"
+        ("l" "Line" consult-line)
+        ("i" "Imenu" consult-imenu)
+        ("m" "Mark" consult-mark)]
+       ["Project"
+        ("g" "Grep" color-rg-search-input-in-project)
+        ("s" "Symbol" color-rg-search-symbol-in-project)
+        ("B" "Blink" blink-search)]
+       ["Current"
+        ("." "Symbol here" color-rg-search-symbol-in-current-file)
+        ("," "Input here" color-rg-search-input-in-current-file)]])
+    
+    (global-set-key (kbd "C-c s ?") 'mcg-search-menu)
+    
+    ;; Git 菜单
+    (transient-define-prefix mcg-git-menu ()
+      "Git 操作菜单"
+      [["Main"
+        ("s" "Status" magit-status)
+        ("l" "Log" magit-log)
+        ("d" "Dispatch" magit-dispatch)]
+       ["Commit"
+        ("c" "Commit" magit-commit)
+        ("a" "Amend" magit-commit-amend)]
+       ["Remote"
+        ("p" "Push" magit-push)
+        ("P" "Pull" magit-pull)
+        ("f" "Fetch" magit-fetch)]])
+    
+    (global-set-key (kbd "C-c g ?") 'mcg-git-menu)
+    
+    ;; 窗口菜单
+    (transient-define-prefix mcg-window-menu ()
+      "窗口操作菜单"
+      [["Switch"
+        ("w" "Ace window" ace-window)
+        ("o" "Other window" other-window)]
+       ["Split"
+        ("v" "Vertical" split-window-right)
+        ("h" "Horizontal" split-window-below)]
+       ["Delete"
+        ("d" "Delete" ace-delete-window)
+        ("D" "Delete others" delete-other-windows)]
+       ["Swap"
+        ("s" "Swap" ace-swap-window)
+        ("u" "Undo layout" winner-undo)
+        ("r" "Redo layout" winner-redo)]])
+    
+    (global-set-key (kbd "C-c w ?") 'mcg-window-menu)
+    
+    (mcg-log "Transient menus configured")))
+
+;; 延迟加载 transient 菜单
+(with-eval-after-load 'transient
+  (mcg--setup-transient-menus))
+
+#+END_SRC
+
+** Keybindings Reference
+#+BEGIN_SRC emacs-lisp
+;;; Keybindings Reference
+
+(defvar mcg-keybindings-popup-buffer "*MCG Keybindings*"
+  "Buffer name for keybindings popup.")
+
+(defun mcg--keybindings-popup-scroll-down ()
+  "向下滚动弹窗内容。"
+  (when-let* ((buf (get-buffer mcg-keybindings-popup-buffer))
+              (frame (buffer-local-value 'posframe--frame buf)))
+    (with-selected-frame frame
+      (ignore-errors (scroll-up 3)))))
+
+(defun mcg--keybindings-popup-scroll-up ()
+  "向上滚动弹窗内容。"
+  (when-let* ((buf (get-buffer mcg-keybindings-popup-buffer))
+              (frame (buffer-local-value 'posframe--frame buf)))
+    (with-selected-frame frame
+      (ignore-errors (scroll-down 3)))))
+
+(defun mcg/show-keybindings ()
+  "显示快捷键速查。
+
+使用 posframe 在屏幕中央显示。
+按键: j/k 滚动, q/ESC 退出"
+  (interactive)
+  (require 'posframe)
+  
+  (let* ((buf (get-buffer-create mcg-keybindings-popup-buffer))
+         (content (mcg--generate-keybindings-content))
+         (hint "j/k 滚动 | q/ESC 退出")
+         (padding (make-string (/ (- 58 (string-width hint)) 2) ?\s)))
+    
+    (with-current-buffer buf
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (insert content))
+      (setq-local buffer-read-only t)
+      (setq-local cursor-type nil)
+      (setq-local header-line-format
+                  (propertize (concat padding hint)
+                              'face '(:foreground "#61AFEF" :weight bold)))
+      (goto-char (point-min)))
+    
+    ;; 使用 posframe 显示居中弹窗
+    (posframe-show buf
+                   :position (point)
+                   :poshandler #'posframe-poshandler-frame-center
+                   :internal-border-width 2
+                   :internal-border-color "#61AFEF"
+                   :background-color "#282C34"
+                   :foreground-color "#ABB2BF"
+                   :width 60
+                   :height 35
+                   :respect-header-line t
+                   :accept-focus nil)
+    
+    ;; 使用 read-key 循环处理按键
+    (unwind-protect
+        (catch 'exit-popup
+          (while t
+            (let ((key (read-key)))
+              (cond
+               ;; 退出
+               ((memq key '(?q 27))  ; q 或 ESC
+                (throw 'exit-popup nil))
+               ;; 向下滚动
+               ((memq key '(?j ?n 14))  ; j, n, C-n
+                (mcg--keybindings-popup-scroll-down))
+               ((equal key 'down)
+                (mcg--keybindings-popup-scroll-down))
+               ;; 向上滚动
+               ((memq key '(?k ?p 16))  ; k, p, C-p
+                (mcg--keybindings-popup-scroll-up))
+               ((equal key 'up)
+                (mcg--keybindings-popup-scroll-up))
+               ;; 其他按键忽略
+               (t nil)))))
+      ;; 清理
+      (posframe-hide mcg-keybindings-popup-buffer))))
+
+(defun mcg--generate-keybindings-content ()
+  "生成快捷键速查内容。"
+  "
+╔═════════════════════════════════════════════════════════╗
+║              MCG Emacs 快捷键速查                       ║
+╚═════════════════════════════════════════════════════════╝
+
+ LSP (标准)
+ ─────────────────────────────────────────────────────────
+ M-.           跳转到定义
+ M-,           返回
+ M-?           查找引用
+ C-h .         显示文档
+ C-c r r       重命名
+ C-c r a       代码操作
+ C-c r f       格式化
+ C-c r l       查找实现
+ M-g n/p       下一个/上一个诊断
+ M-g l         诊断列表
+
+ Git (Magit)
+ ─────────────────────────────────────────────────────────
+ C-x g         Magit 状态
+ C-c g s       Magit 状态
+ C-c g l       日志
+ C-c g p       推送
+ C-c g P       拉取
+ C-c g b b     创建分支
+ C-c g m u     更新 submodule
+
+ 搜索 (C-c s)
+ ─────────────────────────────────────────────────────────
+ C-c s l       搜索行 (consult-line)
+ C-c s g       搜索内容 (color-rg)
+ C-c s G       项目内搜索
+ C-c s s       搜索符号
+ C-c s i       Imenu 导航
+ C-c s b       切换 buffer
+ C-c s B       Blink Search
+
+ 文件 (C-c f)
+ ─────────────────────────────────────────────────────────
+ C-c f r       最近文件 (consult-recent-file)
+
+ 标签页 (C-c t)
+ ─────────────────────────────────────────────────────────
+ C-c t n/p     下一个/上一个标签
+ C-c t f/l     第一个/最后一个标签
+ C-c t k       关闭当前标签
+ C-c t o       关闭其他标签
+ C-c t 1/2/3   快速选择标签
+
+ Org/笔记 (C-c n)
+ ─────────────────────────────────────────────────────────
+ C-c n c       Capture
+ C-c n a       Agenda
+ C-c n l       Store link
+ C-c n t       Todo list
+
+ 编辑
+ ─────────────────────────────────────────────────────────
+ C-a           智能行首
+ C-c E         打开配置文件
+ M-n/M-p       滚动 1/3 窗口
+ M-<up/down>   移动行
+ C-c <up>      上方插入行
+ C-c <down>    下方插入行
+ C-c u         可视化撤销 (vundo)
+
+ 窗口 (C-c w)
+ ─────────────────────────────────────────────────────────
+ M-O / C-x o   Ace window 切换
+ C-c w w       Ace window 切换
+ C-c w d       删除窗口
+ C-c w s       交换窗口
+ C-c w o       删除其他窗口
+ C-c w v       垂直分割
+ C-c w h       水平分割
+ C-c w ?       窗口菜单
+
+ 跳转 (Avy)
+ ─────────────────────────────────────────────────────────
+ C-;           跳转到字符
+ C-'           跳转到两个字符
+ M-g w         跳转到单词
+ M-g g         跳转到行
+ M-g c         定时跳转
+ M-g j         跳转到行内字符
+
+ 多光标 (Markmacro)
+ ─────────────────────────────────────────────────────────
+ C-c m s       设置矩形区域
+ C-c m d       删除矩形区域
+ C-c m r       替换矩形区域
+ C-c m a       应用到所有
+")
+
+(global-set-key (kbd "C-h K") 'mcg/show-keybindings)
+
+#+END_SRC
+
+** Initialize
+#+BEGIN_SRC emacs-lisp
+;;; Initialize
+
+(mcg--setup-markmacro)
+(mcg--setup-vundo)
+(mcg--setup-sort-tab-keys)
+(mcg--setup-search-keys)
+(mcg--setup-file-keys)
+(mcg--setup-git-keys)
+(mcg--setup-lsp-keys)
+(mcg--setup-org-keys)
+
+#+END_SRC
+
+** Provide
+#+BEGIN_SRC emacs-lisp
+(provide 'init-keybindings)
+;;; init-keybindings.el ends here
+#+END_SRC

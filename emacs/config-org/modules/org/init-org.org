@@ -1,0 +1,702 @@
+* init-org.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle init-org.el :lexical t
+:END:
+
+** Headers
+#+BEGIN_SRC emacs-lisp
+  ;;; init-org.el --- Org Mode Configuration for MCG Emacs -*- lexical-binding: t; -*-
+
+  ;; Filename: init-org.el
+  ;; Description: Org Mode 配置模块
+  ;; Author: mcge <mcgeq@outlook.com>
+  ;; Copyright (C) 2024-2026, mcge, all rights reserved.
+  ;; Create   Date: 2026-01-07
+  ;; Version: 3.0
+  ;; Keywords: org, notes, productivity
+  ;; Compatibility: GNU Emacs 29.0+
+
+  ;;; Commentary:
+  ;;
+  ;; MCG Emacs 配置架构的 Org Mode 配置模块，负责：
+  ;; - Org mode 基础设置
+  ;; - TODO 关键词和状态配置
+  ;; - 外观美化（org-superstar, org-appear）
+  ;; - org-modern 现代化界面
+  ;; - org-download 图片下载
+  ;; - 中文日历集成
+  ;; - 符号美化
+  ;;
+  ;; 模块元数据:
+  ;; :depends ()
+  ;; :defer nil
+  ;;
+
+#+END_SRC
+
+** Dependencies
+#+BEGIN_SRC emacs-lisp
+  ;;; Dependencies
+
+  (require 'core-lib)
+  (require 'org)
+  (require 'ox)
+
+#+END_SRC
+
+** Variables
+#+BEGIN_SRC emacs-lisp
+  ;;; Variables
+
+  (defgroup mcg-org nil
+    "Org mode configuration variables."
+    :group 'org
+    :prefix "mcg-org-")
+
+  ;;; 基础目录配置
+  (defcustom mcg-org-directory
+    (expand-file-name "~/org")
+    "Org mode 文件的根目录。"
+    :type 'directory
+    :group 'mcg-org)
+
+  (defcustom mcg-org-agenda-directory
+    (expand-file-name "agenda" mcg-org-directory)
+    "Org agenda 文件目录。"
+    :type 'directory
+    :group 'mcg-org)
+
+  (defcustom mcg-org-notes-directory
+    (expand-file-name "notes" mcg-org-directory)
+    "Org 笔记文件目录。"
+    :type 'directory
+    :group 'mcg-org)
+
+  (defcustom mcg-org-blog-directory
+    (expand-file-name "blog" mcg-org-directory)
+    "博客相关 Org 文件目录。"
+    :type 'directory
+    :group 'mcg-org)
+
+  (defcustom mcg-org-archive-directory
+    (expand-file-name "archive" mcg-org-directory)
+    "Org 归档文件目录。"
+    :type 'directory
+    :group 'mcg-org)
+
+
+  ;;; 主要文件路径
+  (defcustom mcg-org-default-notes-file
+    (expand-file-name "notes.org" mcg-org-notes-directory)
+    "默认笔记文件。"
+    :type 'file
+    :group 'mcg-org)
+
+  (defcustom mcg-org-task-file
+    (expand-file-name "tasks.org" mcg-org-agenda-directory)
+    "任务文件。"
+    :type 'file
+    :group 'mcg-org)
+
+  ;;; 功能开关
+  (defcustom mcg-org-enable-pretty-symbols t
+    "是否启用 Org mode 美化符号。"
+    :type 'boolean
+    :group 'mcg-org)
+
+  (defcustom mcg-org-enable-mixed-pitch nil
+    "是否启用混合字体（衬线+等宽）。"
+    :type 'boolean
+    :group 'mcg-org)
+
+  (defcustom mcg-org-enable-visual-fill nil
+    "是否启用视觉填充列。"
+    :type 'boolean
+    :group 'mcg-org)
+
+  (defcustom mcg-org-enable-chinese-calendar t
+    "是否启用中文日历。"
+    :type 'boolean
+    :group 'mcg-org)
+
+  (defcustom mcg-org-enable-org-modern t
+    "是否启用 org-modern 现代化界面。"
+    :type 'boolean
+    :group 'mcg-org)
+
+  (defcustom mcg-org-visual-fill-width 88
+    "Visual fill column 宽度。"
+    :type 'integer
+    :group 'mcg-org)
+
+#+END_SRC
+
+** Directory Helpers
+#+BEGIN_SRC emacs-lisp
+  ;;; Directory Helpers
+
+  (defun mcg-org-ensure-directory (dir)
+    "确保目录 DIR 存在，如果不存在则创建。"
+    (unless (file-exists-p dir)
+      (make-directory dir t)
+      (mcg-log "Created directory: %s" dir)))
+
+  (defun mcg-org-initialize-directories ()
+    "初始化所有 Org mode 目录。"
+    (interactive)
+    (mapc #'mcg-org-ensure-directory
+          (list mcg-org-directory
+                mcg-org-agenda-directory
+                mcg-org-notes-directory
+                mcg-org-blog-directory
+                mcg-org-archive-directory)))
+
+#+END_SRC
+
+** Basic Settings
+#+BEGIN_SRC emacs-lisp
+  ;;; Basic Settings
+
+  (defun mcg-org-setup-basic ()
+    "设置 Org mode 基础配置。"
+    (setq org-ellipsis " ⭍"
+          org-tags-column 0
+          org-log-into-drawer t
+          org-pretty-entities t
+          org-startup-indented t
+          org-hide-leading-stars nil
+          org-hide-emphasis-markers t
+          org-image-actual-width '(800)
+          org-startup-with-inline-images t
+          org-indent-mode-turns-on-hiding-stars nil)
+
+    ;; 完成任务时记录时间
+    (setq org-log-done 'time)
+
+    ;; 日志记录配置
+    (setq org-log-repeat 'time
+          org-log-redeadline 'note
+          org-log-reschedule 'note
+          org-log-into-drawer t
+          org-log-state-notes-insert-after-drawers nil)
+
+    (mcg-log "Configured org basic settings"))
+
+#+END_SRC
+
+
+** TODO Keywords
+#+BEGIN_SRC emacs-lisp
+  ;;; TODO Keywords
+
+  (defun mcg-org-setup-todo-keywords ()
+    "设置 TODO 关键词和状态。"
+    ;; TODO 的关键词设置
+    (setq org-todo-keywords '((sequence
+                               "TODO(t)"
+                               "HOLD(h!)"
+                               "WIP(i!)"
+                               "WAIT(w!)"
+                               "|"
+                               "DONE(d!)"
+                               "CANCELLED(c@/!)")
+                              (sequence
+                               "REPORT(r)"
+                               "BUG(b)"
+                               "KNOWNCAUSE(k)"
+                               "|"
+                               "FIXED(f!)")))
+
+    ;; TODO 关键词的样式设置
+    (setq org-todo-keyword-faces '(("TODO"       :foreground "#7c7c75" :weight bold)
+                                   ("HOLD"       :foreground "#feb24c" :weight bold)
+                                   ("WIP"        :foreground "#0098dd" :weight bold)
+                                   ("WAIT"       :foreground "#9f7efe" :weight bold)
+                                   ("DONE"       :foreground "#50a14f" :weight bold)
+                                   ("CANCELLED"  :foreground "#ff6480" :weight bold)
+                                   ("REPORT"     :foreground "magenta" :weight bold)
+                                   ("BUG"        :foreground "red"     :weight bold)
+                                   ("KNOWNCAUSE" :foreground "yellow"  :weight bold)
+                                   ("FIXED"      :foreground "green"   :weight bold)))
+
+    ;; 状态变化时标签同步
+    (setq org-todo-state-tags-triggers
+          (quote (("CANCELLED" ("CANCELLED" . t))
+                  ("WAIT" ("WAIT" . t))
+                  ("HOLD" ("WAIT") ("HOLD" . t))
+                  (done ("WAIT") ("HOLD"))
+                  ("TODO" ("WAIT") ("CANCELLED") ("HOLD"))
+                  ("DONE" ("WAIT") ("CANCELLED") ("HOLD")))))
+
+    (mcg-log "Configured org TODO keywords"))
+
+#+END_SRC
+
+** Appearance
+#+BEGIN_SRC emacs-lisp
+  ;;; Appearance
+
+  (defun mcg-org-setup-appearance ()
+    "设置 Org mode 外观。"
+    ;; 标题层级字体大小
+    (custom-set-faces
+     '(org-level-1 ((t (:height 1.15))))
+     '(org-level-2 ((t (:height 1.13))))
+     '(org-level-3 ((t (:height 1.11))))
+     '(org-level-4 ((t (:height 1.09))))
+     '(org-level-5 ((t (:height 1.07))))
+     '(org-level-6 ((t (:height 1.05))))
+     '(org-level-7 ((t (:height 1.03))))
+     '(org-level-8 ((t (:height 1.01))))
+     '(org-tag ((t (:inherit 'fixed-pitch))))
+     '(org-date ((t (:inherit 'fixed-pitch))))
+     '(org-todo ((t (:inherit 'fixed-pitch))))
+     '(org-done ((t (:inherit 'fixed-pitch))))
+     '(org-drawer ((t (:inherit 'fixed-pitch))))
+     '(org-ellipsis ((t (:inherit 'fixed-pitch))))
+     '(org-property-value ((t (:inherit 'fixed-pitch))))
+     '(org-special-keyword ((t (:inherit 'fixed-pitch))))
+     '(org-headline-done ((t (:inherit 'variable-pitch)))))
+
+    ;; 列表符号美化
+    (with-eval-after-load 'org
+      (setq line-spacing 0.25)
+      (setq org-list-demote-modify-bullet
+            '(("+" . "-") ("-" . "+") ("*" . "+") ("1." . "a."))))
+
+    (font-lock-add-keywords
+     'org-mode
+     '(("^ +\\([-*]\\) "
+        (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "▻"))))))
+
+    (mcg-log "Configured org appearance"))
+
+#+END_SRC
+
+
+** Org Superstar
+#+BEGIN_SRC emacs-lisp
+  ;;; Org Superstar
+
+  (defun mcg-org-setup-superstar ()
+    "设置 org-superstar 标题美化。"
+    (when (mcg-require-extension "org/org-superstar-mode" 'org-superstar)
+      (setq org-superstar-leading-bullet ?\s
+            org-superstar-special-todo-items t
+            org-superstar-item-bullet-alist '((43 . "◆") (45 . "▸"))
+            org-superstar-headline-bullets-list '("◉" "○" "✸" "✿" "✤" "✜" "◆" "▶"))
+
+      (custom-set-faces
+       '(org-superstar-item ((t (:inherit 'fixed-pitch))))
+       '(org-superstar-header-bullet ((t (:height 232 :inherit 'fixed-pitch)))))
+
+      (mcg-log "Configured org-superstar")))
+
+#+END_SRC
+
+** Org Appear
+#+BEGIN_SRC emacs-lisp
+  ;;; Org Appear
+
+  (defun mcg-org-setup-appear ()
+    "设置 org-appear 自动显示标记。"
+    (when (mcg-require-extension "org/org-appear" 'org-appear)
+      (mcg-log "Configured org-appear")))
+
+#+END_SRC
+
+** Org Modern
+#+BEGIN_SRC emacs-lisp
+  ;;; Org Modern
+
+  (defun mcg-org-setup-modern ()
+    "设置 org-modern 现代化界面。"
+    (when (and mcg-org-enable-org-modern
+               (mcg-require-extension "org/org-modern" 'org-modern))
+      ;; org-modern 配置
+      (setq org-modern-star '("◉" "○" "✸" "✿" "✤" "✜" "◆" "▶")
+            org-modern-table-vertical 1
+            org-modern-table-horizontal 0.2
+            org-modern-list '((43 . "◆") (45 . "▸") (42 . "•"))
+            org-modern-todo-faces
+            '(("TODO" :inverse-video t :inherit org-todo)
+              ("HOLD" :inverse-video t :inherit +org-todo-onhold)
+              ("WIP" :inverse-video t :inherit +org-todo-active)
+              ("WAIT" :inverse-video t :inherit +org-todo-onhold)
+              ("DONE" :inverse-video t :inherit org-done)
+              ("CANCELLED" :inverse-video t :inherit +org-todo-cancel))
+            org-modern-priority-faces
+            '((?A :inverse-video t :inherit org-priority)
+              (?B :inverse-video t :inherit org-priority)
+              (?C :inverse-video t :inherit org-priority))
+            org-modern-block-fringe nil
+            org-modern-block-name
+            '((t . t)
+              ("src" "»" "«")
+              ("example" "»–" "–«")
+              ("quote" "❝" "❞")))
+
+      (mcg-log "Configured org-modern")))
+
+#+END_SRC
+
+** Org Download
+#+BEGIN_SRC emacs-lisp
+  ;;; Org Download
+
+  (defun mcg-org-setup-download ()
+    "设置 org-download 图片下载。"
+    (when (mcg-require-extension "org/org-download" 'org-download)
+      ;; Drag-and-drop to dired
+      (add-hook 'dired-mode-hook 'org-download-enable)
+      (add-hook 'org-mode-hook 'org-download-enable)
+
+      (setq org-download-display-inline-images 'posframe)
+
+      (mcg-log "Configured org-download")))
+
+  (defun mcg/org-insert-clipboard-image (width)
+    "从剪贴板插入图片到 Org 文件。
+  WIDTH 是图片宽度，默认 800。"
+    (interactive (list
+                  (read-string (format "Input image width, default is 800: ")
+                               nil nil "800")))
+    ;; 设置图片存放的文件夹位置为 `当前 Org 文件同名.assets'
+    (let* ((foldername (concat (file-name-base (buffer-file-name)) ".assets/"))
+           (imgName (concat "img_" (format-time-string "%Y%m%d_%H%M%S") ".png"))
+           (relativeFilename (concat (file-name-base (buffer-name)) ".assets/" imgName)))
+
+      (unless (file-exists-p foldername)
+        (mkdir foldername))
+
+      ;; 根据不同的操作系统设置不同的命令行工具
+      (cond
+       ((eq system-type 'windows-nt)
+        (setq org-download-screenshot-method (concat "magick clipboard: " relativeFilename)))
+       ((eq system-type 'gnu/linux)
+        (setq org-download-screenshot-method (concat "xclip -selection clipboard -t image/png -o > " relativeFilename)))
+       ((eq system-type 'darwin)
+        (setq org-download-screenshot-method (concat "pngpaste " relativeFilename))))
+
+      ;; 给粘贴好的图片链接加上宽度属性
+      (insert (concat "\n#+DOWNLOADED: screenshot @ "
+                      (format-time-string "%Y-%m-%d %a %H:%M:%S" (current-time))
+                      "\n#+CAPTION: \n#+ATTR_ORG: :width "
+                      width
+                      "\n#+ATTR_LATEX: :width "
+                      (if (>= (/ (string-to-number width) 800.0) 1.0)
+                          "1.0"
+                        (number-to-string (/ (string-to-number width) 800.0)))
+                      "\\linewidth :float nil\n"
+                      "#+ATTR_HTML: :width "
+                      width
+                      "\n[[file:" relativeFilename "]]\n"))
+      (when (fboundp 'org-download-screenshot)
+        (org-download-screenshot))))
+
+#+END_SRC
+
+
+** Visual Fill Column
+#+BEGIN_SRC emacs-lisp
+  ;;; Visual Fill Column
+
+  (defun mcg-org-setup-visual-fill ()
+    "设置 visual-fill-column。"
+    (when (and mcg-org-enable-visual-fill
+               (mcg-require-extension "org/visual-fill-column" 'visual-fill-column))
+      (setq visual-fill-column-width mcg-org-visual-fill-width)
+      (mcg-log "Configured visual-fill-column")))
+
+#+END_SRC
+
+** Mixed Pitch
+#+BEGIN_SRC emacs-lisp
+  ;;; Mixed Pitch
+
+  (defun mcg-org-setup-mixed-pitch ()
+    "设置 mixed-pitch 混合字体。"
+    (when (and mcg-org-enable-mixed-pitch
+               (mcg-require-extension "org/mixed-pitch" 'mixed-pitch))
+      ;; 字体配置（带可用性检查）
+      (when (display-graphic-p)
+        (let ((mono-font (cond
+                          ((find-font (font-spec :name "FiraCode Nerd Font Mono"))
+                           "FiraCode Nerd Font Mono")
+                          ((find-font (font-spec :name "Consolas"))
+                           "Consolas")
+                          (t "monospace")))
+              (serif-font (cond
+                           ((find-font (font-spec :name "Noto Serif"))
+                            "Noto Serif")
+                           ((find-font (font-spec :name "Georgia"))
+                            "Georgia")
+                           (t "serif"))))
+          (custom-set-faces
+           `(default ((t (:font ,mono-font))))
+           `(fixed-pitch ((t (:font ,mono-font :height 1.0))))
+           `(variable-pitch ((t (:font ,serif-font :height 1.0)))))))
+      (mcg-log "Configured mixed-pitch")))
+
+#+END_SRC
+
+** Chinese Calendar
+#+BEGIN_SRC emacs-lisp
+  ;;; Chinese Calendar
+
+  (defun mcg-org-setup-chinese-calendar ()
+    "设置中文日历。"
+    (when (and mcg-org-enable-chinese-calendar
+               (mcg-require-extension "org/cal-china-x" 'cal-china-x))
+      (with-eval-after-load 'calendar
+        ;; 设置标记今天
+        (add-hook 'calendar-today-visible-hook 'calendar-mark-today)
+
+        ;; 日历基础设置
+        (setq calendar-chinese-all-holidays-flag nil
+              calendar-mark-holidays-flag t
+              calendar-mark-diary-entries-flag nil
+              calendar-time-zone-style 'numeric
+              calendar-date-style 'iso)
+
+        ;; 设置中文天干地支
+        (setq calendar-chinese-celestial-stem
+              ["甲" "乙" "丙" "丁" "戊" "己" "庚" "辛" "壬" "癸"])
+        (setq calendar-chinese-terrestrial-branch
+              ["子" "丑" "寅" "卯" "辰" "巳" "午" "未" "申" "酉" "戌" "亥"])
+
+        ;; 设置中文月份名称
+        (setq calendar-month-name-array
+              ["一月" "二月" "三月" "四月" "五月" "六月"
+               "七月" "八月" "九月" "十月" "十一月" "十二月"])
+
+        ;; 设置星期标题显示
+        (setq calendar-day-name-array
+              ["日" "一" "二" "三" "四" "五" "六"])
+
+        ;; 设置周一为一周的第一天
+        (setq calendar-week-start-day 1))
+
+      ;; 自动初始化 cal-china-x
+      (add-hook 'after-init-hook 'cal-china-x-setup)
+
+      (mcg-log "Configured Chinese calendar")))
+
+#+END_SRC
+
+** Prettify Symbols
+#+BEGIN_SRC emacs-lisp
+  ;;; Prettify Symbols
+
+  (defun mcg/org-prettify-symbols ()
+    "设置 Org mode 符号美化。"
+    (setq prettify-symbols-alist
+          (mapcan (lambda (x) (list x (cons (upcase (car x)) (cdr x))))
+                  '(("#+begin_src"      . "↪")
+                    ("#+end_src"        . "↩")
+                    ("#+begin_example"  . 129083)
+                    ("#+end_example"    . 129081)
+                    ("#+results:"       . 9776)
+                    ("#+attr_latex:"    . "🄛")
+                    ("#+attr_html:"     . "🄗")
+                    ("#+attr_org:"      . "🄞")
+                    ("#+name:"          . "🄝")
+                    ("#+caption:"       . "🄒")
+                    ("#+date:"          . "📅")
+                    ("#+author:"        . "💁")
+                    ("#+setupfile:"     . 128221)
+                    ("#+email:"         . 128231)
+                    ("#+startup:"       . 10034)
+                    ("#+options:"       . 9965)
+                    ("#+title:"         . 10162)
+                    ("#+subtitle:"      . 11146)
+                    ("#+downloaded:"    . 8650)
+                    ("#+language:"      . 128441)
+                    ("#+begin_quote"    . 187)
+                    ("#+end_quote"      . 171)
+                    ("#+begin_results"  . 8943)
+                    ("#+end_results"    . 8943)
+                    (":PROPERTIES:"     . "⥼")
+                    (":HEADER-ARGS:"    . "Э")
+                    (":END:"            . "⥽"))))
+    (setq prettify-symbols-unprettify-at-point t)
+    (prettify-symbols-mode 1))
+
+#+END_SRC
+
+
+** Chinese-English Spacing
+#+BEGIN_SRC emacs-lisp
+  ;;; Chinese-English Spacing
+
+  (defun mcg-org-setup-chinese-spacing ()
+    "设置中英文混排空格处理。"
+    ;; 解决中文标记前后空格的问题
+    (font-lock-add-keywords
+     'org-mode
+     '(("\\cc\\( \\)[/+*_=~][^a-zA-Z0-9]*?[/+*_=~]\\( \\)?\\cc?"
+        (1 (prog1 () (compose-region (match-beginning 1) (match-end 1) ""))))
+       ("\\cc?\\( \\)?[/+*_=~][^a-zA-Z0-9]*?[/+*_=~]\\( \\)\\cc"
+        (2 (prog1 () (compose-region (match-beginning 2) (match-end 2) "")))))
+     'append)
+
+    (with-eval-after-load 'org
+      (defun mcg-org--strip-ws-maybe (text _backend _info)
+        "处理导出时的中英文空格。"
+        (let* ((text (replace-regexp-in-string
+                      "\\(\\cc\\) *\n *\\(\\cc\\)"
+                      "\\1\\2" text))
+               (text (replace-regexp-in-string
+                      "\\(\\cc\\) \\(.*?\\) \\(\\cc\\)"
+                      "\\1\\2\\3" text))
+               (text (replace-regexp-in-string
+                      "\\(\\cc\\)\\(\\(?:<[^>]+>\\)?[a-z0-9A-Z-]+\\(?:<[^>]+>\\)?\\)\\(\\cc\\)"
+                      "\\1 \\2 \\3" text)))
+          text))
+      (add-to-list 'org-export-filter-paragraph-functions #'mcg-org--strip-ws-maybe))
+
+    (mcg-log "Configured Chinese-English spacing"))
+
+#+END_SRC
+
+** Time Stamp Format
+#+BEGIN_SRC emacs-lisp
+  ;;; Time Stamp Format
+
+  (defun mcg-org-setup-timestamp ()
+    "设置时间戳格式。"
+    ;; 设置时间戳格式为 [2025-12-08 周一 10:21:23]
+    (setq org-time-stamp-custom-formats
+          '("<%Y-%m-%d %A %H:%M:%S>" . "<%Y-%m-%d %A %H:%M:%S>"))
+
+    ;; 设置中文星期显示
+    (setq system-time-locale "zh_CN.UTF-8")
+
+    ;; 使用自定义时间格式
+    (setq org-display-custom-times t)
+
+    (mcg-log "Configured timestamp format"))
+
+#+END_SRC
+
+** Export Configuration
+#+BEGIN_SRC emacs-lisp
+  ;;; Export Configuration
+
+  (defun mcg-org-setup-export ()
+    "设置导出配置。"
+    (with-eval-after-load 'org
+      (require 'ox-gfm nil t)
+      (add-to-list 'org-export-backends 'md)
+      (when (featurep 'ox-gfm)
+        (add-to-list 'org-export-backends 'gfm)))
+
+    (mcg-log "Configured org export"))
+
+#+END_SRC
+
+** Org Mode Hook
+#+BEGIN_SRC emacs-lisp
+  ;;; Org Mode Hook
+
+  (defun mcg-org-mode-setup ()
+    "Org mode 初始化设置。"
+    (setq-local line-spacing 2)
+    (visual-line-mode 1)
+
+    ;; 按需启用功能
+    (when mcg-org-enable-visual-fill
+      (when (fboundp 'visual-fill-column-mode)
+        (visual-fill-column-mode 1)))
+
+    (when mcg-org-enable-mixed-pitch
+      (when (fboundp 'mixed-pitch-mode)
+        (mixed-pitch-mode 1)))
+
+    ;; org-superstar
+    (when (fboundp 'org-superstar-mode)
+      (org-superstar-mode 1))
+
+    ;; org-appear
+    (when (fboundp 'org-appear-mode)
+      (org-appear-mode 1))
+
+    ;; org-modern
+    (when (and mcg-org-enable-org-modern
+               (fboundp 'org-modern-mode))
+      (org-modern-mode 1))
+
+    ;; 美化符号
+    (when mcg-org-enable-pretty-symbols
+      (mcg/org-prettify-symbols)))
+
+#+END_SRC
+
+** Commands
+#+BEGIN_SRC emacs-lisp
+  ;;; Commands
+
+  (defun mcg/org-toggle-modern ()
+    "切换 org-modern 模式。"
+    (interactive)
+    (if (bound-and-true-p org-modern-mode)
+        (org-modern-mode -1)
+      (org-modern-mode 1))
+    (message "Org-modern mode: %s"
+             (if (bound-and-true-p org-modern-mode) "enabled" "disabled")))
+
+  (defun mcg/org-toggle-pretty-symbols ()
+    "切换符号美化。"
+    (interactive)
+    (if prettify-symbols-mode
+        (prettify-symbols-mode -1)
+      (mcg/org-prettify-symbols))
+    (message "Prettify symbols: %s"
+             (if prettify-symbols-mode "enabled" "disabled")))
+
+  (defun mcg/org-open-notes ()
+    "打开笔记目录。"
+    (interactive)
+    (find-file mcg-org-notes-directory))
+
+  (defun mcg/org-open-agenda-dir ()
+    "打开 agenda 目录。"
+    (interactive)
+    (find-file mcg-org-agenda-directory))
+
+#+END_SRC
+
+** Initialize
+#+BEGIN_SRC emacs-lisp
+  ;;; Initialize
+
+  ;; 初始化目录
+  (mcg-org-initialize-directories)
+
+  ;; 设置基础配置
+  (mcg-org-setup-basic)
+  (mcg-org-setup-todo-keywords)
+  (mcg-org-setup-appearance)
+  (mcg-org-setup-timestamp)
+  (mcg-org-setup-export)
+  (mcg-org-setup-chinese-spacing)
+
+  ;; 设置扩展功能
+  (mcg-org-setup-superstar)
+  (mcg-org-setup-appear)
+  (mcg-org-setup-modern)
+  (mcg-org-setup-download)
+  (mcg-org-setup-visual-fill)
+  (mcg-org-setup-mixed-pitch)
+  (mcg-org-setup-chinese-calendar)
+
+  ;; 添加 hook
+  (add-hook 'org-mode-hook #'mcg-org-mode-setup)
+
+#+END_SRC
+
+** Provide
+#+BEGIN_SRC emacs-lisp
+  (provide 'init-org)
+  ;;; init-org.el ends here
+#+END_SRC

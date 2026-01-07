@@ -1,0 +1,560 @@
+* core-lib.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle core-lib.el :lexical t
+:END:
+
+** Headers
+#+BEGIN_SRC emacs-lisp
+  ;;; core-lib.el --- Core Library Functions for MCG Emacs -*- lexical-binding: t; -*-
+
+  ;; Filename: core-lib.el
+  ;; Description: 核心库函数，提供扩展管理和工具函数
+  ;; Author: mcge <mcgeq@outlook.com>
+  ;; Copyright (C) 2024-2026, mcge, all rights reserved.
+  ;; Create   Date: 2026-01-07
+  ;; Version: 3.0
+  ;; Keywords: extensions, library, utilities
+  ;; Compatibility: GNU Emacs 29.0+
+
+  ;;; Commentary:
+  ;;
+  ;; MCG Emacs 配置架构的核心库模块，负责：
+  ;; - 扩展注册表管理
+  ;; - 扩展加载函数
+  ;; - 配置验证系统
+  ;; - 通用工具函数
+  ;;
+  ;; 此模块依赖 core-bootstrap，必须在其之后加载。
+  ;;
+
+#+END_SRC
+
+** Dependencies
+#+BEGIN_SRC emacs-lisp
+;;; Dependencies
+
+(require 'cl-lib)
+(require 'core-bootstrap)
+
+#+END_SRC
+
+** Extension Registry
+#+BEGIN_SRC emacs-lisp
+;;; 扩展注册表
+
+(defvar mcg-extensions nil
+  "扩展注册表（简化版）。
+
+每个条目格式为:
+  (PATH :provides (FEATURES...) [:depends (DEPS...)])
+
+示例:
+  (\"core/dash\" :provides (dash))
+  (\"core/f.el\" :provides (f) :depends (\"core/dash\" \"core/s.el\"))")
+
+;; 初始化扩展注册表
+(setq mcg-extensions
+      '(;; 核心库
+        ("core/dash" :provides (dash))
+        ("core/s.el" :provides (s))
+        ("core/f.el" :provides (f) :depends ("core/dash" "core/s.el"))
+        ("core/compat" :provides (compat))
+        ("core/lazy-load" :provides (lazy-load))
+        ("core/popup-el" :provides (popup))
+        
+        ;; 补全
+        ("completion/vertico" :provides (vertico))
+        ("completion/marginalia" :provides (marginalia))
+        ("completion/embark" :provides (embark embark-consult))
+        ("completion/consult" :provides (consult))
+        ("completion/orderless" :provides (orderless))
+        ("completion/pinyinlib" :provides (pinyinlib))
+        
+        ;; 编辑器
+        ("editor/avy" :provides (avy))
+        ("editor/avy-window" :provides (ace-window) :depends ("editor/avy"))
+        ("editor/beacon" :provides (beacon))
+        ("editor/fingertip" :provides (fingertip))
+        ("editor/symbol-overlay" :provides (symbol-overlay))
+        ("editor/vundo" :provides (vundo))
+        ("editor/wraplish" :provides (wraplish))
+        ("editor/ws-butler" :provides (ws-butler))
+        
+        ;; Git
+        ("git/magit" :provides (magit magit-section) :depends ("core/dash" "git/with-editor"))
+        ("git/with-editor" :provides (with-editor))
+        ("git/llama" :provides (llama))
+        ("git/jujutsu" :provides (jujutsu))
+        
+        ;; 输入法
+        ("input/emacs-rime" :provides (rime) :depends ("input/posframe"))
+        ("input/posframe" :provides (posframe))
+        
+        ;; LSP
+        ("lsp/lsp-bridge" :provides (lsp-bridge acm) :depends ("lsp/markdown-mode"))
+        ("lsp/rust-mode" :provides (rust-mode rust-ts-mode))
+        ("lsp/lua-mode" :provides (lua-mode lua-ts-mode))
+        ("lsp/web-mode" :provides (web-mode))
+        ("lsp/markdown-mode" :provides (markdown-mode))
+        ("lsp/treesit-auto" :provides (treesit-auto))
+        ("lsp/modern-cpp-font-lock" :provides (modern-cpp-font-lock))
+        ("lsp/multiple-cursors" :provides (multiple-cursors))
+        ("lsp/zig" :provides (zig-mode zig-ts-mode))
+        ("lsp/clojure/cider" :provides (cider))
+        ("lsp/clojure/clojure-mode" :provides (clojure-mode clojure-ts-mode))
+        
+        ;; Org
+        ("org/org-modern" :provides (org-modern))
+        ("org/org-download" :provides (org-download))
+        ("org/org-appear" :provides (org-appear))
+        ("org/org-numbering" :provides (org-numbering))
+        ("org/org-superstar-mode" :provides (org-superstar))
+        ("org/visual-fill-column" :provides (visual-fill-column))
+        ("org/mixed-pitch" :provides (mixed-pitch))
+        ("org/ox-hugo" :provides (ox-hugo) :depends ("org/tomelr"))
+        ("org/tomelr" :provides (tomelr))
+        ("org/easy-hugo" :provides (easy-hugo))
+        ("org/emacs-async" :provides (async))
+        ("org/emacs-request" :provides (request))
+        ("org/ht" :provides (ht))
+        ("org/cal-china-x" :provides (cal-china-x))
+        
+        ;; 搜索
+        ("search/blink-search" :provides (blink-search))
+        ("search/color-rg" :provides (color-rg))
+        ("search/consult-todo" :provides (consult-todo) :depends ("search/hl-todo"))
+        ("search/hl-todo" :provides (hl-todo))
+        
+        ;; Snippets
+        ("snippets/yasnippet" :provides (yasnippet))
+        ("snippets/yasnippet-snippet" :provides (yasnippet-snippets))
+        
+        ;; UI
+        ("ui/awesome-tray" :provides (awesome-tray))
+        ("ui/shrink-path" :provides (shrink-path) :depends ("core/dash" "core/f.el" "core/s.el"))
+        ("ui/themes" :provides (ef-themes))
+        
+        ;; 文档
+        ("docs/grip-mode" :provides (grip-mode))
+        ("docs/markdown-ts-mode" :provides (markdown-ts-mode))
+        ("docs/emacs-htmlize" :provides (htmlize))
+        ("docs/flymake-vale" :provides (flymake-vale))
+        
+        ;; 工具
+        ("utils/helpful" :provides (helpful) :depends ("utils/elisp-refs"))
+        ("utils/elisp-refs" :provides (elisp-refs))
+        ("utils/sort-tab" :provides (sort-tab))
+        ("utils/hydra" :provides (hydra))
+        ("utils/json-mode" :provides (json-mode) :depends ("utils/json-snatcher"))
+        ("utils/json-snatcher" :provides (json-snatcher))
+        ("utils/js2-mode" :provides (js2-mode))
+        ("utils/highlight-matching-tag" :provides (highlight-matching-tag))
+        ("utils/instant-rename-tag" :provides (instant-rename-tag))))
+
+(defvar mcg-loaded-extensions nil
+  "已加载的扩展列表。")
+
+(defvar mcg-extension-load-errors nil
+  "扩展加载错误列表。
+每个条目格式为: (PATH . ERROR-MESSAGE)")
+
+#+END_SRC
+
+** Extension Path Functions
+#+BEGIN_SRC emacs-lisp
+;;; 扩展路径函数
+
+(defun mcg-extension-path (name)
+  "获取扩展 NAME 的完整路径。
+
+参数:
+- NAME: 扩展路径，如 \"core/dash\"
+
+返回扩展的完整文件系统路径。"
+  (when (and name (stringp name) mcg-extensions-dir)
+    (expand-file-name name mcg-extensions-dir)))
+
+(defun mcg-extension-exists-p (name)
+  "检查扩展 NAME 是否存在。
+
+参数:
+- NAME: 扩展路径，如 \"core/dash\"
+
+返回 t 如果扩展目录存在，否则返回 nil。"
+  (let ((path (mcg-extension-path name)))
+    (and path (file-directory-p path))))
+
+(defun mcg-extension-info (name)
+  "获取扩展 NAME 的注册信息。
+
+参数:
+- NAME: 扩展路径，如 \"core/dash\"
+
+返回扩展的 plist 信息，如果未注册则返回 nil。"
+  (when (and name (stringp name))
+    (let ((entry (assoc name mcg-extensions)))
+      (when entry
+        (list :name name
+              :path (mcg-extension-path name)
+              :provides (plist-get (cdr entry) :provides)
+              :depends (plist-get (cdr entry) :depends)
+              :exists (mcg-extension-exists-p name)
+              :loaded (member name mcg-loaded-extensions))))))
+
+#+END_SRC
+
+** Extension Loading Functions
+#+BEGIN_SRC emacs-lisp
+;;; 扩展加载函数
+
+(defun mcg-extension-dependencies (name)
+  "获取扩展 NAME 的所有依赖（递归解析）。
+
+参数:
+- NAME: 扩展路径，如 \"core/f.el\"
+
+返回依赖列表，按加载顺序排列（依赖在前）。"
+  (let ((entry (assoc name mcg-extensions))
+        (result nil)
+        (visited nil))
+    (when entry
+      (cl-labels ((resolve-deps (ext-name)
+                    (unless (member ext-name visited)
+                      (push ext-name visited)
+                      (let* ((ext-entry (assoc ext-name mcg-extensions))
+                             (deps (plist-get (cdr ext-entry) :depends)))
+                        (dolist (dep deps)
+                          (resolve-deps dep)
+                          (unless (member dep result)
+                            (push dep result)))))))
+        (resolve-deps name)))
+    (nreverse result)))
+
+(defun mcg-load-extension (name)
+  "加载扩展 NAME 到 load-path。
+
+参数:
+- NAME: 扩展路径，如 \"core/dash\"
+
+如果扩展目录存在，将其添加到 load-path 并返回 t。
+如果扩展目录不存在，记录警告并返回 nil。
+此函数不会阻止启动，即使扩展缺失。"
+  (let ((path (mcg-extension-path name)))
+    (cond
+     ;; 已加载
+     ((member name mcg-loaded-extensions)
+      (mcg-log "Extension already loaded: %s" name)
+      t)
+     
+     ;; 目录存在
+     ((and path (file-directory-p path))
+      ;; 先加载依赖
+      (let ((deps (mcg-extension-dependencies name)))
+        (dolist (dep deps)
+          (mcg-load-extension dep)))
+      ;; 添加到 load-path
+      (add-to-list 'load-path path)
+      (push name mcg-loaded-extensions)
+      (mcg-log "Loaded extension: %s" name)
+      t)
+     
+     ;; 目录不存在 - 警告但不阻止启动
+     (t
+      (let ((error-msg (format "Extension directory missing: %s" name)))
+        (push (cons name error-msg) mcg-extension-load-errors)
+        (mcg-log "Warning: %s" error-msg)
+        (mcg-log "  Run: git submodule update --init site-lisp/extensions/%s" name))
+      nil))))
+
+(defun mcg-load-extensions (names)
+  "批量加载扩展列表 NAMES。
+
+参数:
+- NAMES: 扩展路径列表
+
+返回成功加载的扩展数量。"
+  (let ((loaded-count 0))
+    (dolist (name names)
+      (when (mcg-load-extension name)
+        (cl-incf loaded-count)))
+    loaded-count))
+
+(defun mcg-require-extension (name &optional feature)
+  "加载扩展 NAME 并 require 其 feature。
+
+参数:
+- NAME: 扩展路径，如 \"core/dash\"
+- FEATURE: 要 require 的 feature，默认使用扩展提供的第一个 feature
+
+返回 t 如果成功，nil 如果失败。"
+  (when (mcg-load-extension name)
+    (let* ((entry (assoc name mcg-extensions))
+           (provides (plist-get (cdr entry) :provides))
+           (feat (or feature (car provides))))
+      (when feat
+        (condition-case err
+            (progn
+              (require feat)
+              t)
+          (error
+           (let ((error-msg (format "Failed to require %s from %s: %s"
+                                    feat name (error-message-string err))))
+             (push (cons name error-msg) mcg-extension-load-errors)
+             (mcg-log "Error: %s" error-msg))
+           nil))))))
+
+#+END_SRC
+
+** Extension Query Functions
+#+BEGIN_SRC emacs-lisp
+;;; 扩展查询函数
+
+(defun mcg-list-all-extensions ()
+  "列出所有注册的扩展。
+
+返回扩展路径列表。"
+  (mapcar #'car mcg-extensions))
+
+(defun mcg-list-loaded-extensions ()
+  "列出所有已加载的扩展。
+
+返回已加载的扩展路径列表。"
+  mcg-loaded-extensions)
+
+(defun mcg-list-missing-extensions ()
+  "列出所有缺失的扩展。
+
+返回目录不存在的扩展路径列表。"
+  (seq-filter (lambda (name)
+                (not (mcg-extension-exists-p name)))
+              (mcg-list-all-extensions)))
+
+(defun mcg-extension-provides (name)
+  "获取扩展 NAME 提供的 features。
+
+参数:
+- NAME: 扩展路径
+
+返回 feature 符号列表。"
+  (let ((entry (assoc name mcg-extensions)))
+    (when entry
+      (plist-get (cdr entry) :provides))))
+
+(defun mcg-find-extension-by-feature (feature)
+  "根据 feature 查找提供它的扩展。
+
+参数:
+- FEATURE: feature 符号
+
+返回扩展路径，如果未找到则返回 nil。"
+  (catch 'found
+    (dolist (entry mcg-extensions)
+      (let ((provides (plist-get (cdr entry) :provides)))
+        (when (memq feature provides)
+          (throw 'found (car entry)))))
+    nil))
+
+#+END_SRC
+
+
+
+** Configuration Validation System
+#+BEGIN_SRC emacs-lisp
+;;; 配置验证系统
+
+(defvar mcg-doctor-issues nil
+  "诊断发现的问题列表。
+每个条目格式为: (:type TYPE :message MSG :fix FIX)")
+
+(defun mcg-verify-core-directories ()
+  "验证核心目录是否存在。
+
+返回问题列表。"
+  (let ((issues nil)
+        (dirs `((,mcg-emacs-dir . "Emacs 配置根目录")
+                (,mcg-config-dir . "配置目录")
+                (,mcg-core-dir . "核心模块目录")
+                (,mcg-modules-dir . "模块目录")
+                (,mcg-extensions-dir . "扩展目录"))))
+    (dolist (dir-info dirs)
+      (let ((dir (car dir-info))
+            (desc (cdr dir-info)))
+        (unless (and dir (file-directory-p dir))
+          (push (list :type 'missing-directory
+                      :message (format "%s 不存在: %s" desc (or dir "未设置"))
+                      :fix (format "创建目录或检查 mcg-init-paths 配置"))
+                issues))))
+    issues))
+
+(defun mcg-verify-extensions ()
+  "验证扩展是否存在。
+
+返回问题列表。"
+  (let ((issues nil)
+        (missing (mcg-list-missing-extensions)))
+    (dolist (name missing)
+      (push (list :type 'missing-extension
+                  :message (format "扩展缺失: %s" name)
+                  :fix (format "git submodule update --init site-lisp/extensions/%s" name))
+            issues))
+    issues))
+
+(defun mcg-verify-module-deps (module-name deps)
+  "验证模块 MODULE-NAME 的依赖 DEPS 是否满足。
+
+参数:
+- MODULE-NAME: 模块名称
+- DEPS: 依赖列表，每个元素为 (category . module)
+
+返回问题列表。"
+  (let ((issues nil))
+    (dolist (dep deps)
+      (let* ((category (car dep))
+             (module (cdr dep))
+             ;; 检查依赖模块文件是否存在
+             (module-file (expand-file-name
+                           (format "%s/+%s.el" category module)
+                           mcg-modules-dir)))
+        (unless (file-exists-p module-file)
+          (push (list :type 'missing-dependency
+                      :message (format "模块 %s 依赖 %s/%s，但该模块不存在"
+                                       module-name category module)
+                      :fix (format "创建模块文件: modules/%s/+%s.org" category module))
+                issues))))
+    issues))
+
+(defun mcg-verify-load-errors ()
+  "检查扩展加载错误。
+
+返回问题列表。"
+  (let ((issues nil))
+    (dolist (err mcg-extension-load-errors)
+      (push (list :type 'load-error
+                  :message (cdr err)
+                  :fix "检查扩展目录或运行 git submodule update")
+            issues))
+    issues))
+
+(defun mcg-doctor ()
+  "执行完整的配置诊断。
+
+交互式命令，显示所有发现的问题和修复建议。"
+  (interactive)
+  (setq mcg-doctor-issues nil)
+  
+  ;; 收集所有问题
+  (setq mcg-doctor-issues
+        (append (mcg-verify-core-directories)
+                (mcg-verify-extensions)
+                (mcg-verify-load-errors)))
+  
+  ;; 显示结果
+  (if (null mcg-doctor-issues)
+      (message "✅ 配置诊断通过，未发现问题！")
+    (with-current-buffer (get-buffer-create "*MCG Doctor*")
+      (erase-buffer)
+      (insert "MCG 配置诊断报告\n")
+      (insert "==================\n\n")
+      (insert (format "发现 %d 个问题:\n\n" (length mcg-doctor-issues)))
+      
+      (let ((issue-num 1))
+        (dolist (issue mcg-doctor-issues)
+          (let ((type (plist-get issue :type))
+                (msg (plist-get issue :message))
+                (fix (plist-get issue :fix)))
+            (insert (format "%d. [%s] %s\n" issue-num type msg))
+            (insert (format "   修复建议: %s\n\n" fix))
+            (cl-incf issue-num))))
+      
+      (goto-char (point-min))
+      (display-buffer (current-buffer))))
+  
+  mcg-doctor-issues)
+
+(defun mcg-doctor-check-all-deps ()
+  "检查所有模块的依赖。
+
+返回问题列表。"
+  (let ((issues nil))
+    ;; 这里需要在 core-modules 加载后才能完整检查
+    ;; 目前只检查扩展依赖
+    (dolist (entry mcg-extensions)
+      (let* ((name (car entry))
+             (deps (plist-get (cdr entry) :depends)))
+        (dolist (dep deps)
+          (unless (mcg-extension-exists-p dep)
+            (push (list :type 'extension-dependency
+                        :message (format "扩展 %s 依赖 %s，但 %s 不存在"
+                                         name dep dep)
+                        :fix (format "git submodule update --init site-lisp/extensions/%s" dep))
+                  issues)))))
+    issues))
+
+#+END_SRC
+
+** Interactive Commands
+#+BEGIN_SRC emacs-lisp
+;;; 交互命令
+
+(defun mcg/extension-info (name)
+  "显示扩展 NAME 的详细信息。
+
+交互式调用时，提示输入扩展名称。"
+  (interactive
+   (list (completing-read "Extension: " (mcg-list-all-extensions) nil t)))
+  (let ((info (mcg-extension-info name)))
+    (if info
+        (message "Extension: %s\n  Path: %s\n  Provides: %s\n  Depends: %s\n  Exists: %s\n  Loaded: %s"
+                 (plist-get info :name)
+                 (plist-get info :path)
+                 (plist-get info :provides)
+                 (or (plist-get info :depends) "none")
+                 (if (plist-get info :exists) "yes" "NO")
+                 (if (plist-get info :loaded) "yes" "no"))
+      (message "Extension not found: %s" name))))
+
+(defun mcg/list-extensions ()
+  "显示所有扩展的状态。"
+  (interactive)
+  (with-current-buffer (get-buffer-create "*MCG Extensions*")
+    (erase-buffer)
+    (insert "MCG 扩展列表\n")
+    (insert "=============\n\n")
+    (insert (format "%-40s %-10s %-10s\n" "扩展" "存在" "已加载"))
+    (insert (make-string 62 ?-))
+    (insert "\n")
+    
+    (dolist (name (mcg-list-all-extensions))
+      (let ((exists (mcg-extension-exists-p name))
+            (loaded (member name mcg-loaded-extensions)))
+        (insert (format "%-40s %-10s %-10s\n"
+                        name
+                        (if exists "✓" "✗")
+                        (if loaded "✓" "-")))))
+    
+    (goto-char (point-min))
+    (display-buffer (current-buffer))))
+
+(defun mcg/list-missing-extensions ()
+  "显示所有缺失的扩展。"
+  (interactive)
+  (let ((missing (mcg-list-missing-extensions)))
+    (if missing
+        (with-current-buffer (get-buffer-create "*MCG Missing Extensions*")
+          (erase-buffer)
+          (insert "缺失的扩展\n")
+          (insert "===========\n\n")
+          (insert "运行以下命令安装:\n\n")
+          (dolist (name missing)
+            (insert (format "git submodule update --init site-lisp/extensions/%s\n" name)))
+          (goto-char (point-min))
+          (display-buffer (current-buffer)))
+      (message "所有扩展都已安装！"))))
+
+#+END_SRC
+
+** Provide
+#+BEGIN_SRC emacs-lisp
+(provide 'core-lib)
+;;; core-lib.el ends here
+#+END_SRC

@@ -1,0 +1,174 @@
+* init-sort-tab.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle init-sort-tab.el :lexical t
+:END:
+
+** Headers
+#+BEGIN_SRC emacs-lisp
+  ;;; init-sort-tab.el --- Sort Tab Configuration for MCG Emacs -*- lexical-binding: t; -*-
+
+  ;; Filename: init-sort-tab.el
+  ;; Description: 标签栏配置模块
+  ;; Author: mcge <mcgeq@outlook.com>
+  ;; Copyright (C) 2024-2026, mcge, all rights reserved.
+  ;; Create   Date: 2026-01-07
+  ;; Version: 3.0
+  ;; Keywords: tab, ui
+  ;; Compatibility: GNU Emacs 29.0+
+
+  ;;; Commentary:
+  ;;
+  ;; MCG Emacs 配置架构的标签栏模块，负责：
+  ;; - sort-tab 配置
+  ;; - 标签显示设置
+  ;; - 标签隐藏规则
+  ;;
+  ;; 模块元数据:
+  ;; :depends ()
+  ;; :defer nil
+  ;;
+
+#+END_SRC
+
+** Dependencies
+#+BEGIN_SRC emacs-lisp
+;;; Dependencies
+
+(require 'core-lib)
+
+#+END_SRC
+
+** Load Sort-tab
+#+BEGIN_SRC emacs-lisp
+;;; Load Sort-tab
+
+(require 'sort-tab)
+
+#+END_SRC
+
+** Enable Mode
+#+BEGIN_SRC emacs-lisp
+;;; Enable Mode
+
+(sort-tab-mode 1)
+
+#+END_SRC
+
+** Display Settings
+#+BEGIN_SRC emacs-lisp
+;;; Display Settings
+
+(setq sort-tab-max-length 20)           ; 标签最大长度
+(setq sort-tab-show-index t)            ; 显示标签索引号
+(setq sort-tab-position 'bottom)        ; 标签栏位置 (top/bottom)
+(setq sort-tab-close-button-show t)     ; 显示关闭按钮
+(setq sort-tab-icon-show t)             ; 显示图标
+(setq sort-tab-scale-factor 1.0)        ; 标签缩放因子
+(setq sort-tab-auto-update t)           ; 自动更新标签顺序
+
+#+END_SRC
+
+** Hide Rules
+#+BEGIN_SRC emacs-lisp
+;;; Hide Rules
+
+(setq sort-tab-hide-function
+      (lambda (buf)
+        (let ((name (buffer-name buf)))
+          (with-current-buffer buf
+            (or
+             ;; Hide buffers with leading space
+             (string-prefix-p " " name)
+             
+             ;; Hide system buffers (starting with *)
+             (and (string-prefix-p "*" name)
+                  (not (or
+                        (string= name "*scratch*")
+                        (string= name "*Messages*")
+                        (string-prefix-p "*terminal" name))))
+             
+             ;; Hide specific modes
+             (derived-mode-p 'dired-mode)
+             (derived-mode-p 'eshell-mode)
+             (derived-mode-p 'shell-mode)
+             (derived-mode-p 'vterm-mode)
+             (derived-mode-p 'dirvish-mode)
+             (derived-mode-p 'magit-status-mode)
+             (derived-mode-p 'magit-diff-mode)
+             (derived-mode-p 'help-mode)
+             (derived-mode-p 'helpful-mode)
+             (derived-mode-p 'compilation-mode)
+             
+             ;; Hide temporary/preview buffers
+             (string-match-p "^\\*.*-preview\\*$" name)
+             (string-match-p "^\\*Completions\\*$" name)
+             (string-match-p "^\\*Backtrace\\*$" name)
+             
+             ;; Hide process buffers
+             (eq (get-buffer-process buf) t))))))
+
+#+END_SRC
+
+** Helper Functions
+#+BEGIN_SRC emacs-lisp
+;;; Helper Functions
+
+(defun mcg/sort-tab-select-by-name ()
+  "Interactively select a tab by buffer name."
+  (interactive)
+  (let* ((tabs (sort-tab-get-tabs))
+         (tab-names (mapcar #'buffer-name tabs))
+         (selected (completing-read "Select tab: " tab-names nil t)))
+    (when selected
+      (switch-to-buffer selected))))
+
+(defun mcg/sort-tab-move-current-tab-left ()
+  "Move current tab to the left."
+  (interactive)
+  (when (> (length (sort-tab-get-tabs)) 1)
+    (sort-tab-move-current-tab -1)))
+
+(defun mcg/sort-tab-move-current-tab-right ()
+  "Move current tab to the right."
+  (interactive)
+  (when (> (length (sort-tab-get-tabs)) 1)
+    (sort-tab-move-current-tab 1)))
+
+(defun mcg/sort-tab-info ()
+  "Show information about current tabs."
+  (interactive)
+  (let ((tabs (sort-tab-get-tabs))
+        (current (current-buffer)))
+    (message "Tabs: %d | Current: %s | Position: %d/%d"
+             (length tabs)
+             (buffer-name current)
+             (1+ (cl-position current tabs))
+             (length tabs))))
+
+#+END_SRC
+
+** Keybindings
+#+BEGIN_SRC emacs-lisp
+;;; Keybindings
+
+(global-set-key (kbd "C-c t s") 'mcg/sort-tab-select-by-name)
+(global-set-key (kbd "C-c t <") 'mcg/sort-tab-move-current-tab-left)
+(global-set-key (kbd "C-c t >") 'mcg/sort-tab-move-current-tab-right)
+(global-set-key (kbd "C-c t i") 'mcg/sort-tab-info)
+
+#+END_SRC
+
+** Performance
+#+BEGIN_SRC emacs-lisp
+;;; Performance
+
+(setq sort-tab-update-interval 0.5)
+(setq sort-tab-max-visible-tabs nil)
+
+#+END_SRC
+
+** Provide
+#+BEGIN_SRC emacs-lisp
+(provide 'init-sort-tab)
+;;; init-sort-tab.el ends here
+#+END_SRC

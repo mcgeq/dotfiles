@@ -1,0 +1,74 @@
+* init-wraplish.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle init-wraplish.el :lexical t
+:END:
+
+** Headers
+#+BEGIN_SRC emacs-lisp
+;;; init-wraplish.el --- Wraplish Configuration for MCG Emacs -*- lexical-binding: t; -*-
+
+;; Filename: init-wraplish.el
+;; Description: 中英文混排自动空格模块
+;; Author: mcge <mcgeq@outlook.com>
+;; Copyright (C) 2024-2026, mcge, all rights reserved.
+;; Create   Date: 2026-01-07
+;; Version: 3.0
+;; Keywords: wraplish, chinese, spacing
+;; Compatibility: GNU Emacs 29.0+
+
+;;; Commentary:
+;;
+;; MCG Emacs 配置架构的中英文混排模块，负责：
+;; - 自动在中英文之间添加空格
+;;
+
+#+END_SRC
+
+** Dependencies
+#+BEGIN_SRC emacs-lisp
+;;; Dependencies
+
+(require 'core-lib)
+
+#+END_SRC
+
+** Variables
+#+BEGIN_SRC emacs-lisp
+;;; Variables
+
+(defvar mcg-wraplish-modes
+  '(markdown-mode-hook
+    markdown-ts-mode-hook
+    org-mode-hook
+    prog-mode-hook)
+  "启用 wraplish 的模式列表。")
+
+#+END_SRC
+
+** Configuration
+#+BEGIN_SRC emacs-lisp
+;;; Configuration
+
+(defun mcg--setup-wraplish ()
+  "设置 wraplish 中英文混排。"
+  (when (mcg-require-extension "input/wraplish" 'wraplish)
+    (dolist (hook mcg-wraplish-modes)
+      (add-hook hook (lambda () (wraplish-mode 1))))
+    
+    (mcg-log "Configured wraplish")))
+
+#+END_SRC
+
+** Initialize
+#+BEGIN_SRC emacs-lisp
+;;; Initialize
+
+(mcg--setup-wraplish)
+
+#+END_SRC
+
+** Provide
+#+BEGIN_SRC emacs-lisp
+(provide 'init-wraplish)
+;;; init-wraplish.el ends here
+#+END_SRC

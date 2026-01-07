@@ -1,0 +1,143 @@
+* init-markdown.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle init-markdown.el :lexical t
+:END:
+
+** Headers
+#+BEGIN_SRC emacs-lisp
+;;; init-markdown.el --- Markdown Support for MCG Emacs -*- lexical-binding: t; -*-
+
+;; Filename: init-markdown.el
+;; Description: Markdown 文档模块
+;; Author: mcge <mcgeq@outlook.com>
+;; Copyright (C) 2024-2026, mcge, all rights reserved.
+;; Create   Date: 2026-01-07
+;; Version: 3.0
+;; Keywords: markdown, docs
+;; Compatibility: GNU Emacs 29.0+
+
+;;; Commentary:
+;;
+;; MCG Emacs 配置架构的 Markdown 文档模块，负责：
+;; - Markdown mode 配置
+;; - Tree-sitter 支持
+;; - Flymake-vale 语法检查
+;;
+;; 模块元数据:
+;; :defer t
+;; :mode ("\\.md\\'" "\\.markdown\\'")
+;;
+
+#+END_SRC
+
+** Dependencies
+#+BEGIN_SRC emacs-lisp
+;;; Dependencies
+
+(require 'core-lib)
+
+#+END_SRC
+
+** Markdown Mode Configuration
+#+BEGIN_SRC emacs-lisp
+;;; Markdown Mode Configuration
+
+(defun mcg--setup-markdown-mode ()
+  "设置 Markdown mode。"
+  ;; 使用内置的 markdown-ts-mode (Emacs 29+)
+  (when (fboundp 'markdown-ts-mode)
+    (add-to-list 'auto-mode-alist '("\\.md\\'" . markdown-ts-mode))
+    (add-to-list 'auto-mode-alist '("\\.markdown\\'" . markdown-ts-mode))
+    (mcg-log "Markdown tree-sitter mode configured")))
+
+#+END_SRC
+
+** Flymake Vale Integration
+#+BEGIN_SRC emacs-lisp
+;;; Flymake Vale Integration
+
+(defun mcg--setup-flymake-vale ()
+  "设置 flymake-vale 语法检查。"
+  (when (mcg-require-extension "docs/flymake-vale" 'flymake-vale)
+    ;; 为各种文本模式启用 vale
+    (add-hook 'text-mode-hook #'flymake-vale-load)
+    (add-hook 'markdown-mode-hook #'flymake-vale-load)
+    (add-hook 'markdown-ts-mode-hook #'flymake-vale-load)
+    (add-hook 'org-mode-hook #'flymake-vale-load)
+    (add-hook 'latex-mode-hook #'flymake-vale-load)
+    (add-hook 'message-mode-hook #'flymake-vale-load)
+    
+    ;; 自动检测并加载
+    (add-hook 'find-file-hook 'flymake-vale-maybe-load)
+    
+    ;; 添加额外的模式支持
+    (when (boundp 'flymake-vale-modes)
+      (add-to-list 'flymake-vale-modes 'adoc-mode))
+    
+    (mcg-log "Flymake-vale configured")))
+
+#+END_SRC
+
+** Markdown Mode Hook
+#+BEGIN_SRC emacs-lisp
+;;; Markdown Mode Hook
+
+(defun mcg--markdown-mode-hook ()
+  "Markdown mode hook。"
+  ;; 启用自动换行
+  (visual-line-mode 1)
+  ;; 启用拼写检查 (可选)
+  ;; (flyspell-mode 1)
+  )
+
+#+END_SRC
+
+** Grip Mode Integration
+#+BEGIN_SRC emacs-lisp
+;;; Grip Mode Integration
+
+(defun mcg--setup-grip-mode ()
+  "设置 grip-mode 实时预览。"
+  (when (mcg-require-extension "docs/grip-mode" 'grip-mode)
+    ;; 绑定快捷键到 markdown-mode-command-map
+    (with-eval-after-load 'markdown-mode
+      (define-key markdown-mode-command-map (kbd "g") #'grip-mode))
+    
+    ;; 命令选择: auto, grip, go-grip 或 mdopen
+    (setq grip-command 'auto)
+    
+    ;; 主题选择
+    (setq grip-theme 'auto)
+    
+    ;; 使用内嵌 webkit 预览 (需要 Emacs 26+ 且编译时带 --with-xwidgets)
+    (setq grip-preview-use-webkit t)
+    
+    ;; 保存后更新预览，而不是每次文本变化后
+    (setq grip-update-after-change nil)
+    
+    ;; 确保服务器启动的等待时间
+    (setq grip-sleep-time 2)
+    
+    (mcg-log "Grip-mode configured")))
+
+#+END_SRC
+
+** Initialize
+#+BEGIN_SRC emacs-lisp
+;;; Initialize
+
+(mcg--setup-markdown-mode)
+(mcg--setup-flymake-vale)
+(mcg--setup-grip-mode)
+
+;; 添加 hook
+(add-hook 'markdown-mode-hook #'mcg--markdown-mode-hook)
+(add-hook 'markdown-ts-mode-hook #'mcg--markdown-mode-hook)
+
+#+END_SRC
+
+** Provide
+#+BEGIN_SRC emacs-lisp
+(provide 'init-markdown)
+;;; init-markdown.el ends here
+#+END_SRC

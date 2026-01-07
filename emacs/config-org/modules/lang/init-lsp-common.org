@@ -1,0 +1,283 @@
+* init-lsp-common.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle init-lsp-common.el :lexical t
+:END:
+
+** Headers
+#+BEGIN_SRC emacs-lisp
+;;; init-lsp-common.el --- Common LSP Configuration for MCG Emacs -*- lexical-binding: t; -*-
+
+;; Filename: init-lsp-common.el
+;; Description: 统一 LSP 配置，跨语言共享
+;; Author: mcge <mcgeq@outlook.com>
+;; Copyright (C) 2024-2026, mcge, all rights reserved.
+;; Create   Date: 2026-01-07
+;; Version: 3.0
+;; Keywords: lsp, language-server, development
+;; Compatibility: GNU Emacs 29.0+
+
+;;; Commentary:
+;;
+;; MCG Emacs 配置架构的统一 LSP 配置模块，负责：
+;; - 性能优化
+;; - 通用快捷键
+;; - 共享工具函数
+;; - 一致的行为
+;;
+
+#+END_SRC
+
+** Dependencies
+#+BEGIN_SRC emacs-lisp
+;;; Dependencies
+
+(require 'core-lib)
+
+#+END_SRC
+
+** LSP Bridge Performance
+#+BEGIN_SRC emacs-lisp
+;;; LSP Bridge 性能优化
+
+(defun mcg--setup-lsp-bridge-performance ()
+  "设置 LSP Bridge 性能优化。"
+  (with-eval-after-load 'lsp-bridge
+    ;; 启用诊断
+    (setq lsp-bridge-enable-diagnostics t
+          lsp-bridge-enable-hover-diagnostic t
+          lsp-bridge-enable-search-words t
+          lsp-bridge-enable-auto-import t)
+    
+    ;; 补全性能
+    (setq lsp-bridge-completion-hide-characters '(":" ";" "(" ")" "[" "]" "{" "}" "," "\"")
+          lsp-bridge-completion-popup-predicates '(lsp-bridge-not-match-stop-commands
+                                                    lsp-bridge-not-match-hide-characters
+                                                    lsp-bridge-not-in-string
+                                                    lsp-bridge-not-in-comment))
+    
+    ;; 代码格式化
+    (setq lsp-bridge-enable-signature-help t
+          lsp-bridge-signature-show-function 'lsp-bridge-signature-show-with-frame)
+    
+    (mcg-log "LSP Bridge performance settings configured")))
+
+#+END_SRC
+
+** Common Keybindings
+#+BEGIN_SRC emacs-lisp
+;;; 统一快捷键
+
+(defvar mcg-lsp-keymap (make-sparse-keymap)
+  "Keymap for LSP commands.")
+
+(defun mcg-lsp-setup-keybindings ()
+  "Setup common LSP keybindings."
+  ;; Navigation
+  (local-set-key (kbd "M-.") #'lsp-bridge-find-def)
+  (local-set-key (kbd "M-,") #'lsp-bridge-find-def-return)
+  (local-set-key (kbd "M-?") #'lsp-bridge-find-references)
+  
+  ;; Documentation
+  (local-set-key (kbd "C-h .") #'lsp-bridge-lookup-documentation)
+  (local-set-key (kbd "C-h ,") #'lsp-bridge-show-signature)
+  
+  ;; Refactoring
+  (local-set-key (kbd "C-c r r") #'lsp-bridge-rename)
+  (local-set-key (kbd "C-c r a") #'lsp-bridge-code-action)
+  (local-set-key (kbd "C-c r f") #'lsp-bridge-code-format)
+  (local-set-key (kbd "C-c r i") #'mcg-lsp-organize-imports)
+  
+  ;; Diagnostics (M-g prefix - standard Emacs "goto" prefix)
+  (local-set-key (kbd "M-g n") #'lsp-bridge-diagnostic-jump-next)
+  (local-set-key (kbd "M-g p") #'lsp-bridge-diagnostic-jump-prev)
+  (local-set-key (kbd "M-g l") #'lsp-bridge-diagnostic-list)
+  
+  ;; Workspace symbols
+  (local-set-key (kbd "C-c r s") #'lsp-bridge-workspace-list-symbols))
+
+#+END_SRC
+
+** Shared Utilities
+#+BEGIN_SRC emacs-lisp
+;;; 共享工具函数
+
+(defun mcg-lsp-format-buffer ()
+  "Format current buffer using LSP."
+  (interactive)
+  (if (and (fboundp 'lsp-bridge-mode)
+           lsp-bridge-mode)
+      (lsp-bridge-code-format)
+    (message "LSP not active in current buffer")))
+
+(defun mcg-lsp-organize-imports ()
+  "Organize imports based on current major mode."
+  (interactive)
+  (cond
+   ;; Python: 使用 ruff
+   ((member major-mode '(python-mode python-ts-mode))
+    (if (executable-find "ruff")
+        (let ((file (buffer-file-name)))
+          (when file
+            (save-buffer)
+            (if (zerop (call-process "ruff" nil nil nil "check" "--select" "I" "--fix" file))
+                (progn
+                  (revert-buffer t t t)
+                  (message "Sorted imports with ruff"))
+              (message "ruff: no import changes needed"))))
+      (message "ruff not found")))
+   ;; Rust: 使用 rustfmt (已包含在格式化中)
+   ((member major-mode '(rust-mode rust-ts-mode))
+    (lsp-bridge-code-format)
+    (message "Rust imports organized via rustfmt"))
+   ;; 其他语言: 尝试 LSP code action
+   ((bound-and-true-p lsp-bridge-mode)
+    (lsp-bridge-code-action))
+   (t
+    (message "No import organizer available for this mode"))))
+
+(defun mcg-lsp-restart ()
+  "Restart LSP server."
+  (interactive)
+  (when lsp-bridge-mode
+    (lsp-bridge-restart-process)
+    (message "LSP server restarted")))
+
+#+END_SRC
+
+** Language Detection
+#+BEGIN_SRC emacs-lisp
+;;; 语言检测
+
+(defun mcg-lsp-detect-project-type ()
+  "Detect project type from project root files."
+  (when-let ((project-root (project-root (project-current))))
+    (cond
+     ;; Python
+     ((or (file-exists-p (expand-file-name "setup.py" project-root))
+          (file-exists-p (expand-file-name "pyproject.toml" project-root))
+          (file-exists-p (expand-file-name "requirements.txt" project-root)))
+      'python)
+     ;; JavaScript/TypeScript
+     ((or (file-exists-p (expand-file-name "package.json" project-root))
+          (file-exists-p (expand-file-name "tsconfig.json" project-root)))
+      'javascript)
+     ;; Rust
+     ((file-exists-p (expand-file-name "Cargo.toml" project-root))
+      'rust)
+     ;; Zig
+     ((file-exists-p (expand-file-name "build.zig" project-root))
+      'zig)
+     ;; C/C++
+     ((or (file-exists-p (expand-file-name "CMakeLists.txt" project-root))
+          (file-exists-p (expand-file-name "Makefile" project-root))
+          (file-exists-p (expand-file-name "compile_commands.json" project-root)))
+      'c-cpp)
+     (t 'unknown))))
+
+(defun mcg-lsp-show-project-info ()
+  "Show detected project information."
+  (interactive)
+  (let ((project-type (mcg-lsp-detect-project-type))
+        (project-root (when (project-current)
+                        (project-root (project-current)))))
+    (message "Project: %s | Type: %s" 
+             (or project-root "None")
+             (or project-type "unknown"))))
+
+#+END_SRC
+
+** Auto-Format on Save
+#+BEGIN_SRC emacs-lisp
+;;; 保存时自动格式化
+
+(defvar mcg-lsp-format-on-save-modes
+  '(python-mode python-ts-mode
+    rust-mode rust-ts-mode
+    zig-mode zig-ts-mode
+    c-mode c-ts-mode c++-mode c++-ts-mode
+    typescript-mode typescript-ts-mode tsx-ts-mode
+    js-mode js-ts-mode)
+  "Modes where format-on-save is enabled.")
+
+(defvar mcg-lsp-format-on-save-enabled t
+  "Whether format-on-save is globally enabled.")
+
+(defun mcg-lsp-format-on-save ()
+  "Format buffer on save if appropriate."
+  (when (and mcg-lsp-format-on-save-enabled
+             (bound-and-true-p lsp-bridge-mode)
+             (member major-mode mcg-lsp-format-on-save-modes))
+    (lsp-bridge-code-format)))
+
+(defun mcg-lsp-toggle-format-on-save ()
+  "Toggle format-on-save globally."
+  (interactive)
+  (setq mcg-lsp-format-on-save-enabled (not mcg-lsp-format-on-save-enabled))
+  (message "Format on save: %s" 
+           (if mcg-lsp-format-on-save-enabled "enabled" "disabled")))
+
+#+END_SRC
+
+** Server Status
+#+BEGIN_SRC emacs-lisp
+;;; 服务器状态
+
+(defun mcg-lsp-check-server-available (server-name)
+  "Check if LSP server is available in PATH."
+  (executable-find server-name))
+
+(defun mcg-lsp-show-server-status ()
+  "Show status of all LSP servers."
+  (interactive)
+  (let ((servers '(("Python (ty)" . "ty")
+                   ("Python (ruff)" . "ruff")
+                   ("TypeScript" . "typescript-language-server")
+                   ("Rust" . "rust-analyzer")
+                   ("Zig" . "zls")
+                   ("C/C++ (clangd)" . "clangd"))))
+    (with-help-window "*LSP Server Status*"
+      (princ "═══════════════════════════════════\n")
+      (princ "   LSP Server Availability\n")
+      (princ "═══════════════════════════════════\n\n")
+      (dolist (server servers)
+        (let ((name (car server))
+              (executable (cdr server)))
+          (princ (format "%-20s %s\n" 
+                         name
+                         (if (mcg-lsp-check-server-available executable)
+                             "✓ Available"
+                           "✗ Not found"))))))))
+
+#+END_SRC
+
+** Quick Commands
+#+BEGIN_SRC emacs-lisp
+;;; 快速命令
+
+(defalias 'lsp-format #'mcg-lsp-format-buffer)
+(defalias 'lsp-imports #'mcg-lsp-organize-imports)
+(defalias 'lsp-restart #'mcg-lsp-restart)
+(defalias 'lsp-status #'mcg-lsp-show-server-status)
+(defalias 'lsp-project #'mcg-lsp-show-project-info)
+
+#+END_SRC
+
+** Initialize
+#+BEGIN_SRC emacs-lisp
+;;; Initialize
+
+(mcg--setup-lsp-bridge-performance)
+
+;; 自动设置快捷键
+(add-hook 'lsp-bridge-mode-hook #'mcg-lsp-setup-keybindings)
+
+;; 启用保存时格式化
+(add-hook 'before-save-hook #'mcg-lsp-format-on-save)
+
+#+END_SRC
+
+** Provide
+#+BEGIN_SRC emacs-lisp
+(provide 'init-lsp-common)
+;;; init-lsp-common.el ends here
+#+END_SRC

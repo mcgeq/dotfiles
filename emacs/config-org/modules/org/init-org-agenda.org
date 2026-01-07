@@ -1,0 +1,251 @@
+* init-org-agenda.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle init-org-agenda.el :lexical t
+:END:
+
+** Headers
+#+BEGIN_SRC emacs-lisp
+;;; init-org-agenda.el --- Org Agenda Configuration for MCG Emacs -*- lexical-binding: t; -*-
+
+;; Filename: init-org-agenda.el
+;; Description: Org Agenda 配置模块
+;; Author: mcge <mcgeq@outlook.com>
+;; Copyright (C) 2024-2026, mcge, all rights reserved.
+;; Create   Date: 2026-01-07
+;; Version: 3.0
+;; Keywords: org, agenda, calendar
+;; Compatibility: GNU Emacs 29.0+
+
+;;; Commentary:
+;;
+;; MCG Emacs 配置架构的 Org Agenda 配置模块，负责：
+;; - Agenda 文件和视图配置
+;; - 时间网格和日程显示
+;; - 日期格式化（包含农历支持）
+;; - 日出日落函数
+;;
+
+#+END_SRC
+
+** Dependencies
+#+BEGIN_SRC emacs-lisp
+;;; Dependencies
+
+(require 'core-lib)
+(require 'org-agenda)
+(require 'cal-china-x nil t)
+
+#+END_SRC
+
+** Variables
+#+BEGIN_SRC emacs-lisp
+;;; Variables
+
+(defvar mcg-org-agenda-files
+  (list (expand-file-name "agenda" mcg-org-directory))
+  "Org agenda 扫描的文件列表或目录。")
+
+(defvar mcg-org-agenda-diary-file
+  (expand-file-name "diary.org" (expand-file-name "agenda" mcg-org-directory))
+  "Org agenda 日记文件。")
+
+(defvar mcg-calendar-location-longitude 116.9962
+  "当前位置的经度（用于日出日落计算）。")
+
+(defvar mcg-calendar-location-latitude 39.91
+  "当前位置的纬度（用于日出日落计算）。")
+
+#+END_SRC
+
+** Agenda Files Configuration
+#+BEGIN_SRC emacs-lisp
+;;; Agenda 文件和基础配置
+
+(defun mcg-org-agenda-setup-files ()
+  "设置 Org Agenda 文件配置。"
+  (setq org-agenda-files mcg-org-agenda-files)
+  (setq org-agenda-use-time-grid t)
+  (setq org-agenda-current-time-string "⏰------------now")
+  
+  (mcg-log "Configured org-agenda files"))
+
+#+END_SRC
+
+** Date Format with Lunar Calendar
+#+BEGIN_SRC emacs-lisp
+;;; 日期格式化（含农历）
+
+(defun mcg-org-agenda-format-date-aligned (date)
+  "格式化 DATE 用于 agenda 显示，包含农历信息。"
+  (require 'cal-iso)
+  (let* ((dayname (if (boundp 'cal-china-x-days)
+                      (aref cal-china-x-days (calendar-day-of-week date))
+                    (aref ["日" "一" "二" "三" "四" "五" "六"]
+                          (calendar-day-of-week date))))
+         (day (cadr date))
+         (month (car date))
+         (year (nth 2 date))
+         (day-of-week (calendar-day-of-week date))
+         (iso-week (org-days-to-iso-week
+                    (calendar-absolute-from-gregorian date)))
+         ;; 农历计算
+         (cn-date (calendar-chinese-from-absolute
+                   (calendar-absolute-from-gregorian date)))
+         (cn-month (cl-caddr cn-date))
+         (cn-day (cl-cadddr cn-date))
+         (cn-month-string (if (and (boundp 'cal-china-x-month-name)
+                                   (< (1- (floor cn-month)) 12))
+                              (concat (aref cal-china-x-month-name
+                                            (1- (floor cn-month)))
+                                      (if (integerp cn-month) "" "（闰月）"))
+                            ""))
+         (cn-day-string (if (and (boundp 'cal-china-x-day-name)
+                                 (< (1- cn-day) 30))
+                            (aref cal-china-x-day-name (1- cn-day))
+                          ""))
+         ;; 计算今年第几天
+         (absolute-date (calendar-absolute-from-gregorian date))
+         (start-of-year (calendar-absolute-from-gregorian (list 1 1 year)))
+         (day-of-year (+ 1 (- absolute-date start-of-year)))
+         (extra (format " 农历%s%s%s 今年第 %02d 周 第%03d 天"
+                        cn-month-string
+                        cn-day-string
+                        (if (integerp cn-month) "" "[闰]")
+                        iso-week
+                        day-of-year)))
+    (format "%04d-%02d-%02d 星期%s%s\n"
+            year month day dayname extra)))
+
+(defun mcg-org-agenda-setup-date-format ()
+  "设置 Agenda 日期格式。"
+  (setq org-agenda-format-date 'mcg-org-agenda-format-date-aligned)
+  (mcg-log "Configured org-agenda date format"))
+
+#+END_SRC
+
+** Time Grid Configuration
+#+BEGIN_SRC emacs-lisp
+;;; 时间网格配置
+
+(defun mcg-org-agenda-setup-time-grid ()
+  "设置 Agenda 时间网格。"
+  ;; 八分图时间段
+  ;; 1: 0-3时 午夜  2: 3-6时 破晓  3: 6-9时 早晨  4: 9-12时 明昼
+  ;; 5: 12-15时 午后  6: 15-18时 下午  7: 18-21时 向晚  8: 21-24时 深夜
+  (setq org-agenda-time-grid
+        '((daily today require-timed)
+          (300 600 900 1200 1500 1800 2100 2400)
+          "......"
+          "-----------------------------------------------------"))
+  
+  (mcg-log "Configured org-agenda time grid"))
+
+#+END_SRC
+
+** Display and Format Settings
+#+BEGIN_SRC emacs-lisp
+;;; 显示和格式设置
+
+(defun mcg-org-agenda-setup-display ()
+  "设置 Agenda 显示格式。"
+  ;; 日记集成
+  (setq org-agenda-include-diary t
+        org-agenda-diary-file mcg-org-agenda-diary-file
+        diary-file mcg-org-agenda-diary-file)
+  
+  ;; 日程视图的前缀设置
+  (setq org-agenda-prefix-format
+        '((agenda . " %i %-25:c %5t %s")
+          (todo   . " %i %-25:c ")
+          (tags   . " %i %-25:c ")
+          (search . " %i %-25:c ")))
+  
+  ;; 计划任务显示
+  (setq org-agenda-scheduled-leaders
+        '("计划 " "应在%02d 天前开始 "))
+  
+  ;; 截止日期显示
+  (setq org-agenda-deadline-leaders
+        '("截止 " "还有%02d 天到期 " "已经过期%02d 天 "))
+  
+  ;; 时间戳格式
+  (setq org-time-stamp-formats '("<%Y-%m-%d %A>" . "<%Y-%m-%d %A %H:%M>"))
+  
+  ;; 其他显示设置
+  (setq org-cycle-separator-lines 2
+        org-agenda-insert-diary-extract-time t
+        org-agenda-sticky t
+        org-agenda-time-leading-zero t
+        org-agenda-tags-column -80
+        org-deadline-warning-days 3)
+  
+  (mcg-log "Configured org-agenda display"))
+
+#+END_SRC
+
+** Location and Sunrise/Sunset
+#+BEGIN_SRC emacs-lisp
+;;; 地理位置和日出日落
+
+(defun mcg-org-agenda-setup-location ()
+  "设置地理位置。"
+  (setq calendar-longitude mcg-calendar-location-longitude
+        calendar-latitude mcg-calendar-location-latitude)
+  
+  ;; 天干地支配置
+  (setq calendar-chinese-celestial-stem
+        ["甲" "乙" "丙" "丁" "戊" "己" "庚" "辛" "壬" "癸"]
+        calendar-chinese-terrestrial-branch
+        ["子" "丑" "寅" "卯" "辰" "巳" "午" "未" "申" "酉" "戌" "亥"])
+  
+  (mcg-log "Configured calendar location"))
+
+(defun diary-sunrise ()
+  "获取日出时间。"
+  (let ((dss (diary-sunrise-sunset)))
+    (with-temp-buffer
+      (insert dss)
+      (goto-char (point-min))
+      (while (re-search-forward " ([^)]*)" nil t)
+        (replace-match "" nil nil))
+      (goto-char (point-min))
+      (search-forward ",")
+      (buffer-substring (point-min) (match-beginning 0)))))
+
+(defun diary-sunset ()
+  "获取日落时间。"
+  (let ((dss (diary-sunrise-sunset))
+        start end)
+    (with-temp-buffer
+      (insert dss)
+      (goto-char (point-min))
+      (while (re-search-forward " ([^)]*)" nil t)
+        (replace-match "" nil nil))
+      (goto-char (point-min))
+      (search-forward ", ")
+      (setq start (match-end 0))
+      (search-forward " at")
+      (setq end (match-beginning 0))
+      (goto-char start)
+      (capitalize-word 1)
+      (buffer-substring start end))))
+
+#+END_SRC
+
+** Initialize
+#+BEGIN_SRC emacs-lisp
+;;; Initialize
+
+(mcg-org-agenda-setup-files)
+(mcg-org-agenda-setup-date-format)
+(mcg-org-agenda-setup-time-grid)
+(mcg-org-agenda-setup-display)
+(mcg-org-agenda-setup-location)
+
+#+END_SRC
+
+** Provide
+#+BEGIN_SRC emacs-lisp
+(provide 'init-org-agenda)
+;;; init-org-agenda.el ends here
+#+END_SRC

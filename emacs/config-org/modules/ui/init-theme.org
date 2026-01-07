@@ -1,0 +1,183 @@
+* init-theme.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle init-theme.el :lexical t
+:END:
+
+** Headers
+#+BEGIN_SRC emacs-lisp
+  ;;; init-theme.el --- Theme Configuration for MCG Emacs -*- lexical-binding: t; -*-
+
+  ;; Filename: init-theme.el
+  ;; Description: 主题配置模块
+  ;; Author: mcge <mcgeq@outlook.com>
+  ;; Copyright (C) 2024-2026, mcge, all rights reserved.
+  ;; Create   Date: 2026-01-07
+  ;; Version: 3.0
+  ;; Keywords: theme, ui, appearance
+  ;; Compatibility: GNU Emacs 29.0+
+
+  ;;; Commentary:
+  ;;
+  ;; MCG Emacs 配置架构的主题模块，负责：
+  ;; - ef-themes 配置
+  ;; - 主题切换命令
+  ;; - nerd-icons 配置
+  ;;
+  ;; 模块元数据:
+  ;; :depends ()
+  ;; :defer nil
+  ;;
+
+#+END_SRC
+
+** Dependencies
+#+BEGIN_SRC emacs-lisp
+;;; Dependencies
+
+(require 'core-lib)
+
+#+END_SRC
+
+** Variables
+#+BEGIN_SRC emacs-lisp
+;;; Variables
+
+(defvar mcg-ui-default-theme 'ef-dream
+  "默认主题。")
+
+(defvar mcg-ui-light-theme 'ef-summer
+  "日间主题。")
+
+(defvar mcg-ui-dark-theme 'ef-bio
+  "夜间主题。")
+
+(defvar mcg-ui-auto-switch-theme nil
+  "是否根据时间自动切换主题。
+当设置为 t 时，18:00 后使用夜间主题，否则使用日间主题。")
+
+(defvar mcg-ui-theme-switch-hour 18
+  "主题切换时间（小时）。
+当 `mcg-ui-auto-switch-theme' 为 t 时，
+此时间之后使用夜间主题。")
+
+#+END_SRC
+
+** Theme Configuration
+#+BEGIN_SRC emacs-lisp
+;;; Theme Configuration
+
+(defun mcg--load-ef-themes ()
+  "加载 ef-themes 扩展。"
+  (mcg-require-extension "ui/themes" 'ef-themes))
+
+(defun mcg--select-theme ()
+  "根据配置选择要加载的主题。"
+  (if mcg-ui-auto-switch-theme
+      (if (>= (string-to-number (format-time-string "%H"))
+              mcg-ui-theme-switch-hour)
+          mcg-ui-dark-theme
+        mcg-ui-light-theme)
+    mcg-ui-default-theme))
+
+(defun mcg-ui-setup-theme ()
+  "设置主题。"
+  (when (mcg--load-ef-themes)
+    (let ((theme (mcg--select-theme)))
+      (load-theme theme t)
+      (mcg-log "Loaded theme: %s" theme))))
+
+#+END_SRC
+
+** Theme Commands
+#+BEGIN_SRC emacs-lisp
+;;; Theme Commands
+
+(defun mcg/switch-theme ()
+  "交互式切换主题。
+使用 completing-read 选择 ef-themes 中的主题。"
+  (interactive)
+  (when (mcg--load-ef-themes)
+    (let* ((themes (custom-available-themes))
+           (ef-themes (seq-filter (lambda (t)
+                                    (string-prefix-p "ef-" (symbol-name t)))
+                                  themes))
+           (theme (intern (completing-read "Select theme: "
+                                           (mapcar #'symbol-name ef-themes)
+                                           nil t))))
+      (mapc #'disable-theme custom-enabled-themes)
+      (load-theme theme t)
+      (mcg-log "Switched to theme: %s" theme)
+      (message "Theme: %s" theme))))
+
+(defun mcg/toggle-dark-light ()
+  "在日间和夜间主题之间切换。"
+  (interactive)
+  (when (mcg--load-ef-themes)
+    (let* ((current (car custom-enabled-themes))
+           (is-dark (and current
+                         (string-match-p "dark\\|night\\|bio\\|dream"
+                                         (symbol-name current))))
+           (new-theme (if is-dark
+                          mcg-ui-light-theme
+                        mcg-ui-dark-theme)))
+      (mapc #'disable-theme custom-enabled-themes)
+      (load-theme new-theme t)
+      (mcg-log "Toggled to theme: %s" new-theme)
+      (message "Theme: %s" new-theme))))
+
+(defun mcg/reload-theme ()
+  "重新加载当前主题。"
+  (interactive)
+  (let ((current (car custom-enabled-themes)))
+    (when current
+      (mapc #'disable-theme custom-enabled-themes)
+      (load-theme current t)
+      (message "Reloaded theme: %s" current))))
+
+#+END_SRC
+
+** Nerd Icons Configuration
+#+BEGIN_SRC emacs-lisp
+;;; Nerd Icons Configuration
+
+(defvar mcg-ui-icon-font-family "FiraCode Nerd Font"
+  "图标字体家族名称。")
+
+(defun mcg-ui-setup-nerd-icons ()
+  "设置 nerd-icons。
+路径已由 core-bootstrap 的 mcg-setup-load-path 添加到 load-path。"
+  (require 'nerd-icons nil t)
+  
+  (when (featurep 'nerd-icons)
+    ;; 设置图标字体
+    (setq nerd-icons-font-family mcg-ui-icon-font-family)
+    
+    ;; 加载 nerd-icons-completion
+    (require 'nerd-icons-completion nil t)
+    
+    (when (featurep 'nerd-icons-completion)
+      (nerd-icons-completion-mode 1)
+      (add-hook 'marginalia-mode-hook #'nerd-icons-completion-marginalia-setup)
+      (mcg-log "nerd-icons-completion configured")))
+  
+  (mcg-log "nerd-icons configured"))
+
+#+END_SRC
+
+** Initialize
+#+BEGIN_SRC emacs-lisp
+;;; Initialize
+
+;; 设置主题
+(mcg-ui-setup-theme)
+
+;; 设置图标
+(mcg-ui-setup-nerd-icons)
+
+#+END_SRC
+
+** Provide
+#+BEGIN_SRC emacs-lisp
+(provide 'init-theme)
+;;; init-theme.el ends here
+#+END_SRC

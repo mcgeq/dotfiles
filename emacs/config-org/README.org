@@ -1,0 +1,170 @@
+#+TITLE: Emacs 配置 - 声明式模块化架构
+#+AUTHOR: mcge
+#+DATE: 2026-01-07
+#+OPTIONS: toc:3 num:t
+
+* 概述
+
+MCG Emacs 配置采用声明式模块系统，借鉴 Doom Emacs 的设计理念，同时保持 Org Babel 文学编程的优势。
+
+** 核心特性
+
+- 声明式模块配置 (mcg! 宏)
+- 延迟加载支持
+- 模块依赖管理
+- 统一的扩展管理
+- 完整的测试覆盖
+
+* 目录结构
+
+#+begin_src text
+config-org/
+├── init.org                      # 入口文件（只包含 mcg! 声明）
+├── core/                         # 核心层（必须加载）
+│   ├── core-bootstrap.org        # 路径定义、性能优化
+│   ├── core-lib.org              # 工具函数、扩展管理
+│   └── core-modules.org          # mcg! 宏、模块系统
+├── modules/                      # 功能模块
+│   ├── ui/                       # UI 相关
+│   │   ├── init-theme.org
+│   │   ├── init-modeline.org
+│   │   └── init-font.org
+│   ├── editor/                   # 编辑器功能
+│   │   ├── init-defaults.org
+│   │   ├── init-treesit.org
+│   │   ├── init-navigation.org
+│   │   └── init-keybindings.org
+│   ├── completion/               # 补全系统
+│   │   ├── init-vertico.org
+│   │   └── init-yasnippet.org
+│   ├── tools/                    # 工具
+│   │   ├── init-magit.org
+│   │   ├── init-search.org
+│   │   ├── init-rime.org
+│   │   ├── init-utils.org
+│   │   └── init-sort-tab.org
+│   ├── input/                    # 输入增强
+│   │   ├── init-fingertip.org
+│   │   └── init-wraplish.org
+│   ├── org/                      # Org-mode
+│   │   ├── init-org.org
+│   │   ├── init-org-agenda.org
+│   │   ├── init-org-babel.org
+│   │   ├── init-org-capture.org
+│   │   └── init-org-extras.org
+│   ├── docs/                     # 文档
+│   │   └── init-markdown.org
+│   └── lang/                     # 编程语言
+│       ├── init-lsp.org
+│       ├── init-lsp-common.org
+│       ├── init-rust.org
+│       ├── init-python.org
+│       └── ...
+└── private/                      # 私有配置（不提交到 Git）
+    └── config.org
+#+end_src
+
+* 快速开始
+
+** 1. 初始化 submodules
+
+#+begin_src bash
+make init
+#+end_src
+
+** 2. 编译配置
+
+#+begin_src bash
+make
+#+end_src
+
+** 3. 启动 Emacs
+
+#+begin_src bash
+emacs -Q -l site-lisp/config/init.el
+#+end_src
+
+* 模块声明
+
+使用 =mcg!= 宏在 =init.org= 中声明启用的模块：
+
+#+begin_src emacs-lisp
+(mcg! :ui
+      theme           ; 主题配置
+      modeline        ; 状态栏
+      font            ; 字体配置
+
+      :editor
+      defaults        ; 编辑器默认配置
+      treesit         ; Tree-sitter 支持
+      navigation      ; 导航 (avy, ace-window)
+      keybindings     ; 快捷键
+
+      :completion
+      vertico         ; 垂直补全框架
+      yasnippet       ; 代码片段
+
+      :tools
+      magit           ; Git 客户端
+      search          ; 搜索工具
+      rime            ; 中文输入法
+      utils           ; 工具集
+
+      :lang
+      lsp             ; LSP 配置
+      rust            ; Rust 开发
+      -lua            ; 禁用 Lua（以 - 前缀）
+      )
+#+end_src
+
+* 私有配置
+
+创建私有配置文件：
+
+#+begin_src bash
+cp config-org/private/config.org.example config-org/private/config.org
+#+end_src
+
+私有配置不会提交到 Git。
+
+* Makefile 命令
+
+#+begin_src bash
+# 编译配置
+make
+
+# 清理生成文件
+make clean
+
+# 查看文件列表
+make list
+
+# 运行测试
+make test
+
+# 初始化 submodules
+make init
+
+# 更新 submodules
+make up
+
+# 查看 submodule 状态
+make st
+#+end_src
+
+* 常用命令
+
+| 命令                  | 描述                     |
+|-----------------------+--------------------------|
+| M-x mcg-list-modules  | 显示所有模块及其状态     |
+| M-x mcg/reload-module | 重新加载指定模块         |
+| M-x mcg/show-keybindings | 显示快捷键速查        |
+
+* 更新日志
+
+** 2026-01-07 - 发布
+
+- 声明式模块系统 (mcg! 宏)
+- 延迟加载支持
+- 完整的测试覆盖
+- 统一的扩展管理

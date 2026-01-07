@@ -4,9 +4,14 @@ vimrc/pack/mcge/start/ultisnips/tags
 !vimrc/coc-data/ultisnips/*
 
 emacs/site-lisp/config/*
+emacs/site-lisp/config-v3/*
 emacs/config-org/**/*.md
 emacs/custom.el
 emacs/site-lisp/packages-lock.el
+
+# V3 config private directory (user-specific configurations)
+emacs/config-org-v3/private/*
+!emacs/config-org-v3/private/.gitkeep
 
 # nushell
 nushell/history.*

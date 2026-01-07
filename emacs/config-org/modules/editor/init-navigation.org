@@ -1,0 +1,243 @@
+* init-navigation.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle init-navigation.el :lexical t
+:END:
+
+** Headers
+#+BEGIN_SRC emacs-lisp
+;;; init-navigation.el --- Navigation Tools for MCG Emacs -*- lexical-binding: t; -*-
+
+;; Filename: init-navigation.el
+;; Description: 导航工具模块（Ace-window + Avy）
+;; Author: mcge <mcgeq@outlook.com>
+;; Copyright (C) 2024-2026, mcge, all rights reserved.
+;; Create   Date: 2026-01-07
+;; Version: 3.0
+;; Keywords: navigation, window, jump, avy, ace-window
+;; Compatibility: GNU Emacs 29.0+
+
+;;; Commentary:
+;;
+;; MCG Emacs 配置架构的导航工具模块，负责：
+;; - Ace-window 快速窗口切换
+;; - Avy 快速跳转
+;; - Winner-mode 窗口布局撤销
+;;
+
+#+END_SRC
+
+** Dependencies
+#+BEGIN_SRC emacs-lisp
+;;; Dependencies
+
+(require 'core-lib)
+
+#+END_SRC
+
+** Ace-Window Configuration
+#+BEGIN_SRC emacs-lisp
+;;; Ace-Window Configuration
+
+(defun mcg--setup-ace-window ()
+  "设置 Ace-window 快速窗口切换。"
+  (when (mcg-require-extension "editor/ace-window" 'ace-window)
+    ;; 使用更容易按的键作为窗口标签
+    (setq aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l))
+    
+    ;; 窗口标签位置
+    (setq aw-char-position 'top-left)
+    
+    ;; 显示背景
+    (setq aw-background t)
+    
+    ;; 忽略某些 buffer
+    (setq aw-ignored-buffers '("*Calc Trail*" "*LV*"))
+    
+    ;; 当只有两个窗口时直接切换
+    (setq aw-dispatch-always nil)
+    
+    ;; 自定义 dispatch alist
+    (setq aw-dispatch-alist
+          '((?x aw-delete-window "Delete Window")
+            (?m aw-swap-window "Swap Windows")
+            (?M aw-move-window "Move Window")
+            (?c aw-copy-window "Copy Window")
+            (?j aw-switch-buffer-in-window "Select Buffer")
+            (?n aw-flip-window "Flip Window")
+            (?u aw-switch-buffer-other-window "Switch Buffer Other Window")
+            (?v aw-split-window-vert "Split Vertically")
+            (?b aw-split-window-horz "Split Horizontally")
+            (?o delete-other-windows "Delete Other Windows")
+            (?? aw-show-dispatch-help)))
+    
+    ;; 窗口标签样式
+    (custom-set-faces
+     '(aw-leading-char-face
+       ((t (:inherit ace-jump-face-foreground :height 2.0)))))
+    
+    (mcg-log "Ace-window configured")))
+
+#+END_SRC
+
+** Ace-Window Keybindings
+#+BEGIN_SRC emacs-lisp
+;;; Ace-Window Keybindings
+
+(defun mcg--setup-ace-window-keybindings ()
+  "设置 Ace-window 快捷键。"
+  (when (featurep 'ace-window)
+    ;; 主要快捷键
+    (global-set-key (kbd "M-O") 'ace-window)
+    (global-set-key (kbd "C-x o") 'ace-window)
+    
+    ;; C-c w 前缀
+    (global-set-key (kbd "C-c w w") 'ace-window)
+    (global-set-key (kbd "C-c w d") 'ace-delete-window)
+    (global-set-key (kbd "C-c w s") 'ace-swap-window)
+    (global-set-key (kbd "C-c w m") 'ace-swap-window)
+    (global-set-key (kbd "C-c w o") 'delete-other-windows)
+    (global-set-key (kbd "C-c w v") 'split-window-right)
+    (global-set-key (kbd "C-c w h") 'split-window-below)
+    
+    ;; 快速删除窗口
+    (global-set-key (kbd "C-x 0") 'ace-delete-window)
+    
+    ;; 快速交换窗口
+    (global-set-key (kbd "C-x 4 s") 'ace-swap-window)
+    
+    (mcg-log "Ace-window keybindings configured")))
+
+#+END_SRC
+
+** Winner Mode Configuration
+#+BEGIN_SRC emacs-lisp
+;;; Winner Mode Configuration
+
+(defun mcg--setup-winner-mode ()
+  "设置 Winner-mode 窗口布局撤销。"
+  ;; winner-mode 是内置的
+  (winner-mode 1)
+  
+  ;; 快捷键:
+  ;; C-c <left>  - 撤销窗口布局变化
+  ;; C-c <right> - 重做窗口布局变化
+  
+  (mcg-log "Winner-mode enabled"))
+
+#+END_SRC
+
+** Avy Configuration
+#+BEGIN_SRC emacs-lisp
+;;; Avy Configuration
+
+(defun mcg--setup-avy ()
+  "设置 Avy 快速跳转。"
+  (when (mcg-require-extension "editor/avy" 'avy)
+    ;; 使用更容易按的键
+    (setq avy-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l ?q ?w ?e ?r ?u ?i ?o ?p))
+    
+    ;; 跳转样式
+    (setq avy-style 'at-full)
+    
+    ;; 背景变暗
+    (setq avy-background t)
+    
+    ;; 所有窗口都可以跳转
+    (setq avy-all-windows t)
+    (setq avy-all-windows-alt nil)
+    
+    ;; 超时时间
+    (setq avy-timeout-seconds 0.5)
+    
+    ;; 高亮第一个字符
+    (setq avy-highlight-first t)
+    
+    ;; 忽略大小写
+    (setq avy-case-fold-search t)
+    
+    (mcg-log "Avy configured")))
+
+#+END_SRC
+
+** Avy Keybindings
+#+BEGIN_SRC emacs-lisp
+;;; Avy Keybindings
+
+(defun mcg--setup-avy-keybindings ()
+  "设置 Avy 快捷键。"
+  (when (featurep 'avy)
+    ;; 跳转到字符
+    (global-set-key (kbd "C-;") 'avy-goto-char)
+    (global-set-key (kbd "C-'") 'avy-goto-char-2)
+    
+    ;; M-g 前缀（标准 Emacs goto 前缀）
+    (global-set-key (kbd "M-g w") 'avy-goto-word-1)
+    (global-set-key (kbd "M-g g") 'avy-goto-line)
+    (global-set-key (kbd "M-g c") 'avy-goto-char-timer)
+    (global-set-key (kbd "M-g j") 'avy-goto-char-in-line)
+    
+    ;; 高级命令
+    (global-set-key (kbd "M-g y") 'avy-copy-line)
+    (global-set-key (kbd "M-g m") 'avy-move-line)
+    (global-set-key (kbd "M-g k") 'avy-kill-whole-line)
+    (global-set-key (kbd "M-g Y") 'avy-copy-region)
+    (global-set-key (kbd "M-g K") 'avy-kill-region)
+    
+    ;; isearch 集成
+    (define-key isearch-mode-map (kbd "C-;") 'avy-isearch)
+    
+    (mcg-log "Avy keybindings configured")))
+
+#+END_SRC
+
+** Avy Custom Functions
+#+BEGIN_SRC emacs-lisp
+;;; Avy Custom Functions
+
+(defun mcg/avy-goto-word-or-subword ()
+  "跳转到单词或子词（驼峰命名中的部分）。"
+  (interactive)
+  (if (bound-and-true-p subword-mode)
+      (avy-goto-subword-1)
+    (avy-goto-word-1)))
+
+(defun mcg/avy-goto-open-paren ()
+  "跳转到开括号。"
+  (interactive)
+  (avy-goto-char ?\())
+
+(defun mcg/avy-goto-close-paren ()
+  "跳转到闭括号。"
+  (interactive)
+  (avy-goto-char ?\)))
+
+(defun mcg/avy-goto-string ()
+  "跳转到字符串开头（引号）。"
+  (interactive)
+  (avy-goto-char ?\"))
+
+;; 绑定自定义函数
+(with-eval-after-load 'avy
+  (global-set-key (kbd "M-g (") 'mcg/avy-goto-open-paren)
+  (global-set-key (kbd "M-g )") 'mcg/avy-goto-close-paren)
+  (global-set-key (kbd "M-g \"") 'mcg/avy-goto-string))
+
+#+END_SRC
+
+** Initialize
+#+BEGIN_SRC emacs-lisp
+;;; Initialize
+
+(mcg--setup-ace-window)
+(mcg--setup-ace-window-keybindings)
+(mcg--setup-winner-mode)
+(mcg--setup-avy)
+(mcg--setup-avy-keybindings)
+
+#+END_SRC
+
+** Provide
+#+BEGIN_SRC emacs-lisp
+(provide 'init-navigation)
+;;; init-navigation.el ends here
+#+END_SRC

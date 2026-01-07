@@ -1,0 +1,115 @@
+* init-cpp.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle init-cpp.el :lexical t
+:END:
+
+** Headers
+#+BEGIN_SRC emacs-lisp
+;;; init-cpp.el --- C/C++ Development for MCG Emacs -*- lexical-binding: t; -*-
+
+;; Filename: init-cpp.el
+;; Description: C/C++ 开发模块
+;; Author: mcge <mcgeq@outlook.com>
+;; Copyright (C) 2024-2026, mcge, all rights reserved.
+;; Create   Date: 2026-01-07
+;; Version: 3.0
+;; Keywords: c, c++, cpp
+;; Compatibility: GNU Emacs 29.0+
+
+;;; Commentary:
+;;
+;; MCG Emacs 配置架构的 C/C++ 开发模块，负责：
+;; - C/C++ mode 配置
+;; - Modern C++ 字体锁定
+;; - Qt 关键字支持
+;; - LSP 集成 (clangd)
+;;
+;; 模块元数据:
+;; :depends (+lsp)
+;; :defer t
+;; :mode ("\\.c\\'" "\\.h\\'" "\\.cpp\\'" "\\.hpp\\'" "\\.cc\\'" "\\.cxx\\'")
+;;
+
+#+END_SRC
+
+** Dependencies
+#+BEGIN_SRC emacs-lisp
+;;; Dependencies
+
+(require 'core-lib)
+(require 'cc-mode)
+
+#+END_SRC
+
+** Modern C++ Font Lock
+#+BEGIN_SRC emacs-lisp
+;;; Modern C++ Font Lock
+
+(defun mcg--setup-modern-cpp-font-lock ()
+  "设置 Modern C++ 字体锁定。"
+  (when (mcg-require-extension "lang/modern-cpp-font-lock" 'modern-cpp-font-lock)
+    (modern-c++-font-lock-global-mode 1)
+    (mcg-log "Modern C++ font lock enabled")))
+
+#+END_SRC
+
+** C/C++ Mode Configuration
+#+BEGIN_SRC emacs-lisp
+;;; C/C++ Mode Configuration
+
+(defun mcg--c-mode-style-setup ()
+  "设置 C/C++ 代码风格。"
+  ;; 使用 stroustrup 风格
+  (c-set-style "stroustrup")
+  
+  ;; 缩进设置
+  (setq c-basic-offset 4)
+  (setq tab-width 4)
+  (setq indent-tabs-mode nil)
+  
+  ;; Qt 关键字支持
+  (setq c-protection-key
+        (concat "\\<\\(public\\|public slot\\|protected"
+                "\\|protected slot\\|private\\|private slot"
+                "\\)\\>"))
+  (setq c-C++-access-key
+        (concat "\\<\\(signals\\|public\\|protected\\|private"
+                "\\|public slots\\|protected slots\\|private slots"
+                "\\)\\>[ \t]*:"))
+  
+  ;; Qt 关键字字体
+  (font-lock-add-keywords
+   'c++-mode
+   '(("\\<\\(slots\\|signals\\)\\>" . font-lock-type-face)
+     ("\\<Q_OBJECT\\>" . font-lock-keyword-face)
+     ("\\<\\(SIGNAL\\|SLOT\\)\\>" . font-lock-keyword-face)
+     ("\\<Q[A-Z][A-Za-z]*\\>" . font-lock-type-face))))
+
+(defun mcg--c-mode-hook ()
+  "C/C++ mode hook。"
+  (mcg--c-mode-style-setup)
+  
+  ;; 启用 LSP
+  (when (fboundp 'lsp-bridge-mode)
+    (lsp-bridge-mode 1)))
+
+#+END_SRC
+
+** Initialize
+#+BEGIN_SRC emacs-lisp
+;;; Initialize
+
+(mcg--setup-modern-cpp-font-lock)
+
+;; 添加 hooks
+(add-hook 'c-mode-hook #'mcg--c-mode-hook)
+(add-hook 'c++-mode-hook #'mcg--c-mode-hook)
+(add-hook 'c-mode-common-hook #'mcg--c-mode-hook)
+
+#+END_SRC
+
+** Provide
+#+BEGIN_SRC emacs-lisp
+(provide 'init-cpp)
+;;; init-cpp.el ends here
+#+END_SRC

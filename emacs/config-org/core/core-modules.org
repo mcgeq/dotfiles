@@ -1,0 +1,799 @@
+* core-modules.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle core-modules.el :lexical t
+:END:
+
+** Headers
+#+BEGIN_SRC emacs-lisp
+  ;;; core-modules.el --- Module System for MCG Emacs -*- lexical-binding: t; -*-
+
+  ;; Filename: core-modules.el
+  ;; Description: 模块系统核心，提供声明式模块配置
+  ;; Author: mcge <mcgeq@outlook.com>
+  ;; Copyright (C) 2024-2026, mcge, all rights reserved.
+  ;; Create   Date: 2026-01-07
+  ;; Version: 3.0
+  ;; Keywords: modules, configuration, declarative
+  ;; Compatibility: GNU Emacs 29.0+
+
+  ;;; Commentary:
+  ;;
+  ;; MCG Emacs 配置架构的模块系统，负责：
+  ;; - mcg! 宏：声明式模块配置
+  ;; - 模块注册和加载
+  ;; - 延迟加载支持
+  ;; - 模块依赖管理
+  ;;
+  ;; 此模块依赖 core-bootstrap 和 core-lib。
+  ;;
+
+#+END_SRC
+
+** Dependencies
+#+BEGIN_SRC emacs-lisp
+;;; Dependencies
+
+(require 'core-bootstrap)
+(require 'core-lib)
+
+#+END_SRC
+
+** Module Registry
+#+BEGIN_SRC emacs-lisp
+;;; 模块注册表
+
+(defvar mcg-modules-alist nil
+  "已注册模块列表。
+
+格式为 alist: ((CATEGORY . (MODULE1 MODULE2 ...)) ...)
+
+示例:
+  ((:ui . (theme modeline))
+   (:editor . (defaults treesit))
+   (:lang . (lsp rust python)))")
+
+(defvar mcg-disabled-modules nil
+  "已禁用的模块列表。
+
+格式为 alist: ((CATEGORY . (MODULE1 MODULE2 ...)) ...)
+
+使用 -module 语法禁用的模块会被记录在此。")
+
+(defvar mcg-module-load-order nil
+  "模块加载顺序记录。
+
+按实际加载顺序记录的 (CATEGORY . MODULE) 列表。")
+
+(defvar mcg-loaded-modules nil
+  "已加载的模块列表。
+
+格式为 (CATEGORY . MODULE) 的 cons cell 列表。")
+
+(defvar mcg-module-load-errors nil
+  "模块加载错误列表。
+
+每个条目格式为: ((CATEGORY . MODULE) . ERROR-MESSAGE)")
+
+#+END_SRC
+
+** Module Path Functions
+#+BEGIN_SRC emacs-lisp
+;;; 模块路径函数
+
+(defun mcg-module-path (category module)
+  "获取模块文件路径。
+
+参数:
+- CATEGORY: 模块类别，如 :ui, :editor, :lang
+- MODULE: 模块名称，如 theme, defaults, rust
+
+返回模块的完整文件路径（.el 文件）。"
+  (when (and category module mcg-modules-dir)
+    (let ((cat-name (if (keywordp category)
+                        (substring (symbol-name category) 1)
+                      (symbol-name category)))
+          (mod-name (if (symbolp module)
+                        (symbol-name module)
+                      module)))
+      (expand-file-name (format "%s/init-%s.el" cat-name mod-name)
+                        mcg-modules-dir))))
+
+(defun mcg-module-org-path (category module)
+  "获取模块 org 文件路径。
+
+参数:
+- CATEGORY: 模块类别
+- MODULE: 模块名称
+
+返回模块的 .org 源文件路径。"
+  (when (and category module mcg-modules-dir)
+    (let ((cat-name (if (keywordp category)
+                        (substring (symbol-name category) 1)
+                      (symbol-name category)))
+          (mod-name (if (symbolp module)
+                        (symbol-name module)
+                      module)))
+      (expand-file-name (format "%s/init-%s.org" cat-name mod-name)
+                        mcg-modules-dir))))
+
+(defun mcg-module-exists-p (category module)
+  "检查模块文件是否存在。
+
+参数:
+- CATEGORY: 模块类别
+- MODULE: 模块名称
+
+返回 t 如果模块 .el 文件存在。"
+  (let ((path (mcg-module-path category module)))
+    (and path (file-exists-p path))))
+
+#+END_SRC
+
+** Module Registration
+#+BEGIN_SRC emacs-lisp
+;;; 模块注册
+
+(defun mcg--register-module (category module)
+  "注册模块到 mcg-modules-alist。
+
+参数:
+- CATEGORY: 模块类别（keyword）
+- MODULE: 模块名称（symbol）
+
+内部函数，由 mcg! 宏调用。"
+  (let ((entry (assq category mcg-modules-alist)))
+    (if entry
+        ;; 类别已存在，添加模块（如果不存在）
+        (unless (memq module (cdr entry))
+          (setcdr entry (append (cdr entry) (list module))))
+      ;; 类别不存在，创建新条目
+      (push (cons category (list module)) mcg-modules-alist))))
+
+(defun mcg--disable-module (category module)
+  "禁用模块，记录到 mcg-disabled-modules。
+
+参数:
+- CATEGORY: 模块类别（keyword）
+- MODULE: 模块名称（symbol）
+
+内部函数，由 mcg! 宏调用。"
+  (let ((entry (assq category mcg-disabled-modules)))
+    (if entry
+        (unless (memq module (cdr entry))
+          (setcdr entry (append (cdr entry) (list module))))
+      (push (cons category (list module)) mcg-disabled-modules))))
+
+(defun mcg-module-enabled-p (category module)
+  "检查模块是否已启用。
+
+参数:
+- CATEGORY: 模块类别
+- MODULE: 模块名称
+
+返回 t 如果模块在 mcg-modules-alist 中且不在 mcg-disabled-modules 中。"
+  (let ((cat-key (if (keywordp category) category
+                   (intern (concat ":" (symbol-name category)))))
+        (mod-sym (if (symbolp module) module (intern module))))
+    (and (let ((entry (assq cat-key mcg-modules-alist)))
+           (and entry (memq mod-sym (cdr entry))))
+         (not (let ((disabled (assq cat-key mcg-disabled-modules)))
+                (and disabled (memq mod-sym (cdr disabled))))))))
+
+(defun mcg-module-disabled-p (category module)
+  "检查模块是否被禁用。
+
+参数:
+- CATEGORY: 模块类别
+- MODULE: 模块名称
+
+返回 t 如果模块在 mcg-disabled-modules 中。"
+  (let ((cat-key (if (keywordp category) category
+                   (intern (concat ":" (symbol-name category)))))
+        (mod-sym (if (symbolp module) module (intern module))))
+    (let ((disabled (assq cat-key mcg-disabled-modules)))
+      (and disabled (memq mod-sym (cdr disabled))))))
+
+#+END_SRC
+
+** mcg! Macro
+#+BEGIN_SRC emacs-lisp
+;;; mcg! 宏
+
+(defun mcg--parse-modules (args)
+  "解析 mcg! 宏的参数。
+
+参数:
+- ARGS: mcg! 宏的参数列表
+
+返回解析后的模块列表，格式为:
+  ((CATEGORY . ((MODULE . ENABLED) ...)) ...)
+
+其中 ENABLED 为 t 表示启用，nil 表示禁用（-module 语法）。"
+  (let ((result nil)
+        (current-category nil))
+    (dolist (arg args)
+      (cond
+       ;; 类别关键字
+       ((keywordp arg)
+        (setq current-category arg)
+        (unless (assq current-category result)
+          (push (cons current-category nil) result)))
+       
+       ;; 禁用模块（-module 语法）
+       ((and (symbolp arg)
+             (string-prefix-p "-" (symbol-name arg)))
+        (when current-category
+          (let* ((mod-name (substring (symbol-name arg) 1))
+                 (mod-sym (intern mod-name))
+                 (entry (assq current-category result)))
+            (when entry
+              (setcdr entry (append (cdr entry)
+                                    (list (cons mod-sym nil))))))))
+       
+       ;; 启用模块
+       ((symbolp arg)
+        (when current-category
+          (let ((entry (assq current-category result)))
+            (when entry
+              (setcdr entry (append (cdr entry)
+                                    (list (cons arg t))))))))))
+    (nreverse result)))
+
+(defmacro mcg! (&rest modules)
+  "声明启用的模块。
+
+用法:
+  (mcg! :ui theme modeline
+        :editor defaults treesit
+        :lang lsp rust -lua)
+
+语法:
+- :category - 模块类别（如 :ui, :editor, :lang）
+- module - 启用模块
+- -module - 禁用模块（以 - 前缀）
+
+此宏解析声明并注册模块到 mcg-modules-alist。
+禁用的模块会被记录到 mcg-disabled-modules。"
+  (let ((parsed (mcg--parse-modules modules)))
+    `(progn
+       ;; 清空之前的注册（允许重新声明）
+       (setq mcg-modules-alist nil)
+       (setq mcg-disabled-modules nil)
+       
+       ;; 注册模块
+       ,@(mapcan
+          (lambda (cat-entry)
+            (let ((category (car cat-entry))
+                  (mods (cdr cat-entry)))
+              (mapcar
+               (lambda (mod-entry)
+                 (let ((module (car mod-entry))
+                       (enabled (cdr mod-entry)))
+                   (if enabled
+                       `(mcg--register-module ',category ',module)
+                     `(mcg--disable-module ',category ',module))))
+               mods)))
+          parsed)
+       
+       ;; 返回注册的模块列表
+       mcg-modules-alist)))
+
+#+END_SRC
+
+** Module Loading
+#+BEGIN_SRC emacs-lisp
+;;; 模块加载
+
+(defun mcg-load-module (category module)
+  "加载指定模块。
+
+参数:
+- CATEGORY: 模块类别
+- MODULE: 模块名称
+
+返回 t 如果加载成功，nil 如果失败。
+加载失败时记录错误但不阻止继续执行。"
+  (let* ((cat-key (if (keywordp category) category
+                    (intern (concat ":" (symbol-name category)))))
+         (mod-sym (if (symbolp module) module (intern module)))
+         (mod-key (cons cat-key mod-sym))
+         (path (mcg-module-path cat-key mod-sym))
+         (feature-name (intern (format "init-%s" mod-sym))))
+    
+    ;; 检查是否已加载
+    (if (member mod-key mcg-loaded-modules)
+        (progn
+          (mcg-log "Module already loaded: %s/%s" cat-key mod-sym)
+          t)
+      
+      ;; 检查是否被禁用
+      (if (mcg-module-disabled-p cat-key mod-sym)
+          (progn
+            (mcg-log "Module disabled, skipping: %s/%s" cat-key mod-sym)
+            nil)
+        
+        ;; 尝试加载
+        (if (and path (file-exists-p path))
+            (condition-case err
+                (progn
+                  (load path nil t)
+                  (push mod-key mcg-loaded-modules)
+                  (push mod-key mcg-module-load-order)
+                  (mcg-log "Loaded module: %s/%s" cat-key mod-sym)
+                  t)
+              (error
+               (let ((error-msg (format "Error loading %s/%s: %s"
+                                        cat-key mod-sym
+                                        (error-message-string err))))
+                 (push (cons mod-key error-msg) mcg-module-load-errors)
+                 (mcg-log "Error: %s" error-msg))
+               nil))
+          
+          ;; 文件不存在
+          (let ((error-msg (format "Module file not found: %s/%s (path: %s)"
+                                   cat-key mod-sym path)))
+            (push (cons mod-key error-msg) mcg-module-load-errors)
+            (mcg-log "Warning: %s" error-msg))
+          nil)))))
+
+(defun mcg-load-module-safe (category module)
+  "安全加载模块，捕获所有错误。
+
+参数:
+- CATEGORY: 模块类别
+- MODULE: 模块名称
+
+与 mcg-load-module 相同，但确保不会抛出错误。"
+  (condition-case err
+      (mcg-load-module category module)
+    (error
+     (mcg-log "Critical error loading %s/%s: %s"
+              category module (error-message-string err))
+     nil)))
+
+(defun mcg-load-modules-by-category (category)
+  "加载某类别的所有已启用模块。
+
+参数:
+- CATEGORY: 模块类别
+
+返回成功加载的模块数量。"
+  (let ((cat-key (if (keywordp category) category
+                   (intern (concat ":" (symbol-name category)))))
+        (loaded-count 0))
+    (let ((entry (assq cat-key mcg-modules-alist)))
+      (when entry
+        (dolist (module (cdr entry))
+          (when (mcg-load-module cat-key module)
+            (cl-incf loaded-count)))))
+    loaded-count))
+
+(defun mcg-load-all-modules ()
+  "加载所有已注册的模块。
+
+按 mcg-modules-alist 中的顺序加载。
+返回成功加载的模块总数。"
+  (let ((total-loaded 0))
+    (dolist (entry mcg-modules-alist)
+      (let ((category (car entry)))
+        (cl-incf total-loaded (mcg-load-modules-by-category category))))
+    total-loaded))
+
+#+END_SRC
+
+
+** Deferred Loading
+#+BEGIN_SRC emacs-lisp
+;;; 延迟加载
+
+(defvar mcg-deferred-modules nil
+  "延迟加载的模块列表。
+
+格式为 ((CATEGORY . MODULE) . TRIGGER) 的 alist。
+TRIGGER 可以是:
+- hook 名称（symbol）
+- auto-mode-alist 条目
+- 文件扩展名字符串")
+
+(defvar mcg-module-triggers
+  '(;; 语言模块触发器
+    ((:lang . rust) . ("\\.rs\\'" . rust-mode))
+    ((:lang . python) . ("\\.py\\'" . python-mode))
+    ((:lang . typescript) . ("\\.tsx?\\'" . typescript-mode))
+    ((:lang . web) . ("\\.vue\\'" . web-mode))
+    ((:lang . lua) . ("\\.lua\\'" . lua-mode))
+    ((:lang . zig) . ("\\.zig\\'" . zig-mode))
+    ((:lang . cpp) . ("\\.\\(cpp\\|cc\\|cxx\\|h\\|hpp\\)\\'" . c++-mode))
+    ((:lang . clojure) . ("\\.clj[sc]?\\'" . clojure-mode)))
+  "模块触发器映射。
+
+格式为 ((CATEGORY . MODULE) . (PATTERN . MODE)) 的 alist。
+当打开匹配 PATTERN 的文件时，自动加载对应模块。")
+
+(defvar mcg-mode-extension-paths
+  '((web-mode . "lsp/web-mode")
+    (rust-mode . "lsp/rust-mode")
+    (lua-mode . "lsp/lua-mode")
+    (zig-mode . "lsp/zig"))
+  "Mode 对应的扩展路径映射。
+
+用于在设置 autoload 时找到正确的扩展路径。")
+
+(defun mcg--setup-mode-autoload (mode)
+  "为 MODE 设置 autoload。
+
+参数:
+- MODE: mode 函数符号
+
+如果 MODE 对应的扩展路径存在，设置 autoload。"
+  (unless (fboundp mode)
+    (let* ((ext-path (cdr (assq mode mcg-mode-extension-paths)))
+           (full-path (when ext-path
+                        (expand-file-name ext-path mcg-extensions-dir))))
+      (when (and full-path (file-directory-p full-path))
+        ;; 添加到 load-path
+        (add-to-list 'load-path full-path)
+        ;; 设置 autoload
+        (autoload mode (symbol-name mode) nil t)))))
+
+(defun mcg-defer-module (category module &optional trigger)
+  "延迟加载模块。
+
+参数:
+- CATEGORY: 模块类别
+- MODULE: 模块名称
+- TRIGGER: 触发条件（可选）
+
+如果不指定 TRIGGER，将使用 mcg-module-triggers 中的默认触发器。"
+  (let* ((cat-key (if (keywordp category) category
+                    (intern (concat ":" (symbol-name category)))))
+         (mod-sym (if (symbolp module) module (intern module)))
+         (mod-key (cons cat-key mod-sym))
+         (trig (or trigger
+                   (cdr (assoc mod-key mcg-module-triggers)))))
+    
+    ;; 记录延迟加载
+    (push (cons mod-key trig) mcg-deferred-modules)
+    
+    ;; 设置触发器
+    (when trig
+      (cond
+       ;; auto-mode-alist 触发器
+       ((and (consp trig) (stringp (car trig)))
+        (let ((pattern (car trig))
+              (mode (cdr trig)))
+          ;; 先设置 autoload，确保 mode 函数存在
+          (mcg--setup-mode-autoload mode)
+          ;; 添加 auto-mode-alist 条目
+          (add-to-list 'auto-mode-alist (cons pattern mode))
+          ;; 设置 mode hook 来加载模块配置
+          (let ((hook-name (intern (format "%s-hook" mode))))
+            (add-hook hook-name
+                      (lambda ()
+                        (mcg--trigger-deferred-load cat-key mod-sym))
+                      nil t))))
+       
+       ;; hook 触发器
+       ((symbolp trig)
+        (add-hook trig
+                  (lambda ()
+                    (mcg--trigger-deferred-load cat-key mod-sym))))))
+    
+    (mcg-log "Deferred module: %s/%s (trigger: %s)" cat-key mod-sym trig)))
+
+(defun mcg--trigger-deferred-load (category module)
+  "触发延迟加载。
+
+参数:
+- CATEGORY: 模块类别
+- MODULE: 模块名称
+
+内部函数，由触发器调用。"
+  (let ((mod-key (cons category module)))
+    ;; 只加载一次
+    (unless (member mod-key mcg-loaded-modules)
+      (mcg-log "Triggering deferred load: %s/%s" category module)
+      (mcg-load-module category module))))
+
+(defun mcg-setup-deferred-loading ()
+  "设置所有语言模块的延迟加载。
+
+遍历 mcg-module-triggers，为所有已注册的语言模块设置延迟加载。"
+  (dolist (trigger-entry mcg-module-triggers)
+    (let* ((mod-key (car trigger-entry))
+           (category (car mod-key))
+           (module (cdr mod-key)))
+      ;; 只为已注册的模块设置延迟加载
+      (when (mcg-module-enabled-p category module)
+        (mcg-defer-module category module)))))
+
+#+END_SRC
+
+** mcg-after! Macro
+#+BEGIN_SRC emacs-lisp
+;;; mcg-after! 宏
+
+(defmacro mcg-after! (feature &rest body)
+  "在 FEATURE 加载后执行 BODY。
+
+参数:
+- FEATURE: feature 符号或模块标识 (CATEGORY . MODULE)
+- BODY: 要执行的代码
+
+用法:
+  (mcg-after! magit
+    (setq magit-display-buffer-function ...))
+
+  (mcg-after! (:lang . rust)
+    (setq rust-format-on-save t))"
+  (declare (indent 1))
+  (if (and (consp feature) (keywordp (car feature)))
+      ;; 模块标识
+      (let ((category (car feature))
+            (module (cdr feature)))
+        `(if (member (cons ',category ',module) mcg-loaded-modules)
+             (progn ,@body)
+           (add-hook 'mcg-module-load-hook
+                     (lambda ()
+                       (when (member (cons ',category ',module) mcg-loaded-modules)
+                         ,@body)))))
+    ;; feature 符号
+    `(with-eval-after-load ',feature
+       ,@body)))
+
+(defvar mcg-module-load-hook nil
+  "模块加载后运行的 hook。
+
+每次模块加载完成后都会运行此 hook。")
+
+#+END_SRC
+
+** Module Query Functions
+#+BEGIN_SRC emacs-lisp
+;;; 模块查询函数
+
+(defun mcg-list-enabled-modules ()
+  "列出所有已启用的模块。
+
+返回 (CATEGORY . MODULE) 的列表。"
+  (let ((result nil))
+    (dolist (entry mcg-modules-alist)
+      (let ((category (car entry)))
+        (dolist (module (cdr entry))
+          (unless (mcg-module-disabled-p category module)
+            (push (cons category module) result)))))
+    (nreverse result)))
+
+(defun mcg-list-loaded-modules ()
+  "列出所有已加载的模块。
+
+返回 (CATEGORY . MODULE) 的列表。"
+  mcg-loaded-modules)
+
+(defun mcg-list-deferred-modules ()
+  "列出所有延迟加载的模块。
+
+返回 ((CATEGORY . MODULE) . TRIGGER) 的 alist。"
+  mcg-deferred-modules)
+
+(defun mcg-module-loaded-p (category module)
+  "检查模块是否已加载。
+
+参数:
+- CATEGORY: 模块类别
+- MODULE: 模块名称
+
+返回 t 如果模块已加载。"
+  (let ((cat-key (if (keywordp category) category
+                   (intern (concat ":" (symbol-name category)))))
+        (mod-sym (if (symbolp module) module (intern module))))
+    (member (cons cat-key mod-sym) mcg-loaded-modules)))
+
+(defun mcg-get-module-errors ()
+  "获取所有模块加载错误。
+
+返回 ((CATEGORY . MODULE) . ERROR-MESSAGE) 的 alist。"
+  mcg-module-load-errors)
+
+#+END_SRC
+
+** Interactive Commands
+#+BEGIN_SRC emacs-lisp
+;;; 交互命令
+
+(defvar mcg-modules-popup-buffer "*MCG Modules*"
+  "Buffer name for modules popup.")
+
+(defun mcg--modules-popup-scroll-down ()
+  "向下滚动弹窗内容。"
+  (when-let* ((buf (get-buffer mcg-modules-popup-buffer))
+              (frame (buffer-local-value 'posframe--frame buf)))
+    (with-selected-frame frame
+      (ignore-errors (scroll-up 3)))))
+
+(defun mcg--modules-popup-scroll-up ()
+  "向上滚动弹窗内容。"
+  (when-let* ((buf (get-buffer mcg-modules-popup-buffer))
+              (frame (buffer-local-value 'posframe--frame buf)))
+    (with-selected-frame frame
+      (ignore-errors (scroll-down 3)))))
+
+(defun mcg-list-modules ()
+  "显示所有已启用模块及其状态。
+
+使用 posframe 在屏幕中央显示模块列表弹窗。
+按键: j/k 滚动, q/ESC 退出"
+  (interactive)
+  (require 'posframe)
+  
+  (let* ((buf (get-buffer-create mcg-modules-popup-buffer))
+         (content (mcg--generate-modules-content))
+         (hint "j/k 滚动 | q/ESC 退出")
+         (padding (make-string (/ (- 60 (string-width hint)) 2) ?\s)))
+    
+    (with-current-buffer buf
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (insert content))
+      (setq-local buffer-read-only t)
+      (setq-local cursor-type nil)
+      (setq-local header-line-format
+                  (propertize (concat padding hint)
+                              'face '(:foreground "#61AFEF" :weight bold)))
+      (goto-char (point-min)))
+    
+    ;; 使用 posframe 显示居中弹窗
+    (posframe-show buf
+                   :position (point)
+                   :poshandler #'posframe-poshandler-frame-center
+                   :internal-border-width 2
+                   :internal-border-color "#61AFEF"
+                   :background-color "#282C34"
+                   :foreground-color "#ABB2BF"
+                   :width 62
+                   :height 30
+                   :respect-header-line t
+                   :accept-focus nil)
+    
+    ;; 使用 read-key 循环处理按键
+    (unwind-protect
+        (catch 'exit-popup
+          (while t
+            (let ((key (read-key)))
+              (cond
+               ;; 退出
+               ((memq key '(?q 27))  ; q 或 ESC
+                (throw 'exit-popup nil))
+               ;; 向下滚动
+               ((memq key '(?j ?n 14))  ; j, n, C-n
+                (mcg--modules-popup-scroll-down))
+               ((equal key 'down)
+                (mcg--modules-popup-scroll-down))
+               ;; 向上滚动
+               ((memq key '(?k ?p 16))  ; k, p, C-p
+                (mcg--modules-popup-scroll-up))
+               ((equal key 'up)
+                (mcg--modules-popup-scroll-up))
+               ;; 其他按键忽略
+               (t nil)))))
+      ;; 清理
+      (posframe-hide mcg-modules-popup-buffer))))
+
+(defun mcg--generate-modules-content ()
+  "生成模块列表内容字符串。"
+  (with-temp-buffer
+    (insert "╔══════════════════════════════════════════════════════════╗\n")
+    (insert "║                    MCG 模块列表                          ║\n")
+    (insert "╚══════════════════════════════════════════════════════════╝\n\n")
+    
+    ;; 统计信息
+    (let ((enabled (length (mcg-list-enabled-modules)))
+          (loaded (length mcg-loaded-modules))
+          (deferred (length mcg-deferred-modules))
+          (errors (length mcg-module-load-errors)))
+      (insert (format "  已启用: %d | 已加载: %d | 延迟: %d | 错误: %d\n\n"
+                      enabled loaded deferred errors)))
+    
+    ;; 按类别显示模块
+    (insert (format "  %-12s %-20s %-10s %-6s\n"
+                    "类别" "模块" "状态" "文件"))
+    (insert "  ")
+    (insert (make-string 52 ?─))
+    (insert "\n")
+    
+    (dolist (entry mcg-modules-alist)
+      (let ((category (car entry)))
+        (dolist (module (cdr entry))
+          (let* ((mod-key (cons category module))
+                 (loaded (member mod-key mcg-loaded-modules))
+                 (deferred (assoc mod-key mcg-deferred-modules))
+                 (disabled (mcg-module-disabled-p category module))
+                 (exists (mcg-module-exists-p category module))
+                 (status (cond
+                          (disabled "禁用")
+                          (loaded "已加载")
+                          (deferred "延迟")
+                          (t "待加载"))))
+            (insert (format "  %-12s %-20s %-10s %-6s\n"
+                            (substring (symbol-name category) 1)
+                            module
+                            status
+                            (if exists "✓" "✗")))))))
+    
+    ;; 显示错误
+    (when mcg-module-load-errors
+      (insert "\n  加载错误:\n  ")
+      (insert (make-string 40 ?─))
+      (insert "\n")
+      (dolist (err mcg-module-load-errors)
+        (insert (format "  • %s/%s: %s\n"
+                        (caar err) (cdar err) (cdr err)))))
+    
+    (buffer-string)))
+
+(defun mcg/reload-module (category module)
+  "重新加载指定模块。
+
+交互式调用时，提示选择模块。"
+  (interactive
+   (let* ((modules (mcg-list-enabled-modules))
+          (choices (mapcar (lambda (m)
+                             (format "%s/%s"
+                                     (substring (symbol-name (car m)) 1)
+                                     (cdr m)))
+                           modules))
+          (choice (completing-read "Reload module: " choices nil t))
+          (parts (split-string choice "/")))
+     (list (intern (concat ":" (car parts)))
+           (intern (cadr parts)))))
+  ;; 从已加载列表中移除
+  (let ((mod-key (cons category module)))
+    (setq mcg-loaded-modules (delete mod-key mcg-loaded-modules)))
+  ;; 重新加载
+  (if (mcg-load-module category module)
+      (message "Reloaded module: %s/%s" category module)
+    (message "Failed to reload module: %s/%s" category module)))
+
+(defun mcg/describe-module (category module)
+  "显示模块的详细信息。
+
+交互式调用时，提示选择模块。"
+  (interactive
+   (let* ((modules (mcg-list-enabled-modules))
+          (choices (mapcar (lambda (m)
+                             (format "%s/%s"
+                                     (substring (symbol-name (car m)) 1)
+                                     (cdr m)))
+                           modules))
+          (choice (completing-read "Describe module: " choices nil t))
+          (parts (split-string choice "/")))
+     (list (intern (concat ":" (car parts)))
+           (intern (cadr parts)))))
+  (let* ((cat-key (if (keywordp category) category
+                    (intern (concat ":" (symbol-name category)))))
+         (mod-sym (if (symbolp module) module (intern module)))
+         (mod-key (cons cat-key mod-sym))
+         (path (mcg-module-path cat-key mod-sym))
+         (org-path (mcg-module-org-path cat-key mod-sym))
+         (loaded (member mod-key mcg-loaded-modules))
+         (deferred (assoc mod-key mcg-deferred-modules))
+         (disabled (mcg-module-disabled-p cat-key mod-sym))
+         (exists (mcg-module-exists-p cat-key mod-sym)))
+    (message "Module: %s/%s\n  Path: %s\n  Org: %s\n  Exists: %s\n  Status: %s"
+             cat-key mod-sym
+             (or path "N/A")
+             (or org-path "N/A")
+             (if exists "yes" "NO")
+             (cond
+              (disabled "disabled")
+              (loaded "loaded")
+              (deferred "deferred")
+              (t "pending")))))
+
+#+END_SRC
+
+** Provide
+#+BEGIN_SRC emacs-lisp
+(provide 'core-modules)
+;;; core-modules.el ends here
+#+END_SRC

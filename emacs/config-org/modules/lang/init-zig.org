@@ -1,0 +1,228 @@
+* init-zig.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle init-zig.el :lexical t
+:END:
+
+** Headers
+#+BEGIN_SRC emacs-lisp
+;;; init-zig.el --- Zig Development for MCG Emacs -*- lexical-binding: t; -*-
+
+;; Filename: init-zig.el
+;; Description: Zig 开发模块
+;; Author: mcge <mcgeq@outlook.com>
+;; Copyright (C) 2024-2026, mcge, all rights reserved.
+;; Create   Date: 2026-01-07
+;; Version: 3.0
+;; Keywords: zig, systems-programming
+;; Compatibility: GNU Emacs 29.0+
+
+;;; Commentary:
+;;
+;; MCG Emacs 配置架构的 Zig 开发模块，负责：
+;; - Zig mode 配置
+;; - LSP 集成 (zls)
+;; - 构建系统集成
+;; - 测试支持
+;;
+;; 模块元数据:
+;; :depends (+lsp)
+;; :defer t
+;; :mode ("\\.zig\\'")
+;;
+
+#+END_SRC
+
+** Dependencies
+#+BEGIN_SRC emacs-lisp
+;;; Dependencies
+
+(require 'core-lib)
+
+#+END_SRC
+
+** Zig Mode Configuration
+#+BEGIN_SRC emacs-lisp
+;;; Zig Mode Configuration
+
+(defun mcg--setup-zig-mode ()
+  "设置 Zig mode。"
+  ;; 尝试加载 zig-mode 扩展
+  (if (mcg-require-extension "lang/zig-mode" 'zig-mode)
+      (mcg-log "Zig mode loaded from extension")
+    ;; 如果没有扩展，定义简单的 zig-mode
+    (unless (fboundp 'zig-mode)
+      (define-derived-mode zig-mode prog-mode "Zig"
+        "简单的 Zig mode。"
+        (setq-local comment-start "// ")
+        (setq-local comment-end "")
+        (setq-local tab-width 4)
+        (setq-local indent-tabs-mode nil))
+      (mcg-log "Using simple zig-mode")))
+  
+  ;; Zig 文件关联
+  (add-to-list 'auto-mode-alist '("\\.zig\\'" . zig-mode)))
+
+#+END_SRC
+
+** LSP Configuration
+#+BEGIN_SRC emacs-lisp
+;;; LSP Configuration (zls)
+
+(defun mcg--zig-mode-hook ()
+  "Zig mode hook。"
+  ;; 启用 LSP
+  (when (fboundp 'lsp-bridge-mode)
+    (lsp-bridge-mode 1)))
+
+#+END_SRC
+
+** Formatting
+#+BEGIN_SRC emacs-lisp
+;;; Formatting
+
+(defun mcg/zig-format-buffer ()
+  "使用 zig fmt 格式化代码。"
+  (interactive)
+  (if (executable-find "zig")
+      (let ((output-buffer (get-buffer-create "*zig fmt*"))
+            (error-buffer (get-buffer-create "*zig errors*")))
+        (if (zerop (call-process-region 
+                    (point-min) (point-max)
+                    "zig" nil (list output-buffer error-buffer) nil
+                    "fmt" "--stdin"))
+            (progn
+              (erase-buffer)
+              (insert-buffer-substring output-buffer)
+              (message "Formatted with zig fmt"))
+          (display-buffer error-buffer)
+          (message "Zig fmt failed")))
+    (message "Zig compiler not found")))
+
+(defun mcg--zig-format-on-save ()
+  "保存时自动格式化。"
+  (when (and (eq major-mode 'zig-mode)
+             (executable-find "zig"))
+    (mcg/zig-format-buffer)))
+
+#+END_SRC
+
+** Build System
+#+BEGIN_SRC emacs-lisp
+;;; Build System
+
+(defun mcg/zig-build ()
+  "运行 zig build。"
+  (interactive)
+  (if (executable-find "zig")
+      (let ((compilation-scroll-output t)
+            (default-directory (or (locate-dominating-file default-directory "build.zig")
+                                   default-directory)))
+        (compile "zig build"))
+    (message "Zig compiler not found")))
+
+(defun mcg/zig-build-run ()
+  "构建并运行。"
+  (interactive)
+  (if (executable-find "zig")
+      (let ((compilation-scroll-output t)
+            (default-directory (or (locate-dominating-file default-directory "build.zig")
+                                   default-directory)))
+        (compile "zig build run"))
+    (message "Zig compiler not found")))
+
+(defun mcg/zig-run-file ()
+  "直接运行当前 Zig 文件。"
+  (interactive)
+  (if (executable-find "zig")
+      (let ((compilation-scroll-output t))
+        (compile (format "zig run %s" (buffer-file-name))))
+    (message "Zig compiler not found")))
+
+#+END_SRC
+
+** Testing Support
+#+BEGIN_SRC emacs-lisp
+;;; Testing Support
+
+(defun mcg/zig-test ()
+  "运行 zig build test。"
+  (interactive)
+  (if (executable-find "zig")
+      (let ((compilation-scroll-output t)
+            (default-directory (or (locate-dominating-file default-directory "build.zig")
+                                   default-directory)))
+        (compile "zig build test"))
+    (message "Zig compiler not found")))
+
+(defun mcg/zig-test-file ()
+  "测试当前文件。"
+  (interactive)
+  (if (executable-find "zig")
+      (let ((compilation-scroll-output t))
+        (compile (format "zig test %s" (buffer-file-name))))
+    (message "Zig compiler not found")))
+
+#+END_SRC
+
+** Snippets
+#+BEGIN_SRC emacs-lisp
+;;; Snippets
+
+(defun mcg/zig-insert-main ()
+  "插入 main 函数模板。"
+  (interactive)
+  (insert "const std = @import(\"std\");\n\n")
+  (insert "pub fn main() !void {\n")
+  (insert "    const stdout = std.io.getStdOut().writer();\n")
+  (insert "    try stdout.print(\"Hello, World!\\n\", .{});\n")
+  (insert "}\n"))
+
+(defun mcg/zig-insert-test ()
+  "插入测试模板。"
+  (interactive)
+  (let ((test-name (read-string "Test name: ")))
+    (insert (format "test \"%s\" {\n" test-name))
+    (insert "    const testing = @import(\"std\").testing;\n")
+    (insert "    \n")
+    (insert "}\n")))
+
+#+END_SRC
+
+** Keybindings
+#+BEGIN_SRC emacs-lisp
+;;; Keybindings
+
+(defun mcg--setup-zig-keybindings ()
+  "设置 Zig 快捷键。"
+  (with-eval-after-load 'zig-mode
+    (define-key zig-mode-map (kbd "C-c r f") #'mcg/zig-format-buffer)
+    (define-key zig-mode-map (kbd "C-c C-c") #'mcg/zig-build)
+    (define-key zig-mode-map (kbd "C-c C-r") #'mcg/zig-build-run)
+    (define-key zig-mode-map (kbd "C-c r") #'mcg/zig-run-file)
+    (define-key zig-mode-map (kbd "C-c t") #'mcg/zig-test)
+    (define-key zig-mode-map (kbd "C-c T") #'mcg/zig-test-file)
+    (define-key zig-mode-map (kbd "C-c C-m") #'mcg/zig-insert-main)
+    (define-key zig-mode-map (kbd "C-c C-t") #'mcg/zig-insert-test)))
+
+#+END_SRC
+
+** Initialize
+#+BEGIN_SRC emacs-lisp
+;;; Initialize
+
+(mcg--setup-zig-mode)
+(mcg--setup-zig-keybindings)
+
+;; 添加 hook
+(add-hook 'zig-mode-hook #'mcg--zig-mode-hook)
+
+;; 保存时格式化 (可选)
+;; (add-hook 'before-save-hook #'mcg--zig-format-on-save)
+
+#+END_SRC
+
+** Provide
+#+BEGIN_SRC emacs-lisp
+(provide 'init-zig)
+;;; init-zig.el ends here
+#+END_SRC

@@ -1,0 +1,283 @@
+* core-bootstrap.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle (concat temporary-file-directory "core-bootstrap.el") :lexical t
+:END:
+
+** Headers
+#+BEGIN_SRC emacs-lisp
+  ;;; core-bootstrap.el --- Core Bootstrap for MCG Emacs -*- lexical-binding: t; -*-
+
+  ;; Filename: core-bootstrap.el
+  ;; Description: 核心引导模块，定义路径变量和性能优化
+  ;; Author: mcge <mcgeq@outlook.com>
+  ;; Copyright (C) 2024-2026, mcge, all rights reserved.
+  ;; Create   Date: 2026-01-07
+  ;; Version: 3.0
+  ;; Keywords: bootstrap, paths, performance
+  ;; Compatibility: GNU Emacs 29.0+
+
+  ;;; Commentary:
+  ;;
+  ;; MCG Emacs 配置架构的核心引导模块，负责：
+  ;; - 定义所有路径变量
+  ;; - 设置 load-path
+  ;; - 性能优化（GC、file-name-handler）
+  ;; - 启动时间记录
+  ;;
+  ;; 此模块必须在所有其他模块之前加载。
+  ;;
+
+#+END_SRC
+
+** System Detection
+#+BEGIN_SRC emacs-lisp
+;;; 系统检测
+
+(defconst mcg-is-windows
+  (memq system-type '(cygwin windows-nt ms-dos))
+  "Running on a Windows system.")
+
+(defconst mcg-is-linux
+  (eq system-type 'gnu/linux)
+  "Running on a GNU/Linux system.")
+
+(defconst mcg-is-mac
+  (eq system-type 'darwin)
+  "Running on a macOS system.")
+
+(defconst mcg-is-gui
+  (memq window-system '(x w32 ns pc pgtk))
+  "Running in GUI mode.")
+
+(defconst mcg-emacs-29+
+  (>= emacs-major-version 29)
+  "Emacs is version 29 or above.")
+#+END_SRC
+
+** Path Variables
+#+BEGIN_SRC emacs-lisp
+;;; 路径变量定义
+
+(defvar mcg-emacs-dir nil
+  "Emacs 配置根目录 (emacs/).")
+
+(defvar mcg-core-dir nil
+  "核心配置目录 (site-lisp/config/core/).")
+
+(defvar mcg-modules-dir nil
+  "模块目录 (site-lisp/config/modules/).")
+
+(defvar mcg-extensions-dir nil
+  "扩展目录 (site-lisp/extensions/).")
+
+(defvar mcg-private-dir nil
+  "私有配置目录 (site-lisp/config/private/).")
+
+(defvar mcg-config-dir nil
+  "配置根目录 (site-lisp/config/).")
+
+(defvar mcg-config-org-dir nil
+  "Org 源文件目录 (config-org/).")
+
+(defvar mcg-site-lisp-dir nil
+  "site-lisp 目录.")
+
+(defvar mcg-langservers-dir nil
+  "LSP 服务器配置目录.")
+
+(defvar mcg-multiservers-dir nil
+  "LSP 多服务器配置目录.")
+#+END_SRC
+
+** Path Initialization
+#+BEGIN_SRC emacs-lisp
+;;; 路径初始化
+
+(defun mcg-init-paths (base-dir)
+  "初始化所有路径变量。
+
+参数:
+- BASE-DIR: 用户自定义根目录（如 D:/config 或 ~）
+
+此函数设置所有 mcg-* 路径变量，必须在配置加载前调用。"
+  (let ((custom-dir (file-truename base-dir)))
+    ;; 主目录
+    (setq mcg-emacs-dir (expand-file-name "dotfiles/emacs" custom-dir))
+    
+    ;; site-lisp 目录
+    (setq mcg-site-lisp-dir (expand-file-name "site-lisp" mcg-emacs-dir))
+    (setq mcg-extensions-dir (expand-file-name "extensions" mcg-site-lisp-dir))
+    
+    ;; 生成的配置目录 (site-lisp/config/)
+    (setq mcg-config-dir (expand-file-name "config" mcg-site-lisp-dir))
+    (setq mcg-core-dir (expand-file-name "core" mcg-config-dir))
+    (setq mcg-modules-dir (expand-file-name "modules" mcg-config-dir))
+    (setq mcg-private-dir (expand-file-name "private" mcg-config-dir))
+    
+    ;; Org 源文件目录 (config-org/)
+    (setq mcg-config-org-dir (expand-file-name "config-org" mcg-emacs-dir))
+    
+    ;; LSP 配置目录
+    (setq mcg-langservers-dir (expand-file-name "langservers" mcg-emacs-dir))
+    (setq mcg-multiservers-dir (expand-file-name "multiservers" mcg-emacs-dir))))
+
+;; 自动检测并初始化路径
+(let ((env-config-dir (getenv "MCG_EMACS_CONFIG_DIR")))
+  (if env-config-dir
+      (mcg-init-paths env-config-dir)
+    ;; 默认配置
+    (mcg-init-paths (if mcg-is-windows "D:/config" "~"))))
+#+END_SRC
+
+** Load Path Setup
+#+BEGIN_SRC emacs-lisp
+;;; Load Path 设置
+
+(defun mcg-setup-load-path ()
+  "设置 load-path，添加核心配置和扩展目录。
+
+此函数将以下目录添加到 load-path：
+1. site-lisp/config - 生成的 .el 配置文件
+2. site-lisp/config/core - 核心模块
+3. site-lisp/config/modules/* - 功能模块
+4. site-lisp/extensions/* - 所有扩展子目录"
+  ;; 添加配置目录
+  (let ((config-dir (expand-file-name "config" mcg-site-lisp-dir)))
+    (when (file-directory-p config-dir)
+      (add-to-list 'load-path config-dir)
+      ;; 添加 core 目录
+      (add-to-list 'load-path (expand-file-name "core" config-dir))
+      ;; 添加 modules 子目录
+      (let ((modules-dir (expand-file-name "modules" config-dir)))
+        (when (file-directory-p modules-dir)
+          (dolist (cat-dir (directory-files modules-dir t "^[^.]"))
+            (when (file-directory-p cat-dir)
+              (add-to-list 'load-path cat-dir)))))))
+  
+  ;; 递归添加扩展目录
+  (when (file-directory-p mcg-extensions-dir)
+    (dolist (category-dir (directory-files mcg-extensions-dir t "^[^.]"))
+      (when (file-directory-p category-dir)
+        ;; 添加类别目录
+        (add-to-list 'load-path category-dir)
+        ;; 添加类别下的子目录
+        (dolist (ext-dir (directory-files category-dir t "^[^.]"))
+          (when (file-directory-p ext-dir)
+            (add-to-list 'load-path ext-dir)
+            ;; 处理二级子目录（如 lsp/clojure/）
+            (dolist (sub-ext-dir (directory-files ext-dir t "^[^.]"))
+              (when (file-directory-p sub-ext-dir)
+                (add-to-list 'load-path sub-ext-dir)))))))))
+
+;; 初始化 load-path
+(mcg-setup-load-path)
+#+END_SRC
+
+** Performance Optimization
+#+BEGIN_SRC emacs-lisp
+;;; 性能优化
+
+;; 保存原始值
+(defvar mcg--gc-cons-threshold-original gc-cons-threshold
+  "Original GC threshold.")
+
+(defvar mcg--gc-cons-percentage-original gc-cons-percentage
+  "Original GC percentage.")
+
+(defvar mcg--file-name-handler-alist-original file-name-handler-alist
+  "Original file-name-handler-alist.")
+
+;; 默认 GC 设置
+(defvar mcg-gc-cons-threshold-default (* 16 1024 1024)
+  "Default GC threshold (16MB) for normal operation.")
+
+(defvar mcg-gc-cons-percentage-default 0.1
+  "Default GC percentage for normal operation.")
+
+;; 启动时禁用 GC 和 file-name-handler
+(setq gc-cons-threshold most-positive-fixnum
+      gc-cons-percentage 0.6
+      file-name-handler-alist nil)
+
+;; 启动后恢复设置
+(defun mcg--restore-startup-optimizations ()
+  "恢复启动时的性能优化设置。"
+  (setq gc-cons-threshold mcg-gc-cons-threshold-default
+        gc-cons-percentage mcg-gc-cons-percentage-default
+        file-name-handler-alist mcg--file-name-handler-alist-original))
+
+(add-hook 'emacs-startup-hook #'mcg--restore-startup-optimizations)
+
+;; Minibuffer GC 优化
+(defun mcg--minibuffer-gc-setup ()
+  "Increase GC threshold in minibuffer."
+  (setq gc-cons-threshold most-positive-fixnum))
+
+(defun mcg--minibuffer-gc-restore ()
+  "Restore GC threshold after minibuffer."
+  (setq gc-cons-threshold mcg-gc-cons-threshold-default))
+
+(add-hook 'minibuffer-setup-hook #'mcg--minibuffer-gc-setup)
+(add-hook 'minibuffer-exit-hook #'mcg--minibuffer-gc-restore)
+
+;; 空闲时 GC
+(run-with-idle-timer 5 t #'garbage-collect)
+#+END_SRC
+
+** Startup Time Tracking
+#+BEGIN_SRC emacs-lisp
+;;; 启动时间记录
+
+(defvar mcg-startup-time nil
+  "Emacs startup time in seconds.")
+
+(defvar mcg--startup-start-time (current-time)
+  "Record Emacs startup start time.")
+
+(defun mcg-display-startup-time ()
+  "Display Emacs startup time."
+  (let ((elapsed (float-time (time-subtract (current-time) mcg--startup-start-time))))
+    (setq mcg-startup-time elapsed)
+    (message "✨ Emacs loaded in %.2f seconds with %d garbage collections"
+             elapsed gcs-done)))
+
+(add-hook 'emacs-startup-hook #'mcg-display-startup-time)
+#+END_SRC
+
+** Native Compilation
+#+BEGIN_SRC emacs-lisp
+;;; 本地编译优化
+
+(when (and (fboundp 'native-comp-available-p)
+           (native-comp-available-p))
+  (setq native-comp-async-report-warnings-errors nil
+        native-comp-deferred-compilation t
+        native-comp-speed 2))
+
+;; 字节编译警告
+(setq byte-compile-warnings '(not free-vars unresolved noruntime lexical make-local))
+
+;; 优先加载新文件
+(setq load-prefer-newer t)
+#+END_SRC
+
+** Logging
+#+BEGIN_SRC emacs-lisp
+;;; 日志系统
+
+(defvar mcg-debug-mode nil
+  "Enable debug mode for verbose logging.")
+
+(defmacro mcg-log (format-string &rest args)
+  "Log message with FORMAT-STRING and ARGS.
+
+Only logs when `mcg-debug-mode' is non-nil."
+  `(when mcg-debug-mode
+     (message (concat "[MCG] " ,format-string) ,@args)))
+#+END_SRC
+
+** Provide
+#+BEGIN_SRC emacs-lisp
+(provide 'core-bootstrap)
+;;; core-bootstrap.el ends here
+#+END_SRC

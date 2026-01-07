@@ -1,0 +1,343 @@
+* init-utils.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle init-utils.el :lexical t
+:END:
+
+** Headers
+#+BEGIN_SRC emacs-lisp
+;;; init-utils.el --- Utility Tools for MCG Emacs -*- lexical-binding: t; -*-
+
+;; Filename: init-utils.el
+;; Description: 实用工具模块
+;; Author: mcge <mcgeq@outlook.com>
+;; Copyright (C) 2024-2026, mcge, all rights reserved.
+;; Create   Date: 2026-01-07
+;; Version: 3.0
+;; Keywords: utils, auto-save, which-key, recentf
+;; Compatibility: GNU Emacs 29.0+
+
+;;; Commentary:
+;;
+;; MCG Emacs 配置架构的实用工具模块，负责：
+;; - 自动保存 (idle-auto-save)
+;; - Which-key 快捷键提示
+;; - Recentf 最近文件
+;; - Helpful 增强帮助
+;;
+
+#+END_SRC
+
+** Dependencies
+#+BEGIN_SRC emacs-lisp
+;;; Dependencies
+
+(require 'core-lib)
+(require 'recentf)
+
+#+END_SRC
+
+** Idle Auto-Save
+#+BEGIN_SRC emacs-lisp
+;;; Idle Auto-Save
+
+(defgroup mcg-auto-save nil
+  "Auto save files when Emacs is idle."
+  :group 'convenience)
+
+(defcustom mcg-auto-save-idle 1
+  "空闲多少秒后自动保存。"
+  :type 'integer
+  :group 'mcg-auto-save)
+
+(defcustom mcg-auto-save-silent t
+  "是否静默保存（不显示消息）。"
+  :type 'boolean
+  :group 'mcg-auto-save)
+
+(defvar mcg--auto-save-timer nil
+  "自动保存定时器。")
+
+;; 禁用 Emacs 默认的自动保存
+(setq make-backup-files nil)
+(setq auto-save-default nil)
+(setq create-lockfiles nil)
+
+(defun mcg--auto-save-buffers ()
+  "自动保存所有修改过的 buffer。"
+  (interactive)
+  (let ((saved-buffers nil))
+    (save-current-buffer
+      (dolist (buf (buffer-list))
+        (set-buffer buf)
+        (when (and (buffer-file-name)
+                   (buffer-modified-p)
+                   (not (bound-and-true-p yas--active-snippets))
+                   (not (bound-and-true-p company-candidates))
+                   (or (not (bound-and-true-p corfu--total))
+                       (zerop corfu--total)))
+          (push (buffer-name) saved-buffers)
+          (let ((inhibit-message mcg-auto-save-silent)
+                (message-log-max (unless mcg-auto-save-silent message-log-max)))
+            (basic-save-buffer)))))
+    (unless mcg-auto-save-silent
+      (when saved-buffers
+        (message "Auto-saved: %s" (string-join saved-buffers ", "))))))
+
+(defun mcg--auto-save-enable ()
+  "启用自动保存。"
+  (when mcg--auto-save-timer
+    (cancel-timer mcg--auto-save-timer))
+  (setq mcg--auto-save-timer
+        (run-with-idle-timer mcg-auto-save-idle t #'mcg--auto-save-buffers)))
+
+(defun mcg--auto-save-disable ()
+  "禁用自动保存。"
+  (when mcg--auto-save-timer
+    (cancel-timer mcg--auto-save-timer)
+    (setq mcg--auto-save-timer nil)))
+
+;; 启用自动保存
+(mcg--auto-save-enable)
+
+#+END_SRC
+
+** Which-Key Configuration
+#+BEGIN_SRC emacs-lisp
+;;; Which-Key Configuration
+
+(defun mcg--setup-which-key ()
+  "设置 Which-key 快捷键提示。"
+  ;; which-key 是 Emacs 30+ 内置的
+  (require 'which-key)
+  
+  ;; 基础设置
+  (setq which-key-idle-delay 0.3)
+  (setq which-key-idle-secondary-delay 0.05)
+  (setq which-key-popup-type 'side-window)
+  (setq which-key-side-window-location 'bottom)
+  (setq which-key-side-window-max-height 0.3)
+  (setq which-key-min-display-lines 6)
+  
+  ;; 排序和外观
+  (setq which-key-sort-order 'which-key-key-order-alpha)
+  (setq which-key-separator "  ")
+  (setq which-key-max-description-length 32)
+  (setq which-key-add-column-padding 2)
+  (setq which-key-ellipsis "..")
+  
+  ;; 键名美化
+  (setq which-key-special-keys '("SPC" "TAB" "RET" "DEL" "ESC"))
+  (setq which-key-key-replacement-alist
+        '(("<left>"  . "←")
+          ("<right>" . "→")
+          ("<up>"    . "↑")
+          ("<down>"  . "↓")
+          ("<return>" . "⏎")
+          ("<tab>"   . "⇥")
+          ("<escape>" . "⎋")
+          ("SPC"     . "␣")
+          ("RET"     . "⏎")
+          ("TAB"     . "⇥")
+          ("DEL"     . "⌫")))
+  
+  ;; 前缀描述
+  (which-key-add-key-based-replacements
+    ;; C-c 前缀组
+    "C-c"     "⚙ User"
+    "C-c f"   "📁 File"
+    "C-c g"   " Git"
+    "C-c g b" " Branch"
+    "C-c g m" " Submodule"
+    "C-c m"   "✎ Markmacro"
+    "C-c n"   "📝 Notes/Org"
+    "C-c r"   "🔧 Refactor"
+    "C-c s"   "🔍 Search"
+    "C-c t"   "📑 Tabs"
+    "C-c u"   "↩ Undo"
+    "C-c y"   "✂ Snippet"
+    "C-c E"   "⚙ Config"
+    
+    ;; C-x 前缀组
+    "C-x"     "📋 Emacs"
+    "C-x r"   "📌 Register/Rect"
+    "C-x n"   "📐 Narrow"
+    "C-x p"   "📂 Project"
+    "C-x t"   "🗂 Tab-bar"
+    "C-x 4"   "🪟 Other Window"
+    "C-x 5"   "🖼 Frame"
+    
+    ;; 帮助
+    "C-h"     "❓ Help"
+    
+    ;; 跳转
+    "M-g"     "➡ Goto"
+    
+    ;; 搜索
+    "M-s"     "🔎 Search")
+  
+  ;; 性能优化
+  (setq which-key-compute-remaps nil)
+  (setq which-key-allow-evil-operators nil)
+  (setq which-key-show-remaining-keys nil)
+  
+  ;; 修复 C-g 取消后 which-key 窗口不关闭的问题
+  (advice-add 'keyboard-quit :before
+              (lambda (&rest _)
+                (when (which-key--popup-showing-p)
+                  (which-key--hide-popup))))
+  
+  ;; 启用
+  (which-key-mode 1)
+  
+  (mcg-log "Which-key configured"))
+
+#+END_SRC
+
+** Recentf Configuration
+#+BEGIN_SRC emacs-lisp
+;;; Recentf Configuration
+
+(defun mcg--setup-recentf ()
+  "设置 Recentf 最近文件。"
+  (setq recentf-max-saved-items 300)
+  (setq recentf-auto-cleanup 'never)
+  (setq recentf-filename-handlers '(abbreviate-file-name))
+  
+  ;; 排除列表
+  (setq recentf-exclude
+        '(".cache"
+          ".cask"
+          ".elfeed"
+          "bookmarks"
+          "cache"
+          "ido.*"
+          "recentf"
+          "undo-tree-hist"
+          "url"
+          "^/tmp/"
+          "/ssh\\(x\\)?:"
+          "/su\\(do\\)?:"
+          "^/usr/include/"
+          "/TAGS\\'"
+          "COMMIT_EDITMSG\\'"))
+  
+  ;; 启用
+  (recentf-mode 1)
+  
+  (mcg-log "Recentf configured"))
+
+#+END_SRC
+
+** Helpful Configuration
+#+BEGIN_SRC emacs-lisp
+;;; Helpful Configuration
+
+(defun mcg--setup-helpful ()
+  "设置 Helpful 增强帮助。"
+  (when (mcg-require-extension "core/helpful" 'helpful)
+    ;; 替换默认帮助命令
+    (global-set-key (kbd "C-h f") #'helpful-callable)
+    (global-set-key (kbd "C-h v") #'helpful-variable)
+    (global-set-key (kbd "C-h k") #'helpful-key)
+    (global-set-key (kbd "C-h x") #'helpful-command)
+    (global-set-key (kbd "C-c C-d") #'helpful-at-point)
+    
+    (mcg-log "Helpful configured")))
+
+#+END_SRC
+
+** Sort-Tab Configuration
+#+BEGIN_SRC emacs-lisp
+;;; Sort-Tab Configuration
+
+(defun mcg--setup-sort-tab ()
+  "设置 Sort-tab 标签管理。"
+  (when (mcg-require-extension "ui/sort-tab" 'sort-tab)
+    ;; 显示设置
+    (setq sort-tab-max-length 20)
+    (setq sort-tab-show-index t)
+    (setq sort-tab-position 'bottom)
+    (setq sort-tab-close-button-show t)
+    (setq sort-tab-icon-show t)
+    (setq sort-tab-scale-factor 1.0)
+    (setq sort-tab-auto-update t)
+    (setq sort-tab-update-interval 0.5)
+    
+    ;; 隐藏规则
+    (setq sort-tab-hide-function
+          (lambda (buf)
+            (let ((name (buffer-name buf)))
+              (with-current-buffer buf
+                (or
+                 (string-prefix-p " " name)
+                 (and (string-prefix-p "*" name)
+                      (not (or
+                            (string= name "*scratch*")
+                            (string= name "*Messages*")
+                            (string-prefix-p "*terminal" name))))
+                 (derived-mode-p 'dired-mode)
+                 (derived-mode-p 'eshell-mode)
+                 (derived-mode-p 'shell-mode)
+                 (derived-mode-p 'vterm-mode)
+                 (derived-mode-p 'magit-status-mode)
+                 (derived-mode-p 'help-mode)
+                 (derived-mode-p 'helpful-mode)
+                 (derived-mode-p 'compilation-mode)
+                 (string-match-p "^\\*.*-preview\\*$" name)
+                 (string-match-p "^\\*Completions\\*$" name))))))
+    
+    ;; 启用
+    (sort-tab-mode 1)
+    
+    ;; 快捷键
+    (global-set-key (kbd "C-c t n") #'sort-tab-select-next-tab)
+    (global-set-key (kbd "C-c t p") #'sort-tab-select-prev-tab)
+    (global-set-key (kbd "C-c t c") #'sort-tab-close-current-tab)
+    
+    (mcg-log "Sort-tab configured")))
+
+#+END_SRC
+
+** Symbol-Overlay Configuration
+#+BEGIN_SRC emacs-lisp
+;;; Symbol-Overlay Configuration
+
+(defun mcg--setup-symbol-overlay ()
+  "设置 Symbol-overlay 符号高亮。"
+  (when (mcg-require-extension "editor/symbol-overlay" 'symbol-overlay)
+    ;; 在 prog-mode 中启用
+    (add-hook 'prog-mode-hook #'symbol-overlay-mode)
+    
+    ;; 快捷键 (在 symbol-overlay-map 中)
+    (with-eval-after-load 'symbol-overlay
+      (define-key symbol-overlay-map (kbd "s") #'symbol-overlay-put)
+      (define-key symbol-overlay-map (kbd "n") #'symbol-overlay-jump-next)
+      (define-key symbol-overlay-map (kbd "p") #'symbol-overlay-jump-prev)
+      (define-key symbol-overlay-map (kbd "w") #'symbol-overlay-save-symbol)
+      (define-key symbol-overlay-map (kbd "t") #'symbol-overlay-toggle-in-scope)
+      (define-key symbol-overlay-map (kbd "d") #'symbol-overlay-jump-to-definition)
+      (define-key symbol-overlay-map (kbd "r") #'symbol-overlay-rename)
+      (define-key symbol-overlay-map (kbd "R") #'symbol-overlay-query-replace)
+      (define-key symbol-overlay-map (kbd "q") #'symbol-overlay-remove-all))
+    
+    (mcg-log "Symbol-overlay configured")))
+
+#+END_SRC
+
+** Initialize
+#+BEGIN_SRC emacs-lisp
+;;; Initialize
+
+(mcg--setup-recentf)
+(mcg--setup-which-key)
+(mcg--setup-helpful)
+(mcg--setup-sort-tab)
+(mcg--setup-symbol-overlay)
+
+#+END_SRC
+
+** Provide
+#+BEGIN_SRC emacs-lisp
+(provide 'init-utils)
+;;; init-utils.el ends here
+#+END_SRC

@@ -1,0 +1,392 @@
+* init-python.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle init-python.el :lexical t
+:END:
+
+** Headers
+#+BEGIN_SRC emacs-lisp
+  ;;; init-python.el --- Python Language Support for MCG Emacs -*- lexical-binding: t; -*-
+
+  ;; Filename: init-python.el
+  ;; Description: Python 语言支持模块
+  ;; Author: mcge <mcgeq@outlook.com>
+  ;; Copyright (C) 2024-2026, mcge, all rights reserved.
+  ;; Create   Date: 2026-01-07
+  ;; Version: 3.0
+  ;; Keywords: python, ty, ruff, development
+  ;; Compatibility: GNU Emacs 29.0+
+
+  ;;; Commentary:
+  ;;
+  ;; MCG Emacs 配置架构的 Python 语言支持模块，提供：
+  ;; - python-mode / python-ts-mode 配置
+  ;; - ty + ruff LSP 集成（通过 +lsp 模块）
+  ;; - 虚拟环境管理
+  ;; - pytest 测试支持
+  ;; - REPL 集成
+  ;;
+  ;; 工具链说明:
+  ;; - ty: Astral 出品的 Python 类型检查器，提供补全、跳转、类型检查
+  ;; - ruff: Astral 出品的超快 Python linter/formatter，替代 black/isort/flake8
+  ;;
+  ;; 模块元数据:
+  ;; :depends (+lsp)
+  ;; :defer t
+  ;;
+
+#+END_SRC
+
+** Dependencies
+#+BEGIN_SRC emacs-lisp
+;;; Dependencies
+
+(require 'core-lib)
+
+;; 确保 +lsp 模块已加载
+(when (and (boundp 'mcg-module-enabled-p)
+           (fboundp 'mcg-module-enabled-p)
+           (mcg-module-enabled-p :lang 'lsp))
+  (require '+lsp nil t))
+
+#+END_SRC
+
+** Python Mode Configuration
+#+BEGIN_SRC emacs-lisp
+;;; Python 基础配置
+
+;; Python 缩进设置
+(setq python-indent-offset 4
+      python-indent-guess-indent-offset nil)
+
+;; 使用 Python 3
+(setq python-shell-interpreter "python3"
+      python-shell-interpreter-args "-i")
+
+;; 使用 python-ts-mode（如果可用）
+(when (and (fboundp 'treesit-available-p)
+           (treesit-available-p))
+  (add-to-list 'major-mode-remap-alist '(python-mode . python-ts-mode)))
+
+;; 文件关联
+(add-to-list 'auto-mode-alist '("\\.py\\'" . python-mode))
+(add-to-list 'auto-mode-alist '("\\.pyi\\'" . python-mode))
+(add-to-list 'interpreter-mode-alist '("python3" . python-mode))
+(add-to-list 'interpreter-mode-alist '("python" . python-mode))
+
+#+END_SRC
+
+** Virtual Environment
+#+BEGIN_SRC emacs-lisp
+;;; 虚拟环境支持
+
+(defvar mcg-python-venv-dirs '(".venv" "venv" ".virtualenv" "env")
+  "虚拟环境目录名列表。")
+
+(defun mcg-python-setup-venv ()
+  "自动检测并激活 Python 虚拟环境。"
+  (when-let* ((project-root (when (project-current)
+                              (project-root (project-current))))
+              (venv-path (seq-find
+                          (lambda (dir)
+                            (file-directory-p (expand-file-name dir project-root)))
+                          mcg-python-venv-dirs)))
+    (let ((venv-full-path (expand-file-name venv-path project-root)))
+      (setenv "VIRTUAL_ENV" venv-full-path)
+      (setq python-shell-virtualenv-root venv-full-path)
+      (mcg-log "Activated Python venv: %s" venv-full-path))))
+
+;; 自动激活虚拟环境
+(add-hook 'python-mode-hook #'mcg-python-setup-venv)
+(add-hook 'python-ts-mode-hook #'mcg-python-setup-venv)
+
+#+END_SRC
+
+** Formatting with Ruff
+#+BEGIN_SRC emacs-lisp
+;;; 代码格式化（使用 ruff）
+
+(defun mcg-python-format-buffer ()
+  "使用 ruff 格式化 Python 代码。"
+  (interactive)
+  (if (and (bound-and-true-p lsp-bridge-mode)
+           (fboundp 'lsp-bridge-code-format))
+      ;; 使用 lsp-bridge 的格式化功能（会调用 ruff）
+      (lsp-bridge-code-format)
+    ;; 回退到直接调用 ruff
+    (when (executable-find "ruff")
+      (let ((temp-file (make-temp-file "ruff-format" nil ".py")))
+        (unwind-protect
+            (progn
+              (write-region (point-min) (point-max) temp-file nil 'silent)
+              (when (zerop (call-process "ruff" nil nil nil "format" temp-file))
+                (let ((formatted (with-temp-buffer
+                                   (insert-file-contents temp-file)
+                                   (buffer-string))))
+                  (erase-buffer)
+                  (insert formatted)
+                  (message "Formatted with ruff"))))
+          (delete-file temp-file))))))
+
+#+END_SRC
+
+** Linting with Ruff
+#+BEGIN_SRC emacs-lisp
+;;; 代码检查（使用 ruff）
+
+(defun mcg/python-lint-buffer ()
+  "使用 ruff 检查当前 buffer。"
+  (interactive)
+  (if (executable-find "ruff")
+      (compile (format "ruff check %s" (buffer-file-name)))
+    (message "ruff not found. Install with: uv tool install ruff")))
+
+(defun mcg/python-fix-buffer ()
+  "使用 ruff 自动修复当前 buffer。"
+  (interactive)
+  (if (executable-find "ruff")
+      (let ((file (buffer-file-name)))
+        (when (zerop (call-process "ruff" nil nil nil "check" "--fix" file))
+          (revert-buffer t t t)
+          (message "Fixed with ruff")))
+    (message "ruff not found")))
+
+(defun mcg/python-sort-imports ()
+  "使用 ruff 整理 imports。"
+  (interactive)
+  (if (executable-find "ruff")
+      (let ((file (buffer-file-name)))
+        (when file
+          (save-buffer)
+          (if (zerop (call-process "ruff" nil nil nil "check" "--select" "I" "--fix" file))
+              (progn
+                (revert-buffer t t t)
+                (message "Sorted imports with ruff"))
+            (message "ruff: no import changes needed"))))
+    (message "ruff not found. Install with: uv tool install ruff")))
+
+#+END_SRC
+
+** Type Checking with ty
+#+BEGIN_SRC emacs-lisp
+;;; 类型检查（使用 ty）
+
+(defun mcg/python-type-check ()
+  "使用 ty 进行类型检查。"
+  (interactive)
+  (if (executable-find "ty")
+      (compile (format "ty check %s" (buffer-file-name)))
+    (message "ty not found. Install with: uv tool install ty")))
+
+(defun mcg/python-type-check-project ()
+  "对整个项目进行类型检查。"
+  (interactive)
+  (if (executable-find "ty")
+      (let ((default-directory (or (when (project-current)
+                                     (project-root (project-current)))
+                                   default-directory)))
+        (compile "ty check ."))
+    (message "ty not found. Install with: uv tool install ty")))
+
+#+END_SRC
+
+** Testing Support
+#+BEGIN_SRC emacs-lisp
+;;; 测试支持（pytest）
+
+(defun mcg/python-run-pytest ()
+  "运行 pytest 测试。"
+  (interactive)
+  (if (executable-find "pytest")
+      (let ((compilation-scroll-output t))
+        (compile "pytest -v"))
+    (message "pytest not found. Install with: pip install pytest")))
+
+(defun mcg/python-run-pytest-file ()
+  "运行当前文件的测试。"
+  (interactive)
+  (if (executable-find "pytest")
+      (let ((compilation-scroll-output t))
+        (compile (format "pytest -v %s" (buffer-file-name))))
+    (message "pytest not found")))
+
+(defun mcg/python-run-pytest-function ()
+  "运行光标所在的测试函数。"
+  (interactive)
+  (if (executable-find "pytest")
+      (let* ((func-name (python-info-current-defun))
+             (file (buffer-file-name)))
+        (if func-name
+            (compile (format "pytest -v %s::%s" file func-name))
+          (message "No function at point")))
+    (message "pytest not found")))
+
+#+END_SRC
+
+** REPL Integration
+#+BEGIN_SRC emacs-lisp
+;;; REPL 集成
+
+(defun mcg/python-send-region-to-repl (start end)
+  "发送选中区域到 Python REPL。"
+  (interactive "r")
+  (python-shell-send-region start end)
+  (python-shell-switch-to-shell))
+
+(defun mcg/python-send-buffer-to-repl ()
+  "发送整个 buffer 到 Python REPL。"
+  (interactive)
+  (python-shell-send-buffer)
+  (python-shell-switch-to-shell))
+
+(defun mcg/python-send-defun-to-repl ()
+  "发送当前函数到 Python REPL。"
+  (interactive)
+  (python-shell-send-defun)
+  (python-shell-switch-to-shell))
+
+#+END_SRC
+
+** Documentation
+#+BEGIN_SRC emacs-lisp
+;;; 文档支持
+
+(defun mcg/python-insert-docstring ()
+  "插入 Python docstring 模板。"
+  (interactive)
+  (let ((indent (make-string (current-indentation) ?\s)))
+    (insert (format "%s\"\"\"\n%s\n%s\n%s\"\"\"\n"
+                    indent
+                    indent
+                    indent
+                    indent))
+    (forward-line -2)
+    (end-of-line)))
+
+#+END_SRC
+
+** Project Detection
+#+BEGIN_SRC emacs-lisp
+;;; 项目检测
+
+(defun mcg-python-project-p ()
+  "检测是否为 Python 项目。"
+  (when-let ((project-root (when (project-current)
+                             (project-root (project-current)))))
+    (or (file-exists-p (expand-file-name "setup.py" project-root))
+        (file-exists-p (expand-file-name "pyproject.toml" project-root))
+        (file-exists-p (expand-file-name "requirements.txt" project-root))
+        (file-exists-p (expand-file-name "Pipfile" project-root))
+        (file-exists-p (expand-file-name "poetry.lock" project-root))
+        (file-exists-p (expand-file-name "uv.lock" project-root)))))
+
+#+END_SRC
+
+** Keybindings
+#+BEGIN_SRC emacs-lisp
+;;; 快捷键配置
+
+(defun mcg-python-setup-keybindings ()
+  "设置 Python 模式快捷键。"
+  ;; 重构 (C-c r 前缀)
+  (local-set-key (kbd "C-c r f") #'mcg-python-format-buffer)
+  (local-set-key (kbd "C-c r l") #'mcg/python-lint-buffer)
+  (local-set-key (kbd "C-c r x") #'mcg/python-fix-buffer)
+  (local-set-key (kbd "C-c r i") #'mcg/python-sort-imports)
+  
+  ;; 类型检查
+  (local-set-key (kbd "C-c c") #'mcg/python-type-check)
+  (local-set-key (kbd "C-c C") #'mcg/python-type-check-project)
+  
+  ;; 测试 (C-c t 前缀)
+  (local-set-key (kbd "C-c t t") #'mcg/python-run-pytest)
+  (local-set-key (kbd "C-c t f") #'mcg/python-run-pytest-file)
+  (local-set-key (kbd "C-c t d") #'mcg/python-run-pytest-function)
+  
+  ;; REPL
+  (local-set-key (kbd "C-c C-r") #'mcg/python-send-region-to-repl)
+  (local-set-key (kbd "C-c C-b") #'mcg/python-send-buffer-to-repl)
+  (local-set-key (kbd "C-c C-d") #'mcg/python-send-defun-to-repl)
+  
+  ;; 文档
+  (local-set-key (kbd "C-c d") #'mcg/python-insert-docstring))
+
+(add-hook 'python-mode-hook #'mcg-python-setup-keybindings)
+(add-hook 'python-ts-mode-hook #'mcg-python-setup-keybindings)
+
+#+END_SRC
+
+** Tool Status Check
+#+BEGIN_SRC emacs-lisp
+;;; 工具状态检查
+
+(defun mcg/python-check-tools ()
+  "检查 Python 开发工具是否已安装。"
+  (interactive)
+  (let ((tools '(("ty" . "uv tool install ty")
+                 ("ruff" . "uv tool install ruff")
+                 ("pytest" . "uv pip install pytest")
+                 ("python3" . "系统安装"))))
+    (with-help-window "*Python Tools Status*"
+      (princ "═══════════════════════════════════════════\n")
+      (princ "   Python 开发工具状态\n")
+      (princ "═══════════════════════════════════════════\n\n")
+      (dolist (tool tools)
+        (let ((name (car tool))
+              (install-cmd (cdr tool)))
+          (princ (format "%-12s %s\n"
+                         name
+                         (if (executable-find name)
+                             "✓ 已安装"
+                           (format "✗ 未安装 (%s)" install-cmd))))))
+      (princ "\n═══════════════════════════════════════════\n")
+      (princ "\n推荐安装命令:\n")
+      (princ "  uv tool install ty\n")
+      (princ "  uv tool install ruff\n")
+      (princ "  uv pip install pytest\n")
+      (princ "\n或使用 pip:\n")
+      (princ "  pip install ty ruff pytest\n"))))
+
+#+END_SRC
+
+** Keybindings Summary
+#+BEGIN_SRC emacs-lisp
+;;; 快捷键总结
+
+;; 重构 (C-c r 前缀):
+;; C-c r f   - 格式化代码 (ruff format)
+;; C-c r l   - 检查代码 (ruff check)
+;; C-c r x   - 自动修复 (ruff --fix)
+;; C-c r i   - 整理 imports (ruff)
+;; C-c r r   - 重命名 (lsp-bridge，由 +lsp 提供)
+;;
+;; 类型检查:
+;; C-c c     - 类型检查当前文件 (ty)
+;; C-c C     - 类型检查整个项目 (ty)
+;;
+;; 测试:
+;; C-c t t   - 运行所有测试 (pytest)
+;; C-c t f   - 运行当前文件测试
+;; C-c t d   - 运行当前函数测试
+;;
+;; REPL:
+;; C-c C-r   - 发送选中区域到 REPL
+;; C-c C-b   - 发送整个 buffer 到 REPL
+;; C-c C-d   - 发送当前函数到 REPL
+;; C-c C-z   - 切换到 REPL (内置)
+;; C-c C-c   - 发送当前定义到 REPL (内置)
+;;
+;; 其他:
+;; C-c d     - 插入 docstring
+;;
+;; LSP (由 +lsp 模块提供):
+;; M-.       - 跳转定义
+;; M-,       - 返回
+;; M-?       - 查找引用
+
+#+END_SRC
+
+** Provide
+#+BEGIN_SRC emacs-lisp
+(provide 'init-python)
+;;; init-python.el ends here
+#+END_SRC

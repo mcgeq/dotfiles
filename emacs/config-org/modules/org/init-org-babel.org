@@ -1,0 +1,235 @@
+* init-org-babel.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle init-org-babel.el :lexical t
+:END:
+
+** Headers
+#+BEGIN_SRC emacs-lisp
+;;; init-org-babel.el --- Org Babel Configuration for MCG Emacs -*- lexical-binding: t; -*-
+
+;; Filename: init-org-babel.el
+;; Description: Org Babel 代码执行配置模块
+;; Author: mcge <mcgeq@outlook.com>
+;; Copyright (C) 2024-2026, mcge, all rights reserved.
+;; Create   Date: 2026-01-07
+;; Version: 3.0
+;; Keywords: org, babel, literate-programming
+;; Compatibility: GNU Emacs 29.0+
+
+;;; Commentary:
+;;
+;; MCG Emacs 配置架构的 Org Babel 配置模块，负责：
+;; - 多语言代码块执行支持
+;; - 自定义语言扩展（如 Zig）
+;; - 代码块结果处理和导出
+;; - 安全性和性能优化
+;;
+
+#+END_SRC
+
+** Dependencies
+#+BEGIN_SRC emacs-lisp
+;;; Dependencies
+
+(require 'core-lib)
+(require 'org)
+(require 'ob-core)
+(require 'ob-tangle)
+
+#+END_SRC
+
+** Basic Configuration
+#+BEGIN_SRC emacs-lisp
+;;; Org Babel 基础配置
+
+(defun mcg-org-babel-setup-basic ()
+  "设置 Org Babel 基础配置。"
+  ;; 执行代码块前的确认设置
+  (setq org-confirm-babel-evaluate nil
+        org-src-fontify-natively t
+        org-src-tab-acts-natively t
+        org-src-preserve-indentation t
+        org-edit-src-content-indentation 0)
+  
+  ;; 代码块编辑窗口设置
+  (setq org-src-window-setup 'current-window)
+  
+  ;; 代码块导出设置
+  (setq org-export-use-babel t
+        org-export-babel-evaluate t)
+  
+  (mcg-log "Configured org-babel basic settings"))
+
+#+END_SRC
+
+** Language Support
+#+BEGIN_SRC emacs-lisp
+;;; 语言支持配置
+
+(defun mcg-org-babel-setup-languages ()
+  "设置 Org Babel 语言支持。"
+  (org-babel-do-load-languages
+   'org-babel-load-languages
+   '((emacs-lisp . t)
+     (shell . t)
+     (python . t)
+     (js . t)
+     (C . t)
+     (css . t)
+     (dot . t)
+     (org . t)
+     (plantuml . t)
+     (sql . t)))
+  
+  (mcg-log "Configured org-babel languages"))
+
+#+END_SRC
+
+** Default Header Arguments
+#+BEGIN_SRC emacs-lisp
+;;; 默认代码块参数
+
+(defun mcg-org-babel-setup-defaults ()
+  "设置 Org Babel 默认参数。"
+  ;; 全局默认参数
+  (setq org-babel-default-header-args
+        '((:session . "none")
+          (:results . "replace")
+          (:exports . "code")
+          (:cache . "no")
+          (:noweb . "no")
+          (:hlines . "no")
+          (:tangle . "no")))
+  
+  ;; Python 默认参数
+  (setq org-babel-default-header-args:python
+        '((:results . "output")))
+  
+  ;; Shell 默认参数
+  (setq org-babel-default-header-args:shell
+        '((:results . "output")))
+  
+  (mcg-log "Configured org-babel default arguments"))
+
+#+END_SRC
+
+** Zig Language Support
+#+BEGIN_SRC emacs-lisp
+;;; Zig 语言支持
+
+(defvar org-babel-default-header-args:zig '()
+  "Zig 代码块的默认参数。")
+
+(defun org-babel-execute:zig (body params)
+  "执行 Zig 代码块。
+BODY 是代码内容，PARAMS 是参数。"
+  (let* ((tmp-src-file (org-babel-temp-file "zig-src-" ".zig"))
+         (tmp-bin-file (org-babel-temp-file "zig-bin-"))
+         (cmdline (cdr (assq :cmdline params)))
+         (flags (cdr (assq :flags params)))
+         (full-body (org-babel-expand-body:generic body params)))
+    
+    ;; 检查 Zig 是否安装
+    (unless (executable-find "zig")
+      (error "Zig compiler not found"))
+    
+    ;; 写入源文件
+    (with-temp-file tmp-src-file
+      (insert full-body))
+    
+    ;; 编译并运行
+    (let ((compile-command
+           (format "zig build-exe %s %s -femit-bin=%s"
+                   (or flags "")
+                   (org-babel-process-file-name tmp-src-file)
+                   (org-babel-process-file-name tmp-bin-file)))
+          (run-command
+           (format "%s %s"
+                   (org-babel-process-file-name tmp-bin-file)
+                   (or cmdline ""))))
+      
+      (let ((compile-result (org-babel-eval compile-command "")))
+        (if (string-match-p "error" compile-result)
+            (concat "Compilation failed:\n" compile-result)
+          (org-babel-eval run-command ""))))))
+
+(defun mcg-org-babel-setup-zig ()
+  "设置 Zig 语言支持。"
+  ;; 注册 Zig 语言
+  (add-to-list 'org-babel-load-languages '(zig . t))
+  
+  ;; Zig 默认参数
+  (setq org-babel-default-header-args:zig
+        '((:results . "output")
+          (:exports . "both")))
+  
+  (mcg-log "Configured org-babel Zig support"))
+
+#+END_SRC
+
+** Helper Functions
+#+BEGIN_SRC emacs-lisp
+;;; 辅助函数
+
+(defun mcg/org-babel-execute-buffer ()
+  "执行当前 buffer 中的所有代码块。"
+  (interactive)
+  (org-babel-execute-buffer)
+  (message "Executed all code blocks in buffer"))
+
+(defun mcg/org-babel-tangle-and-compile ()
+  "Tangle 当前文件。"
+  (interactive)
+  (org-babel-tangle)
+  (message "Tangled file"))
+
+(defun mcg/org-babel-remove-all-results ()
+  "移除当前 buffer 中所有代码块的结果。"
+  (interactive)
+  (org-babel-remove-result-one-or-many t)
+  (message "Removed all results"))
+
+(defun mcg/org-insert-src-block (lang)
+  "插入指定语言 LANG 的代码块。"
+  (interactive
+   (list (completing-read "Language: "
+                          '("emacs-lisp" "python" "shell" "zig"
+                            "C" "js" "css" "sql")
+                          nil nil)))
+  (insert (format "#+begin_src %s\n\n#+end_src" lang))
+  (forward-line -1))
+
+#+END_SRC
+
+** Keybindings
+#+BEGIN_SRC emacs-lisp
+;;; 快捷键绑定
+
+(defun mcg-org-babel-setup-keybindings ()
+  "设置 Org Babel 快捷键。"
+  (with-eval-after-load 'org
+    (define-key org-mode-map (kbd "C-c C-v C-b") #'mcg/org-babel-execute-buffer)
+    (define-key org-mode-map (kbd "C-c C-v C-r") #'mcg/org-babel-remove-all-results)
+    (define-key org-mode-map (kbd "C-c C-v i") #'mcg/org-insert-src-block))
+  
+  (mcg-log "Configured org-babel keybindings"))
+
+#+END_SRC
+
+** Initialize
+#+BEGIN_SRC emacs-lisp
+;;; Initialize
+
+(mcg-org-babel-setup-basic)
+(mcg-org-babel-setup-languages)
+(mcg-org-babel-setup-defaults)
+(mcg-org-babel-setup-zig)
+(mcg-org-babel-setup-keybindings)
+
+#+END_SRC
+
+** Provide
+#+BEGIN_SRC emacs-lisp
+(provide 'init-org-babel)
+;;; init-org-babel.el ends here
+#+END_SRC

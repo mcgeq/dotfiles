@@ -1,0 +1,435 @@
+* init-treesit.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle init-treesit.el :lexical t
+:END:
+
+** Headers
+#+BEGIN_SRC emacs-lisp
+  ;;; init-treesit.el --- Tree-sitter Configuration for MCG Emacs -*- lexical-binding: t; -*-
+
+  ;; Filename: init-treesit.el
+  ;; Description: Tree-sitter 语法高亮配置模块
+  ;; Author: mcge <mcgeq@outlook.com>
+  ;; Copyright (C) 2024-2026, mcge, all rights reserved.
+  ;; Create   Date: 2026-01-07
+  ;; Version: 3.0
+  ;; Keywords: tree-sitter, syntax, highlighting
+  ;; Compatibility: GNU Emacs 29.0+
+
+  ;;; Commentary:
+  ;;
+  ;; MCG Emacs 配置架构的 Tree-sitter 配置模块，负责：
+  ;; - treesit 语法源配置
+  ;; - major-mode 重映射
+  ;; - treesit-auto 自动安装
+  ;; - 文件类型关联
+  ;;
+  ;; 模块元数据:
+  ;; :depends ()
+  ;; :defer nil
+  ;;
+
+#+END_SRC
+
+** Dependencies
+#+BEGIN_SRC emacs-lisp
+;;; Dependencies
+
+(require 'core-lib)
+(require 'treesit)
+
+#+END_SRC
+
+** Variables
+#+BEGIN_SRC emacs-lisp
+;;; Variables
+
+(defvar mcg-treesit-auto-install nil
+  "是否自动安装缺失的 tree-sitter 语法。
+设置为 t 时，首次打开文件会自动下载语法。")
+
+(defvar mcg-treesit-font-lock-level 4
+  "Tree-sitter 语法高亮级别 (1-4)。
+1: 最小高亮
+4: 最大高亮")
+
+#+END_SRC
+
+** Language Sources
+#+BEGIN_SRC emacs-lisp
+;;; Language Sources
+
+(defvar mcg-treesit-language-sources
+  '((bash . ("https://github.com/tree-sitter/tree-sitter-bash"))
+    (c . ("https://github.com/tree-sitter/tree-sitter-c"))
+    (cpp . ("https://github.com/tree-sitter/tree-sitter-cpp"))
+    (css . ("https://github.com/tree-sitter/tree-sitter-css"))
+    (cmake . ("https://github.com/uyha/tree-sitter-cmake"))
+    (csharp . ("https://github.com/tree-sitter/tree-sitter-c-sharp.git"))
+    (dockerfile . ("https://github.com/camdencheek/tree-sitter-dockerfile"))
+    (elisp . ("https://github.com/Wilfred/tree-sitter-elisp"))
+    (elixir . ("https://github.com/elixir-lang/tree-sitter-elixir" "main" "src" nil nil))
+    (go . ("https://github.com/tree-sitter/tree-sitter-go"))
+    (gomod . ("https://github.com/camdencheek/tree-sitter-go-mod.git"))
+    (haskell . ("https://github.com/tree-sitter/tree-sitter-haskell" "master" "src" nil nil))
+    (html . ("https://github.com/tree-sitter/tree-sitter-html"))
+    (java . ("https://github.com/tree-sitter/tree-sitter-java.git"))
+    (javascript . ("https://github.com/tree-sitter/tree-sitter-javascript"))
+    (json . ("https://github.com/tree-sitter/tree-sitter-json"))
+    (lua . ("https://github.com/Azganoth/tree-sitter-lua"))
+    (make . ("https://github.com/alemuller/tree-sitter-make"))
+    (markdown . ("https://github.com/tree-sitter-grammars/tree-sitter-markdown"
+                 "split_parser" "tree-sitter-markdown/src"))
+    (markdown-inline . ("https://github.com/tree-sitter-grammars/tree-sitter-markdown"
+                        "split_parser" "tree-sitter-markdown-inline/src"))
+    (ocaml . ("https://github.com/tree-sitter/tree-sitter-ocaml" nil "ocaml/src"))
+    (org . ("https://github.com/milisims/tree-sitter-org"))
+    (python . ("https://github.com/tree-sitter/tree-sitter-python"))
+    (php . ("https://github.com/tree-sitter/tree-sitter-php"))
+    (typescript . ("https://github.com/tree-sitter/tree-sitter-typescript" nil "typescript/src"))
+    (tsx . ("https://github.com/tree-sitter/tree-sitter-typescript" nil "tsx/src"))
+    (ruby . ("https://github.com/tree-sitter/tree-sitter-ruby"))
+    (rust . ("https://github.com/tree-sitter/tree-sitter-rust"))
+    (sql . ("https://github.com/m-novikov/tree-sitter-sql"))
+    (scala . ("https://github.com/tree-sitter/tree-sitter-scala" "master" "src" nil nil))
+    (toml . ("https://github.com/tree-sitter/tree-sitter-toml" "master" "src" nil nil))
+    (vue . ("https://github.com/merico-dev/tree-sitter-vue"))
+    (kotlin . ("https://github.com/fwcd/tree-sitter-kotlin"))
+    (yaml . ("https://github.com/ikatyang/tree-sitter-yaml"))
+    (zig . ("https://github.com/GrayJack/tree-sitter-zig"))
+    (clojure . ("https://github.com/sogaiu/tree-sitter-clojure"))
+    (mojo . ("https://github.com/HerringtonDarkholme/tree-sitter-mojo")))
+  "Tree-sitter 语言语法源列表。")
+
+#+END_SRC
+
+** Major Mode Remap
+#+BEGIN_SRC emacs-lisp
+;;; Major Mode Remap
+
+(defvar mcg-treesit-major-mode-remap
+  '((c-mode . c-ts-mode)
+    (c++-mode . c++-ts-mode)
+    (cmake-mode . cmake-ts-mode)
+    (conf-toml-mode . toml-ts-mode)
+    (css-mode . css-ts-mode)
+    (js-mode . js-ts-mode)
+    (js-json-mode . json-ts-mode)
+    (python-mode . python-ts-mode)
+    (sh-mode . bash-ts-mode)
+    (typescript-mode . typescript-ts-mode)
+    (rust-mode . rust-ts-mode)
+    (java-mode . java-ts-mode)
+    (clojure-mode . clojure-ts-mode)
+    (markdown-mode . markdown-ts-mode))
+  "传统模式到 tree-sitter 模式的映射。")
+
+#+END_SRC
+
+** Auto Mode Alist
+#+BEGIN_SRC emacs-lisp
+;;; Auto Mode Alist
+
+(defvar mcg-treesit-auto-mode-alist
+  '(("\\.markdown\\'" . markdown-mode)
+    ("\\.md\\'" . markdown-mode)
+    ("\\.coffee\\'" . coffee-mode)
+    ("\\.iced\\'" . coffee-mode)
+    ("Cakefile\\'" . coffee-mode)
+    ("\\.stumpwmrc\\'" . lisp-mode)
+    ("\\.[hg]s\\'" . haskell-mode)
+    ("\\.hi\\'" . haskell-mode)
+    ("\\.hs-boot\\'" . haskell-mode)
+    ("\\.chs\\'" . haskell-mode)
+    ("\\.l[hg]s\\'" . literate-haskell-mode)
+    ("\\.inc\\'" . asm-mode)
+    ("\\.max\\'" . maxima-mode)
+    ("\\.org\\'" . org-mode)
+    ("\\.cron\\(tab\\)?\\'" . crontab-mode)
+    ("cron\\(tab\\)?\\." . crontab-mode)
+    ("\\.a90\\'" . intel-hex-mode)
+    ("\\.hex\\'" . intel-hex-mode)
+    ("\\.py\\'" . python-mode)
+    ("/\\.php_cs\\(?:\\.dist\\)?\\'" . php-mode)
+    ("\\.\\(?:php\\.inc\\|stub\\)\\'" . php-mode)
+    ("\\.\\(?:php[s345]?\\|phtml\\)\\'" . php-mode-maybe)
+    ("SConstruct\\'" . python-mode)
+    ("\\.ml\\'" . tuareg-mode)
+    ("\\.mli\\'" . tuareg-mode)
+    ("\\.mly\\'" . tuareg-mode)
+    ("\\.mll\\'" . tuareg-mode)
+    ("\\.mlp\\'" . tuareg-mode)
+    ("\\.qml\\'" . qml-mode)
+    ("\\.jl\\'" . lisp-mode)
+    ("\\.asdf\\'" . lisp-mode)
+    ("CMakeLists\\.txt\\'" . cmake-mode)
+    ("\\.cmake\\'" . cmake-mode)
+    ("\\.vue\\'" . web-mode)
+    ("\\.wxml\\'" . web-mode)
+    ("\\.phtml\\'" . web-mode)
+    ("\\.jsp\\'" . web-mode)
+    ("\\.as[cp]x\\'" . web-mode)
+    ("\\.erb\\'" . web-mode)
+    ("\\.mustache\\'" . web-mode)
+    ("\\.djhtml\\'" . web-mode)
+    ("\\.html?\\'" . web-mode)
+    ("\\.css\\'" . css-mode)
+    ("\\.wxss\\'" . css-mode)
+    ("\\.styl\\'" . sws-mode)
+    ("\\.jade\\'" . jade-mode)
+    ("\\.go\\'" . go-mode)
+    ("\\.vala\\'" . vala-mode)
+    ("\\.vapi\\'" . vala-mode)
+    ("\\.rs\\'" . rust-ts-mode)
+    ("\\.pro\\'" . qmake-mode)
+    ("\\.js\\'" . js-mode)
+    ("\\.wxs\\'" . js-mode)
+    ("\\.jsx\\'" . web-mode)
+    ("\\.lua\\'" . lua-mode)
+    ("\\.swift\\'" . swift-mode)
+    ("\\.l\\'" . flex-mode)
+    ("\\.y\\'" . bison-mode)
+    ("\\.pdf\\'" . pdf-view-mode)
+    ("\\.cpp\\'" . c++-mode)
+    ("\\.h\\'" . c++-mode)
+    ("\\.ll\\'" . llvm-mode)
+    ("\\.bc\\'" . hexl-mode)
+    ("\\.nim\\'" . nim-mode)
+    ("\\.nims\\'" . nim-mode)
+    ("\\.nimble\\'" . nim-mode)
+    ("\\.nim\\.cfg\\'" . nim-mode)
+    ("\\.exs\\'" . elixir-mode)
+    ("\\.json\\'" . json-mode)
+    ("\\.clj\\'" . clojure-ts-mode)
+    ("\\.dart\\'" . dart-mode)
+    ("\\.zig\\'" . zig-mode)
+    ("\\.kt\\'" . kotlin-mode)
+    ("\\.mojo\\'" . mojo-mode)
+    ("\\.fs\\'" . fsharp-mode))
+  "文件扩展名到模式的映射。")
+
+#+END_SRC
+
+** Treesit Parser Hooks
+#+BEGIN_SRC emacs-lisp
+;;; Treesit Parser Hooks
+
+(defvar mcg-treesit-parser-hooks
+  '((markdown-ts-mode-hook . markdown)
+    (zig-mode-hook . zig)
+    (mojo-mode-hook . mojo)
+    (emacs-lisp-mode-hook . elisp)
+    (ielm-mode-hook . elisp)
+    (json-mode-hook . json)
+    (go-mode-hook . go)
+    (java-mode-hook . java)
+    (java-ts-mode-hook . java)
+    (clojure-mode-hook . clojure)
+    (clojure-ts-mode-hook . clojure)
+    (cider-repl-mode-hook . clojure)
+    (php-mode-hook . php)
+    (php-ts-mode-hook . php)
+    (haskell-mode-hook . haskell)
+    (kotlin-mode-hook . kotlin)
+    (lua-mode-hook . lua))
+  "模式钩子到 tree-sitter 语言的映射。")
+
+(defun mcg-treesit--add-parser-hooks ()
+  "为各模式添加 treesit-parser 创建钩子。"
+  (dolist (pair mcg-treesit-parser-hooks)
+    (let ((hook (car pair))
+          (lang (cdr pair)))
+      (add-hook hook
+                (lambda ()
+                  (when (treesit-available-p)
+                    (treesit-parser-create lang)))))))
+
+#+END_SRC
+
+** Web Mode Parser
+#+BEGIN_SRC emacs-lisp
+;;; Web Mode Parser
+
+(defun mcg-treesit--web-mode-parser ()
+  "为 web-mode 创建适当的 treesit parser。"
+  (let ((file-name (buffer-file-name)))
+    (when file-name
+      (treesit-parser-create
+       (pcase (file-name-extension file-name)
+         ("vue" 'vue)
+         ("html" 'html)
+         ("php" 'php))))))
+
+#+END_SRC
+
+** Autoloads
+#+BEGIN_SRC emacs-lisp
+;;; Autoloads
+
+(defvar mcg-treesit-autoloads
+  '((cmake-mode . "cmake-mode")
+    (qml-mode . "qml-mode")
+    (php-mode . "php-mode")
+    (php-mode-maybe . "php-mode")
+    (coffee-mode . "coffee-mode")
+    (sws-mode . "sws-mode")
+    (jade-mode . "jade-mode")
+    (vala-mode . "vala-mode")
+    (rust-mode . "rust-mode")
+    (qmake-mode . "qmake-mode")
+    (swift-mode . "swift-mode")
+    (rjsx-mode . "rjsx-mode")
+    (flex-mode . "flex")
+    (bison-mode . "bison")
+    (llvm-mode . "llvm-mode")
+    (elixir-mode . "elixir-mode")
+    (json-mode . "json-mode")
+    (clojure-ts-mode . "clojure-ts-mode")
+    (dart-mode . "dart-mode")
+    (zig-mode . "zig-mode")
+    (kotlin-mode . "kotlin-mode")
+    (mojo-mode . "mojo")
+    (fsharp-mode . "fsharp-mode")
+    (lua-mode . "lang-lua"))
+  "模式到文件的 autoload 映射。")
+
+(defun mcg-treesit--setup-autoloads ()
+  "设置模式 autoloads。"
+  (dolist (pair mcg-treesit-autoloads)
+    (autoload (car pair) (cdr pair) nil t)))
+
+#+END_SRC
+
+** Setup Functions
+#+BEGIN_SRC emacs-lisp
+;;; Setup Functions
+
+(defun mcg-treesit-setup-sources ()
+  "设置 tree-sitter 语言源。"
+  (setq treesit-language-source-alist mcg-treesit-language-sources)
+  (mcg-log "Configured treesit language sources"))
+
+(defun mcg-treesit-setup-remap ()
+  "设置 major-mode 重映射。"
+  (setq major-mode-remap-alist mcg-treesit-major-mode-remap)
+  (mcg-log "Configured major-mode remap for tree-sitter"))
+
+(defun mcg-treesit-setup-auto-mode ()
+  "设置 auto-mode-alist。"
+  (dolist (pair mcg-treesit-auto-mode-alist)
+    (add-to-list 'auto-mode-alist pair))
+  (add-to-list 'interpreter-mode-alist '("coffee" . coffee-mode))
+  (mcg-log "Configured auto-mode-alist"))
+
+(defun mcg-treesit-setup-hooks ()
+  "设置 treesit parser 钩子。"
+  (mcg-treesit--add-parser-hooks)
+  (add-hook 'web-mode-hook #'mcg-treesit--web-mode-parser)
+  (mcg-log "Configured treesit parser hooks"))
+
+(defun mcg-treesit-setup-font-lock ()
+  "设置 tree-sitter 语法高亮级别。"
+  (setq treesit-font-lock-level mcg-treesit-font-lock-level)
+  (mcg-log "Set treesit font-lock level to %d" mcg-treesit-font-lock-level))
+
+(defun mcg-treesit-setup-auto ()
+  "设置 treesit-auto（如果可用）。"
+  (when (mcg-load-extension "lsp/treesit-auto")
+    (require 'treesit-auto nil t)
+    (when (featurep 'treesit-auto)
+      (setq treesit-auto-install mcg-treesit-auto-install)
+      (global-treesit-auto-mode 1)
+      (mcg-log "Enabled treesit-auto-mode"))))
+
+#+END_SRC
+
+** Commands
+#+BEGIN_SRC emacs-lisp
+;;; Commands
+
+(defun mcg/treesit-install-all-grammars ()
+  "安装所有配置的 tree-sitter 语法。"
+  (interactive)
+  (dolist (lang-source treesit-language-source-alist)
+    (let ((lang (car lang-source)))
+      (unless (treesit-language-available-p lang)
+        (message "Installing grammar for %s..." lang)
+        (treesit-install-language-grammar lang))))
+  (message "All grammars installed!"))
+
+(defun mcg/treesit-install-grammar (lang)
+  "安装指定语言 LANG 的 tree-sitter 语法。"
+  (interactive
+   (list (intern (completing-read "Language: "
+                                  (mapcar #'car treesit-language-source-alist)
+                                  nil t))))
+  (if (treesit-language-available-p lang)
+      (message "Grammar for %s is already installed" lang)
+    (treesit-install-language-grammar lang)
+    (message "Installed grammar for %s" lang)))
+
+(defun mcg/treesit-list-available ()
+  "列出所有可用的 tree-sitter 语法。"
+  (interactive)
+  (let ((available nil)
+        (missing nil))
+    (dolist (lang-source treesit-language-source-alist)
+      (let ((lang (car lang-source)))
+        (if (treesit-language-available-p lang)
+            (push lang available)
+          (push lang missing))))
+    (with-current-buffer (get-buffer-create "*Tree-sitter Grammars*")
+      (erase-buffer)
+      (insert "Tree-sitter 语法状态\n")
+      (insert "====================\n\n")
+      (insert (format "已安装 (%d):\n" (length available)))
+      (dolist (lang (sort available #'string<))
+        (insert (format "  ✓ %s\n" lang)))
+      (insert (format "\n未安装 (%d):\n" (length missing)))
+      (dolist (lang (sort missing #'string<))
+        (insert (format "  ✗ %s\n" lang)))
+      (goto-char (point-min))
+      (display-buffer (current-buffer)))))
+
+(defun mcg/treesit-explore ()
+  "打开当前 buffer 的 tree-sitter 语法树浏览器。"
+  (interactive)
+  (if (treesit-parser-list)
+      (treesit-explore-mode)
+    (message "No tree-sitter parser active in this buffer")))
+
+#+END_SRC
+
+** Initialize
+#+BEGIN_SRC emacs-lisp
+;;; Initialize
+
+;; 设置语言源
+(mcg-treesit-setup-sources)
+
+;; 设置 major-mode 重映射
+(mcg-treesit-setup-remap)
+
+;; 设置 auto-mode-alist
+(mcg-treesit-setup-auto-mode)
+
+;; 设置 parser 钩子
+(mcg-treesit-setup-hooks)
+
+;; 设置语法高亮级别
+(mcg-treesit-setup-font-lock)
+
+;; 设置 autoloads
+(mcg-treesit--setup-autoloads)
+
+;; 设置 treesit-auto（可选）
+(when (mcg-extension-exists-p "lsp/treesit-auto")
+  (mcg-treesit-setup-auto))
+
+#+END_SRC
+
+** Provide
+#+BEGIN_SRC emacs-lisp
+(provide 'init-treesit)
+;;; init-treesit.el ends here
+#+END_SRC

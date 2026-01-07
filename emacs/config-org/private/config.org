@@ -1,0 +1,164 @@
+#+TITLE: MCG Emacs Private Configuration
+#+AUTHOR: Your Name
+#+PROPERTY: header-args:emacs-lisp :tangle config.el :lexical t
+
+* Private Configuration
+:PROPERTIES:
+:HEADER-ARGS: :tangle config.el :lexical t
+:END:
+
+** Headers
+#+BEGIN_SRC emacs-lisp
+  ;;; config.el --- Private Configuration -*- lexical-binding: t; -*-
+
+  ;; Filename: config.el
+  ;; Description: 用户私有配置
+  ;; Author: Your Name
+  ;; Copyright (C) 2024-2026, Your Name, all rights reserved.
+  ;; Create   Date: 2026-01-07
+  ;; Version: 1.0
+  ;; Keywords: private, configuration
+  ;; Compatibility: GNU Emacs 29.0+
+
+  ;;; Commentary:
+  ;;
+  ;; 此文件用于存放用户私有配置，不会被 Git 跟踪。
+  ;;
+  ;; 可以在此文件中配置：
+  ;; - 个人信息（用户名、邮箱）
+  ;; - 自定义路径
+  ;; - 私有快捷键
+  ;; - 工作相关配置
+  ;; - 其他个人偏好
+  ;;
+
+#+END_SRC
+
+** User Information
+#+BEGIN_SRC emacs-lisp
+;;; 用户信息
+
+;; 设置用户名和邮箱
+(setq user-full-name "Your Name"
+      user-mail-address "your.email@example.com")
+
+#+END_SRC
+
+** Custom Paths
+#+BEGIN_SRC emacs-lisp
+;;; 自定义路径
+
+;; 示例：设置 org 文件目录
+;; (setq org-directory "~/Documents/org")
+
+;; 示例：设置笔记目录
+;; (setq mcg-notes-dir "~/Documents/notes")
+
+;; 示例：设置项目目录
+;; (setq mcg-projects-dir "~/Projects")
+
+#+END_SRC
+
+** Theme Customization
+#+BEGIN_SRC emacs-lisp
+;;; 主题定制
+
+;; 示例：设置默认主题
+;; (setq mcg-default-theme 'ef-maris-light)
+
+;; 示例：设置字体大小
+;; (when mcg-is-gui
+;;   (set-face-attribute 'default nil :height 140))
+
+#+END_SRC
+
+** Editor Preferences
+#+BEGIN_SRC emacs-lisp
+;;; 编辑器偏好
+
+;; 示例：设置缩进宽度
+;; (setq-default tab-width 4)
+;; (setq-default indent-tabs-mode nil)
+
+;; 示例：启用行号
+;; (global-display-line-numbers-mode 1)
+
+;; 示例：设置自动保存
+;; (setq auto-save-default t)
+
+#+END_SRC
+
+** LSP Configuration
+#+BEGIN_SRC emacs-lisp
+;;; LSP 配置
+
+;; 示例：设置 Python LSP 服务器
+;; (setq mcg-python-lsp-server "python-ty-ruff")
+
+;; 示例：禁用保存时自动格式化
+;; (setq mcg-lsp-format-on-save nil)
+
+#+END_SRC
+
+** Org Mode Configuration
+#+BEGIN_SRC emacs-lisp
+;;; Org Mode 配置
+
+;; 示例：设置 agenda 文件
+;; (setq org-agenda-files '("~/Documents/org/agenda"))
+
+;; 示例：设置 capture 模板
+;; (setq org-capture-templates
+;;       '(("t" "Todo" entry (file+headline "~/Documents/org/todo.org" "Tasks")
+;;          "* TODO %?\n  %i\n  %a")
+;;         ("n" "Note" entry (file+headline "~/Documents/org/notes.org" "Notes")
+;;          "* %?\n  %i\n  %a")))
+
+#+END_SRC
+
+** Custom Keybindings
+#+BEGIN_SRC emacs-lisp
+;;; 自定义快捷键
+
+;; 示例：全局快捷键
+;; (global-set-key (kbd "C-c o") #'org-capture)
+;; (global-set-key (kbd "C-c a") #'org-agenda)
+
+;; 示例：使用 mcg-after! 在模块加载后设置快捷键
+;; (mcg-after! magit
+;;   (global-set-key (kbd "C-c g") #'magit-status))
+
+#+END_SRC
+
+** Work-specific Configuration
+#+BEGIN_SRC emacs-lisp
+;;; 工作相关配置
+
+;; 示例：设置代理
+;; (setq url-proxy-services
+;;       '(("http" . "proxy.example.com:8080")
+;;         ("https" . "proxy.example.com:8080")))
+
+;; 示例：设置公司特定的代码风格
+;; (mcg-after! (:lang . typescript)
+;;   (setq typescript-indent-level 2))
+
+#+END_SRC
+
+** Debug Settings
+#+BEGIN_SRC emacs-lisp
+;;; 调试设置
+
+;; 启用调试模式（显示详细日志）
+;; (setq mcg-debug-mode t)
+
+;; 启用 Emacs 调试
+;; (setq debug-on-error t)
+
+#+END_SRC
+
+** Provide
+#+BEGIN_SRC emacs-lisp
+(provide 'config)
+;;; config.el ends here
+#+END_SRC

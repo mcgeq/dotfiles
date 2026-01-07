@@ -1,0 +1,179 @@
+* init-org-extras.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle init-org-extras.el :lexical t
+:END:
+
+** Headers
+#+BEGIN_SRC emacs-lisp
+;;; init-org-extras.el --- Org Extras for MCG Emacs -*- lexical-binding: t; -*-
+
+;; Filename: init-org-extras.el
+;; Description: Org 扩展功能模块
+;; Author: mcge <mcgeq@outlook.com>
+;; Copyright (C) 2024-2026, mcge, all rights reserved.
+;; Create   Date: 2026-01-07
+;; Version: 3.0
+;; Keywords: org, download, numbering, consult-todo
+;; Compatibility: GNU Emacs 29.0+
+
+;;; Commentary:
+;;
+;; MCG Emacs 配置架构的 Org 扩展功能模块，负责：
+;; - Org-download 图片下载
+;; - Org-numbering 标题编号
+;; - Consult-todo 集成
+;;
+
+#+END_SRC
+
+** Dependencies
+#+BEGIN_SRC emacs-lisp
+;;; Dependencies
+
+(require 'core-lib)
+
+#+END_SRC
+
+** Org-Download Configuration
+#+BEGIN_SRC emacs-lisp
+;;; Org-Download Configuration
+
+(defun mcg--setup-org-download ()
+  "设置 Org-download 图片下载。"
+  (when (mcg-require-extension "org/org-download" 'org-download)
+    ;; Drag-and-drop 支持
+    (add-hook 'dired-mode-hook 'org-download-enable)
+    (add-hook 'org-mode-hook 'org-download-enable)
+    
+    ;; 显示设置
+    (setq org-download-display-inline-images 'posframe)
+    
+    (mcg-log "Org-download configured")))
+
+#+END_SRC
+
+** Clipboard Image Function
+#+BEGIN_SRC emacs-lisp
+;;; Clipboard Image Function
+
+(defun mcg/org-insert-clipboard-image (width)
+  "从剪贴板插入图片到 Org 文件。
+WIDTH 为图片宽度，默认 800。
+图片保存在与 Org 文件同名的 .assets 目录中。"
+  (interactive (list
+                (read-string (format "Input image width, default is 800: ")
+                             nil nil "800")))
+  ;; 设置图片存放的文件夹位置
+  (let* ((foldername (concat (file-name-base (buffer-file-name)) ".assets/"))
+         (imgName (concat "img_" (format-time-string "%Y%m%d_%H%M%S") ".png"))
+         (relativeFilename (concat (file-name-base (buffer-name)) ".assets/" imgName)))
+    
+    ;; 创建目录
+    (unless (file-exists-p foldername)
+      (mkdir foldername))
+    
+    ;; 根据操作系统设置截图命令
+    (cond
+     ((eq system-type 'windows-nt)
+      (setq org-download-screenshot-method
+            (concat "magick clipboard: " relativeFilename)))
+     ((eq system-type 'gnu/linux)
+      (setq org-download-screenshot-method
+            (concat "xclip -selection clipboard -t image/png -o > " relativeFilename)))
+     ((eq system-type 'darwin)
+      (setq org-download-screenshot-method
+            (concat "pngpaste " relativeFilename))))
+    
+    ;; 插入图片链接
+    (insert (concat "\n#+DOWNLOADED: screenshot @ "
+                    (format-time-string "%Y-%m-%d %a %H:%M:%S" (current-time))
+                    "\n#+CAPTION: \n#+ATTR_ORG: :width "
+                    width
+                    "\n#+ATTR_LATEX: :width "
+                    (if (>= (/ (string-to-number width) 800.0) 1.0)
+                        "1.0"
+                      (number-to-string (/ (string-to-number width) 800.0)))
+                    "\\linewidth :float nil\n"
+                    "#+ATTR_HTML: :width "
+                    width
+                    "\n[[file:" relativeFilename "]]\n"))
+    
+    ;; 执行截图
+    (when (fboundp 'org-download-screenshot)
+      (org-download-screenshot))))
+
+;; 绑定快捷键
+(with-eval-after-load 'org
+  (define-key org-mode-map (kbd "C-c n v") 'mcg/org-insert-clipboard-image))
+
+#+END_SRC
+
+** Org-Numbering Configuration
+#+BEGIN_SRC emacs-lisp
+;;; Org-Numbering Configuration
+
+(defun mcg--setup-org-numbering ()
+  "设置 Org-numbering 标题编号。"
+  (when (mcg-require-extension "org/org-numbering" 'org-numbering)
+    ;; 编号方案
+    (setq org-numbering-level-scheme
+          '((1 . ((scheme . decimal)      ; 1, 2, 3...
+                  (combine . nil)))
+            (2 . ((scheme . decimal)      ; 1.1, 1.2...
+                  (combine . t)))
+            (3 . ((scheme . decimal)      ; 1.1.1, 1.1.2...
+                  (combine . t)))
+            (4 . ((scheme . alpha)        ; a), b), c)...
+                  (combine . nil)))
+            (5 . ((scheme . paren-num)    ; (1), (2), (3)...
+                  (combine . nil)))))
+    
+    (mcg-log "Org-numbering configured")))
+
+#+END_SRC
+
+** Consult-Todo Configuration
+#+BEGIN_SRC emacs-lisp
+;;; Consult-Todo Configuration
+
+(defun mcg--setup-consult-todo ()
+  "设置 Consult-todo 集成。"
+  (when (mcg-require-extension "org/consult-todo" 'consult-todo)
+    ;; 绑定快捷键
+    (global-set-key (kbd "C-c n T") 'consult-todo)
+    
+    (mcg-log "Consult-todo configured")))
+
+#+END_SRC
+
+** Org Mode Keybindings
+#+BEGIN_SRC emacs-lisp
+;;; Org Mode Keybindings
+
+(defun mcg--setup-org-extras-keybindings ()
+  "设置 Org 扩展功能快捷键。"
+  (with-eval-after-load 'org
+    (define-key org-mode-map (kbd "C-c n e") 'org-edit-src-code)
+    (define-key org-mode-map (kbd "C-c n h") 'org-insert-heading)
+    (define-key org-mode-map (kbd "C-c n s") 'org-insert-subheading))
+  
+  (mcg-log "Org extras keybindings configured"))
+
+#+END_SRC
+
+** Initialize
+#+BEGIN_SRC emacs-lisp
+;;; Initialize
+
+(mcg--setup-org-download)
+(mcg--setup-org-numbering)
+(mcg--setup-consult-todo)
+(mcg--setup-org-extras-keybindings)
+
+#+END_SRC
+
+** Provide
+#+BEGIN_SRC emacs-lisp
+(provide 'init-org-extras)
+;;; init-org-extras.el ends here
+#+END_SRC

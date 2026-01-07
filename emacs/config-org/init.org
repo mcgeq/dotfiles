@@ -1,304 +1,186 @@
+#+TITLE: MCG Emacs Configuration
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init.el :lexical t
+
 * init.el
 :PROPERTIES:
-:HEADER-ARGS: :tangle (concat temporary-file-directory "init.el") :lexical t
+:HEADER-ARGS: :tangle init.el :lexical t
 :END:
 
 ** Headers
-
 #+BEGIN_SRC emacs-lisp
-  ;;; init.el -- Emacs Configuration Manager -*- lexical-binding: t; -*-
+  ;;; init.el --- MCG Emacs Configuration Entry -*- lexical-binding: t; -*-
 
   ;; Filename: init.el
-  ;; Description: Emacs Configuration - Version 2.0
+  ;; Description: 配置架构入口文件
   ;; Author: mcge <mcgeq@outlook.com>
-  ;; Copyright (C) 2024-2025, mcge, all rights reserved.
-  ;; Create   Date: 2025-01-04 15:00:00
-  ;; Version: 2.0
-  ;; Modified   By: mcgeq <mcgeq@outlook.com>
-  ;; Last Modified: <2025-02-16 Sun 12:00>
-  ;; Keywords: emacs, configuration, startup
-  ;; Compatibility: GNU Emacs 31.0.50+
+  ;; Copyright (C) 2024-2026, mcge, all rights reserved.
+  ;; Create   Date: 2026-01-07
+  ;; Version: 3.0
+  ;; Keywords: configuration, init
+  ;; Compatibility: GNU Emacs 29.0+
 
   ;;; Commentary:
   ;;
-  ;; Emacs配置管理器 - 使用Git Submodules和Org Babel
+  ;; MCG Emacs 配置架构入口文件。
   ;;
-  ;; 配置结构:
-  ;; 1. Core: 核心基础配置
-  ;; 2. UI: 用户界面和主题
-  ;; 3. Editor: 编辑器增强
-  ;; 4. Completion: 代码补全
-  ;; 5. Tools: 工具集
-  ;; 6. Org: Org mode扩展
-  ;; 7. Lang: 语言支持
+  ;; 此文件负责：
+  ;; - 加载核心模块 (core-bootstrap, core-lib, core-modules)
+  ;; - 使用 mcg! 宏声明启用的模块
+  ;; - 设置延迟加载
+  ;; - 加载私有配置
   ;;
-
-  ;;; Installation:
-  ;;
-  ;; 1. 克隆dotfiles仓库并初始化submodules:
-  ;;    git clone --recursive https://github.com/user/dotfiles.git
-  ;;
-  ;; 2. 编译配置:
-  ;;    cd dotfiles/emacs
-  ;;    make generate
-  ;;
-  ;; 3. 加载配置:
-  ;;    emacs -Q -l site-lisp/config/init.el
-
-  ;;; Change log:
-  ;;
-  ;; Version 2.0 (2025-02-16):
-  ;; - 重构为模块化结构
-  ;; - 统一Load-path管理
-  ;; - 添加配置验证系统
-  ;; - 优化启动性能
+  ;; 使用方法：
+  ;; 1. 设置环境变量 MCG_EMACS_CONFIG_DIR 指向配置根目录
+  ;;    或使用默认路径 (Windows: D:/config, Linux/Mac: ~)
+  ;; 2. 在 ~/.emacs.d/init.el 中加载此文件：
+  ;;    (load (expand-file-name "site-lisp/config/init.el" mcg-emacs-dir))
   ;;
 
 #+END_SRC
 
-** Initialize Emacs UI
+** Load Core Modules
 #+BEGIN_SRC emacs-lisp
-;;; 初始化Emacs界面
-;; Hide tools menu vertical-scroll
-(menu-bar-mode 0)
-(tool-bar-mode 0)
-(scroll-bar-mode 0)
+;;; 加载核心模块
+
+;; 核心引导模块 - 定义路径和性能优化
+(require 'core-bootstrap)
+
+;; 核心库模块 - 扩展管理和工具函数
+(require 'core-lib)
+
+;; 模块系统 - mcg! 宏和模块加载
+(require 'core-modules)
+
 #+END_SRC
 
-** Phase 1: Core Infrastructure (Priority 0)
+** Module Declaration
 #+BEGIN_SRC emacs-lisp
-;;; Phase 1: 核心基础设施
+;;; 模块声明
+;;
+;; 使用 mcg! 宏声明启用的模块
+;; 语法:
+;;   :category module  - 启用模块
+;;   :category -module - 禁用模块
+;;
 
-;; 记录启动时间
-(defvar mcg-startup-start-time (current-time))
+(mcg! :ui
+      theme           ; 主题配置 (ef-themes)
+      modeline        ; 状态栏 (awesome-tray)
+      font            ; 字体配置
 
-;; 加载路径和基础配置（最高优先级）
-(require 'init-paths)      ; 路径配置管理
-(require 'init-loadpath)   ; Load-path管理
-(require 'init-verify)     ; 配置验证
+      :editor
+      defaults        ; 编辑器默认配置
+      treesit         ; Tree-sitter 支持
+      navigation      ; 导航 (avy, ace-window)
+      keybindings     ; 快捷键 (markmacro, vundo)
 
-;; 🆕 加载模块声明系统（可选，用于声明式配置）
-(require 'init-modules)    ; 模块声明系统
+      :completion
+      vertico         ; 垂直补全框架
+      yasnippet       ; 代码片段
 
-;; 核心常量和函数
-(require 'init-font)       ; 字体配置
-(require 'init-function)   ; 自定义函数
-(require 'init-builtin)    ; 内置功能增强
+      :tools
+      magit           ; Git 客户端
+      search          ; 搜索工具 (blink-search, color-rg)
+      rime            ; 中文输入法
+      utils           ; 工具集 (auto-save, which-key, recentf, helpful)
+      sort-tab        ; 标签栏
 
-;; 注册已加载的模块
-(mcg-register-loaded-module 'init-paths)
-(mcg-register-loaded-module 'init-loadpath)
-(mcg-register-loaded-module 'init-verify)
-(mcg-register-loaded-module 'init-modules)    ; 🆕
-(mcg-register-loaded-module 'init-font)
-(mcg-register-loaded-module 'init-function)
-(mcg-register-loaded-module 'init-builtin)
+      :input
+      fingertip       ; 结构化编程
+      wraplish        ; 中英文混排
+
+      :org
+      org             ; Org-mode 基础配置
+      org-agenda      ; Agenda 日程管理
+      org-babel       ; Babel 代码执行
+      org-capture     ; Capture 模板和 Hugo 集成
+      org-extras      ; Org 扩展 (download, numbering, consult-todo)
+
+      :docs
+      markdown        ; Markdown 支持
+
+      :lang
+      lsp             ; LSP 统一配置 (lsp-bridge)
+      lsp-common      ; LSP 通用工具
+      rust            ; Rust 开发
+      python          ; Python 开发
+      typescript      ; TypeScript 开发
+      web             ; Web 开发 (Vue, HTML, CSS)
+      cpp             ; C/C++ 开发
+      lua             ; Lua 开发
+      zig             ; Zig 开发
+      )
+
 #+END_SRC
 
-** Phase 2: UI and Themes (Priority 1)
+** Load Modules
 #+BEGIN_SRC emacs-lisp
-;;; Phase 2: 用户界面和主题
+;;; 加载模块
 
-;; 加载UI配置
-(require 'init-ui)
-;; 使用 awesome-tray，不再使用 doom-modeline
-;; (require 'init-doom-modeline)
+;; 立即加载 UI 模块（启动时需要）
+(mcg-load-modules-by-category :ui)
 
-;; 立即加载 awesome-tray，避免启动时显示 mode-line
-(require 'init-awesome-tray)
+;; 立即加载编辑器模块
+(mcg-load-modules-by-category :editor)
 
-(mcg-register-loaded-module 'init-ui)
-(mcg-register-loaded-module 'init-awesome-tray)
-;; (mcg-register-loaded-module 'init-doom-modeline)
+;; 立即加载补全模块
+(mcg-load-modules-by-category :completion)
+
+;; 立即加载工具模块
+(mcg-load-modules-by-category :tools)
+
+;; 立即加载输入模块
+(mcg-load-modules-by-category :input)
+
+;; 立即加载 Org 模块
+(mcg-load-modules-by-category :org)
+
+;; 立即加载文档模块
+(mcg-load-modules-by-category :docs)
+
+;; 设置语言模块延迟加载
+;; LSP 模块立即加载（其他语言模块依赖它）
+(mcg-load-module :lang 'lsp)
+(mcg-load-module :lang 'lsp-common)
+
+;; 设置语言模块的延迟加载
+(mcg-setup-deferred-loading)
+
 #+END_SRC
 
-** Phase 3: Editor Enhancement (Priority 2)
+** Load Private Configuration
 #+BEGIN_SRC emacs-lisp
-;;; Phase 3: 编辑器增强
+;;; 加载私有配置
 
-;; 性能优化：在快速GC模式下加载编辑器配置
-(defmacro with-fast-gc (&rest body)
-  "在快速GC模式下执行代码"
-  `(let ((gc-threshold gc-cons-threshold)
-         (file-handler file-name-handler-alist))
-     (setq gc-cons-threshold most-positive-fixnum
-           file-name-handler-alist nil)
-     (unwind-protect
-         (progn ,@body)
-       (setq gc-cons-threshold gc-threshold
-             file-name-handler-alist file-handler)
-       (garbage-collect))))
+(let ((private-config (expand-file-name "config.el" mcg-private-dir)))
+  (when (file-exists-p private-config)
+    (mcg-log "Loading private configuration...")
+    (load private-config nil t)))
 
-(with-fast-gc
-  ;; 编辑器配置（已迁移到editor目录）
-  (require 'init-line-number)
-  (require 'init-indent)
-  (require 'init-editor)
-  (require 'init-treesit)
-  
-  ;; 🆕 窗口和跳转增强
-  (require 'init-ace-window)  ; 快速窗口切换
-  (require 'init-avy)         ; 快速跳转
-  
-  ;; 工具配置（已迁移到tools目录）
-  (require 'init-sort-tab)
-  (require 'init-auto-save)
-  (require 'init-generic)
-  (require 'init-symbol-overlay)
-  (require 'init-rime)
-  (require 'init-which-key)   ; 🆕 快捷键提示
-  
-  (mcg-register-loaded-module 'init-sort-tab)
-  (mcg-register-loaded-module 'init-auto-save)
-  (mcg-register-loaded-module 'init-line-number)
-  (mcg-register-loaded-module 'init-generic)
-  (mcg-register-loaded-module 'init-editor)
-  (mcg-register-loaded-module 'init-treesit)
-  (mcg-register-loaded-module 'init-symbol-overlay)
-  (mcg-register-loaded-module 'init-rime)
-  (mcg-register-loaded-module 'init-ace-window)  ; 🆕
-  (mcg-register-loaded-module 'init-avy)         ; 🆕
-  (mcg-register-loaded-module 'init-which-key))  ; 🆕
 #+END_SRC
 
-** Phase 4: Completion and Search (Priority 3)
+** Startup Complete
 #+BEGIN_SRC emacs-lisp
-;;; Phase 4: 代码补全和搜索（已迁移到completion目录）
+;;; 启动完成
 
-(require 'init-marginalia)
-(require 'init-vertico)
-(require 'init-embark)
-(require 'init-yasnippet)
+;; 显示模块加载统计
+(add-hook 'emacs-startup-hook
+          (lambda ()
+            (let ((loaded (length mcg-loaded-modules))
+                  (deferred (length mcg-deferred-modules))
+                  (errors (length mcg-module-load-errors)))
+              (mcg-log "Modules: %d loaded, %d deferred, %d errors"
+                       loaded deferred errors)
+              ;; 如果有错误，显示警告
+              (when (> errors 0)
+                (message "⚠️ %d module(s) failed to load. Run M-x mcg-list-modules for details."
+                         errors)))))
 
-(mcg-register-loaded-module 'init-marginalia)
-(mcg-register-loaded-module 'init-vertico)
-(mcg-register-loaded-module 'init-embark)
-(mcg-register-loaded-module 'init-yasnippet)
 #+END_SRC
 
-** Phase 5: Keybindings
-#+BEGIN_SRC emacs-lisp
-;;; Phase 5: 键绑定
-
-;; Keybindings configuration
-(require 'init-keymaps)
-(require 'init-vundo)
-
-;; 工具配置（已迁移到tools目录）
-(require 'init-recentf)
-(require 'init-wraplish)
-(require 'init-fingertip)
-
-(mcg-register-loaded-module 'init-keymaps)
-(mcg-register-loaded-module 'init-vundo)
-(mcg-register-loaded-module 'init-recentf)
-(mcg-register-loaded-module 'init-wraplish)
-(mcg-register-loaded-module 'init-fingertip)
-#+END_SRC
-
-** Phase 6: LSP and Languages (Delayed Loading)
-#+BEGIN_SRC emacs-lisp
-;;; Phase 6: LSP和语言支持（延迟加载）
-
-(defun mcg-load-lang-support ()
-  "加载语言支持"
-  (require 'init-lsp-bridge)
-  ;; 按需加载具体语言
-  (mcg-load-extension "rust-mode")
-  (mcg-load-extension "lua-mode")
-  (mcg-load-extension "web-mode")
-  ;; typescript-mode is built-in for Emacs 29+
-  
-  (require 'lang-rust)
-  (require 'lang-lua)
-  (require 'lang-web-mode)
-  (require 'lang-cpp)
-  (require 'lang-typescript)
-  (require 'lang-python)      ; 🆕 Python 支持
-  
-  (mcg-register-loaded-module 'init-lsp-bridge)
-  (mcg-register-loaded-module 'lang-rust)
-  (mcg-register-loaded-module 'lang-lua)
-  (mcg-register-loaded-module 'lang-web-mode)
-  (mcg-register-loaded-module 'lang-cpp)
-  (mcg-register-loaded-module 'lang-typescript)
-  (mcg-register-loaded-module 'lang-python))     ; 🆕
-
-;; 延迟1秒加载语言支持
-(run-with-timer 1 nil #'mcg-load-lang-support)
-#+END_SRC
-
-** Phase 7: Org and Documentation (Delayed Loading)
-#+BEGIN_SRC emacs-lisp
-;;; Phase 7: Org和文档支持（延迟加载）
-
-(defun mcg-load-org-support ()
-  "加载 Org 和文档支持（使用新的模块化配置系统）
-  
-新的 Org 配置系统特性：
-- 统一变量管理 (mcg-org-*)
-- 模块化加载
-- 智能依赖管理
-- 功能开关控制
-  
-查看状态: M-x mcg-org-show-status
-完整文档: org/README-ORG-CONFIG.org"
-  
-  ;; 工具配置
-  (require 'init-helpful)
-  (require 'init-blink-search)
-  (require 'init-color-rg)
-  
-  ;; 🚀 使用新的 Org 配置加载器
-  ;; 提供统一的变量系统和模块化配置
-  (require 'init-org-loader)
-  (mcg-org-setup-autoload)  ; 自动加载所有 Org 模块
-  
-  ;; 显示加载信息
-  (message "✓ Org mode 新配置系统已加载")
-  (message "  运行 M-x mcg-org-show-status 查看详情")
-  
-  ;; 文档配置
-  (require 'init-markdown)
-  (require 'init-grip-mode)
-  
-  ;; 注册已加载模块
-  (mcg-register-loaded-module 'init-helpful)
-  (mcg-register-loaded-module 'init-blink-search)
-  (mcg-register-loaded-module 'init-color-rg)
-  (mcg-register-loaded-module 'init-org-loader)
-  (mcg-register-loaded-module 'init-markdown)
-  (mcg-register-loaded-module 'init-grip-mode))
-
-;; 延迟2秒加载Org支持
-(run-with-timer 2 nil #'mcg-load-org-support)
-#+END_SRC
-
-** Hooks
-#+BEGIN_SRC emacs-lisp
-;;; 钩子配置
-
-;; 绑定到保存前钩子
-(add-hook 'before-save-hook 'mcg/org-update-file-headers)
-#+END_SRC
-
-** Display Startup Time
-#+BEGIN_SRC emacs-lisp
-;;; 显示启动时间
-
-(defun mcg-display-startup-time ()
-  "显示启动时间"
-  (let ((elapsed (float-time (time-subtract (current-time) mcg-startup-start-time))))
-    (message "Emacs configuration loaded in %.2f seconds" elapsed)))
-
-;; 延迟显示启动时间
-(run-with-timer 3 nil #'mcg-display-startup-time)
-#+END_SRC
-
-** Ends
+** Provide
 #+BEGIN_SRC emacs-lisp
 (provide 'init)
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; init.el ends here
 #+END_SRC
-

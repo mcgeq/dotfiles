@@ -1,0 +1,267 @@
+* init-rime.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle init-rime.el :lexical t
+:END:
+
+** Headers
+#+BEGIN_SRC emacs-lisp
+  ;;; init-rime.el --- Chinese Input Method for MCG Emacs -*- lexical-binding: t; -*-
+
+  ;; Filename: init-rime.el
+  ;; Description: 中文输入法模块（emacs-rime）
+  ;; Author: mcge <mcgeq@outlook.com>
+  ;; Copyright (C) 2024-2026, mcge, all rights reserved.
+  ;; Create   Date: 2026-01-07
+  ;; Version: 3.0
+  ;; Keywords: input-method, rime, chinese
+  ;; Compatibility: GNU Emacs 29.0+
+
+  ;;; Commentary:
+  ;;
+  ;; MCG Emacs 配置架构的中文输入法模块，负责：
+  ;; - emacs-rime 配置
+  ;; - 自动中英文切换
+  ;; - 光标颜色指示
+  ;;
+  ;; 模块元数据:
+  ;; :depends ()
+  ;; :defer t
+  ;;
+
+#+END_SRC
+
+** Dependencies
+#+BEGIN_SRC emacs-lisp
+;;; Dependencies
+
+(require 'core-lib)
+
+#+END_SRC
+
+** Variables
+#+BEGIN_SRC emacs-lisp
+;;; Variables
+
+(defvar mcg-tools-rime-user-data-dir "~/.config/emacs_rime"
+  "Rime 用户数据目录。")
+
+(defvar mcg-tools-rime-show-candidate 'posframe
+  "Rime 候选词显示方式。
+可选值: 'posframe, 'popup, 'minibuffer")
+
+(defvar mcg-tools-rime-posframe-bg "#333333"
+  "Rime posframe 背景颜色。")
+
+(defvar mcg-tools-rime-posframe-fg "#dcdccc"
+  "Rime posframe 前景颜色。")
+
+(defvar mcg-tools-rime-posframe-border-width 10
+  "Rime posframe 边框宽度。")
+
+(defvar mcg-tools-rime-cursor-color "white"
+  "输入中文时的光标颜色。")
+
+(defvar mcg-tools-rime-default-cursor-color nil
+  "默认光标颜色（自动检测）。")
+
+#+END_SRC
+
+** Rime Configuration
+#+BEGIN_SRC emacs-lisp
+;;; Rime Configuration
+
+(defun mcg--setup-rime ()
+  "设置 emacs-rime。"
+  (when (mcg-require-extension "input/rime" 'rime)
+    ;; 加载 popup（可选依赖）
+    (mcg-load-extension "input/popup")
+    (require 'popup nil t)
+    
+    ;; 设置默认输入法
+    (setq default-input-method "rime")
+    
+    ;; 用户数据目录
+    (setq rime-user-data-dir mcg-tools-rime-user-data-dir)
+    
+    ;; 候选词显示方式
+    (setq rime-show-candidate mcg-tools-rime-show-candidate)
+    
+    ;; Posframe 样式
+    (setq rime-posframe-properties
+          (list :background-color mcg-tools-rime-posframe-bg
+                :foreground-color mcg-tools-rime-posframe-fg
+                :internal-border-width mcg-tools-rime-posframe-border-width))
+    
+    (mcg-log "emacs-rime configured")))
+
+#+END_SRC
+
+** Rime Keybindings
+#+BEGIN_SRC emacs-lisp
+;;; Rime Keybindings
+
+(defun mcg--setup-rime-keybindings ()
+  "设置 Rime 键绑定。"
+  (when (and (featurep 'rime) (boundp 'rime-active-mode-map))
+    (define-key rime-active-mode-map (kbd "M-DEL") 'rime--escape)
+    (define-key rime-active-mode-map (kbd "C-w") 'rime--escape)
+    (mcg-log "Rime keybindings configured")))
+
+#+END_SRC
+
+** Auto Switch Predicates
+#+BEGIN_SRC emacs-lisp
+;;; Auto Switch Predicates
+
+(defun mcg--setup-rime-predicates ()
+  "设置 Rime 自动切换规则。"
+  (when (featurep 'rime)
+    (setq rime-disable-predicates
+          '(rime-predicate-after-ascii-char-p
+            rime-predicate-evil-mode-p
+            rime-predicate-punctuation-after-space-cc-p
+            rime-predicate-punctuation-after-ascii-p
+            rime-predicate-punctuation-line-begin-p
+            rime-predicate-org-in-src-block-p
+            rime-predicate-prog-in-code-p
+            rime-predicate-org-latex-mode-p
+            rime-predicate-space-after-cc-p
+            rime-predicate-current-uppercase-letter-p
+            rime-predicate-tex-math-or-command-p))
+    (mcg-log "Rime predicates configured")))
+
+#+END_SRC
+
+** Cursor Color Indicator
+#+BEGIN_SRC emacs-lisp
+;;; Cursor Color Indicator
+
+(defun mcg--get-frame-cursor-color ()
+  "获取当前 frame 的光标颜色。"
+  (frame-parameter nil 'cursor-color))
+
+(defun mcg--change-cursor-color-on-input-method ()
+  "根据输入法状态改变光标颜色。"
+  (when (featurep 'rime)
+    (set-cursor-color
+     (if (and (rime--should-enable-p)
+              (not (rime--should-inline-ascii-p))
+              current-input-method)
+         mcg-tools-rime-cursor-color
+       (or mcg-tools-rime-default-cursor-color "black")))))
+
+(defun mcg--setup-rime-cursor-color ()
+  "设置 Rime 光标颜色指示。"
+  (when (featurep 'rime)
+    ;; 保存默认光标颜色
+    (setq mcg-tools-rime-default-cursor-color (mcg--get-frame-cursor-color))
+    
+    ;; 切换输入法后改变光标颜色
+    (advice-add 'toggle-input-method :after #'mcg--change-cursor-color-on-input-method)
+    
+    ;; 每次命令后检查
+    (add-hook 'post-command-hook #'mcg--change-cursor-color-on-input-method)
+    
+    (mcg-log "Rime cursor color indicator configured")))
+
+#+END_SRC
+
+** Commands
+#+BEGIN_SRC emacs-lisp
+;;; Commands
+
+(defun mcg/rime-switch-manually ()
+  "手动切换到 Rime 输入法。"
+  (interactive)
+  (when (featurep 'rime)
+    (rime-force-enable)))
+
+(defun mcg/rime-switch-auto ()
+  "切换到自动模式。"
+  (interactive)
+  (when (featurep 'rime)
+    (rime-disable)))
+
+(defun mcg/rime-toggle-show-candidate ()
+  "切换候选词显示方式。"
+  (interactive)
+  (when (featurep 'rime)
+    (setq rime-show-candidate
+          (pcase rime-show-candidate
+            ('posframe 'popup)
+            ('popup 'minibuffer)
+            ('minibuffer 'posframe)
+            (_ 'posframe)))
+    (message "Rime show candidate: %s" rime-show-candidate)))
+
+(defun mcg/rime-sync ()
+  "同步 Rime 用户数据。"
+  (interactive)
+  (when (featurep 'rime)
+    (rime-sync)
+    (message "Rime sync done")))
+
+(defun mcg/rime-sync-with-ibus ()
+  "同步 ibus 和 emacs-rime 用户数据库。"
+  (interactive)
+  (when (featurep 'rime)
+    (rime-sync)
+    (start-process-shell-command
+     ""
+     nil
+     "ibus exit;cd ~/.config/ibus/rime; rime_dict_manager -s;ibus-daemon --xim -d -r")
+    (message "ibus-rime and emacs rime sync done")))
+
+#+END_SRC
+
+** Symbol to Rime
+#+BEGIN_SRC emacs-lisp
+;;; Symbol to Rime
+
+(defun mcg/translate-symbol-to-rime ()
+  "将光标前的英文字符转换为 Rime 输入。"
+  (interactive)
+  (when (featurep 'rime)
+    (let* ((end (point))
+           (beg (+ end (skip-chars-backward "a-z")))
+           (input (buffer-substring beg end)))
+      (delete-region beg end)
+      (unless current-input-method
+        (toggle-input-method))
+      (dolist (c (string-to-list input))
+        (rime-lib-process-key c 0))
+      (rime--redisplay))))
+
+(defun mcg/convert-code-or-disable-rime ()
+  "转换代码或禁用 Rime。"
+  (interactive)
+  (when (featurep 'rime)
+    (let ((str-before-1 (if (> (point) (point-min))
+                            (buffer-substring-no-properties (1- (point)) (point))
+                          "")))
+      (cond ((string-match-p "[a-z]" str-before-1)
+             (mcg/translate-symbol-to-rime))
+            (t (toggle-input-method))))))
+
+#+END_SRC
+
+** Initialize
+#+BEGIN_SRC emacs-lisp
+;;; Initialize
+
+;; 设置 Rime
+(mcg--setup-rime)
+
+;; 在 rime 加载后设置其他配置
+(with-eval-after-load 'rime
+  (mcg--setup-rime-keybindings)
+  (mcg--setup-rime-predicates)
+  (mcg--setup-rime-cursor-color))
+
+#+END_SRC
+
+** Provide
+#+BEGIN_SRC emacs-lisp
+(provide 'init-rime)
+;;; init-rime.el ends here
+#+END_SRC
