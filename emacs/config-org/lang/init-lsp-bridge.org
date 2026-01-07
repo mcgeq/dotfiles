@@ -55,12 +55,14 @@
   (require 'lazy-load)
   (require 'lsp-bridge)
   (require 'lsp-bridge-jdtls)
+  (require 'init-lsp-common)  ;; 通用 LSP 配置和快捷键
   
   ;; Language-specific configurations
   (require 'lang-cpp)
   (require 'lang-rust)
-  (require 'lang-web-mode)  ;; Required for Vue files
-  (require 'lang-typescript)  ;; Required for .ts/.tsx files
+  (require 'lang-python)     ;; Python with ty + ruff
+  (require 'lang-web-mode)   ;; Required for Vue files
+  (require 'lang-typescript) ;; Required for .ts/.tsx files
   ;; Uncomment if you need these languages:
   ;;(require 'lang-java)
   ;;(require 'lang-css-mode)
@@ -236,7 +238,13 @@
     ;; 选择跳转方式：
     ;; - "vue-full" = TypeScript 跳转（更可靠）
     ;; - "vue-full-volar" = Volar 跳转（需要正确配置 tsdk）
-    (add-to-list 'lsp-bridge-multi-lang-server-extension-list '(("vue") . "vue-full"))))
+    (add-to-list 'lsp-bridge-multi-lang-server-extension-list '(("vue") . "vue-full"))
+    
+    ;; Python with ty + ruff (multi-server configuration)
+    ;; ty: 类型检查器/LSP (补全、跳转、类型检查)
+    ;; ruff: linter/formatter (诊断、格式化、代码修复)
+    (add-to-list 'lsp-bridge-multi-lang-server-extension-list '(("py") . "python-ty-ruff"))
+    (add-to-list 'lsp-bridge-multi-lang-server-extension-list '(("pyi") . "python-ty-ruff"))))
   
   ;; Enable global lsp-bridge mode
   (global-lsp-bridge-mode)

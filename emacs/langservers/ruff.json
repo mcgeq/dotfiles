@@ -1,0 +1,23 @@
+{
+  "name": "ruff",
+  "languageId": "python",
+  "command": ["ruff", "server"],
+  "support_features": [
+    "diagnostics",
+    "formatting",
+    "code_action",
+    "hover"
+  ],
+  "initializationOptions": {
+    "settings": {
+      "lint": {
+        "enable": true
+      },
+      "format": {
+        "enable": true
+      },
+      "organizeImports": true,
+      "fixAll": true
+    }
+  }
+}

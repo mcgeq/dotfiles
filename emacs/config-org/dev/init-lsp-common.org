@@ -52,28 +52,28 @@
 
 (defun mcg-lsp-setup-keybindings ()
   "Setup common LSP keybindings."
-  (when (bound-and-p 'lsp-bridge-mode)
-    ;; Navigation
-    (local-set-key (kbd "M-.") #'lsp-bridge-find-def)
-    (local-set-key (kbd "M-,") #'lsp-bridge-find-def-return)
-    (local-set-key (kbd "M-?") #'lsp-bridge-find-references)
-    
-    ;; Documentation
-    (local-set-key (kbd "C-h .") #'lsp-bridge-lookup-documentation)
-    (local-set-key (kbd "C-h ,") #'lsp-bridge-show-signature)
-    
-    ;; Refactoring
-    (local-set-key (kbd "C-c r r") #'lsp-bridge-rename)
-    (local-set-key (kbd "C-c r i") #'lsp-bridge-code-action)
-    (local-set-key (kbd "C-c r f") #'lsp-bridge-code-format)
-    
-    ;; Diagnostics (M-g prefix - standard Emacs "goto" prefix)
-    (local-set-key (kbd "M-g n") #'lsp-bridge-diagnostic-jump-next)
-    (local-set-key (kbd "M-g p") #'lsp-bridge-diagnostic-jump-prev)
-    (local-set-key (kbd "M-g l") #'lsp-bridge-diagnostic-list)
-    
-    ;; Workspace symbols (避免占用 C-c w 前缀)
-    (local-set-key (kbd "C-c r s") #'lsp-bridge-workspace-list-symbols)))
+  ;; Navigation
+  (local-set-key (kbd "M-.") #'lsp-bridge-find-def)
+  (local-set-key (kbd "M-,") #'lsp-bridge-find-def-return)
+  (local-set-key (kbd "M-?") #'lsp-bridge-find-references)
+  
+  ;; Documentation
+  (local-set-key (kbd "C-h .") #'lsp-bridge-lookup-documentation)
+  (local-set-key (kbd "C-h ,") #'lsp-bridge-show-signature)
+  
+  ;; Refactoring
+  (local-set-key (kbd "C-c r r") #'lsp-bridge-rename)
+  (local-set-key (kbd "C-c r a") #'lsp-bridge-code-action)  ;; a = action
+  (local-set-key (kbd "C-c r f") #'lsp-bridge-code-format)
+  (local-set-key (kbd "C-c r i") #'mcg-lsp-organize-imports) ;; i = imports
+  
+  ;; Diagnostics (M-g prefix - standard Emacs "goto" prefix)
+  (local-set-key (kbd "M-g n") #'lsp-bridge-diagnostic-jump-next)
+  (local-set-key (kbd "M-g p") #'lsp-bridge-diagnostic-jump-prev)
+  (local-set-key (kbd "M-g l") #'lsp-bridge-diagnostic-list)
+  
+  ;; Workspace symbols (避免占用 C-c w 前缀)
+  (local-set-key (kbd "C-c r s") #'lsp-bridge-workspace-list-symbols))
 
 ;; 自动设置快捷键
 (add-hook 'lsp-bridge-mode-hook #'mcg-lsp-setup-keybindings)
@@ -92,11 +92,30 @@
     (message "LSP not active in current buffer")))
 
 (defun mcg-lsp-organize-imports ()
-  "Organize imports using LSP."
+  "Organize imports based on current major mode."
   (interactive)
-  (when (and (fboundp 'lsp-bridge-code-action)
-             lsp-bridge-mode)
-    (lsp-bridge-code-action "source.organizeImports")))
+  (cond
+   ;; Python: 使用 ruff
+   ((member major-mode '(python-mode python-ts-mode))
+    (if (executable-find "ruff")
+        (let ((file (buffer-file-name)))
+          (when file
+            (save-buffer)
+            (if (zerop (call-process "ruff" nil nil nil "check" "--select" "I" "--fix" file))
+                (progn
+                  (revert-buffer t t t)
+                  (message "Sorted imports with ruff"))
+              (message "ruff: no import changes needed"))))
+      (message "ruff not found")))
+   ;; Rust: 使用 rustfmt (已包含在格式化中)
+   ((member major-mode '(rust-mode rust-ts-mode))
+    (lsp-bridge-code-format)
+    (message "Rust imports organized via rustfmt"))
+   ;; 其他语言: 尝试 LSP code action
+   ((bound-and-true-p lsp-bridge-mode)
+    (lsp-bridge-code-action))
+   (t
+    (message "No import organizer available for this mode"))))
 
 (defun mcg-lsp-show-diagnostics-summary ()
   "Show diagnostics summary for current project."
@@ -164,26 +183,43 @@
 
 (defvar mcg-lsp-format-on-save-modes
   '(python-mode
+    python-ts-mode
     rust-mode
+    rust-ts-mode
     zig-mode
+    zig-ts-mode
     c-mode
+    c-ts-mode
     c++-mode
+    c++-ts-mode
     typescript-mode
     typescript-ts-mode
+    tsx-ts-mode
     js-mode
     js-ts-mode)
   "Modes where format-on-save is enabled.")
+
+;; 需要整理 imports 的模式
+(defvar mcg-lsp-organize-imports-modes
+  '(python-mode
+    python-ts-mode
+    typescript-mode
+    typescript-ts-mode
+    tsx-ts-mode
+    js-mode
+    js-ts-mode)
+  "Modes where organize-imports on save is enabled.")
 
 (defvar mcg-lsp-format-on-save-enabled t
   "Whether format-on-save is globally enabled.")
 
 (defun mcg-lsp-format-on-save ()
-  "Format buffer on save if appropriate."
+  "Format buffer and organize imports on save if appropriate."
   (when (and mcg-lsp-format-on-save-enabled
-             (member major-mode mcg-lsp-format-on-save-modes)
-             (bound-and-p 'lsp-bridge-mode)
-             lsp-bridge-mode)
-    (lsp-bridge-code-format)))
+             (bound-and-true-p lsp-bridge-mode))
+    ;; 格式化代码 (lsp-bridge 会调用对应的 formatter)
+    (when (member major-mode mcg-lsp-format-on-save-modes)
+      (lsp-bridge-code-format))))
 
 (defun mcg-lsp-toggle-format-on-save ()
   "Toggle format-on-save globally."
@@ -207,8 +243,8 @@
 (defun mcg-lsp-show-server-status ()
   "Show status of all LSP servers."
   (interactive)
-  (let ((servers '(("Python (pyright)" . "pyright")
-                   ("Python (pylsp)" . "pylsp")
+  (let ((servers '(("Python (ty)" . "ty")
+                   ("Python (ruff)" . "ruff")
                    ("TypeScript" . "typescript-language-server")
                    ("Rust" . "rust-analyzer")
                    ("Zig" . "zls")
@@ -227,7 +263,8 @@
                            "✗ Not found")))))
       (princ "\n═══════════════════════════════════\n")
       (princ "\nInstallation instructions:\n")
-      (princ "  Python:     pip install pyright\n")
+      (princ "  Python (ty):   uv tool install ty\n")
+      (princ "  Python (ruff): uv tool install ruff\n")
       (princ "  TypeScript: npm install -g typescript-language-server\n")
       (princ "  Rust:       rustup component add rust-analyzer\n")
       (princ "  Zig:        Download from github.com/zigtools/zls\n")

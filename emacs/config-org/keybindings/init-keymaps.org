@@ -139,8 +139,9 @@
   
   ;; Code actions (C-c r prefix for refactoring)
   (global-set-key (kbd "C-c r r") 'lsp-bridge-rename)
-  (global-set-key (kbd "C-c r i") 'lsp-bridge-code-action)
+  (global-set-key (kbd "C-c r a") 'lsp-bridge-code-action)  ;; a = action
   (global-set-key (kbd "C-c r f") 'lsp-bridge-code-format)
+  ;; C-c r i 在 init-lsp-common.org 的 mcg-lsp-setup-keybindings 中设置
   
   ;; Diagnostics (M-g prefix - standard Emacs "goto" prefix)
   (global-set-key (kbd "M-g n") 'lsp-bridge-diagnostic-jump-next)

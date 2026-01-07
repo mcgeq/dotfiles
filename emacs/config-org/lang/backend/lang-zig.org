@@ -87,7 +87,7 @@
 
 ;; 快捷键
 (with-eval-after-load 'zig-mode
-  (define-key zig-mode-map (kbd "C-c f") #'mcg-zig-format-buffer))
+  (define-key zig-mode-map (kbd "C-c r f") #'mcg-zig-format-buffer))
 #+END_SRC
 
 ** Build System
@@ -231,7 +231,7 @@
 #+BEGIN_SRC emacs-lisp
 ;;; 快捷键总结
 
-;; C-c f     - 格式化代码 (zig fmt)
+;; C-c r f   - 格式化代码 (zig fmt)
 ;; C-c C-c   - 构建项目 (zig build)
 ;; C-c C-r   - 构建并运行 (zig build run)
 ;; C-c r     - 运行当前文件

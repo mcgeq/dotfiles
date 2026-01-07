@@ -8,17 +8,21 @@
   ;;; lang-python.el -- Python Language Support -*- lexical-binding: t; -*-
   
   ;; Author: mcge <mcgeq@outlook.com>
-  ;; Version: 1.0
-  ;; Keywords: python, lsp, development
+  ;; Version: 2.0
+  ;; Keywords: python, lsp, ty, ruff, development
+  ;; Modified: <2025-01-07 Wed>
   
   ;;; Commentary:
   ;; Comprehensive Python development support with:
-  ;; - LSP (pyright/pylsp)
-  ;; - Formatting (black)
-  ;; - Linting (ruff)
+  ;; - LSP: ty (类型检查器，Astral 出品，与 ruff 同源)
+  ;; - Linting & Formatting: ruff (超快的 Python linter/formatter)
   ;; - Virtual environment management
   ;; - Testing (pytest)
   ;; - REPL integration
+  ;;
+  ;; 工具链说明:
+  ;; - ty: Astral 出品的 Python 类型检查器，提供补全、跳转、类型检查
+  ;; - ruff: Astral 出品的超快 Python linter/formatter，替代 black/isort/flake8
 #+END_SRC
 
 ** Python Mode Configuration
@@ -32,6 +36,10 @@
 ;; 使用 Python 3
 (setq python-shell-interpreter "python3"
       python-shell-interpreter-args "-i")
+
+;; 使用 python-ts-mode (如果可用)
+(when (treesit-available-p)
+  (add-to-list 'major-mode-remap-alist '(python-mode . python-ts-mode)))
 #+END_SRC
 
 ** Virtual Environment
@@ -40,7 +48,8 @@
 
 (defun mcg-python-setup-venv ()
   "自动检测并激活Python虚拟环境"
-  (when-let* ((project-root (project-root (project-current)))
+  (when-let* ((project-root (when (project-current)
+                              (project-root (project-current))))
               (venv-dirs '(".venv" "venv" ".virtualenv" "env"))
               (venv-path (seq-find 
                           (lambda (dir)
@@ -53,55 +62,150 @@
 
 ;; 自动激活虚拟环境
 (add-hook 'python-mode-hook #'mcg-python-setup-venv)
+(add-hook 'python-ts-mode-hook #'mcg-python-setup-venv)
 #+END_SRC
 
-** LSP Configuration
+** LSP Configuration (ty + ruff)
 #+BEGIN_SRC emacs-lisp
-;;; LSP配置 (使用lsp-bridge)
+;;; LSP配置 (使用 lsp-bridge + ty + ruff)
+;;
+;; ty: 类型检查器，提供:
+;;   - 代码补全
+;;   - 跳转定义/引用
+;;   - 类型检查诊断
+;;   - 悬停文档
+;;   - 重命名
+;;
+;; ruff: linter/formatter，提供:
+;;   - 代码诊断 (lint)
+;;   - 代码格式化
+;;   - 代码修复 (code action)
+;;   - 自动整理 imports
+
+;; lsp-bridge 会通过 multiservers/python-ty-ruff.json 配置
+;; 自动使用 ty 和 ruff 的组合
 
 (defun mcg-python-lsp-setup ()
-  "配置Python LSP"
-  ;; lsp-bridge会自动检测pyright或pylsp
-  ;; 优先级: pyright > pylsp
-  (when (derived-mode-p 'python-mode)
-    (lsp-bridge-mode 1)))
+  "配置Python LSP (ty + ruff)"
+  (when (or (derived-mode-p 'python-mode)
+            (derived-mode-p 'python-ts-mode))
+    ;; lsp-bridge-mode 会自动启用
+    ;; 多服务器配置在 init-lsp-bridge.org 中设置
+    t))
 
 (add-hook 'python-mode-hook #'mcg-python-lsp-setup)
+(add-hook 'python-ts-mode-hook #'mcg-python-lsp-setup)
 #+END_SRC
 
-** Formatting
+** Formatting with Ruff
 #+BEGIN_SRC emacs-lisp
-;;; 代码格式化
+;;; 代码格式化 (使用 ruff)
 
 (defun mcg-python-format-buffer ()
-  "使用black格式化Python代码"
+  "使用 ruff 格式化 Python 代码"
   (interactive)
-  (when (executable-find "black")
-    (let ((output-buffer (get-buffer-create "*black output*"))
-          (error-buffer (get-buffer-create "*black errors*")))
-      (if (zerop (call-process-region 
-                  (point-min) (point-max)
-                  "black" nil (list output-buffer error-buffer) nil
-                  "--quiet" "-"))
-          (progn
-            (replace-buffer-contents output-buffer)
-            (message "Formatted with black"))
-        (display-buffer error-buffer)
-        (message "Black formatting failed")))))
-
-;; 可选：保存时自动格式化
-(defun mcg-python-format-on-save ()
-  "保存时自动格式化"
-  (when (and (eq major-mode 'python-mode)
-             (executable-find "black"))
-    (mcg-python-format-buffer)))
-
-;; 取消注释以启用保存时格式化
-;; (add-hook 'before-save-hook #'mcg-python-format-on-save)
+  (if (and (bound-and-true-p lsp-bridge-mode)
+           (executable-find "ruff"))
+      ;; 使用 lsp-bridge 的格式化功能 (会调用 ruff)
+      (lsp-bridge-code-format)
+    ;; 回退到直接调用 ruff
+    (when (executable-find "ruff")
+      (let ((temp-file (make-temp-file "ruff-format" nil ".py")))
+        (unwind-protect
+            (progn
+              (write-region (point-min) (point-max) temp-file nil 'silent)
+              (when (zerop (call-process "ruff" nil nil nil "format" temp-file))
+                (let ((formatted (with-temp-buffer
+                                   (insert-file-contents temp-file)
+                                   (buffer-string))))
+                  (erase-buffer)
+                  (insert formatted)
+                  (message "Formatted with ruff"))))
+          (delete-file temp-file))))))
 
 ;; 快捷键
 (with-eval-after-load 'python
-  (define-key python-mode-map (kbd "C-c f") #'mcg-python-format-buffer))
+  (define-key python-mode-map (kbd "C-c r f") #'mcg-python-format-buffer))
+(with-eval-after-load 'python-ts-mode
+  (when (boundp 'python-ts-mode-map)
+    (define-key python-ts-mode-map (kbd "C-c r f") #'mcg-python-format-buffer)))
+#+END_SRC
+
+** Linting with Ruff
+#+BEGIN_SRC emacs-lisp
+;;; 代码检查 (使用 ruff)
+
+(defun mcg-python-lint-buffer ()
+  "使用 ruff 检查当前 buffer"
+  (interactive)
+  (when (executable-find "ruff")
+    (compile (format "ruff check %s" (buffer-file-name)))))
+
+(defun mcg-python-fix-buffer ()
+  "使用 ruff 自动修复当前 buffer"
+  (interactive)
+  (when (executable-find "ruff")
+    (let ((file (buffer-file-name)))
+      (when (zerop (call-process "ruff" nil nil nil "check" "--fix" file))
+        (revert-buffer t t t)
+        (message "Fixed with ruff")))))
+
+;; 快捷键
+(with-eval-after-load 'python
+  (define-key python-mode-map (kbd "C-c r l") #'mcg-python-lint-buffer)
+  (define-key python-mode-map (kbd "C-c r x") #'mcg-python-fix-buffer))
+(with-eval-after-load 'python-ts-mode
+  (when (boundp 'python-ts-mode-map)
+    (define-key python-ts-mode-map (kbd "C-c r l") #'mcg-python-lint-buffer)
+    (define-key python-ts-mode-map (kbd "C-c r x") #'mcg-python-fix-buffer)))
+#+END_SRC
+
+** Import Optimization with Ruff
+#+BEGIN_SRC emacs-lisp
+;;; Import优化 (使用 ruff)
+;; 注意: C-c r i 快捷键已在 init-lsp-common.org 中统一配置
+;; mcg-lsp-organize-imports 会根据 major-mode 自动选择正确的工具
+
+(defun mcg-python-sort-imports ()
+  "使用 ruff 整理 imports (供 mcg-lsp-organize-imports 调用)"
+  (interactive)
+  (if (executable-find "ruff")
+      (let ((file (buffer-file-name)))
+        (when file
+          (save-buffer)
+          (if (zerop (call-process "ruff" nil nil nil "check" "--select" "I" "--fix" file))
+              (progn
+                (revert-buffer t t t)
+                (message "Sorted imports with ruff"))
+            (message "ruff: no import changes needed"))))
+    (message "ruff not found. Install with: uv tool install ruff")))
+#+END_SRC
+
+** Type Checking with ty
+#+BEGIN_SRC emacs-lisp
+;;; 类型检查 (使用 ty)
+
+(defun mcg-python-type-check ()
+  "使用 ty 进行类型检查"
+  (interactive)
+  (if (executable-find "ty")
+      (compile (format "ty check %s" (buffer-file-name)))
+    (message "ty not found. Install with: uv tool install ty")))
+
+(defun mcg-python-type-check-project ()
+  "对整个项目进行类型检查"
+  (interactive)
+  (if (executable-find "ty")
+      (let ((default-directory (or (when (project-current)
+                                     (project-root (project-current)))
+                                   default-directory)))
+        (compile "ty check ."))
+    (message "ty not found. Install with: uv tool install ty")))
+
+;; 快捷键
+(with-eval-after-load 'python
+  (define-key python-mode-map (kbd "C-c c") #'mcg-python-type-check)
+  (define-key python-mode-map (kbd "C-c C") #'mcg-python-type-check-project))
 #+END_SRC
 
 ** Testing Support
@@ -124,10 +228,22 @@
         (compile (format "pytest -v %s" (buffer-file-name))))
     (message "pytest not found")))
 
+(defun mcg-python-run-pytest-function ()
+  "运行光标所在的测试函数"
+  (interactive)
+  (if (executable-find "pytest")
+      (let* ((func-name (python-info-current-defun))
+             (file (buffer-file-name)))
+        (if func-name
+            (compile (format "pytest -v %s::%s" file func-name))
+          (message "No function at point")))
+    (message "pytest not found")))
+
 ;; 快捷键
 (with-eval-after-load 'python
   (define-key python-mode-map (kbd "C-c t t") #'mcg-python-run-pytest)
-  (define-key python-mode-map (kbd "C-c t f") #'mcg-python-run-pytest-file))
+  (define-key python-mode-map (kbd "C-c t f") #'mcg-python-run-pytest-file)
+  (define-key python-mode-map (kbd "C-c t d") #'mcg-python-run-pytest-function))
 #+END_SRC
 
 ** REPL Integration
@@ -158,35 +274,14 @@
 
 (defun mcg-python-project-p ()
   "检测是否为Python项目"
-  (when-let ((project-root (project-root (project-current))))
+  (when-let ((project-root (when (project-current)
+                             (project-root (project-current)))))
     (or (file-exists-p (expand-file-name "setup.py" project-root))
         (file-exists-p (expand-file-name "pyproject.toml" project-root))
         (file-exists-p (expand-file-name "requirements.txt" project-root))
         (file-exists-p (expand-file-name "Pipfile" project-root))
-        (file-exists-p (expand-file-name "poetry.lock" project-root)))))
-#+END_SRC
-
-** Import Optimization
-#+BEGIN_SRC emacs-lisp
-;;; Import优化
-
-(defun mcg-python-sort-imports ()
-  "使用isort整理imports"
-  (interactive)
-  (when (executable-find "isort")
-    (let ((output-buffer (get-buffer-create "*isort output*")))
-      (if (zerop (call-process-region 
-                  (point-min) (point-max)
-                  "isort" nil output-buffer nil
-                  "-"))
-          (progn
-            (replace-buffer-contents output-buffer)
-            (message "Sorted imports with isort"))
-        (message "isort failed")))))
-
-;; 快捷键
-(with-eval-after-load 'python
-  (define-key python-mode-map (kbd "C-c i") #'mcg-python-sort-imports))
+        (file-exists-p (expand-file-name "poetry.lock" project-root))
+        (file-exists-p (expand-file-name "uv.lock" project-root)))))
 #+END_SRC
 
 ** Documentation
@@ -210,19 +305,66 @@
   (define-key python-mode-map (kbd "C-c d") #'mcg-python-insert-docstring))
 #+END_SRC
 
+** Tool Status Check
+#+BEGIN_SRC emacs-lisp
+;;; 工具状态检查
+
+(defun mcg-python-check-tools ()
+  "检查 Python 开发工具是否已安装"
+  (interactive)
+  (let ((tools '(("ty" . "uv tool install ty")
+                 ("ruff" . "uv tool install ruff")
+                 ("pytest" . "uv pip install pytest")
+                 ("python3" . "系统安装"))))
+    (with-help-window "*Python Tools Status*"
+      (princ "═══════════════════════════════════════════\n")
+      (princ "   Python 开发工具状态\n")
+      (princ "═══════════════════════════════════════════\n\n")
+      (dolist (tool tools)
+        (let ((name (car tool))
+              (install-cmd (cdr tool)))
+          (princ (format "%-12s %s\n" 
+                         name
+                         (if (executable-find name)
+                             "✓ 已安装"
+                           (format "✗ 未安装 (%s)" install-cmd))))))
+      (princ "\n═══════════════════════════════════════════\n")
+      (princ "\n推荐安装命令:\n")
+      (princ "  uv tool install ty\n")
+      (princ "  uv tool install ruff\n")
+      (princ "  uv pip install pytest\n")
+      (princ "\n或使用 pip:\n")
+      (princ "  pip install ty ruff pytest\n"))))
+#+END_SRC
+
 ** Keybindings Summary
 #+BEGIN_SRC emacs-lisp
 ;;; 快捷键总结
 
-;; C-c f     - 格式化代码 (black)
-;; C-c i     - 整理imports (isort)
-;; C-c d     - 插入docstring
+;; 重构 (C-c r 前缀):
+;; C-c r f   - 格式化代码 (ruff format)
+;; C-c r l   - 检查代码 (ruff check)
+;; C-c r x   - 自动修复 (ruff --fix)
+;; C-c r i   - 整理 imports (ruff)
+;; C-c r r   - 重命名 (lsp-bridge)
+;;
+;; 类型检查:
+;; C-c c     - 类型检查当前文件 (ty)
+;; C-c C     - 类型检查整个项目 (ty)
+;;
+;; 测试:
 ;; C-c t t   - 运行所有测试 (pytest)
 ;; C-c t f   - 运行当前文件测试
+;; C-c t d   - 运行当前函数测试
+;;
+;; REPL:
 ;; C-c C-r   - 发送选中区域到REPL
 ;; C-c C-b   - 发送整个buffer到REPL
 ;; C-c C-z   - 切换到REPL (内置)
 ;; C-c C-c   - 发送当前定义到REPL (内置)
+;;
+;; 其他:
+;; C-c d     - 插入docstring
 #+END_SRC
 
 ** Auto-load Configuration
@@ -231,34 +373,69 @@
 
 ;; 确保Python文件自动启用此配置
 (add-to-list 'auto-mode-alist '("\\.py\\'" . python-mode))
+(add-to-list 'auto-mode-alist '("\\.pyi\\'" . python-mode))
 (add-to-list 'interpreter-mode-alist '("python3" . python-mode))
 (add-to-list 'interpreter-mode-alist '("python" . python-mode))
-
-;; Jupyter notebook支持
-(add-to-list 'auto-mode-alist '("\\.ipynb\\'" . python-mode))
 #+END_SRC
+
 
 ** Setup Instructions
 #+BEGIN_SRC emacs-lisp
 ;;; 安装说明
 
-;; 1. 安装Python LSP服务器 (二选一):
-;;    pip install pyright         # 推荐，速度快
-;;    pip install python-lsp-server[all]
+;; ═══════════════════════════════════════════
+;; Python 开发环境配置 (ty + ruff)
+;; ═══════════════════════════════════════════
 ;;
-;; 2. 安装格式化工具:
-;;    pip install black           # 代码格式化
-;;    pip install isort           # import排序
+;; 1. 安装 ty (类型检查器/LSP):
+;;    uv tool install ty
+;;    # 或
+;;    pip install ty
 ;;
-;; 3. 安装linter (可选):
-;;    pip install ruff            # 现代化linter，速度快
-;;    pip install pylint          # 传统linter
+;; 2. 安装 ruff (linter/formatter):
+;;    uv tool install ruff
+;;    # 或
+;;    pip install ruff
 ;;
-;; 4. 安装测试工具 (可选):
-;;    pip install pytest          # 测试框架
+;; 3. 安装测试工具 (可选):
+;;    uv pip install pytest
 ;;
-;; 推荐一次性安装:
-;;    pip install pyright black isort ruff pytest
+;; 推荐安装:
+;;    uv tool install ty
+;;    uv tool install ruff
+;;    uv pip install pytest
+;;
+;; ═══════════════════════════════════════════
+;; 工具说明
+;; ═══════════════════════════════════════════
+;;
+;; ty (Astral):
+;;   - 超快的 Python 类型检查器
+;;   - 提供 LSP 功能: 补全、跳转、悬停、重命名等
+;;   - 与 ruff 同源，配合使用效果最佳
+;;
+;; ruff (Astral):
+;;   - 超快的 Python linter (替代 flake8/pylint)
+;;   - 超快的 Python formatter (替代 black)
+;;   - 自动整理 imports (替代 isort)
+;;   - 支持 LSP 模式
+;;
+;; ═══════════════════════════════════════════
+;; 项目配置 (pyproject.toml)
+;; ═══════════════════════════════════════════
+;;
+;; [tool.ruff]
+;; line-length = 88
+;; target-version = "py311"
+;;
+;; [tool.ruff.lint]
+;; select = ["E", "F", "I", "UP", "B", "SIM"]
+;;
+;; [tool.ruff.format]
+;; quote-style = "double"
+;;
+;; [tool.ty]
+;; python-version = "3.11"
 #+END_SRC
 
 ** Ends
