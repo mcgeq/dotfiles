@@ -52,6 +52,13 @@
 ;; 模块系统 - mcg! 宏和模块加载
 (require 'core-modules)
 
+;; 自动化模块 - 自动 tangle 和 autoload
+(require 'core-autoload)
+
+;; 设置保存时自动 tangle（仅在交互模式下）
+(when (not noninteractive)
+  (mcg-setup-auto-tangle))
+
 #+END_SRC
 
 ** Module Declaration

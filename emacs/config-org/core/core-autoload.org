@@ -1,0 +1,337 @@
+* core-autoload.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle core-autoload.el :lexical t
+:END:
+
+** Headers
+#+BEGIN_SRC emacs-lisp
+  ;;; core-autoload.el --- Auto-load and Auto-tangle for MCG Emacs -*- lexical-binding: t; -*-
+
+  ;; Filename: core-autoload.el
+  ;; Description: 自动加载和自动 tangle 支持
+  ;; Author: mcge <mcgeq@outlook.com>
+  ;; Copyright (C) 2024-2026, mcge, all rights reserved.
+  ;; Create   Date: 2026-01-07
+  ;; Version: 3.0
+  ;; Keywords: autoload, tangle, automation
+  ;; Compatibility: GNU Emacs 29.0+
+
+  ;;; Commentary:
+  ;;
+  ;; MCG Emacs 配置架构的自动化模块，提供：
+  ;; - 保存 .org 文件时自动 tangle 生成 .el
+  ;; - 自动扫描扩展目录生成 autoload
+  ;; - 简化扩展注册（从目录结构自动推断）
+  ;;
+
+#+END_SRC
+
+** Dependencies
+#+BEGIN_SRC emacs-lisp
+;;; Dependencies
+
+(require 'core-bootstrap)
+
+#+END_SRC
+
+** Auto Tangle on Save
+#+BEGIN_SRC emacs-lisp
+;;; 保存时自动 Tangle
+
+(defvar mcg-auto-tangle-enabled t
+  "是否启用保存时自动 tangle。")
+
+(defvar mcg-tangle-source-dir nil
+  "Org 源文件目录。")
+
+(defvar mcg-tangle-target-dir nil
+  "Tangle 目标目录。")
+
+(defun mcg--init-tangle-dirs ()
+  "初始化 tangle 目录变量。"
+  (setq mcg-tangle-source-dir mcg-config-org-dir)
+  (setq mcg-tangle-target-dir mcg-config-dir))
+
+(defun mcg--org-file-in-config-p (file)
+  "检查 FILE 是否在配置目录中。"
+  (and file
+       mcg-tangle-source-dir
+       (string-prefix-p (expand-file-name mcg-tangle-source-dir)
+                        (expand-file-name file))))
+
+(defun mcg--get-tangle-target (org-file)
+  "获取 ORG-FILE 对应的 tangle 目标目录。"
+  (when (and org-file mcg-tangle-source-dir mcg-tangle-target-dir)
+    (let* ((relative (file-relative-name org-file mcg-tangle-source-dir))
+           (dir (file-name-directory relative)))
+      (if dir
+          (expand-file-name dir mcg-tangle-target-dir)
+        mcg-tangle-target-dir))))
+
+(defun mcg-auto-tangle ()
+  "自动 tangle 当前 org 文件。
+
+仅当文件在 config-org 目录中时执行。"
+  (when (and mcg-auto-tangle-enabled
+             (eq major-mode 'org-mode)
+             (mcg--org-file-in-config-p buffer-file-name))
+    (let* ((org-file buffer-file-name)
+           (target-dir (mcg--get-tangle-target org-file)))
+      ;; 确保目标目录存在
+      (unless (file-directory-p target-dir)
+        (make-directory target-dir t))
+      ;; 执行 tangle
+      (message "Auto-tangling: %s" (file-name-nondirectory org-file))
+      (let ((org-confirm-babel-evaluate nil))
+        (org-babel-tangle-file org-file nil "emacs-lisp"))
+      ;; 移动生成的文件到目标目录
+      (let* ((el-name (concat (file-name-base org-file) ".el"))
+             (src-el (expand-file-name el-name (file-name-directory org-file)))
+             (dst-el (expand-file-name el-name target-dir)))
+        (when (and (file-exists-p src-el)
+                   (not (string= src-el dst-el)))
+          (rename-file src-el dst-el t)
+          (message "Generated: %s" dst-el))))))
+
+(defun mcg-setup-auto-tangle ()
+  "设置保存时自动 tangle。"
+  (mcg--init-tangle-dirs)
+  (add-hook 'after-save-hook #'mcg-auto-tangle))
+
+(defun mcg/toggle-auto-tangle ()
+  "切换自动 tangle 功能。"
+  (interactive)
+  (setq mcg-auto-tangle-enabled (not mcg-auto-tangle-enabled))
+  (message "Auto-tangle %s" (if mcg-auto-tangle-enabled "enabled" "disabled")))
+
+(defun mcg/tangle-current-file ()
+  "手动 tangle 当前文件。"
+  (interactive)
+  (if (eq major-mode 'org-mode)
+      (let ((mcg-auto-tangle-enabled t))
+        (mcg-auto-tangle))
+    (message "Not an org file")))
+
+(defun mcg/tangle-all-config ()
+  "Tangle 所有配置文件。"
+  (interactive)
+  (mcg--init-tangle-dirs)
+  (let ((org-files (directory-files-recursively
+                    mcg-tangle-source-dir
+                    "\\.org$")))
+    (dolist (file org-files)
+      (unless (string-match-p "README" file)
+        (message "Tangling: %s" file)
+        (let ((org-confirm-babel-evaluate nil))
+          (org-babel-tangle-file file nil "emacs-lisp"))))
+    (message "Tangled %d files" (length org-files))))
+
+#+END_SRC
+
+** Auto Extension Discovery
+#+BEGIN_SRC emacs-lisp
+;;; 自动扩展发现
+
+(defvar mcg-extension-autoloads nil
+  "自动生成的扩展 autoload 列表。
+
+格式为 ((MODE . PATH) ...) 的 alist。")
+
+(defun mcg--scan-extension-dir (dir &optional prefix)
+  "扫描扩展目录 DIR，返回 (path . features) 列表。
+
+PREFIX 用于构建相对路径。"
+  (let ((result nil)
+        (prefix (or prefix "")))
+    (when (file-directory-p dir)
+      (dolist (entry (directory-files dir t "^[^.]"))
+        (when (file-directory-p entry)
+          (let* ((name (file-name-nondirectory entry))
+                 (path (if (string-empty-p prefix)
+                           name
+                         (concat prefix "/" name)))
+                 (el-files (directory-files entry nil "\\.el$")))
+            ;; 如果目录包含 .el 文件，记录它
+            (if el-files
+                (let ((features (mapcar (lambda (f)
+                                          (intern (file-name-sans-extension f)))
+                                        el-files)))
+                  (push (cons path features) result))
+              ;; 否则递归扫描子目录
+              (setq result (append result
+                                   (mcg--scan-extension-dir entry path))))))))
+    result))
+
+(defun mcg-discover-extensions ()
+  "自动发现所有扩展并生成注册表。
+
+扫描 mcg-extensions-dir 目录，自动推断扩展路径和 features。"
+  (when (and mcg-extensions-dir (file-directory-p mcg-extensions-dir))
+    (let ((discovered (mcg--scan-extension-dir mcg-extensions-dir)))
+      ;; 更新 mcg-extensions（如果需要）
+      (dolist (ext discovered)
+        (let ((path (car ext))
+              (features (cdr ext)))
+          (unless (assoc path mcg-extensions)
+            ;; 自动添加到注册表
+            (push (list path :provides features) mcg-extensions))))
+      discovered)))
+
+(defun mcg--infer-mode-from-path (path)
+  "从扩展路径推断 mode 名称。
+
+例如: \"lsp/web-mode\" -> web-mode"
+  (let ((name (file-name-nondirectory path)))
+    (intern (concat name (unless (string-suffix-p "-mode" name) "-mode")))))
+
+(defun mcg-generate-autoloads ()
+  "自动生成所有扩展的 autoload。
+
+扫描扩展目录，为每个包含 -mode.el 的扩展设置 autoload。"
+  (setq mcg-extension-autoloads nil)
+  (when (and mcg-extensions-dir (file-directory-p mcg-extensions-dir))
+    (dolist (entry (mcg--scan-extension-dir mcg-extensions-dir))
+      (let* ((path (car entry))
+             (features (cdr entry))
+             (full-path (expand-file-name path mcg-extensions-dir)))
+        ;; 查找 mode 文件
+        (dolist (feat features)
+          (let ((feat-name (symbol-name feat)))
+            (when (string-suffix-p "-mode" feat-name)
+              ;; 添加到 load-path
+              (add-to-list 'load-path full-path)
+              ;; 设置 autoload
+              (unless (fboundp feat)
+                (autoload feat feat-name nil t))
+              ;; 记录
+              (push (cons feat path) mcg-extension-autoloads))))))
+    mcg-extension-autoloads))
+
+(defun mcg-setup-extension-autoloads ()
+  "设置所有扩展的 autoload。
+
+这是改进后的延迟加载方案，不需要手动维护 mcg-mode-extension-paths。"
+  (mcg-generate-autoloads)
+  (message "Generated %d autoloads" (length mcg-extension-autoloads)))
+
+#+END_SRC
+
+** Simplified Extension Loading
+#+BEGIN_SRC emacs-lisp
+;;; 简化的扩展加载
+
+(defun mcg-load-ext (path &optional feature)
+  "简化的扩展加载函数。
+
+参数:
+- PATH: 扩展相对路径，如 \"lsp/web-mode\"
+- FEATURE: 要 require 的 feature（可选，自动推断）
+
+自动处理:
+1. 添加路径到 load-path
+2. 加载依赖（如果在注册表中定义）
+3. require feature"
+  (let ((full-path (expand-file-name path mcg-extensions-dir)))
+    (when (file-directory-p full-path)
+      ;; 添加到 load-path
+      (add-to-list 'load-path full-path)
+      ;; 推断 feature
+      (let ((feat (or feature
+                      (intern (file-name-nondirectory path)))))
+        ;; 尝试 require
+        (condition-case err
+            (progn
+              (require feat)
+              t)
+          (error
+           (mcg-log "Failed to load %s: %s" path (error-message-string err))
+           nil))))))
+
+(defmacro mcg-use-ext (path &rest body)
+  "声明式扩展使用宏。
+
+用法:
+  (mcg-use-ext \"lsp/web-mode\"
+    :feature web-mode
+    :mode (\"\\\\.vue\\\\'\" . web-mode)
+    :hook (web-mode-hook . my-web-setup)
+    :config
+    (setq web-mode-markup-indent-offset 2))
+
+参数:
+- PATH: 扩展路径
+- :feature - 要加载的 feature（可选）
+- :mode - auto-mode-alist 条目（可选）
+- :hook - hook 设置（可选）
+- :defer - 是否延迟加载（可选，默认 nil）
+- :config - 配置代码"
+  (declare (indent 1))
+  (let ((feature (plist-get body :feature))
+        (mode (plist-get body :mode))
+        (hook (plist-get body :hook))
+        (defer (plist-get body :defer))
+        (config (plist-get body :config)))
+    `(progn
+       ;; 添加到 load-path
+       (let ((full-path (expand-file-name ,path mcg-extensions-dir)))
+         (when (file-directory-p full-path)
+           (add-to-list 'load-path full-path)))
+       
+       ;; 设置 auto-mode-alist
+       ,(when mode
+          `(add-to-list 'auto-mode-alist ',mode))
+       
+       ;; 设置 autoload 或立即加载
+       ,(if defer
+            `(autoload ',(or feature (intern (file-name-nondirectory path)))
+               ,(file-name-nondirectory path) nil t)
+          `(require ',(or feature (intern (file-name-nondirectory path)))))
+       
+       ;; 设置 hook
+       ,(when hook
+          `(add-hook ',(car hook) #',(cdr hook)))
+       
+       ;; 配置
+       ,(when config
+          (if defer
+              `(with-eval-after-load ',(or feature (intern (file-name-nondirectory path)))
+                 ,@(if (listp config) config (list config)))
+            `(progn ,@(if (listp config) config (list config))))))))
+
+#+END_SRC
+
+** Extension Registry Auto-Update
+#+BEGIN_SRC emacs-lisp
+;;; 扩展注册表自动更新
+
+(defun mcg-refresh-extensions ()
+  "刷新扩展注册表。
+
+重新扫描扩展目录，更新 mcg-extensions。"
+  (interactive)
+  (let ((discovered (mcg-discover-extensions)))
+    (message "Discovered %d extensions" (length discovered))
+    discovered))
+
+(defun mcg/show-discovered-extensions ()
+  "显示自动发现的扩展。"
+  (interactive)
+  (let ((discovered (mcg-discover-extensions)))
+    (with-current-buffer (get-buffer-create "*MCG Discovered Extensions*")
+      (erase-buffer)
+      (insert "自动发现的扩展\n")
+      (insert "================\n\n")
+      (dolist (ext discovered)
+        (insert (format "%-40s -> %s\n"
+                        (car ext)
+                        (mapconcat #'symbol-name (cdr ext) ", "))))
+      (goto-char (point-min))
+      (display-buffer (current-buffer)))))
+
+#+END_SRC
+
+** Provide
+#+BEGIN_SRC emacs-lisp
+(provide 'core-autoload)
+;;; core-autoload.el ends here
+#+END_SRC

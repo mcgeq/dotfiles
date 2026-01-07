@@ -410,14 +410,26 @@ TRIGGER 可以是:
 格式为 ((CATEGORY . MODULE) . (PATTERN . MODE)) 的 alist。
 当打开匹配 PATTERN 的文件时，自动加载对应模块。")
 
-(defvar mcg-mode-extension-paths
-  '((web-mode . "lsp/web-mode")
-    (rust-mode . "lsp/rust-mode")
-    (lua-mode . "lsp/lua-mode")
-    (zig-mode . "lsp/zig"))
-  "Mode 对应的扩展路径映射。
+(defun mcg--find-mode-extension-path (mode)
+  "自动查找 MODE 对应的扩展路径。
 
-用于在设置 autoload 时找到正确的扩展路径。")
+扫描 mcg-extensions-dir 查找包含 MODE 定义的扩展。"
+  (let ((mode-file (concat (symbol-name mode) ".el")))
+    (catch 'found
+      (dolist (category-dir (directory-files mcg-extensions-dir t "^[^.]"))
+        (when (file-directory-p category-dir)
+          (dolist (ext-dir (directory-files category-dir t "^[^.]"))
+            (when (and (file-directory-p ext-dir)
+                       (file-exists-p (expand-file-name mode-file ext-dir)))
+              (throw 'found ext-dir)))
+          ;; 检查二级子目录
+          (dolist (sub-dir (directory-files category-dir t "^[^.]"))
+            (when (file-directory-p sub-dir)
+              (dolist (ext-dir (directory-files sub-dir t "^[^.]"))
+                (when (and (file-directory-p ext-dir)
+                           (file-exists-p (expand-file-name mode-file ext-dir)))
+                  (throw 'found ext-dir)))))))
+      nil)))
 
 (defun mcg--setup-mode-autoload (mode)
   "为 MODE 设置 autoload。
@@ -425,11 +437,9 @@ TRIGGER 可以是:
 参数:
 - MODE: mode 函数符号
 
-如果 MODE 对应的扩展路径存在，设置 autoload。"
+自动扫描扩展目录查找 MODE 对应的扩展路径。"
   (unless (fboundp mode)
-    (let* ((ext-path (cdr (assq mode mcg-mode-extension-paths)))
-           (full-path (when ext-path
-                        (expand-file-name ext-path mcg-extensions-dir))))
+    (let ((full-path (mcg--find-mode-extension-path mode)))
       (when (and full-path (file-directory-p full-path))
         ;; 添加到 load-path
         (add-to-list 'load-path full-path)
