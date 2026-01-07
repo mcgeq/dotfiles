@@ -69,7 +69,7 @@
                         (set-face-attribute 'default nil
                                             :family font
                                             :height (cond (*is-mac* 150)
-                                                          (*is-win32p* 130)
+                                                          (*is-win32p* 110)
                                                           (*is-linux* 130)))
                       (when scale-factor (setq face-font-rescale-alist `((,font . ,scale-factor))))
                       (set-fontset-font t character (font-spec :family font) nil 'prepend))))
