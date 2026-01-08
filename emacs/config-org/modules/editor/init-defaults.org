@@ -56,11 +56,6 @@
 #+BEGIN_SRC emacs-lisp
 ;;; Basic Settings
 
-;; Hide UI elements (menu-bar, tool-bar, scroll-bar)
-(menu-bar-mode -1)
-(tool-bar-mode -1)
-(scroll-bar-mode -1)
-
 ;; Windows system time settings
 (when (eq system-type 'windows-nt)
   (setq system-time-locale "C"))
@@ -80,13 +75,13 @@
 (setq process-adaptive-read-buffering nil)
 (setq read-process-output-max (* 1024 1024))
 
-;; Basic UI settings
+;; Basic UI settings (UI elements disabled in early-init.el)
 (setq use-short-answers t)
 (blink-cursor-mode -1)
 (transient-mark-mode 1)
 (global-subword-mode 1)
 (setq use-dialog-box nil)
-(setq inhibit-startup-screen t)
+;; inhibit-startup-screen set in early-init.el
 (setq initial-scratch-message
       (concat ";; Happy hacking, "
               (capitalize user-login-name)
@@ -105,7 +100,7 @@
 (setq column-number-mode t)
 (setq completion-auto-select nil)
 (setq ad-redefinition-action 'accept)
-(setq frame-resize-pixelwise t)
+;; frame-resize-pixelwise set in early-init.el
 
 ;; Smooth scrolling
 (setq scroll-step 1)

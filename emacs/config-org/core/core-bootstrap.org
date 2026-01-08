@@ -203,34 +203,22 @@ This function adds the following directories to load-path:
 #+BEGIN_SRC emacs-lisp
 ;;; Performance Optimization
 
-;; Save original values
-(defvar mcg--gc-cons-threshold-original gc-cons-threshold
-  "Original GC threshold.")
-
-(defvar mcg--gc-cons-percentage-original gc-cons-percentage
-  "Original GC percentage.")
-
-(defvar mcg--file-name-handler-alist-original file-name-handler-alist
-  "Original file-name-handler-alist.")
-
-;; Default GC settings
+;; Default GC settings (used after startup)
 (defvar mcg-gc-cons-threshold-default (* 16 1024 1024)
   "Default GC threshold (16MB) for normal operation.")
 
 (defvar mcg-gc-cons-percentage-default 0.1
   "Default GC percentage for normal operation.")
 
-;; Disable GC and file-name-handler during startup
-(setq gc-cons-threshold most-positive-fixnum
-      gc-cons-percentage 0.6
-      file-name-handler-alist nil)
-
 ;; Restore settings after startup
+;; Note: GC is disabled in early-init.el, restore here
 (defun mcg--restore-startup-optimizations ()
   "Restore performance optimization settings after startup."
   (setq gc-cons-threshold mcg-gc-cons-threshold-default
-        gc-cons-percentage mcg-gc-cons-percentage-default
-        file-name-handler-alist mcg--file-name-handler-alist-original))
+        gc-cons-percentage mcg-gc-cons-percentage-default)
+  ;; Restore file-name-handler-alist (saved in early-init.el)
+  (when (boundp 'mcg--file-name-handler-alist-original)
+    (setq file-name-handler-alist mcg--file-name-handler-alist-original)))
 
 (add-hook 'emacs-startup-hook #'mcg--restore-startup-optimizations)
 
@@ -276,15 +264,11 @@ This function adds the following directories to load-path:
 
 (when (and (fboundp 'native-comp-available-p)
            (native-comp-available-p))
-  (setq native-comp-async-report-warnings-errors nil
-        native-comp-deferred-compilation t
-        native-comp-speed 2))
+  ;; Deferred compilation (native-comp-async-report-warnings-errors set in early-init.el)
+  (setq native-comp-deferred-compilation t))
 
 ;; Byte compilation warnings
 (setq byte-compile-warnings '(not free-vars unresolved noruntime lexical make-local))
-
-;; Prefer loading newer files
-(setq load-prefer-newer t)
 #+END_SRC
 
 ** Logging

@@ -17,13 +17,19 @@
 ;; Copyright (C) 2024-2026, mcge, all rights reserved.
 ;; Create   Date: 2026-01-08
 ;; Version: 3.0
-;; Keywords: early-init, frame, startup
+;; Keywords: early-init, frame, startup, performance
 ;; Compatibility: GNU Emacs 29.0+
 
 ;;; Commentary:
 ;;
 ;; This file is loaded before the GUI is initialized.
-;; Put frame size/position settings here for immediate effect.
+;; Settings here take effect before the first frame is created.
+;;
+;; Includes:
+;; - Package initialization control
+;; - GC and performance optimization
+;; - Frame size and UI elements
+;; - Native compilation settings
 ;;
 ;; Copy generated early-init.el to ~/.emacs.d/early-init.el
 ;;
@@ -39,9 +45,18 @@
 
 #+END_SRC
 
-** Startup Optimization
+** Performance Optimization
 #+BEGIN_SRC emacs-lisp
-;;; Startup Optimization
+;;; Performance Optimization
+
+;; Save original values for restoration after startup
+(defvar mcg--file-name-handler-alist-original file-name-handler-alist
+  "Original file-name-handler-alist.")
+
+;; Disable GC and file-name-handler during startup for faster loading
+(setq gc-cons-threshold most-positive-fixnum
+      gc-cons-percentage 0.6
+      file-name-handler-alist nil)
 
 ;; Prevent the glimpse of un-styled Emacs
 (setq inhibit-redisplay t
@@ -55,6 +70,21 @@
 
 #+END_SRC
 
+** Native Compilation
+#+BEGIN_SRC emacs-lisp
+;;; Native Compilation
+
+(when (featurep 'native-compile)
+  ;; Silence compiler warnings
+  (setq native-comp-async-report-warnings-errors nil)
+  ;; Set compilation speed (2 = maximum optimization)
+  (setq native-comp-speed 2))
+
+;; Prefer loading newer files
+(setq load-prefer-newer t)
+
+#+END_SRC
+
 ** Frame Configuration
 #+BEGIN_SRC emacs-lisp
 ;;; Frame Configuration
@@ -62,10 +92,10 @@
 (defvar mcg-frame-width 140
   "Default frame width in characters.")
 
-(defvar mcg-frame-height 48
+(defvar mcg-frame-height 56
   "Default frame height in lines.")
 
-;; Set frame size for initial and default frames
+;; Set frame size and disable UI elements for initial and default frames
 (setq default-frame-alist
       `((width . ,mcg-frame-width)
         (height . ,mcg-frame-height)
@@ -76,15 +106,25 @@
 
 (setq initial-frame-alist default-frame-alist)
 
-#+END_SRC
-
-** Disable UI Elements Early
-#+BEGIN_SRC emacs-lisp
-;;; Disable UI Elements Early
-
+;; Disable UI elements (must set variables before modes are loaded)
 (setq tool-bar-mode nil
       menu-bar-mode nil
       scroll-bar-mode nil)
+
+;; Frame resize behavior
+(setq frame-resize-pixelwise t)
+(setq frame-inhibit-implied-resize t)
+
+#+END_SRC
+
+** Startup Screen
+#+BEGIN_SRC emacs-lisp
+;;; Startup Screen
+
+;; Disable startup screen and messages
+(setq inhibit-startup-screen t)
+(setq inhibit-startup-message t)
+(setq inhibit-startup-echo-area-message user-login-name)
 
 #+END_SRC
 
