@@ -53,6 +53,10 @@ When set to t, grammars will be downloaded automatically on first file open.")
 1: Minimal highlighting
 4: Maximum highlighting")
 
+;; Set tree-sitter grammar install directory
+(setq treesit-extra-load-path
+      (list (expand-file-name "tree-sitter" user-emacs-directory)))
+
 #+END_SRC
 
 ** Language Sources
