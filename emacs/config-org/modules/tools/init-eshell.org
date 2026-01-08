@@ -1,0 +1,346 @@
+* init-eshell.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle init-eshell.el :lexical t
+:END:
+
+** Headers
+#+BEGIN_SRC emacs-lisp
+;;; init-eshell.el --- Eshell Configuration for MCG Emacs -*- lexical-binding: t; -*-
+
+;; Filename: init-eshell.el
+;; Description: Eshell shell module
+;; Author: mcge <mcgeq@outlook.com>
+;; Copyright (C) 2024-2026, mcge, all rights reserved.
+;; Create   Date: 2026-01-08
+;; Version: 3.0
+;; Keywords: eshell, shell, terminal
+;; Compatibility: GNU Emacs 29.0+
+
+;;; Commentary:
+;;
+;; Eshell configuration module for MCG Emacs, responsible for:
+;; - Eshell basic settings
+;; - Custom prompt with git branch
+;; - Useful aliases
+;; - Integration with Emacs ecosystem
+;;
+
+#+END_SRC
+
+** Dependencies
+#+BEGIN_SRC emacs-lisp
+;;; Dependencies
+
+(require 'core-lib)
+(require 'eshell)
+(require 'esh-mode)
+(require 'em-hist)
+(require 'em-dirs)
+(require 'em-alias)
+
+#+END_SRC
+
+** Basic Settings
+#+BEGIN_SRC emacs-lisp
+;;; Basic Settings
+
+(defun mcg--setup-eshell-basic ()
+  "Setup Eshell basic settings."
+  ;; Directory settings
+  (setq eshell-directory-name (expand-file-name "eshell" mcg-cache-dir))
+  
+  ;; History settings
+  (setq eshell-history-size 10000)
+  (setq eshell-save-history-on-exit t)
+  (setq eshell-hist-ignoredups t)
+  (setq eshell-input-filter #'eshell-input-filter-initial-space)
+  
+  ;; Buffer settings
+  (setq eshell-buffer-maximum-lines 10000)
+  (setq eshell-scroll-to-bottom-on-input 'all)
+  (setq eshell-scroll-to-bottom-on-output 'all)
+  (setq eshell-kill-on-exit t)
+  (setq eshell-destroy-buffer-when-process-dies t)
+  
+  ;; Behavior settings
+  (setq eshell-banner-message "")
+  (setq eshell-error-if-no-glob t)
+  (setq eshell-glob-case-insensitive t)
+  (setq eshell-highlight-prompt t)
+  (setq eshell-prefer-lisp-functions nil)
+  
+  ;; Visual commands (use term for these)
+  (setq eshell-visual-commands
+        '("vi" "vim" "nvim" "screen" "tmux" "top" "htop" "btop"
+          "less" "more" "ncdu" "ranger" "ssh" "tail" "watch"))
+  (setq eshell-visual-subcommands
+        '(("git" "log" "diff" "show" "stash")))
+  
+  (mcg-log "Eshell basic settings configured"))
+
+#+END_SRC
+
+** Prompt Configuration
+#+BEGIN_SRC emacs-lisp
+;;; Prompt Configuration
+
+(defun mcg--eshell-git-branch ()
+  "Get current git branch name."
+  (let ((branch (ignore-errors
+                  (car (process-lines "git" "rev-parse" "--abbrev-ref" "HEAD")))))
+    (if branch
+        (format " (%s)" branch)
+      "")))
+
+(defun mcg--eshell-prompt ()
+  "Custom eshell prompt function."
+  (let* ((dir (abbreviate-file-name (eshell/pwd)))
+         (branch (mcg--eshell-git-branch))
+         (user (if (= (user-uid) 0) "#" "λ")))
+    (concat
+     (propertize dir 'face 'font-lock-keyword-face)
+     (propertize branch 'face 'font-lock-function-name-face)
+     (propertize (format " %s " user) 'face 'eshell-prompt-face))))
+
+(defun mcg--setup-eshell-prompt ()
+  "Setup Eshell prompt."
+  (setq eshell-prompt-function #'mcg--eshell-prompt)
+  (setq eshell-prompt-regexp "^.* [λ#] ")
+  (mcg-log "Eshell prompt configured"))
+
+#+END_SRC
+
+** Aliases
+#+BEGIN_SRC emacs-lisp
+;;; Aliases
+
+(defun mcg--setup-eshell-aliases ()
+  "Setup Eshell aliases."
+  ;; File operations
+  (eshell/alias "ll" "ls -la $*")
+  (eshell/alias "la" "ls -a $*")
+  (eshell/alias "l" "ls -CF $*")
+  (eshell/alias "md" "mkdir -p $*")
+  
+  ;; Emacs integration
+  (eshell/alias "e" "find-file $1")
+  (eshell/alias "ee" "find-file-other-window $1")
+  (eshell/alias "d" "dired $1")
+  (eshell/alias "do" "dired-other-window $1")
+  
+  ;; Navigation
+  (eshell/alias ".." "cd ..")
+  (eshell/alias "..." "cd ../..")
+  (eshell/alias "...." "cd ../../..")
+  
+  ;; Git shortcuts
+  (eshell/alias "gs" "git status $*")
+  (eshell/alias "ga" "git add $*")
+  (eshell/alias "gc" "git commit $*")
+  (eshell/alias "gp" "git push $*")
+  (eshell/alias "gl" "git pull $*")
+  (eshell/alias "gd" "git diff $*")
+  (eshell/alias "gb" "git branch $*")
+  (eshell/alias "gco" "git checkout $*")
+  
+  ;; Clear
+  (eshell/alias "clear" "eshell/clear-scrollback")
+  (eshell/alias "cls" "eshell/clear-scrollback")
+  
+  (mcg-log "Eshell aliases configured"))
+
+#+END_SRC
+
+** Custom Commands
+#+BEGIN_SRC emacs-lisp
+;;; Custom Commands
+
+(defun eshell/f (filename &optional dir)
+  "Search for files matching FILENAME in DIR (default current)."
+  (let ((dir (or dir default-directory)))
+    (find-name-dired dir filename)))
+
+(defun eshell/z (pattern)
+  "Jump to directory matching PATTERN using recent directories."
+  (let* ((dirs (ring-elements eshell-last-dir-ring))
+         (match (seq-find (lambda (d) (string-match-p pattern d)) dirs)))
+    (if match
+        (eshell/cd match)
+      (message "No matching directory found for: %s" pattern))))
+
+(defun eshell/mkcd (dir)
+  "Create directory DIR and cd into it."
+  (make-directory dir t)
+  (eshell/cd dir))
+
+(defun eshell/ccat (file)
+  "Like cat but with syntax highlighting."
+  (with-temp-buffer
+    (insert-file-contents file)
+    (let ((buffer-file-name file))
+      (delay-mode-hooks
+        (set-auto-mode)
+        (font-lock-ensure)))
+    (buffer-string)))
+
+(defun eshell/take (dir)
+  "Create DIR and cd into it (alias for mkcd)."
+  (eshell/mkcd dir))
+
+#+END_SRC
+
+** Mode Hook
+#+BEGIN_SRC emacs-lisp
+;;; Mode Hook
+
+(defun mcg--eshell-mode-setup ()
+  "Setup for eshell-mode."
+  ;; Setup aliases
+  (mcg--setup-eshell-aliases)
+  
+  ;; Environment
+  (setenv "PAGER" "cat")
+  (setenv "TERM" "dumb")
+  
+  ;; Local keybindings
+  (local-set-key (kbd "C-l") #'eshell/clear-scrollback)
+  (local-set-key (kbd "C-r") #'consult-history)
+  
+  ;; Disable line numbers
+  (display-line-numbers-mode -1)
+  
+  ;; Disable yas in eshell
+  (when (bound-and-true-p yas-minor-mode)
+    (yas-minor-mode -1)))
+
+(add-hook 'eshell-mode-hook #'mcg--eshell-mode-setup)
+
+#+END_SRC
+
+** Integration
+#+BEGIN_SRC emacs-lisp
+;;; Integration
+
+;; With-editor integration for git commit etc.
+(with-eval-after-load 'with-editor
+  (add-hook 'eshell-mode-hook #'with-editor-export-editor))
+
+;; Completion integration
+(defun mcg--eshell-completion-setup ()
+  "Setup completion for eshell."
+  ;; Use native completion
+  (setq-local completion-at-point-functions
+              '(eshell-complete-lisp-symbol
+                eshell-complete-commands-list
+                pcomplete-completions-at-point
+                cape-file))
+  ;; Disable corfu auto if present
+  (when (bound-and-true-p corfu-mode)
+    (setq-local corfu-auto nil)))
+
+(add-hook 'eshell-mode-hook #'mcg--eshell-completion-setup)
+
+#+END_SRC
+
+** Display Buffer Rules
+#+BEGIN_SRC emacs-lisp
+;;; Display Buffer Rules
+
+;; 强制 eshell 在底部窗口显示
+(add-to-list 'display-buffer-alist
+             '("\\*eshell.*\\*"
+               (display-buffer-in-side-window)
+               (side . bottom)
+               (slot . 0)
+               (window-height . 0.3)
+               (window-parameters . ((no-delete-other-windows . t)))))
+
+#+END_SRC
+
+** Interactive Commands
+#+BEGIN_SRC emacs-lisp
+;;; Interactive Commands
+
+(defun mcg/eshell-toggle ()
+  "Toggle eshell at bottom of frame."
+  (interactive)
+  (let* ((project (project-current))
+         (dir (if project (project-root project) default-directory))
+         (eshell-buffer-name (format "*eshell: %s*"
+                                     (file-name-nondirectory
+                                      (directory-file-name dir))))
+         (buf (get-buffer eshell-buffer-name))
+         (win (and buf (get-buffer-window buf t))))
+    (cond
+     ;; 已显示则关闭窗口
+     (win
+      (delete-window win))
+     ;; 已存在但未显示则显示
+     (buf
+      (pop-to-buffer buf))
+     ;; 不存在则创建新的
+     (t
+      (let ((default-directory dir))
+        (eshell 'N))))))
+
+(defun mcg/eshell-here ()
+  "Open eshell at bottom in current buffer's directory."
+  (interactive)
+  (let* ((dir (file-name-directory (or buffer-file-name default-directory)))
+         (eshell-buffer-name (format "*eshell: %s*"
+                                     (file-name-nondirectory
+                                      (directory-file-name dir))))
+         (buf (get-buffer eshell-buffer-name))
+         (win (and buf (get-buffer-window buf t))))
+    (cond
+     (win
+      (select-window win)
+      (unless (string= (expand-file-name dir)
+                       (expand-file-name default-directory))
+        (eshell/cd dir)
+        (eshell-send-input)))
+     (buf
+      (pop-to-buffer buf)
+      (eshell/cd dir)
+      (eshell-send-input))
+     (t
+      (let ((default-directory dir))
+        (eshell 'N))))))
+
+(defun mcg/eshell-new ()
+  "Open a new eshell buffer at bottom."
+  (interactive)
+  (let ((buf (eshell 'N)))
+    (pop-to-buffer buf)))
+
+#+END_SRC
+
+** Keybindings
+#+BEGIN_SRC emacs-lisp
+;;; Keybindings
+
+(global-set-key (kbd "C-c e e") #'mcg/eshell-toggle)
+(global-set-key (kbd "C-c e h") #'mcg/eshell-here)
+(global-set-key (kbd "C-c e n") #'mcg/eshell-new)
+
+;; Add which-key descriptions
+(with-eval-after-load 'which-key
+  (which-key-add-key-based-replacements
+    "C-c e" "🐚 Eshell"))
+
+#+END_SRC
+
+** Initialize
+#+BEGIN_SRC emacs-lisp
+;;; Initialize
+
+(mcg--setup-eshell-basic)
+(mcg--setup-eshell-prompt)
+
+#+END_SRC
+
+** Provide
+#+BEGIN_SRC emacs-lisp
+(provide 'init-eshell)
+;;; init-eshell.el ends here
+#+END_SRC

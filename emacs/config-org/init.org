@@ -92,6 +92,7 @@
       rime            ; Chinese input method
       utils           ; Utilities (auto-save, which-key, recentf, helpful)
       sort-tab        ; Tab bar
+      eshell          ; Eshell shell
 
       :input
       fingertip       ; Structural editing
