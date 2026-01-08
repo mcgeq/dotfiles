@@ -192,7 +192,7 @@
     ;; 快捷键
     (global-set-key (kbd "C-x u") 'vundo)
     (global-set-key (kbd "C-c u") 'vundo)
-    (global-set-key (kbd "C-/") 'undo)
+    (global-set-key (kbd "C-/") 'vundo)      ; 使用 vundo 替代默认 undo
     (global-set-key (kbd "C-?") 'undo-redo)
     
     (mcg-log "Vundo configured")))
