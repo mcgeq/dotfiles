@@ -1,0 +1,94 @@
+#+TITLE: MCG Emacs Early Init
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle early-init.el :lexical t
+
+* early-init.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle early-init.el :lexical t
+:END:
+
+** Headers
+#+BEGIN_SRC emacs-lisp
+;;; early-init.el --- Early Init for MCG Emacs -*- lexical-binding: t; -*-
+
+;; Filename: early-init.el
+;; Description: Early initialization before GUI
+;; Author: mcge <mcgeq@outlook.com>
+;; Copyright (C) 2024-2026, mcge, all rights reserved.
+;; Create   Date: 2026-01-08
+;; Version: 3.0
+;; Keywords: early-init, frame, startup
+;; Compatibility: GNU Emacs 29.0+
+
+;;; Commentary:
+;;
+;; This file is loaded before the GUI is initialized.
+;; Put frame size/position settings here for immediate effect.
+;;
+;; Copy generated early-init.el to ~/.emacs.d/early-init.el
+;;
+
+#+END_SRC
+
+** Package Initialization
+#+BEGIN_SRC emacs-lisp
+;;; Package Initialization
+
+;; Prevent package.el from loading packages before init.el
+(setq package-enable-at-startup nil)
+
+#+END_SRC
+
+** Startup Optimization
+#+BEGIN_SRC emacs-lisp
+;;; Startup Optimization
+
+;; Prevent the glimpse of un-styled Emacs
+(setq inhibit-redisplay t
+      inhibit-message t)
+
+(add-hook 'window-setup-hook
+          (lambda ()
+            (setq inhibit-redisplay nil
+                  inhibit-message nil)
+            (redisplay)))
+
+#+END_SRC
+
+** Frame Configuration
+#+BEGIN_SRC emacs-lisp
+;;; Frame Configuration
+
+(defvar mcg-frame-width 140
+  "Default frame width in characters.")
+
+(defvar mcg-frame-height 48
+  "Default frame height in lines.")
+
+;; Set frame size for initial and default frames
+(setq default-frame-alist
+      `((width . ,mcg-frame-width)
+        (height . ,mcg-frame-height)
+        (vertical-scroll-bars . nil)
+        (horizontal-scroll-bars . nil)
+        (tool-bar-lines . 0)
+        (menu-bar-lines . 0)))
+
+(setq initial-frame-alist default-frame-alist)
+
+#+END_SRC
+
+** Disable UI Elements Early
+#+BEGIN_SRC emacs-lisp
+;;; Disable UI Elements Early
+
+(setq tool-bar-mode nil
+      menu-bar-mode nil
+      scroll-bar-mode nil)
+
+#+END_SRC
+
+** Provide
+#+BEGIN_SRC emacs-lisp
+;;; early-init.el ends here
+#+END_SRC

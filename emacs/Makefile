@@ -33,11 +33,19 @@ $(DST_DIR)/init.el: $(SRC_DIR)/init.org
 	@echo Tangling: $< -> $@
 	$(EE) --eval '(org-babel-tangle-publish t "$<" "$(DST_DIR)/")'
 
+# early-init.el 特殊处理 (生成后自动复制到 ~/.emacs.d/)
+$(DST_DIR)/early-init.el: $(SRC_DIR)/early-init.org
+	@powershell -Command "if (-not (Test-Path '$(DST_DIR)')) { New-Item -ItemType Directory -Path '$(DST_DIR)' -Force | Out-Null }"
+	@echo Tangling: $< -> $@
+	$(EE) --eval '(org-babel-tangle-publish t "$<" "$(DST_DIR)/")'
+	@echo Copying early-init.el to ~/.emacs.d/
+	@powershell -Command "Copy-Item '$(DST_DIR)/early-init.el' \"$$env:APPDATA\\.emacs.d\\early-init.el\" -Force"
+
 # 生成所有目录的规则
 $(foreach dir,$(DIRS),$(eval $(call tangle_template,$(dir))))
 
 # 主构建目标
-all: $(DST_DIR)/init.el $(foreach dir,$(DIRS),build-$(subst /,-,$(dir)))
+all: $(DST_DIR)/early-init.el $(DST_DIR)/init.el $(foreach dir,$(DIRS),build-$(subst /,-,$(dir)))
 	@echo [OK] Configuration generated!
 
 # 清理生成的文件

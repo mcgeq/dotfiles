@@ -223,8 +223,20 @@ Optional arguments:
 ;; Initialize font settings
 (mcg/font-setup)
 
-;; Ensure fonts are set after GUI startup
-(add-hook 'window-setup-hook #'mcg/font-setup)
+;; Ensure fonts are set after GUI startup and re-center frame
+(add-hook 'window-setup-hook
+          (lambda ()
+            (mcg/font-setup)
+            ;; Re-center frame after font setup (font changes may affect frame size)
+            (when (display-graphic-p)
+              (let* ((dw (display-pixel-width))
+                     (dh (display-pixel-height))
+                     (fw (frame-pixel-width))
+                     (fh (frame-pixel-height))
+                     (top-offset 50))
+                (set-frame-position nil
+                                    (/ (- dw fw) 2)
+                                    (max 0 (- (/ (- dh fh) 2) top-offset)))))))
 (add-hook 'server-after-make-frame-hook #'mcg/font-setup)
 
 #+END_SRC
