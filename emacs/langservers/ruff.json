@@ -11,13 +11,22 @@
   "initializationOptions": {
     "settings": {
       "lint": {
-        "enable": true
+        "enable": true,
+        "select": ["I"]
       },
       "format": {
         "enable": true
       },
       "organizeImports": true,
-      "fixAll": true
+      "fixAll": true,
+      "codeAction": {
+        "fixViolation": {
+          "enable": true
+        },
+        "disableRuleComment": {
+          "enable": true
+        }
+      }
     }
   }
 }
