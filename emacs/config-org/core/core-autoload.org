@@ -137,10 +137,68 @@
 
 格式为 ((MODE . PATH) ...) 的 alist。")
 
+(defvar mcg-extension-cache nil
+  "扩展路径缓存。
+
+格式为 ((MODE-FILE . FULL-PATH) ...) 的 alist。
+用于避免重复扫描目录。")
+
+(defvar mcg-extension-cache-file nil
+  "扩展缓存文件路径。")
+
+(defun mcg--init-cache-file ()
+  "初始化缓存文件路径。"
+  (setq mcg-extension-cache-file
+        (expand-file-name "extension-cache.el" mcg-config-dir)))
+
+(defun mcg-save-extension-cache ()
+  "保存扩展缓存到文件。"
+  (mcg--init-cache-file)
+  (when (and mcg-extension-cache mcg-extension-cache-file)
+    (with-temp-file mcg-extension-cache-file
+      (insert ";; MCG Extension Cache - Auto-generated\n")
+      (insert ";; Do not edit manually\n\n")
+      (insert "(setq mcg-extension-cache\n  '")
+      (prin1 mcg-extension-cache (current-buffer))
+      (insert ")\n"))
+    (mcg-log "Saved extension cache: %d entries" (length mcg-extension-cache))))
+
+(defun mcg-load-extension-cache ()
+  "从文件加载扩展缓存。"
+  (mcg--init-cache-file)
+  (when (and mcg-extension-cache-file
+             (file-exists-p mcg-extension-cache-file))
+    (condition-case err
+        (progn
+          (load mcg-extension-cache-file nil t)
+          (mcg-log "Loaded extension cache: %d entries" (length mcg-extension-cache))
+          t)
+      (error
+       (mcg-log "Failed to load cache: %s" (error-message-string err))
+       nil))))
+
+(defun mcg-cache-lookup (mode-file)
+  "从缓存查找 MODE-FILE 对应的扩展路径。"
+  (cdr (assoc mode-file mcg-extension-cache)))
+
+(defun mcg-cache-store (mode-file full-path)
+  "将 MODE-FILE -> FULL-PATH 映射存入缓存。"
+  (unless (assoc mode-file mcg-extension-cache)
+    (push (cons mode-file full-path) mcg-extension-cache)))
+
+(defun mcg/rebuild-extension-cache ()
+  "重建扩展缓存。"
+  (interactive)
+  (setq mcg-extension-cache nil)
+  (mcg--scan-extension-dir mcg-extensions-dir)
+  (mcg-save-extension-cache)
+  (message "Extension cache rebuilt: %d entries" (length mcg-extension-cache)))
+
 (defun mcg--scan-extension-dir (dir &optional prefix)
   "扫描扩展目录 DIR，返回 (path . features) 列表。
 
-PREFIX 用于构建相对路径。"
+PREFIX 用于构建相对路径。
+同时更新 mcg-extension-cache。"
   (let ((result nil)
         (prefix (or prefix "")))
     (when (file-directory-p dir)
@@ -154,7 +212,10 @@ PREFIX 用于构建相对路径。"
             ;; 如果目录包含 .el 文件，记录它
             (if el-files
                 (let ((features (mapcar (lambda (f)
-                                          (intern (file-name-sans-extension f)))
+                                          (let ((feat (intern (file-name-sans-extension f))))
+                                            ;; 更新缓存
+                                            (mcg-cache-store f entry)
+                                            feat))
                                         el-files)))
                   (push (cons path features) result))
               ;; 否则递归扫描子目录
@@ -165,17 +226,23 @@ PREFIX 用于构建相对路径。"
 (defun mcg-discover-extensions ()
   "自动发现所有扩展并生成注册表。
 
-扫描 mcg-extensions-dir 目录，自动推断扩展路径和 features。"
+扫描 mcg-extensions-dir 目录，自动推断扩展路径和 features。
+优先使用缓存，缓存不存在时扫描并保存。"
   (when (and mcg-extensions-dir (file-directory-p mcg-extensions-dir))
-    (let ((discovered (mcg--scan-extension-dir mcg-extensions-dir)))
-      ;; 更新 mcg-extensions（如果需要）
-      (dolist (ext discovered)
-        (let ((path (car ext))
-              (features (cdr ext)))
-          (unless (assoc path mcg-extensions)
-            ;; 自动添加到注册表
-            (push (list path :provides features) mcg-extensions))))
-      discovered)))
+    ;; 尝试加载缓存
+    (unless mcg-extension-cache
+      (mcg-load-extension-cache))
+    ;; 如果缓存为空，扫描并保存
+    (unless mcg-extension-cache
+      (let ((discovered (mcg--scan-extension-dir mcg-extensions-dir)))
+        (mcg-save-extension-cache)
+        ;; 更新 mcg-extensions
+        (dolist (ext discovered)
+          (let ((path (car ext))
+                (features (cdr ext)))
+            (unless (assoc path mcg-extensions)
+              (push (list path :provides features) mcg-extensions))))
+        discovered))))
 
 (defun mcg--infer-mode-from-path (path)
   "从扩展路径推断 mode 名称。
@@ -247,56 +314,88 @@ PREFIX 用于构建相对路径。"
            (mcg-log "Failed to load %s: %s" path (error-message-string err))
            nil))))))
 
-(defmacro mcg-use-ext (path &rest body)
-  "声明式扩展使用宏。
+(defmacro mcg-use-ext (path &rest args)
+  "声明式扩展使用宏（类 use-package 语法）。
 
 用法:
   (mcg-use-ext \"lsp/web-mode\"
     :feature web-mode
     :mode (\"\\\\.vue\\\\'\" . web-mode)
     :hook (web-mode-hook . my-web-setup)
-    :config
-    (setq web-mode-markup-indent-offset 2))
+    :defer t
+    :init (setq web-mode-enable-auto-quoting nil)
+    :config (setq web-mode-markup-indent-offset 2))
 
 参数:
 - PATH: 扩展路径
 - :feature - 要加载的 feature（可选）
 - :mode - auto-mode-alist 条目（可选）
-- :hook - hook 设置（可选）
+- :hook - hook 设置（可选，支持多个）
 - :defer - 是否延迟加载（可选，默认 nil）
-- :config - 配置代码"
+- :init - 加载前执行的代码
+- :config - 加载后执行的代码
+- :if / :when - 条件加载
+- :after - 在指定 feature 之后加载"
   (declare (indent 1))
-  (let ((feature (plist-get body :feature))
-        (mode (plist-get body :mode))
-        (hook (plist-get body :hook))
-        (defer (plist-get body :defer))
-        (config (plist-get body :config)))
-    `(progn
-       ;; 添加到 load-path
-       (let ((full-path (expand-file-name ,path mcg-extensions-dir)))
-         (when (file-directory-p full-path)
-           (add-to-list 'load-path full-path)))
-       
-       ;; 设置 auto-mode-alist
-       ,(when mode
-          `(add-to-list 'auto-mode-alist ',mode))
-       
-       ;; 设置 autoload 或立即加载
-       ,(if defer
-            `(autoload ',(or feature (intern (file-name-nondirectory path)))
-               ,(file-name-nondirectory path) nil t)
-          `(require ',(or feature (intern (file-name-nondirectory path)))))
-       
-       ;; 设置 hook
-       ,(when hook
-          `(add-hook ',(car hook) #',(cdr hook)))
-       
-       ;; 配置
-       ,(when config
-          (if defer
-              `(with-eval-after-load ',(or feature (intern (file-name-nondirectory path)))
-                 ,@(if (listp config) config (list config)))
-            `(progn ,@(if (listp config) config (list config))))))))
+  (let* ((feature (plist-get args :feature))
+         (mode (plist-get args :mode))
+         (hook (plist-get args :hook))
+         (defer (plist-get args :defer))
+         (init (plist-get args :init))
+         (config (plist-get args :config))
+         (if-cond (or (plist-get args :if) (plist-get args :when)))
+         (after (plist-get args :after))
+         (feat-sym (or feature (intern (file-name-nondirectory path))))
+         (body
+          `(progn
+             ;; 添加到 load-path
+             (let ((full-path (expand-file-name ,path mcg-extensions-dir)))
+               (when (file-directory-p full-path)
+                 (add-to-list 'load-path full-path)))
+             
+             ;; :init - 加载前执行
+             ,@(when init (if (listp (car init)) init (list init)))
+             
+             ;; 设置 auto-mode-alist
+             ,@(when mode
+                 (if (and (consp mode) (stringp (car mode)))
+                     `((add-to-list 'auto-mode-alist ',mode))
+                   (mapcar (lambda (m) `(add-to-list 'auto-mode-alist ',m))
+                           (if (consp (car mode)) mode (list mode)))))
+             
+             ;; 设置 hook
+             ,@(when hook
+                 (if (and (consp hook) (symbolp (car hook)))
+                     `((add-hook ',(car hook) #',(cdr hook)))
+                   (mapcar (lambda (h) `(add-hook ',(car h) #',(cdr h)))
+                           (if (consp (car hook)) hook (list hook)))))
+             
+             ;; 加载或设置 autoload
+             ,(cond
+               ;; :after - 在指定 feature 后加载
+               (after
+                `(with-eval-after-load ',after
+                   (require ',feat-sym)
+                   ,@(when config (if (listp (car config)) config (list config)))))
+               ;; :defer - 延迟加载
+               (defer
+                `(progn
+                   (autoload ',feat-sym ,(symbol-name feat-sym) nil t)
+                   ,@(when config
+                       `((with-eval-after-load ',feat-sym
+                           ,@(if (listp (car config)) config (list config)))))))
+               ;; 立即加载
+               (t
+                `(progn
+                   (require ',feat-sym)
+                   ,@(when config (if (listp (car config)) config (list config)))))))))
+    ;; 条件包装
+    (if if-cond
+        `(when ,if-cond ,body)
+      body)))
+
+;; use-package 风格别名
+(defalias 'use-ext 'mcg-use-ext)
 
 #+END_SRC
 

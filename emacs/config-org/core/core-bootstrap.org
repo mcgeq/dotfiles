@@ -268,12 +268,71 @@
 (defvar mcg-debug-mode nil
   "Enable debug mode for verbose logging.")
 
+(defvar mcg-profile-mode nil
+  "Enable profiling mode to track load times.")
+
+(defvar mcg-load-times nil
+  "记录各模块/扩展的加载耗时。
+格式为 ((NAME . TIME-MS) ...) 的 alist。")
+
 (defmacro mcg-log (format-string &rest args)
   "Log message with FORMAT-STRING and ARGS.
 
 Only logs when `mcg-debug-mode' is non-nil."
   `(when mcg-debug-mode
      (message (concat "[MCG] " ,format-string) ,@args)))
+
+(defmacro mcg-profile (name &rest body)
+  "执行 BODY 并记录耗时到 mcg-load-times。
+
+参数:
+- NAME: 标识名称
+- BODY: 要执行的代码"
+  (declare (indent 1))
+  `(if mcg-profile-mode
+       (let ((start-time (current-time)))
+         (prog1 (progn ,@body)
+           (let ((elapsed (* 1000 (float-time (time-subtract (current-time) start-time)))))
+             (push (cons ,name elapsed) mcg-load-times)
+             (mcg-log "⏱ %s: %.2fms" ,name elapsed))))
+     (progn ,@body)))
+
+(defun mcg/show-load-times ()
+  "显示所有模块/扩展的加载耗时。"
+  (interactive)
+  (if (null mcg-load-times)
+      (message "No load times recorded. Set mcg-profile-mode to t before startup.")
+    (with-current-buffer (get-buffer-create "*MCG Load Times*")
+      (erase-buffer)
+      (insert "MCG 加载耗时统计\n")
+      (insert "==================\n\n")
+      (let ((sorted (sort (copy-sequence mcg-load-times)
+                          (lambda (a b) (> (cdr a) (cdr b)))))
+            (total 0))
+        (insert (format "%-50s %10s\n" "名称" "耗时(ms)"))
+        (insert (make-string 62 ?─))
+        (insert "\n")
+        (dolist (entry sorted)
+          (insert (format "%-50s %10.2f\n" (car entry) (cdr entry)))
+          (cl-incf total (cdr entry)))
+        (insert (make-string 62 ?─))
+        (insert "\n")
+        (insert (format "%-50s %10.2f\n" "总计" total)))
+      (goto-char (point-min))
+      (display-buffer (current-buffer)))))
+
+(defun mcg/toggle-debug-mode ()
+  "切换调试模式。"
+  (interactive)
+  (setq mcg-debug-mode (not mcg-debug-mode))
+  (message "MCG debug mode %s" (if mcg-debug-mode "enabled" "disabled")))
+
+(defun mcg/toggle-profile-mode ()
+  "切换性能分析模式。"
+  (interactive)
+  (setq mcg-profile-mode (not mcg-profile-mode))
+  (message "MCG profile mode %s" (if mcg-profile-mode "enabled" "disabled")))
+
 #+END_SRC
 
 ** Provide
