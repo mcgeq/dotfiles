@@ -322,11 +322,62 @@
 (global-set-key (kbd "C-c e e") #'mcg/eshell-toggle)
 (global-set-key (kbd "C-c e h") #'mcg/eshell-here)
 (global-set-key (kbd "C-c e n") #'mcg/eshell-new)
+(global-set-key (kbd "C-c e ?") #'mcg/eshell-help)
 
 ;; Add which-key descriptions
 (with-eval-after-load 'which-key
   (which-key-add-key-based-replacements
     "C-c e" "🐚 Eshell"))
+
+#+END_SRC
+
+** Help Popup
+#+BEGIN_SRC emacs-lisp
+;;; Help Popup
+
+(defun mcg/eshell-help ()
+  "Show Eshell commands reference in posframe popup."
+  (interactive)
+  (mcg-popup-show "*Eshell Help*" (mcg--eshell-help-content) 55 30))
+
+(defun mcg--eshell-help-content ()
+  "Generate Eshell help content."
+  "
+                      Eshell 命令速查                      
+    ═══════════════════════════════════════════════════  
+
+    【快捷键】                                            
+    C-c e e         切换 Eshell (项目目录)                
+    C-c e h         当前文件目录打开                      
+    C-c e n         新建 Eshell                           
+    C-l             清屏                                  
+    C-r             历史搜索 (consult)                    
+
+    【内置别名】                                          
+    ll              ls -la                                
+    la              ls -a                                 
+    ..              cd ..                                 
+    ...             cd ../..                              
+    e <file>        find-file (在 Emacs 打开)             
+    d <dir>         dired                                 
+    clear/cls       清屏                                  
+
+    【Git 别名】                                          
+    gs              git status                            
+    ga              git add                               
+    gc              git commit                            
+    gp              git push                              
+    gl              git pull                              
+    gd              git diff                              
+    gco             git checkout                          
+
+    【自定义命令】                                        
+    z <pattern>     跳转到匹配的历史目录                  
+    mkcd <dir>      创建目录并进入                        
+    take <dir>      同 mkcd                               
+    f <name>        搜索文件                              
+    ccat <file>     语法高亮显示文件                      
+")
 
 #+END_SRC
 

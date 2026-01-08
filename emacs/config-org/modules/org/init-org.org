@@ -666,6 +666,67 @@
 
 #+END_SRC
 
+** Help Popup
+#+BEGIN_SRC emacs-lisp
+;;; Help Popup
+
+(defun mcg/org-help ()
+  "Show Org mode commands reference in posframe popup."
+  (interactive)
+  (mcg-popup-show "*Org Help*" (mcg--org-help-content) 55 38))
+
+(defun mcg--org-help-content ()
+  "Generate Org help content."
+  "
+                      Org Mode 操作速查                    
+    ═══════════════════════════════════════════════════  
+
+    【基本操作】 C-c n                                    
+    C-c n c         Capture 快速记录                      
+    C-c n a         Agenda 日程视图                       
+    C-c n l         Store link 存储链接                   
+    C-c n t         Todo list 待办列表                    
+
+    【标题与结构】                                        
+    M-RET           插入同级标题                          
+    M-S-RET         插入 TODO 标题                        
+    M-LEFT/RIGHT    升级/降级标题                         
+    M-UP/DOWN       上移/下移标题                         
+    TAB             折叠/展开                             
+    S-TAB           全局折叠/展开                         
+
+    【TODO 状态】                                         
+    C-c C-t         切换 TODO 状态                        
+    S-LEFT/RIGHT    快速切换状态                          
+    C-c C-s         设置 SCHEDULED                        
+    C-c C-d         设置 DEADLINE                         
+
+    【链接与图片】                                        
+    C-c C-l         插入/编辑链接                         
+    C-c C-o         打开链接                              
+    C-c C-x C-v     显示/隐藏图片                         
+
+    【表格】                                              
+    | 内容 |         创建表格 (输入 | 后 TAB)             
+    TAB             下一单元格                            
+    S-TAB           上一单元格                            
+    C-c -           插入水平线                            
+
+    【代码块】                                            
+    <s TAB          插入 src 代码块                       
+    C-c C-c         执行代码块                            
+    C-c '           编辑代码块                            
+
+    【导出】                                              
+    C-c C-e         导出菜单                              
+    C-c C-e h h     导出 HTML                             
+    C-c C-e l p     导出 PDF (LaTeX)                      
+")
+
+(global-set-key (kbd "C-c n ?") #'mcg/org-help)
+
+#+END_SRC
+
 ** Initialize
 #+BEGIN_SRC emacs-lisp
   ;;; Initialize

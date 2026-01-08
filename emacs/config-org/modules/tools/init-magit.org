@@ -179,6 +179,61 @@
 
 #+END_SRC
 
+** Help Popup
+#+BEGIN_SRC emacs-lisp
+;;; Help Popup
+
+(defun mcg/git-help ()
+  "Show Git/Magit commands reference in posframe popup."
+  (interactive)
+  (mcg-popup-show "*Git Help*" (mcg--git-help-content) 55 35))
+
+(defun mcg--git-help-content ()
+  "Generate Git help content."
+  "
+                    Git/Magit 操作速查                    
+    ═══════════════════════════════════════════════════  
+
+    【基本操作】                                          
+    C-x g           Magit 状态 (主界面)                   
+    C-c g s         Magit 状态                            
+    C-c g d         Magit dispatch (所有命令)             
+    C-c g f         文件操作菜单                          
+
+    【提交与推送】                                        
+    C-c g p         推送 (push)                           
+    C-c g P         拉取 (pull)                           
+
+    【分支操作】 C-c g b                                  
+    C-c g b b       创建分支                              
+    C-c g b r       重命名分支                            
+    C-c g b d       删除分支                              
+
+    【日志查看】                                          
+    C-c g l         查看日志                              
+
+    【Submodule】 C-c g m                                 
+    C-c g m a       添加 submodule                        
+    C-c g m r       移除 submodule                        
+    C-c g m u       更新 submodule                        
+
+    【Magit 状态界面】                                    
+    s               Stage 文件/区块                       
+    u               Unstage                               
+    c c             提交                                  
+    P p             推送                                  
+    F p             拉取                                  
+    b b             切换分支                              
+    l l             查看日志                              
+    d d             查看 diff                             
+    g               刷新                                  
+    q               退出                                  
+")
+
+(global-set-key (kbd "C-c g H") #'mcg/git-help)
+
+#+END_SRC
+
 ** Initialize
 #+BEGIN_SRC emacs-lisp
 ;;; Initialize
