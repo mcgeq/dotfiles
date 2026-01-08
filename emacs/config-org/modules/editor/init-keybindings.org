@@ -322,31 +322,37 @@
 
 (defun mcg--setup-search-keys ()
   "Setup search-related keybindings."
-  ;; Consult search
-  (with-eval-after-load 'consult
-    (global-set-key (kbd "C-c s l") 'consult-line)
-    (global-set-key (kbd "C-c s i") 'consult-imenu)
-    (global-set-key (kbd "C-c s m") 'consult-mark)
-    (global-set-key (kbd "C-c s b") 'consult-buffer)
-    (global-set-key (kbd "C-c s r") 'consult-recent-file))
+  ;; Consult search (use autoload to ensure commands are available)
+  (autoload 'consult-line "consult" nil t)
+  (autoload 'consult-imenu "consult-imenu" nil t)
+  (autoload 'consult-mark "consult" nil t)
+  (autoload 'consult-buffer "consult" nil t)
+  (autoload 'consult-recent-file "consult" nil t)
+  
+  (global-set-key (kbd "C-c s l") #'consult-line)
+  (global-set-key (kbd "C-c s i") #'consult-imenu)
+  (global-set-key (kbd "C-c s m") #'consult-mark)
+  (global-set-key (kbd "C-c s b") #'consult-buffer)
+  (global-set-key (kbd "C-c s r") #'consult-recent-file)
   
   ;; Embark
-  (with-eval-after-load 'embark
-    (global-set-key (kbd "C-.") 'embark-act)
-    (global-set-key (kbd "C-,") 'embark-dwim))
+  (autoload 'embark-act "embark" nil t)
+  (autoload 'embark-dwim "embark" nil t)
+  (global-set-key (kbd "C-.") #'embark-act)
+  (global-set-key (kbd "C-,") #'embark-dwim)
   
   ;; Color-rg search
   (with-eval-after-load 'color-rg
-    (global-set-key (kbd "C-c s g") 'color-rg-search-input)
-    (global-set-key (kbd "C-c s G") 'color-rg-search-input-in-project)
-    (global-set-key (kbd "C-c s s") 'color-rg-search-symbol)
-    (global-set-key (kbd "C-c s S") 'color-rg-search-symbol-in-project)
-    (global-set-key (kbd "C-c s .") 'color-rg-search-symbol-in-current-file)
-    (global-set-key (kbd "C-c s ,") 'color-rg-search-input-in-current-file))
+    (global-set-key (kbd "C-c s g") #'color-rg-search-input)
+    (global-set-key (kbd "C-c s G") #'color-rg-search-input-in-project)
+    (global-set-key (kbd "C-c s s") #'color-rg-search-symbol)
+    (global-set-key (kbd "C-c s S") #'color-rg-search-symbol-in-project)
+    (global-set-key (kbd "C-c s .") #'color-rg-search-symbol-in-current-file)
+    (global-set-key (kbd "C-c s ,") #'color-rg-search-input-in-current-file))
   
   ;; Blink-search
   (with-eval-after-load 'blink-search
-    (global-set-key (kbd "C-c s B") 'blink-search))
+    (global-set-key (kbd "C-c s B") #'blink-search))
   
   (mcg-log "Search keybindings configured"))
 
@@ -358,13 +364,8 @@
 
 (defun mcg--setup-file-keys ()
   "Setup file-related keybindings."
-  ;; Recent files
-  (with-eval-after-load 'consult
-    (global-set-key (kbd "C-c f r") 'consult-recent-file))
-  
-  ;; If consult not loaded, use recentf
-  (unless (featurep 'consult)
-    (global-set-key (kbd "C-c f r") 'recentf-open-files))
+  ;; Recent files (consult-recent-file already autoloaded in search keys)
+  (global-set-key (kbd "C-c f r") #'consult-recent-file)
   
   (mcg-log "File keybindings configured"))
 
