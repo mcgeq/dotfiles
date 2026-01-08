@@ -212,9 +212,9 @@ This function configures lsp-bridge core options, including:
     ;; Vue with full stack
     (add-to-list 'lsp-bridge-multi-lang-server-extension-list '(("vue") . "vue-full"))
     
-    ;; Python with ty + ruff
-    (add-to-list 'lsp-bridge-multi-lang-server-extension-list '(("py") . "python-ty-ruff"))
-    (add-to-list 'lsp-bridge-multi-lang-server-extension-list '(("pyi") . "python-ty-ruff")))
+    ;; Python with ty + ruff (use official lsp-bridge config)
+    (add-to-list 'lsp-bridge-multi-lang-server-extension-list '(("py") . "ty_ruff"))
+    (add-to-list 'lsp-bridge-multi-lang-server-extension-list '(("pyi") . "ty_ruff")))
   
   ;; Setup keybindings hook
   (add-hook 'lsp-bridge-mode-hook #'mcg-lsp-setup-keybindings)
