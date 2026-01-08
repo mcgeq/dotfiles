@@ -8,7 +8,7 @@
 ;;; init-navigation.el --- Navigation Tools for MCG Emacs -*- lexical-binding: t; -*-
 
 ;; Filename: init-navigation.el
-;; Description: 导航工具模块（Ace-window + Avy）
+;; Description: Navigation tools module (Ace-window + Avy)
 ;; Author: mcge <mcgeq@outlook.com>
 ;; Copyright (C) 2024-2026, mcge, all rights reserved.
 ;; Create   Date: 2026-01-07
@@ -18,10 +18,10 @@
 
 ;;; Commentary:
 ;;
-;; MCG Emacs 配置架构的导航工具模块，负责：
-;; - Ace-window 快速窗口切换
-;; - Avy 快速跳转
-;; - Winner-mode 窗口布局撤销
+;; Navigation tools module for MCG Emacs configuration, responsible for:
+;; - Ace-window fast window switching
+;; - Avy fast jumping
+;; - Winner-mode window layout undo
 ;;
 
 #+END_SRC
@@ -39,24 +39,24 @@
 ;;; Ace-Window Configuration
 
 (defun mcg--setup-ace-window ()
-  "设置 Ace-window 快速窗口切换。"
+  "Set up Ace-window for fast window switching."
   (when (mcg-require-extension "editor/ace-window" 'ace-window)
-    ;; 使用更容易按的键作为窗口标签
+    ;; Use easier-to-press keys as window labels
     (setq aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l))
     
-    ;; 窗口标签位置
+    ;; Window label position
     (setq aw-char-position 'top-left)
     
-    ;; 显示背景
+    ;; Show background
     (setq aw-background t)
     
-    ;; 忽略某些 buffer
+    ;; Ignore certain buffers
     (setq aw-ignored-buffers '("*Calc Trail*" "*LV*"))
     
-    ;; 当只有两个窗口时直接切换
+    ;; Switch directly when only two windows
     (setq aw-dispatch-always nil)
     
-    ;; 自定义 dispatch alist
+    ;; Custom dispatch alist
     (setq aw-dispatch-alist
           '((?x aw-delete-window "Delete Window")
             (?m aw-swap-window "Swap Windows")
@@ -70,7 +70,7 @@
             (?o delete-other-windows "Delete Other Windows")
             (?? aw-show-dispatch-help)))
     
-    ;; 窗口标签样式
+    ;; Window label style
     (custom-set-faces
      '(aw-leading-char-face
        ((t (:inherit ace-jump-face-foreground :height 2.0)))))
@@ -84,13 +84,13 @@
 ;;; Ace-Window Keybindings
 
 (defun mcg--setup-ace-window-keybindings ()
-  "设置 Ace-window 快捷键。"
+  "Set up Ace-window keybindings."
   (when (featurep 'ace-window)
-    ;; 主要快捷键
+    ;; Main keybindings
     (global-set-key (kbd "M-O") 'ace-window)
     (global-set-key (kbd "C-x o") 'ace-window)
     
-    ;; C-c w 前缀
+    ;; C-c w prefix
     (global-set-key (kbd "C-c w w") 'ace-window)
     (global-set-key (kbd "C-c w d") 'ace-delete-window)
     (global-set-key (kbd "C-c w s") 'ace-swap-window)
@@ -99,10 +99,10 @@
     (global-set-key (kbd "C-c w v") 'split-window-right)
     (global-set-key (kbd "C-c w h") 'split-window-below)
     
-    ;; 快速删除窗口
+    ;; Quick delete window
     (global-set-key (kbd "C-x 0") 'ace-delete-window)
     
-    ;; 快速交换窗口
+    ;; Quick swap window
     (global-set-key (kbd "C-x 4 s") 'ace-swap-window)
     
     (mcg-log "Ace-window keybindings configured")))
@@ -114,13 +114,13 @@
 ;;; Winner Mode Configuration
 
 (defun mcg--setup-winner-mode ()
-  "设置 Winner-mode 窗口布局撤销。"
-  ;; winner-mode 是内置的
+  "Set up Winner-mode for window layout undo."
+  ;; winner-mode is built-in
   (winner-mode 1)
   
-  ;; 快捷键:
-  ;; C-c <left>  - 撤销窗口布局变化
-  ;; C-c <right> - 重做窗口布局变化
+  ;; Keybindings:
+  ;; C-c <left>  - Undo window layout change
+  ;; C-c <right> - Redo window layout change
   
   (mcg-log "Winner-mode enabled"))
 
@@ -131,28 +131,28 @@
 ;;; Avy Configuration
 
 (defun mcg--setup-avy ()
-  "设置 Avy 快速跳转。"
+  "Set up Avy for fast jumping."
   (when (mcg-require-extension "editor/avy" 'avy)
-    ;; 使用更容易按的键
+    ;; Use easier-to-press keys
     (setq avy-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l ?q ?w ?e ?r ?u ?i ?o ?p))
     
-    ;; 跳转样式
+    ;; Jump style
     (setq avy-style 'at-full)
     
-    ;; 背景变暗
+    ;; Dim background
     (setq avy-background t)
     
-    ;; 所有窗口都可以跳转
+    ;; Jump across all windows
     (setq avy-all-windows t)
     (setq avy-all-windows-alt nil)
     
-    ;; 超时时间
+    ;; Timeout
     (setq avy-timeout-seconds 0.5)
     
-    ;; 高亮第一个字符
+    ;; Highlight first character
     (setq avy-highlight-first t)
     
-    ;; 忽略大小写
+    ;; Case insensitive
     (setq avy-case-fold-search t)
     
     (mcg-log "Avy configured")))
@@ -164,26 +164,26 @@
 ;;; Avy Keybindings
 
 (defun mcg--setup-avy-keybindings ()
-  "设置 Avy 快捷键。"
+  "Set up Avy keybindings."
   (when (featurep 'avy)
-    ;; 跳转到字符
+    ;; Jump to character
     (global-set-key (kbd "C-;") 'avy-goto-char)
     (global-set-key (kbd "C-'") 'avy-goto-char-2)
     
-    ;; M-g 前缀（标准 Emacs goto 前缀）
+    ;; M-g prefix (standard Emacs goto prefix)
     (global-set-key (kbd "M-g w") 'avy-goto-word-1)
     (global-set-key (kbd "M-g g") 'avy-goto-line)
     (global-set-key (kbd "M-g c") 'avy-goto-char-timer)
     (global-set-key (kbd "M-g j") 'avy-goto-char-in-line)
     
-    ;; 高级命令
+    ;; Advanced commands
     (global-set-key (kbd "M-g y") 'avy-copy-line)
     (global-set-key (kbd "M-g m") 'avy-move-line)
     (global-set-key (kbd "M-g k") 'avy-kill-whole-line)
     (global-set-key (kbd "M-g Y") 'avy-copy-region)
     (global-set-key (kbd "M-g K") 'avy-kill-region)
     
-    ;; isearch 集成
+    ;; isearch integration
     (define-key isearch-mode-map (kbd "C-;") 'avy-isearch)
     
     (mcg-log "Avy keybindings configured")))
@@ -195,28 +195,28 @@
 ;;; Avy Custom Functions
 
 (defun mcg/avy-goto-word-or-subword ()
-  "跳转到单词或子词（驼峰命名中的部分）。"
+  "Jump to word or subword (part of camelCase)."
   (interactive)
   (if (bound-and-true-p subword-mode)
       (avy-goto-subword-1)
     (avy-goto-word-1)))
 
 (defun mcg/avy-goto-open-paren ()
-  "跳转到开括号。"
+  "Jump to open parenthesis."
   (interactive)
   (avy-goto-char ?\())
 
 (defun mcg/avy-goto-close-paren ()
-  "跳转到闭括号。"
+  "Jump to close parenthesis."
   (interactive)
   (avy-goto-char ?\)))
 
 (defun mcg/avy-goto-string ()
-  "跳转到字符串开头（引号）。"
+  "Jump to string start (quote)."
   (interactive)
   (avy-goto-char ?\"))
 
-;; 绑定自定义函数
+;; Bind custom functions
 (with-eval-after-load 'avy
   (global-set-key (kbd "M-g (") 'mcg/avy-goto-open-paren)
   (global-set-key (kbd "M-g )") 'mcg/avy-goto-close-paren)

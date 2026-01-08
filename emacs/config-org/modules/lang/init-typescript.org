@@ -8,7 +8,7 @@
   ;;; init-typescript.el --- TypeScript/JavaScript Support for MCG Emacs -*- lexical-binding: t; -*-
 
   ;; Filename: init-typescript.el
-  ;; Description: TypeScript/JavaScript 语言支持模块
+  ;; Description: TypeScript/JavaScript language support module
   ;; Author: mcge <mcgeq@outlook.com>
   ;; Copyright (C) 2024-2026, mcge, all rights reserved.
   ;; Create   Date: 2026-01-07
@@ -18,14 +18,14 @@
 
   ;;; Commentary:
   ;;
-  ;; MCG Emacs 配置架构的 TypeScript/JavaScript 语言支持模块，提供：
-  ;; - typescript-ts-mode / tsx-ts-mode / js-ts-mode 配置
-  ;; - Biome 格式化和 lint（替代 ESLint + Prettier）
-  ;; - LSP 集成（通过 +lsp 模块）
-  ;; - Node.js 运行支持
-  ;; - React/JSX 支持
+  ;; TypeScript/JavaScript language support module for MCG Emacs, providing:
+  ;; - typescript-ts-mode / tsx-ts-mode / js-ts-mode configuration
+  ;; - Biome formatting and lint (replaces ESLint + Prettier)
+  ;; - LSP integration (via +lsp module)
+  ;; - Node.js run support
+  ;; - React/JSX support
   ;;
-  ;; 模块元数据:
+  ;; Module metadata:
   ;; :depends (+lsp)
   ;; :defer t
   ;;
@@ -38,7 +38,7 @@
 
 (require 'core-lib)
 
-;; 确保 +lsp 模块已加载
+;; Ensure +lsp module is loaded
 (when (and (boundp 'mcg-module-enabled-p)
            (fboundp 'mcg-module-enabled-p)
            (mcg-module-enabled-p :lang 'lsp))
@@ -48,13 +48,13 @@
 
 ** TypeScript Mode Configuration
 #+BEGIN_SRC emacs-lisp
-;;; TypeScript 基础配置
+;;; TypeScript Basic Configuration
 
-;; 缩进设置
+;; Indentation settings
 (setq typescript-indent-level 2
       js-indent-level 2)
 
-;; 强制使用 tree-sitter 版本
+;; Force use of tree-sitter version
 (when (and (fboundp 'treesit-available-p)
            (treesit-available-p))
   ;; Mode remapping
@@ -62,29 +62,29 @@
   (add-to-list 'major-mode-remap-alist '(js-mode . js-ts-mode))
   (add-to-list 'major-mode-remap-alist '(tsx-mode . tsx-ts-mode))
   
-  ;; TypeScript 文件关联
+  ;; TypeScript file associations
   (add-to-list 'auto-mode-alist '("\\.ts\\'" . typescript-ts-mode))
   (add-to-list 'auto-mode-alist '("\\.tsx\\'" . tsx-ts-mode))
   (add-to-list 'auto-mode-alist '("\\.mts\\'" . typescript-ts-mode))
   (add-to-list 'auto-mode-alist '("\\.cts\\'" . typescript-ts-mode))
   
-  ;; JavaScript 文件关联
+  ;; JavaScript file associations
   (add-to-list 'auto-mode-alist '("\\.js\\'" . js-ts-mode))
   (add-to-list 'auto-mode-alist '("\\.jsx\\'" . js-ts-mode))
   (add-to-list 'auto-mode-alist '("\\.mjs\\'" . js-ts-mode))
   (add-to-list 'auto-mode-alist '("\\.cjs\\'" . js-ts-mode)))
 
-;; 启用 JSX 语法高亮
+;; Enable JSX syntax highlighting
 (setq js-jsx-syntax t)
 
 #+END_SRC
 
 ** Biome Integration
 #+BEGIN_SRC emacs-lisp
-;;; Biome 格式化和 lint（推荐，替代 ESLint + Prettier）
+;;; Biome Formatting and Lint (recommended, replaces ESLint + Prettier)
 
 (defun mcg-ts-format-with-biome ()
-  "使用 Biome 格式化代码。"
+  "Format code using Biome."
   (interactive)
   (if (executable-find "biome")
       (let ((output-buffer (get-buffer-create "*biome*")))
@@ -98,7 +98,7 @@
     (message "Biome not found. Install with: npm install -g @biomejs/biome")))
 
 (defun mcg/ts-check-with-biome ()
-  "使用 Biome 检查代码（lint + format）。"
+  "Check code using Biome (lint + format)."
   (interactive)
   (if (executable-find "biome")
       (let ((compilation-scroll-output t))
@@ -106,7 +106,7 @@
     (message "Biome not found. Install with: npm install -g @biomejs/biome")))
 
 (defun mcg/ts-fix-with-biome ()
-  "使用 Biome 自动修复代码。"
+  "Auto-fix code using Biome."
   (interactive)
   (if (executable-find "biome")
       (let ((file (buffer-file-name)))
@@ -119,10 +119,10 @@
 
 ** Prettier Integration (Fallback)
 #+BEGIN_SRC emacs-lisp
-;;; Prettier 格式化（如果不使用 Biome）
+;;; Prettier Formatting (Fallback)
 
 (defun mcg-ts-format-with-prettier ()
-  "使用 Prettier 格式化代码。"
+  "Format code using Prettier."
   (interactive)
   (if (executable-find "prettier")
       (let* ((temp-file (make-temp-file "prettier" nil
@@ -140,7 +140,7 @@
     (message "Prettier not found. Install with: npm install -g prettier")))
 
 (defun mcg-ts-format-buffer ()
-  "格式化 TypeScript/JavaScript 代码（优先使用 Biome）。"
+  "Format TypeScript/JavaScript code (prefer Biome)."
   (interactive)
   (cond
    ((executable-find "biome") (mcg-ts-format-with-biome))
@@ -151,10 +151,10 @@
 
 ** Node.js Support
 #+BEGIN_SRC emacs-lisp
-;;; Node.js 支持
+;;; Node.js Support
 
 (defun mcg/ts-run-node ()
-  "使用 Node.js 运行当前文件。"
+  "Run current file using Node.js."
   (interactive)
   (if (executable-find "node")
       (let ((compilation-scroll-output t))
@@ -162,7 +162,7 @@
     (message "Node.js not found")))
 
 (defun mcg/ts-run-npm-script ()
-  "运行 npm script。"
+  "Run npm script."
   (interactive)
   (if (executable-find "npm")
       (let* ((package-json (locate-dominating-file default-directory "package.json"))
@@ -173,7 +173,7 @@
     (message "npm not found")))
 
 (defun mcg--ts-get-npm-scripts ()
-  "获取 package.json 中的 scripts。"
+  "Get scripts from package.json."
   (when-let* ((package-json (locate-dominating-file default-directory "package.json"))
               (json-file (expand-file-name "package.json" package-json)))
     (when (file-exists-p json-file)
@@ -187,10 +187,10 @@
 
 ** Import Management
 #+BEGIN_SRC emacs-lisp
-;;; Import 管理和代码动作
+;;; Import Management and Code Actions
 
 (defun mcg/ts-organize-imports ()
-  "整理 imports（需要 LSP 支持）。"
+  "Organize imports (requires LSP support)."
   (interactive)
   (if (and (fboundp 'lsp-bridge-code-action)
            (bound-and-true-p lsp-bridge-mode))
@@ -198,7 +198,7 @@
     (message "LSP not active")))
 
 (defun mcg/ts-remove-unused ()
-  "删除未使用的 imports 和 variables。"
+  "Remove unused imports and variables."
   (interactive)
   (if (and (fboundp 'lsp-bridge-code-action)
            (bound-and-true-p lsp-bridge-mode))
@@ -206,7 +206,7 @@
     (message "LSP not active")))
 
 (defun mcg/ts-fix-all ()
-  "自动修复所有可修复的问题。"
+  "Auto-fix all fixable issues."
   (interactive)
   (if (and (fboundp 'lsp-bridge-code-action)
            (bound-and-true-p lsp-bridge-mode))
@@ -217,10 +217,10 @@
 
 ** React/JSX Support
 #+BEGIN_SRC emacs-lisp
-;;; React/JSX 支持
+;;; React/JSX Support
 
 (defun mcg/ts-insert-component ()
-  "插入 React 组件模板。"
+  "Insert React component template."
   (interactive)
   (let ((component-name (read-string "Component name: ")))
     (insert (format "import React from 'react';\n\n"))
@@ -230,7 +230,7 @@
     (insert "  return (\n    <div>\n      \n    </div>\n  );\n};\n")))
 
 (defun mcg/ts-insert-interface ()
-  "创建 TypeScript interface。"
+  "Create TypeScript interface."
   (interactive)
   (let ((name (read-string "Interface name: ")))
     (insert (format "interface %s {\n  \n}\n" name))
@@ -238,7 +238,7 @@
     (end-of-line)))
 
 (defun mcg/ts-insert-type ()
-  "创建 TypeScript type alias。"
+  "Create TypeScript type alias."
   (interactive)
   (let ((name (read-string "Type name: ")))
     (insert (format "type %s = \n" name))
@@ -248,10 +248,10 @@
 
 ** Console Log Helper
 #+BEGIN_SRC emacs-lisp
-;;; Console.log 辅助
+;;; Console.log Helper
 
 (defun mcg/ts-insert-console-log ()
-  "插入 console.log 语句。"
+  "Insert console.log statement."
   (interactive)
   (let ((var-name (if (use-region-p)
                       (buffer-substring-no-properties (region-beginning) (region-end))
@@ -261,7 +261,7 @@
     (insert (format "console.log('%s:', %s);" var-name var-name))))
 
 (defun mcg/ts-remove-console-logs ()
-  "删除所有 console.log 语句。"
+  "Remove all console.log statements."
   (interactive)
   (save-excursion
     (goto-char (point-min))
@@ -275,10 +275,10 @@
 
 ** Project Detection
 #+BEGIN_SRC emacs-lisp
-;;; 项目检测
+;;; Project Detection
 
 (defun mcg-ts-project-p ()
-  "检测是否为 TypeScript/JavaScript 项目。"
+  "Detect if current project is a TypeScript/JavaScript project."
   (when-let ((project-root (when (project-current)
                              (project-root (project-current)))))
     (or (file-exists-p (expand-file-name "package.json" project-root))
@@ -286,7 +286,7 @@
         (file-exists-p (expand-file-name "jsconfig.json" project-root)))))
 
 (defun mcg-ts-is-react-project-p ()
-  "检测是否为 React 项目。"
+  "Detect if current project is a React project."
   (when-let* ((project-root (when (project-current)
                               (project-root (project-current))))
               (package-json (expand-file-name "package.json" project-root)))
@@ -300,25 +300,25 @@
 
 ** Keybindings
 #+BEGIN_SRC emacs-lisp
-;;; 快捷键配置
+;;; Keybindings Configuration
 
 (defun mcg-ts-setup-keybindings ()
-  "设置 TypeScript/JavaScript 模式快捷键。"
-  ;; 格式化和检查
+  "Setup TypeScript/JavaScript mode keybindings."
+  ;; Formatting and checking
   (local-set-key (kbd "C-c r f") #'mcg-ts-format-buffer)
   (local-set-key (kbd "C-c b") #'mcg/ts-check-with-biome)
   (local-set-key (kbd "C-c B") #'mcg/ts-fix-with-biome)
   
-  ;; 代码动作
+  ;; Code actions
   (local-set-key (kbd "C-c i") #'mcg/ts-organize-imports)
   (local-set-key (kbd "C-c u") #'mcg/ts-remove-unused)
   (local-set-key (kbd "C-c x") #'mcg/ts-fix-all)
   
-  ;; 运行
+  ;; Run
   (local-set-key (kbd "C-c r r") #'mcg/ts-run-node)
   (local-set-key (kbd "C-c n") #'mcg/ts-run-npm-script)
   
-  ;; 代码生成
+  ;; Code generation
   (local-set-key (kbd "C-c c") #'mcg/ts-insert-component)
   (local-set-key (kbd "C-c t i") #'mcg/ts-insert-interface)
   (local-set-key (kbd "C-c t t") #'mcg/ts-insert-type)
@@ -337,20 +337,20 @@
 
 ** Tool Status Check
 #+BEGIN_SRC emacs-lisp
-;;; 工具状态检查
+;;; Tool Status Check
 
 (defun mcg/ts-check-tools ()
-  "检查 TypeScript/JavaScript 开发工具是否已安装。"
+  "Check if TypeScript/JavaScript development tools are installed."
   (interactive)
-  (let ((tools '(("node" . "安装 Node.js")
-                 ("npm" . "随 Node.js 安装")
+  (let ((tools '(("node" . "Install Node.js")
+                 ("npm" . "Installed with Node.js")
                  ("biome" . "npm install -g @biomejs/biome")
                  ("prettier" . "npm install -g prettier")
                  ("typescript-language-server" . "npm install -g typescript-language-server")
                  ("tsc" . "npm install -g typescript"))))
     (with-help-window "*TypeScript Tools Status*"
       (princ "═══════════════════════════════════════════\n")
-      (princ "   TypeScript/JavaScript 开发工具状态\n")
+      (princ "   TypeScript/JavaScript Development Tools Status\n")
       (princ "═══════════════════════════════════════════\n\n")
       (dolist (tool tools)
         (let ((name (car tool))
@@ -358,47 +358,47 @@
           (princ (format "%-28s %s\n"
                          name
                          (if (executable-find name)
-                             "✓ 已安装"
-                           (format "✗ 未安装 (%s)" install-cmd))))))
+                             "✓ Installed"
+                           (format "✗ Not installed (%s)" install-cmd))))))
       (princ "\n═══════════════════════════════════════════\n")
-      (princ "\n推荐安装命令:\n")
+      (princ "\nRecommended install commands:\n")
       (princ "  npm install -g typescript typescript-language-server\n")
       (princ "  npm install -g @biomejs/biome\n")
-      (princ "\n或使用 pnpm:\n")
+      (princ "\nOr using pnpm:\n")
       (princ "  pnpm add -g typescript typescript-language-server @biomejs/biome\n"))))
 
 #+END_SRC
 
 ** Keybindings Summary
 #+BEGIN_SRC emacs-lisp
-;;; 快捷键总结
+;;; Keybindings Summary
 
-;; 格式化和检查:
-;; C-c r f   - 格式化代码 (Biome 或 Prettier)
-;; C-c b     - Biome 检查 (lint + format)
-;; C-c B     - Biome 自动修复
+;; Formatting and checking:
+;; C-c r f   - Format code (Biome or Prettier)
+;; C-c b     - Biome check (lint + format)
+;; C-c B     - Biome auto-fix
 ;;
-;; 代码动作:
-;; C-c i     - 整理 imports
-;; C-c u     - 删除未使用的 imports/variables
-;; C-c x     - 自动修复所有问题
+;; Code actions:
+;; C-c i     - Organize imports
+;; C-c u     - Remove unused imports/variables
+;; C-c x     - Auto-fix all issues
 ;;
-;; 运行:
-;; C-c r r   - 运行 Node.js
-;; C-c n     - 运行 npm script
+;; Run:
+;; C-c r r   - Run Node.js
+;; C-c n     - Run npm script
 ;;
-;; 代码生成:
-;; C-c c     - 插入 React 组件模板
-;; C-c t i   - 创建 interface
-;; C-c t t   - 创建 type alias
-;; C-c C-l   - 插入 console.log
-;; C-c C-k   - 删除所有 console.log
+;; Code generation:
+;; C-c c     - Insert React component template
+;; C-c t i   - Create interface
+;; C-c t t   - Create type alias
+;; C-c C-l   - Insert console.log
+;; C-c C-k   - Remove all console.log
 ;;
-;; LSP (由 +lsp 模块提供):
-;; M-.       - 跳转定义
-;; M-,       - 返回
-;; M-?       - 查找引用
-;; C-c r r   - 重命名（注意：与运行冲突，使用 LSP 的 C-c r r）
+;; LSP (provided by +lsp module):
+;; M-.       - Jump to definition
+;; M-,       - Return
+;; M-?       - Find references
+;; C-c r r   - Rename (note: conflicts with run, use LSP's C-c r r)
 
 #+END_SRC
 

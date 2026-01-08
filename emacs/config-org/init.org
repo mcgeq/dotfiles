@@ -12,7 +12,7 @@
   ;;; init.el --- MCG Emacs Configuration Entry -*- lexical-binding: t; -*-
 
   ;; Filename: init.el
-  ;; Description: 配置架构入口文件
+  ;; Description: Configuration architecture entry file
   ;; Author: mcge <mcgeq@outlook.com>
   ;; Copyright (C) 2024-2026, mcge, all rights reserved.
   ;; Create   Date: 2026-01-07
@@ -22,18 +22,18 @@
 
   ;;; Commentary:
   ;;
-  ;; MCG Emacs 配置架构入口文件。
+  ;; MCG Emacs configuration architecture entry file.
   ;;
-  ;; 此文件负责：
-  ;; - 加载核心模块 (core-bootstrap, core-lib, core-modules)
-  ;; - 使用 mcg! 宏声明启用的模块
-  ;; - 设置延迟加载
-  ;; - 加载私有配置
+  ;; This file is responsible for:
+  ;; - Loading core modules (core-bootstrap, core-lib, core-modules)
+  ;; - Using mcg! macro to declare enabled modules
+  ;; - Setting up lazy loading
+  ;; - Loading private configuration
   ;;
-  ;; 使用方法：
-  ;; 1. 设置环境变量 MCG_EMACS_CONFIG_DIR 指向配置根目录
-  ;;    或使用默认路径 (Windows: D:/config, Linux/Mac: ~)
-  ;; 2. 在 ~/.emacs.d/init.el 中加载此文件：
+  ;; Usage:
+  ;; 1. Set environment variable MCG_EMACS_CONFIG_DIR to config root directory
+  ;;    or use default path (Windows: D:/config, Linux/Mac: ~)
+  ;; 2. Load this file in ~/.emacs.d/init.el:
   ;;    (load (expand-file-name "site-lisp/config/init.el" mcg-emacs-dir))
   ;;
 
@@ -41,21 +41,21 @@
 
 ** Load Core Modules
 #+BEGIN_SRC emacs-lisp
-;;; 加载核心模块
+;;; Load Core Modules
 
-;; 核心引导模块 - 定义路径和性能优化
+;; Core bootstrap module - define paths and performance optimization
 (require 'core-bootstrap)
 
-;; 核心库模块 - 扩展管理和工具函数
+;; Core library module - extension management and utility functions
 (require 'core-lib)
 
-;; 模块系统 - mcg! 宏和模块加载
+;; Module system - mcg! macro and module loading
 (require 'core-modules)
 
-;; 自动化模块 - 自动 tangle 和 autoload
+;; Automation module - auto tangle and autoload
 (require 'core-autoload)
 
-;; 设置保存时自动 tangle（仅在交互模式下）
+;; Setup auto tangle on save (only in interactive mode)
 (when (not noninteractive)
   (mcg-setup-auto-tangle))
 
@@ -63,102 +63,102 @@
 
 ** Module Declaration
 #+BEGIN_SRC emacs-lisp
-;;; 模块声明
+;;; Module Declaration
 ;;
-;; 使用 mcg! 宏声明启用的模块
-;; 语法:
-;;   :category module  - 启用模块
-;;   :category -module - 禁用模块
+;; Use mcg! macro to declare enabled modules
+;; Syntax:
+;;   :category module  - Enable module
+;;   :category -module - Disable module
 ;;
 
 (mcg! :ui
-      theme           ; 主题配置 (ef-themes)
-      modeline        ; 状态栏 (awesome-tray)
-      font            ; 字体配置
+      theme           ; Theme configuration (ef-themes)
+      modeline        ; Status bar (awesome-tray)
+      font            ; Font configuration
 
       :editor
-      defaults        ; 编辑器默认配置
-      treesit         ; Tree-sitter 支持
-      navigation      ; 导航 (avy, ace-window)
-      keybindings     ; 快捷键 (markmacro, vundo)
+      defaults        ; Editor default configuration
+      treesit         ; Tree-sitter support
+      navigation      ; Navigation (avy, ace-window)
+      keybindings     ; Keybindings (markmacro, vundo)
 
       :completion
-      vertico         ; 垂直补全框架
-      yasnippet       ; 代码片段
+      vertico         ; Vertical completion framework
+      yasnippet       ; Code snippets
 
       :tools
-      magit           ; Git 客户端
-      search          ; 搜索工具 (blink-search, color-rg)
-      rime            ; 中文输入法
-      utils           ; 工具集 (auto-save, which-key, recentf, helpful)
-      sort-tab        ; 标签栏
+      magit           ; Git client
+      search          ; Search tools (blink-search, color-rg)
+      rime            ; Chinese input method
+      utils           ; Utilities (auto-save, which-key, recentf, helpful)
+      sort-tab        ; Tab bar
 
       :input
-      fingertip       ; 结构化编程
-      wraplish        ; 中英文混排
+      fingertip       ; Structural editing
+      wraplish        ; CJK-English mixed spacing
 
       :org
-      org             ; Org-mode 基础配置
-      org-agenda      ; Agenda 日程管理
-      org-babel       ; Babel 代码执行
-      org-capture     ; Capture 模板和 Hugo 集成
-      org-extras      ; Org 扩展 (download, numbering, consult-todo)
+      org             ; Org-mode basic configuration
+      org-agenda      ; Agenda schedule management
+      org-babel       ; Babel code execution
+      org-capture     ; Capture templates and Hugo integration
+      org-extras      ; Org extensions (download, numbering, consult-todo)
 
       :docs
-      markdown        ; Markdown 支持
+      markdown        ; Markdown support
 
       :lang
-      lsp             ; LSP 统一配置 (lsp-bridge)
-      lsp-common      ; LSP 通用工具
-      rust            ; Rust 开发
-      python          ; Python 开发
-      typescript      ; TypeScript 开发
-      web             ; Web 开发 (Vue, HTML, CSS)
-      cpp             ; C/C++ 开发
-      lua             ; Lua 开发
-      zig             ; Zig 开发
+      lsp             ; LSP unified configuration (lsp-bridge)
+      lsp-common      ; LSP common tools
+      rust            ; Rust development
+      python          ; Python development
+      typescript      ; TypeScript development
+      web             ; Web development (Vue, HTML, CSS)
+      cpp             ; C/C++ development
+      lua             ; Lua development
+      zig             ; Zig development
       )
 
 #+END_SRC
 
 ** Load Modules
 #+BEGIN_SRC emacs-lisp
-;;; 加载模块
+;;; Load Modules
 
-;; 立即加载 UI 模块（启动时需要）
+;; Load UI modules immediately (needed at startup)
 (mcg-load-modules-by-category :ui)
 
-;; 立即加载编辑器模块
+;; Load editor modules immediately
 (mcg-load-modules-by-category :editor)
 
-;; 立即加载补全模块
+;; Load completion modules immediately
 (mcg-load-modules-by-category :completion)
 
-;; 立即加载工具模块
+;; Load tools modules immediately
 (mcg-load-modules-by-category :tools)
 
-;; 立即加载输入模块
+;; Load input modules immediately
 (mcg-load-modules-by-category :input)
 
-;; 立即加载 Org 模块
+;; Load Org modules immediately
 (mcg-load-modules-by-category :org)
 
-;; 立即加载文档模块
+;; Load docs modules immediately
 (mcg-load-modules-by-category :docs)
 
-;; 设置语言模块延迟加载
-;; LSP 模块立即加载（其他语言模块依赖它）
+;; Setup lazy loading for language modules
+;; LSP module loads immediately (other language modules depend on it)
 (mcg-load-module :lang 'lsp)
 (mcg-load-module :lang 'lsp-common)
 
-;; 设置语言模块的延迟加载
+;; Setup deferred loading for language modules
 (mcg-setup-deferred-loading)
 
 #+END_SRC
 
 ** Load Private Configuration
 #+BEGIN_SRC emacs-lisp
-;;; 加载私有配置
+;;; Load Private Configuration
 
 (let ((private-config (expand-file-name "config.el" mcg-private-dir)))
   (when (file-exists-p private-config)
@@ -169,9 +169,9 @@
 
 ** Startup Complete
 #+BEGIN_SRC emacs-lisp
-;;; 启动完成
+;;; Startup Complete
 
-;; 显示模块加载统计
+;; Show module loading statistics
 (add-hook 'emacs-startup-hook
           (lambda ()
             (let ((loaded (length mcg-loaded-modules))
@@ -179,7 +179,7 @@
                   (errors (length mcg-module-load-errors)))
               (mcg-log "Modules: %d loaded, %d deferred, %d errors"
                        loaded deferred errors)
-              ;; 如果有错误，显示警告
+              ;; Show warning if there are errors
               (when (> errors 0)
                 (message "⚠️ %d module(s) failed to load. Run M-x mcg-list-modules for details."
                          errors)))))

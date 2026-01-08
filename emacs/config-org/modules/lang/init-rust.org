@@ -8,7 +8,7 @@
   ;;; init-rust.el --- Rust Language Support for MCG Emacs -*- lexical-binding: t; -*-
 
   ;; Filename: init-rust.el
-  ;; Description: Rust 语言支持模块
+  ;; Description: Rust language support module
   ;; Author: mcge <mcgeq@outlook.com>
   ;; Copyright (C) 2024-2026, mcge, all rights reserved.
   ;; Create   Date: 2026-01-07
@@ -18,14 +18,14 @@
 
   ;;; Commentary:
   ;;
-  ;; MCG Emacs 配置架构的 Rust 语言支持模块，提供：
-  ;; - rust-mode / rust-ts-mode 配置
-  ;; - rust-analyzer LSP 集成（通过 +lsp 模块）
-  ;; - Cargo 命令集成
-  ;; - 代码格式化（rustfmt）
-  ;; - 测试运行支持
+  ;; Rust language support module for MCG Emacs, providing:
+  ;; - rust-mode / rust-ts-mode configuration
+  ;; - rust-analyzer LSP integration (via +lsp module)
+  ;; - Cargo command integration
+  ;; - Code formatting (rustfmt)
+  ;; - Test running support
   ;;
-  ;; 模块元数据:
+  ;; Module metadata:
   ;; :depends (+lsp)
   ;; :defer t
   ;;
@@ -38,7 +38,7 @@
 
 (require 'core-lib)
 
-;; 确保 +lsp 模块已加载
+;; Ensure +lsp module is loaded
 (when (and (boundp 'mcg-module-enabled-p)
            (fboundp 'mcg-module-enabled-p)
            (mcg-module-enabled-p :lang 'lsp))
@@ -48,67 +48,67 @@
 
 ** Rust Mode Configuration
 #+BEGIN_SRC emacs-lisp
-;;; Rust 基础配置
+;;; Rust Basic Configuration
 
-;; 加载 rust-mode 扩展
+;; Load rust-mode extension
 (mcg-require-extension "lsp/rust-mode" 'rust-mode)
 
-;; 使用 rust-ts-mode（如果可用）
+;; Use rust-ts-mode (if available)
 (when (and (fboundp 'treesit-available-p)
            (treesit-available-p))
   (add-to-list 'major-mode-remap-alist '(rust-mode . rust-ts-mode)))
 
-;; 文件关联
+;; File associations
 (add-to-list 'auto-mode-alist '("\\.rs\\'" . rust-mode))
 (add-to-list 'auto-mode-alist '("Cargo\\.toml\\'" . toml-ts-mode))
 
-;; Rust 缩进设置
+;; Rust indentation settings
 (setq rust-indent-offset 4)
 
 #+END_SRC
 
 ** Cargo Integration
 #+BEGIN_SRC emacs-lisp
-;;; Cargo 命令集成
+;;; Cargo Command Integration
 
 (defun mcg/rust-cargo-build ()
-  "运行 cargo build。"
+  "Run cargo build."
   (interactive)
   (let ((compilation-scroll-output t))
     (compile "cargo build")))
 
 (defun mcg/rust-cargo-run ()
-  "运行 cargo run。"
+  "Run cargo run."
   (interactive)
   (let ((compilation-scroll-output t))
     (compile "cargo run")))
 
 (defun mcg/rust-cargo-test ()
-  "运行 cargo test。"
+  "Run cargo test."
   (interactive)
   (let ((compilation-scroll-output t))
     (compile "cargo test")))
 
 (defun mcg/rust-cargo-check ()
-  "运行 cargo check。"
+  "Run cargo check."
   (interactive)
   (let ((compilation-scroll-output t))
     (compile "cargo check")))
 
 (defun mcg/rust-cargo-clippy ()
-  "运行 cargo clippy。"
+  "Run cargo clippy."
   (interactive)
   (let ((compilation-scroll-output t))
     (compile "cargo clippy")))
 
 (defun mcg/rust-cargo-doc ()
-  "运行 cargo doc --open。"
+  "Run cargo doc --open."
   (interactive)
   (let ((compilation-scroll-output t))
     (compile "cargo doc --open")))
 
 (defun mcg/rust-cargo-fmt ()
-  "运行 cargo fmt。"
+  "Run cargo fmt."
   (interactive)
   (let ((file (buffer-file-name)))
     (when file
@@ -123,10 +123,10 @@
 
 ** Test Functions
 #+BEGIN_SRC emacs-lisp
-;;; 测试支持
+;;; Testing Support
 
 (defun mcg/rust-test-current-fn ()
-  "运行光标所在的测试函数。"
+  "Run test function at cursor."
   (interactive)
   (let ((fn-name (mcg--rust-current-fn-name)))
     (if fn-name
@@ -135,13 +135,13 @@
       (message "No test function at point"))))
 
 (defun mcg--rust-current-fn-name ()
-  "获取光标所在的函数名。"
+  "Get function name at cursor."
   (save-excursion
     (when (re-search-backward "^\\s-*\\(?:pub\\s-+\\)?\\(?:async\\s-+\\)?fn\\s-+\\([a-zA-Z_][a-zA-Z0-9_]*\\)" nil t)
       (match-string-no-properties 1))))
 
 (defun mcg/rust-test-module ()
-  "运行当前模块的所有测试。"
+  "Run all tests in current module."
   (interactive)
   (let* ((file (buffer-file-name))
          (module-name (when file
@@ -156,18 +156,18 @@
 
 ** Format on Save
 #+BEGIN_SRC emacs-lisp
-;;; 保存时格式化
+;;; Format on Save
 
 (defvar mcg-rust-format-on-save t
-  "是否在保存时自动格式化 Rust 代码。")
+  "Whether to auto-format Rust code on save.")
 
 (defun mcg-rust-format-buffer ()
-  "使用 rustfmt 格式化当前 buffer。"
+  "Format current buffer using rustfmt."
   (interactive)
   (if (and (bound-and-true-p lsp-bridge-mode)
            (fboundp 'lsp-bridge-code-format))
       (lsp-bridge-code-format)
-    ;; 回退到直接调用 rustfmt
+    ;; Fallback to direct rustfmt call
     (when (executable-find "rustfmt")
       (let ((temp-file (make-temp-file "rustfmt" nil ".rs")))
         (unwind-protect
@@ -183,24 +183,24 @@
           (delete-file temp-file))))))
 
 (defun mcg-rust-maybe-format-on-save ()
-  "保存时可能格式化 Rust 代码。"
+  "Maybe format Rust code on save."
   (when (and mcg-rust-format-on-save
              (or (derived-mode-p 'rust-mode)
                  (derived-mode-p 'rust-ts-mode)))
     (mcg-rust-format-buffer)))
 
-;; 注意：格式化由 +lsp 模块的 mcg-lsp-format-on-save 统一处理
-;; 这里不再添加 before-save-hook
+;; Note: Formatting is handled by +lsp module's mcg-lsp-format-on-save
+;; No longer adding before-save-hook here
 
 #+END_SRC
 
 ** Keybindings
 #+BEGIN_SRC emacs-lisp
-;;; 快捷键配置
+;;; Keybindings Configuration
 
 (defun mcg-rust-setup-keybindings ()
-  "设置 Rust 模式快捷键。"
-  ;; Cargo 命令 (C-c C-u 前缀)
+  "Setup Rust mode keybindings."
+  ;; Cargo commands (C-c C-u prefix)
   (local-set-key (kbd "C-c C-u C-b") #'mcg/rust-cargo-build)
   (local-set-key (kbd "C-c C-u C-r") #'mcg/rust-cargo-run)
   (local-set-key (kbd "C-c C-u C-t") #'mcg/rust-cargo-test)
@@ -209,12 +209,12 @@
   (local-set-key (kbd "C-c C-u C-d") #'mcg/rust-cargo-doc)
   (local-set-key (kbd "C-c C-u C-f") #'mcg/rust-cargo-fmt)
   
-  ;; 测试 (C-c t 前缀)
+  ;; Testing (C-c t prefix)
   (local-set-key (kbd "C-c t f") #'mcg/rust-test-current-fn)
   (local-set-key (kbd "C-c t m") #'mcg/rust-test-module)
   (local-set-key (kbd "C-c t t") #'mcg/rust-cargo-test)
   
-  ;; 格式化
+  ;; Formatting
   (local-set-key (kbd "C-c r f") #'mcg-rust-format-buffer))
 
 (add-hook 'rust-mode-hook #'mcg-rust-setup-keybindings)
@@ -224,16 +224,16 @@
 
 ** Project Detection
 #+BEGIN_SRC emacs-lisp
-;;; 项目检测
+;;; Project Detection
 
 (defun mcg-rust-project-p ()
-  "检测是否为 Rust 项目。"
+  "Detect if current project is a Rust project."
   (when-let ((project-root (when (project-current)
                              (project-root (project-current)))))
     (file-exists-p (expand-file-name "Cargo.toml" project-root))))
 
 (defun mcg/rust-project-info ()
-  "显示 Rust 项目信息。"
+  "Show Rust project information."
   (interactive)
   (if (mcg-rust-project-p)
       (let* ((project-root (project-root (project-current)))
@@ -245,10 +245,10 @@
 
 ** Tool Status Check
 #+BEGIN_SRC emacs-lisp
-;;; 工具状态检查
+;;; Tool Status Check
 
 (defun mcg/rust-check-tools ()
-  "检查 Rust 开发工具是否已安装。"
+  "Check if Rust development tools are installed."
   (interactive)
   (let ((tools '(("rustc" . "rustup install stable")
                  ("cargo" . "rustup install stable")
@@ -257,7 +257,7 @@
                  ("rust-analyzer" . "rustup component add rust-analyzer"))))
     (with-help-window "*Rust Tools Status*"
       (princ "═══════════════════════════════════════════\n")
-      (princ "   Rust 开发工具状态\n")
+      (princ "   Rust Development Tools Status\n")
       (princ "═══════════════════════════════════════════\n\n")
       (dolist (tool tools)
         (let ((name (car tool))
@@ -265,10 +265,10 @@
           (princ (format "%-16s %s\n"
                          name
                          (if (executable-find name)
-                             "✓ 已安装"
-                           (format "✗ 未安装 (%s)" install-cmd))))))
+                             "✓ Installed"
+                           (format "✗ Not installed (%s)" install-cmd))))))
       (princ "\n═══════════════════════════════════════════\n")
-      (princ "\n推荐安装命令:\n")
+      (princ "\nRecommended install commands:\n")
       (princ "  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh\n")
       (princ "  rustup component add rustfmt clippy rust-analyzer\n"))))
 
@@ -276,9 +276,9 @@
 
 ** Keybindings Summary
 #+BEGIN_SRC emacs-lisp
-;;; 快捷键总结
+;;; Keybindings Summary
 
-;; Cargo 命令 (C-c C-u 前缀):
+;; Cargo commands (C-c C-u prefix):
 ;; C-c C-u C-b   - cargo build
 ;; C-c C-u C-r   - cargo run
 ;; C-c C-u C-t   - cargo test
@@ -287,19 +287,19 @@
 ;; C-c C-u C-d   - cargo doc --open
 ;; C-c C-u C-f   - cargo fmt
 ;;
-;; 测试 (C-c t 前缀):
-;; C-c t f       - 运行当前函数测试
-;; C-c t m       - 运行当前模块测试
-;; C-c t t       - 运行所有测试
+;; Testing (C-c t prefix):
+;; C-c t f       - Run current function test
+;; C-c t m       - Run current module tests
+;; C-c t t       - Run all tests
 ;;
-;; 格式化:
-;; C-c r f       - 格式化代码
+;; Formatting:
+;; C-c r f       - Format code
 ;;
-;; LSP (由 +lsp 模块提供):
-;; M-.           - 跳转定义
-;; M-,           - 返回
-;; M-?           - 查找引用
-;; C-c r r       - 重命名
+;; LSP (provided by +lsp module):
+;; M-.           - Jump to definition
+;; M-,           - Return
+;; M-?           - Find references
+;; C-c r r       - Rename
 
 #+END_SRC
 

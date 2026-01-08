@@ -8,7 +8,7 @@
   ;;; init-defaults.el --- Editor Defaults for MCG Emacs -*- lexical-binding: t; -*-
 
   ;; Filename: init-defaults.el
-  ;; Description: 编辑器默认配置模块
+  ;; Description: Editor defaults configuration module
   ;; Author: mcge <mcgeq@outlook.com>
   ;; Copyright (C) 2024-2026, mcge, all rights reserved.
   ;; Create   Date: 2026-01-07
@@ -18,18 +18,18 @@
 
   ;;; Commentary:
   ;;
-  ;; MCG Emacs 配置架构的编辑器默认配置模块，负责：
-  ;; - savehist 历史记录
-  ;; - saveplace 位置记忆
-  ;; - whitespace 空白字符显示
-  ;; - autorevert 自动刷新
-  ;; - hideshow 代码折叠
-  ;; - newcomment 注释功能
-  ;; - delete-selection 选择删除
-  ;; - beacon 光标高亮
-  ;; - 行号显示
+  ;; Editor defaults module for MCG Emacs configuration, responsible for:
+  ;; - savehist history records
+  ;; - saveplace position memory
+  ;; - whitespace character display
+  ;; - autorevert auto refresh
+  ;; - hideshow code folding
+  ;; - newcomment commenting
+  ;; - delete-selection selection deletion
+  ;; - beacon cursor highlight
+  ;; - line number display
   ;;
-  ;; 模块元数据:
+  ;; Module metadata:
   ;; :depends ()
   ;; :defer nil
   ;;
@@ -56,16 +56,16 @@
 #+BEGIN_SRC emacs-lisp
 ;;; Basic Settings
 
-;; 隐藏 UI 元素 (menu-bar, tool-bar, scroll-bar)
+;; Hide UI elements (menu-bar, tool-bar, scroll-bar)
 (menu-bar-mode -1)
 (tool-bar-mode -1)
 (scroll-bar-mode -1)
 
-;; Windows 系统时间设置
+;; Windows system time settings
 (when (eq system-type 'windows-nt)
   (setq system-time-locale "C"))
 
-;; UTF-8 编码设置
+;; UTF-8 encoding settings
 (unless (memq system-type '(cygwin windows-nt ms-dos))
   (set-selection-coding-system 'utf-8))
 (prefer-coding-system 'utf-8)
@@ -74,13 +74,13 @@
 (set-keyboard-coding-system 'utf-8)
 (set-buffer-file-coding-system 'utf-8)
 
-;; 性能优化
+;; Performance optimization
 (setq bidi-inhibit-bpa t)
 (setq-default bidi-paragraph-direction 'left-to-right)
 (setq process-adaptive-read-buffering nil)
 (setq read-process-output-max (* 1024 1024))
 
-;; 基础 UI 设置
+;; Basic UI settings
 (setq use-short-answers t)
 (blink-cursor-mode -1)
 (transient-mark-mode 1)
@@ -92,7 +92,7 @@
               (capitalize user-login-name)
               " - Emacs ❤ you!\n\n"))
 
-;; 编辑设置
+;; Editing settings
 (setq-default comment-style 'indent)
 (setq ring-bell-function 'ignore)
 (setq-default major-mode 'text-mode)
@@ -107,17 +107,17 @@
 (setq ad-redefinition-action 'accept)
 (setq frame-resize-pixelwise t)
 
-;; 平滑滚动
+;; Smooth scrolling
 (setq scroll-step 1)
 (setq scroll-conservatively 10000)
 
-;; 光标样式
+;; Cursor style
 (setq-default cursor-type '(bar . 5))
 
-;; 自动换行
+;; Auto line wrap
 (global-visual-line-mode t)
 
-;; 括号匹配
+;; Bracket matching
 (setq electric-pair-inhibit-predicate 'electric-pair-conservative-inhibit)
 (electric-pair-mode 1)
 
@@ -128,30 +128,30 @@
 ;;; Variables
 
 (defvar mcg-editor-history-length 1000
-  "历史记录保存的最大条目数。")
+  "Maximum number of history entries to save.")
 
 (defvar mcg-editor-savehist-interval 300
-  "savehist 自动保存间隔（秒）。")
+  "Savehist auto-save interval in seconds.")
 
 (defvar mcg-editor-line-numbers-type 'relative
-  "行号显示类型。
-可选值: t (绝对行号), 'relative (相对行号), 'visual (可视行号), nil (禁用)")
+  "Line number display type.
+Options: t (absolute), 'relative (relative), 'visual (visual), nil (disabled)")
 
 (defvar mcg-editor-default-fill-column 100
-  "默认换行列数。")
+  "Default fill column for line wrapping.")
 
 (defvar mcg-editor-indent-tabs-modes
   '(makefile-gmake-mode makefile-mode)
-  "使用 Tab 缩进的模式列表。")
+  "List of modes that use tab indentation.")
 
 (defvar mcg-editor-beacon-enabled t
-  "是否启用 beacon 光标高亮。")
+  "Whether to enable beacon cursor highlight.")
 
 (defvar mcg-editor-beacon-size 20
-  "beacon 光标高亮大小。")
+  "Beacon cursor highlight size.")
 
 (defvar mcg-editor-beacon-color 0.5
-  "beacon 光标高亮颜色/透明度。")
+  "Beacon cursor highlight color/opacity.")
 
 #+END_SRC
 
@@ -159,7 +159,7 @@
 #+BEGIN_SRC emacs-lisp
 ;;; Warning Suppression
 
-;; 抑制第三方包缺少 lexical-binding cookie 的警告
+;; Suppress warnings for third-party packages missing lexical-binding cookie
 (setq warning-suppress-types
       '((lexical-binding)
         (files)))
@@ -171,7 +171,7 @@
 ;;; Savehist Configuration
 
 (defun mcg-editor-setup-savehist ()
-  "设置 savehist 历史记录。"
+  "Setup savehist history records."
   (setq enable-recursive-minibuffers t)
   (setq history-length mcg-editor-history-length)
   (setq savehist-additional-variables
@@ -191,7 +191,7 @@
 ;;; Saveplace Configuration
 
 (defun mcg-editor-setup-saveplace ()
-  "设置 saveplace 位置记忆。"
+  "Setup saveplace position memory."
   (save-place-mode 1)
   (mcg-log "Enabled save-place-mode"))
 
@@ -202,8 +202,8 @@
 ;;; Whitespace Configuration
 
 (defun mcg-editor-setup-whitespace ()
-  "设置 whitespace 空白字符显示。"
-  ;; 自定义 face
+  "Setup whitespace character display."
+  ;; Custom faces
   (face-spec-set 'whitespace-tab
                  '((t :background unspecified)))
   (face-spec-set 'whitespace-line
@@ -220,7 +220,7 @@
                     :inherit warning
                     :background "#404040" :foreground "#ee6aa7")))
   
-  ;; 配置显示样式
+  ;; Configure display style
   (setq whitespace-line-column nil)
   (setq whitespace-style
         '(face
@@ -241,7 +241,7 @@
 ;;; Autorevert Configuration
 
 (defun mcg-editor-setup-autorevert ()
-  "设置 autorevert 自动刷新。"
+  "Setup autorevert auto refresh."
   (global-auto-revert-mode 1)
   (mcg-log "Enabled global-auto-revert-mode"))
 
@@ -253,11 +253,11 @@
 
 (defconst mcg-editor-hideshow-folded-face
   '((t (:inherit 'font-lock-comment-face :box t)))
-  "代码折叠提示的 face。")
+  "Face for code folding indicator.")
 
 (defun mcg-editor--hideshow-overlay-fn (ov)
-  "自定义 hideshow 折叠显示。
-OV 是 overlay 对象。"
+  "Custom hideshow folding display.
+OV is the overlay object."
   (when (eq 'code (overlay-get ov 'hs))
     (let* ((nlines (count-lines (overlay-start ov) (overlay-end ov)))
            (info (format " ... #%d " nlines)))
@@ -265,7 +265,7 @@ OV 是 overlay 对象。"
                    (propertize info 'face mcg-editor-hideshow-folded-face)))))
 
 (defun mcg-editor-setup-hideshow ()
-  "设置 hideshow 代码折叠。"
+  "Setup hideshow code folding."
   (setq hs-set-up-overlay 'mcg-editor--hideshow-overlay-fn)
   (add-hook 'prog-mode-hook #'hs-minor-mode)
   (mcg-log "Configured hideshow for prog-mode"))
@@ -277,7 +277,7 @@ OV 是 overlay 对象。"
 ;;; Newcomment Configuration
 
 (defun mcg/comment-or-uncomment ()
-  "切换选中区域或当前行的注释状态。"
+  "Toggle comment state of selected region or current line."
   (interactive)
   (if (region-active-p)
       (comment-or-uncomment-region (region-beginning) (region-end))
@@ -289,7 +289,7 @@ OV 是 overlay 对象。"
                                    (line-end-position)))))
 
 (defun mcg-editor-setup-newcomment ()
-  "设置 newcomment 注释功能。"
+  "Setup newcomment commenting functionality."
   (global-set-key [remap comment-dwim] #'mcg/comment-or-uncomment)
   (setq comment-auto-fill-only-comments t)
   (mcg-log "Configured newcomment"))
@@ -301,7 +301,7 @@ OV 是 overlay 对象。"
 ;;; Delete Selection Configuration
 
 (defun mcg-editor-setup-delete-selection ()
-  "设置 delete-selection 选择删除。"
+  "Setup delete-selection mode."
   (delete-selection-mode 1)
   (mcg-log "Enabled delete-selection-mode"))
 
@@ -312,14 +312,14 @@ OV 是 overlay 对象。"
 ;;; Indent Tabs Configuration
 
 (defun mcg-editor--toggle-indent-tabs-mode ()
-  "根据 major-mode 切换 indent-tabs-mode。"
+  "Toggle indent-tabs-mode based on major-mode."
   (setq indent-tabs-mode
         (if (member major-mode mcg-editor-indent-tabs-modes)
             t
           nil)))
 
 (defun mcg-editor-setup-indent-tabs ()
-  "设置 indent-tabs-mode 自动切换。"
+  "Setup indent-tabs-mode auto-toggle."
   (add-hook 'after-change-major-mode-hook #'mcg-editor--toggle-indent-tabs-mode)
   (mcg-log "Configured indent-tabs-mode auto-toggle"))
 
@@ -329,12 +329,12 @@ OV 是 overlay 对象。"
 #+BEGIN_SRC emacs-lisp
 ;;; Language Indent Configuration
 
-;; 默认缩进设置
+;; Default indentation settings
 (setq-default indent-tabs-mode nil)
 (setq-default tab-width 4)
 
 (defun mcg-editor--adjust-languages-indent (n)
-  "设置各语言的缩进为 N 个空格。"
+  "Set indentation for various languages to N spaces."
   ;; C/C++
   (setq-local c-basic-offset n)
   
@@ -359,8 +359,8 @@ OV 是 overlay 对象。"
   (setq-local typescript-indent-level n))
 
 (defun mcg-editor-setup-language-indent ()
-  "设置各语言的缩进。"
-  ;; 4 空格缩进的语言
+  "Setup language-specific indentation."
+  ;; Languages with 4-space indentation
   (dolist (hook '(c-mode-hook
                   c++-mode-hook
                   java-mode-hook
@@ -374,7 +374,7 @@ OV 是 overlay 对象。"
                      (setq indent-tabs-mode nil)
                      (mcg-editor--adjust-languages-indent 4))))
   
-  ;; 2 空格缩进的语言
+  ;; Languages with 2-space indentation
   (dolist (hook '(web-mode-hook
                   js-mode-hook
                   typescript-mode-hook
@@ -394,7 +394,7 @@ OV 是 overlay 对象。"
 ;;; Beacon Configuration
 
 (defun mcg-editor-setup-beacon ()
-  "设置 beacon 光标高亮。"
+  "Setup beacon cursor highlight."
   (when (and mcg-editor-beacon-enabled
              (mcg-require-extension "editor/beacon" 'beacon))
     (setq beacon-lighter "")
@@ -409,7 +409,7 @@ OV 是 overlay 对象。"
     (setq beacon-size mcg-editor-beacon-size)
     (setq beacon-color mcg-editor-beacon-color)
     
-    ;; 禁用 beacon 的模式
+    ;; Modes where beacon is disabled
     (add-to-list 'beacon-dont-blink-major-modes 'term-mode)
     
     (beacon-mode 1)
@@ -422,11 +422,11 @@ OV 是 overlay 对象。"
 ;;; Line Numbers Configuration
 
 (defun mcg-editor-setup-line-numbers ()
-  "设置行号显示。"
+  "Setup line number display."
   (setq display-line-numbers-type mcg-editor-line-numbers-type)
   (setq display-line-numbers-width-start t)
   
-  ;; 在特定模式启用行号
+  ;; Enable line numbers in specific modes
   (dolist (hook '(prog-mode-hook
                   yaml-mode-hook
                   conf-mode-hook
@@ -442,7 +442,7 @@ OV 是 overlay 对象。"
 ;;; Auto Fill Configuration
 
 (defun mcg-editor-setup-auto-fill ()
-  "设置自动换行。"
+  "Setup auto line wrap."
   (setq-default fill-column mcg-editor-default-fill-column)
   
   (dolist (hook '(text-mode-hook message-mode-hook))
@@ -457,14 +457,14 @@ OV 是 overlay 对象。"
 ;;; Commands
 
 (defun mcg/toggle-line-numbers ()
-  "切换行号显示。"
+  "Toggle line number display."
   (interactive)
   (if display-line-numbers-mode
       (display-line-numbers-mode -1)
     (display-line-numbers-mode 1)))
 
 (defun mcg/cycle-line-numbers-type ()
-  "循环切换行号类型: 绝对 -> 相对 -> 可视 -> 关闭。"
+  "Cycle line number type: absolute -> relative -> visual -> disabled."
   (interactive)
   (setq display-line-numbers-type
         (pcase display-line-numbers-type
@@ -479,7 +479,7 @@ OV 是 overlay 对象。"
            (or display-line-numbers-type "disabled")))
 
 (defun mcg/toggle-whitespace ()
-  "切换空白字符显示。"
+  "Toggle whitespace character display."
   (interactive)
   (if global-whitespace-mode
       (global-whitespace-mode -1)
@@ -488,7 +488,7 @@ OV 是 overlay 对象。"
            (if global-whitespace-mode "enabled" "disabled")))
 
 (defun mcg/toggle-beacon ()
-  "切换 beacon 光标高亮。"
+  "Toggle beacon cursor highlight."
   (interactive)
   (if (bound-and-true-p beacon-mode)
       (beacon-mode -1)
@@ -502,7 +502,7 @@ OV 是 overlay 对象。"
 #+BEGIN_SRC emacs-lisp
 ;;; Initialize
 
-;; 设置内置功能
+;; Setup built-in features
 (mcg-editor-setup-savehist)
 (mcg-editor-setup-saveplace)
 (mcg-editor-setup-whitespace)
@@ -515,7 +515,7 @@ OV 是 overlay 对象。"
 (mcg-editor-setup-line-numbers)
 (mcg-editor-setup-auto-fill)
 
-;; 设置扩展功能（可选）
+;; Setup extension features (optional)
 (mcg-editor-setup-beacon)
 
 #+END_SRC

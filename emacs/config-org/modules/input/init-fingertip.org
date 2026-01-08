@@ -8,7 +8,7 @@
 ;;; init-fingertip.el --- Fingertip Configuration for MCG Emacs -*- lexical-binding: t; -*-
 
 ;; Filename: init-fingertip.el
-;; Description: 结构化编程模块
+;; Description: Structural editing module
 ;; Author: mcge <mcgeq@outlook.com>
 ;; Copyright (C) 2024-2026, mcge, all rights reserved.
 ;; Create   Date: 2026-01-07
@@ -18,9 +18,9 @@
 
 ;;; Commentary:
 ;;
-;; MCG Emacs 配置架构的结构化编程模块，负责：
-;; - fingertip 智能括号处理
-;; - 结构化编辑快捷键
+;; Structural editing module for MCG Emacs, responsible for:
+;; - fingertip smart parenthesis handling
+;; - Structural editing keybindings
 ;;
 
 #+END_SRC
@@ -76,7 +76,7 @@
     fsharp-mode-hook
     clojure-mode-hook clojure-ts-mode-hook
     cider-repl-mode-hook)
-  "启用 fingertip 的模式列表。")
+  "List of modes to enable fingertip.")
 
 #+END_SRC
 
@@ -85,9 +85,9 @@
 ;;; Configuration
 
 (defun mcg--setup-fingertip ()
-  "设置 fingertip 结构化编程。"
+  "Setup fingertip structural editing."
   (when (mcg-require-extension "input/fingertip" 'fingertip)
-    ;; 为各模式启用 fingertip
+    ;; Enable fingertip for various modes
     (dolist (hook mcg-fingertip-modes)
       (add-hook hook
                 (lambda ()
@@ -104,17 +104,17 @@
 ;;; Keybindings
 
 (defun mcg--setup-fingertip-keys ()
-  "设置 fingertip 快捷键。"
+  "Setup fingertip keybindings."
   (with-eval-after-load 'fingertip
-    ;; 卸载默认按键
+    ;; Unbind default keys
     (dolist (key '("M-J" "M-r" "M-s" "M-;" "C-M-f" "C-M-b" "M-)"))
       (define-key fingertip-mode-map (kbd key) nil))
     
-    ;; 移动
+    ;; Movement
     (define-key fingertip-mode-map (kbd "M-n") 'fingertip-jump-left)
     (define-key fingertip-mode-map (kbd "M-p") 'fingertip-jump-right)
     
-    ;; 符号插入
+    ;; Symbol insertion
     (define-key fingertip-mode-map (kbd "%") 'fingertip-match-paren)
     (define-key fingertip-mode-map (kbd "(") 'fingertip-open-round)
     (define-key fingertip-mode-map (kbd "[") 'fingertip-open-bracket)
@@ -123,7 +123,7 @@
     (define-key fingertip-mode-map (kbd "]") 'fingertip-close-bracket)
     (define-key fingertip-mode-map (kbd "}") 'fingertip-close-curly)
     
-    ;; 中文括号
+    ;; Chinese brackets
     (define-key fingertip-mode-map (kbd "（") 'fingertip-open-chinese-round)
     (define-key fingertip-mode-map (kbd "「") 'fingertip-open-chinese-bracket)
     (define-key fingertip-mode-map (kbd "【") 'fingertip-open-chinese-curly)
@@ -131,29 +131,29 @@
     (define-key fingertip-mode-map (kbd "」") 'fingertip-close-chinese-bracket)
     (define-key fingertip-mode-map (kbd "】") 'fingertip-close-chinese-curly)
     
-    ;; 引号和其他
+    ;; Quotes and others
     (define-key fingertip-mode-map (kbd "\"") 'fingertip-double-quote)
     (define-key fingertip-mode-map (kbd "'") 'fingertip-single-quote)
     (define-key fingertip-mode-map (kbd "=") 'fingertip-equal)
     (define-key fingertip-mode-map (kbd "SPC") 'fingertip-space)
     (define-key fingertip-mode-map (kbd "RET") 'fingertip-newline)
     
-    ;; 删除
+    ;; Deletion
     (define-key fingertip-mode-map (kbd "M-o") 'fingertip-backward-delete)
     (define-key fingertip-mode-map (kbd "C-d") 'fingertip-forward-delete)
     (define-key fingertip-mode-map (kbd "C-k") 'fingertip-kill)
     
-    ;; 包围
+    ;; Wrapping
     (define-key fingertip-mode-map (kbd "M-\"") 'fingertip-wrap-double-quote)
     (define-key fingertip-mode-map (kbd "M-'") 'fingertip-wrap-single-quote)
     (define-key fingertip-mode-map (kbd "M-{") 'fingertip-wrap-curly)
     (define-key fingertip-mode-map (kbd "M-(") 'fingertip-wrap-round)
     (define-key fingertip-mode-map (kbd "M-)") 'fingertip-unwrap)
     
-    ;; 跳出并换行
+    ;; Jump out and newline
     (define-key fingertip-mode-map (kbd "M-:") 'fingertip-jump-out-pair-and-newline)
     
-    ;; 向父节点跳动
+    ;; Jump to parent node
     (define-key fingertip-mode-map (kbd "C-j") 'fingertip-jump-up)
     
     (mcg-log "Configured fingertip keybindings")))

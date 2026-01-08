@@ -8,7 +8,7 @@
   ;;; init-org.el --- Org Mode Configuration for MCG Emacs -*- lexical-binding: t; -*-
 
   ;; Filename: init-org.el
-  ;; Description: Org Mode 配置模块
+  ;; Description: Org Mode configuration module
   ;; Author: mcge <mcgeq@outlook.com>
   ;; Copyright (C) 2024-2026, mcge, all rights reserved.
   ;; Create   Date: 2026-01-07
@@ -18,16 +18,16 @@
 
   ;;; Commentary:
   ;;
-  ;; MCG Emacs 配置架构的 Org Mode 配置模块，负责：
-  ;; - Org mode 基础设置
-  ;; - TODO 关键词和状态配置
-  ;; - 外观美化（org-superstar, org-appear）
-  ;; - org-modern 现代化界面
-  ;; - org-download 图片下载
-  ;; - 中文日历集成
-  ;; - 符号美化
+  ;; Org Mode configuration module for MCG Emacs, responsible for:
+  ;; - Org mode basic settings
+  ;; - TODO keywords and state configuration
+  ;; - Appearance beautification (org-superstar, org-appear)
+  ;; - org-modern modern interface
+  ;; - org-download image download
+  ;; - Chinese calendar integration
+  ;; - Symbol beautification
   ;;
-  ;; 模块元数据:
+  ;; Module metadata:
   ;; :depends ()
   ;; :defer nil
   ;;
@@ -53,79 +53,79 @@
     :group 'org
     :prefix "mcg-org-")
 
-  ;;; 基础目录配置
+  ;;; Basic directory configuration
   (defcustom mcg-org-directory
     (expand-file-name "~/org")
-    "Org mode 文件的根目录。"
+    "Root directory for Org mode files."
     :type 'directory
     :group 'mcg-org)
 
   (defcustom mcg-org-agenda-directory
     (expand-file-name "agenda" mcg-org-directory)
-    "Org agenda 文件目录。"
+    "Org agenda files directory."
     :type 'directory
     :group 'mcg-org)
 
   (defcustom mcg-org-notes-directory
     (expand-file-name "notes" mcg-org-directory)
-    "Org 笔记文件目录。"
+    "Org notes files directory."
     :type 'directory
     :group 'mcg-org)
 
   (defcustom mcg-org-blog-directory
     (expand-file-name "blog" mcg-org-directory)
-    "博客相关 Org 文件目录。"
+    "Blog related Org files directory."
     :type 'directory
     :group 'mcg-org)
 
   (defcustom mcg-org-archive-directory
     (expand-file-name "archive" mcg-org-directory)
-    "Org 归档文件目录。"
+    "Org archive files directory."
     :type 'directory
     :group 'mcg-org)
 
 
-  ;;; 主要文件路径
+  ;;; Main file paths
   (defcustom mcg-org-default-notes-file
     (expand-file-name "notes.org" mcg-org-notes-directory)
-    "默认笔记文件。"
+    "Default notes file."
     :type 'file
     :group 'mcg-org)
 
   (defcustom mcg-org-task-file
     (expand-file-name "tasks.org" mcg-org-agenda-directory)
-    "任务文件。"
+    "Task file."
     :type 'file
     :group 'mcg-org)
 
-  ;;; 功能开关
+  ;;; Feature toggles
   (defcustom mcg-org-enable-pretty-symbols t
-    "是否启用 Org mode 美化符号。"
+    "Whether to enable Org mode symbol beautification."
     :type 'boolean
     :group 'mcg-org)
 
   (defcustom mcg-org-enable-mixed-pitch nil
-    "是否启用混合字体（衬线+等宽）。"
+    "Whether to enable mixed fonts (serif + monospace)."
     :type 'boolean
     :group 'mcg-org)
 
   (defcustom mcg-org-enable-visual-fill nil
-    "是否启用视觉填充列。"
+    "Whether to enable visual fill column."
     :type 'boolean
     :group 'mcg-org)
 
   (defcustom mcg-org-enable-chinese-calendar t
-    "是否启用中文日历。"
+    "Whether to enable Chinese calendar."
     :type 'boolean
     :group 'mcg-org)
 
   (defcustom mcg-org-enable-org-modern t
-    "是否启用 org-modern 现代化界面。"
+    "Whether to enable org-modern modern interface."
     :type 'boolean
     :group 'mcg-org)
 
   (defcustom mcg-org-visual-fill-width 88
-    "Visual fill column 宽度。"
+    "Visual fill column width."
     :type 'integer
     :group 'mcg-org)
 
@@ -136,13 +136,13 @@
   ;;; Directory Helpers
 
   (defun mcg-org-ensure-directory (dir)
-    "确保目录 DIR 存在，如果不存在则创建。"
+    "Ensure directory DIR exists, create if not."
     (unless (file-exists-p dir)
       (make-directory dir t)
       (mcg-log "Created directory: %s" dir)))
 
   (defun mcg-org-initialize-directories ()
-    "初始化所有 Org mode 目录。"
+    "Initialize all Org mode directories."
     (interactive)
     (mapc #'mcg-org-ensure-directory
           (list mcg-org-directory
@@ -158,7 +158,7 @@
   ;;; Basic Settings
 
   (defun mcg-org-setup-basic ()
-    "设置 Org mode 基础配置。"
+    "Setup Org mode basic configuration."
     (setq org-ellipsis " ⭍"
           org-tags-column 0
           org-log-into-drawer t
@@ -170,10 +170,10 @@
           org-startup-with-inline-images t
           org-indent-mode-turns-on-hiding-stars nil)
 
-    ;; 完成任务时记录时间
+    ;; Record time when completing tasks
     (setq org-log-done 'time)
 
-    ;; 日志记录配置
+    ;; Log recording configuration
     (setq org-log-repeat 'time
           org-log-redeadline 'note
           org-log-reschedule 'note
@@ -190,8 +190,8 @@
   ;;; TODO Keywords
 
   (defun mcg-org-setup-todo-keywords ()
-    "设置 TODO 关键词和状态。"
-    ;; TODO 的关键词设置
+    "Setup TODO keywords and states."
+    ;; TODO keywords settings
     (setq org-todo-keywords '((sequence
                                "TODO(t)"
                                "HOLD(h!)"
@@ -207,7 +207,7 @@
                                "|"
                                "FIXED(f!)")))
 
-    ;; TODO 关键词的样式设置
+    ;; TODO keyword face settings
     (setq org-todo-keyword-faces '(("TODO"       :foreground "#7c7c75" :weight bold)
                                    ("HOLD"       :foreground "#feb24c" :weight bold)
                                    ("WIP"        :foreground "#0098dd" :weight bold)
@@ -219,7 +219,7 @@
                                    ("KNOWNCAUSE" :foreground "yellow"  :weight bold)
                                    ("FIXED"      :foreground "green"   :weight bold)))
 
-    ;; 状态变化时标签同步
+    ;; Tag sync on state change
     (setq org-todo-state-tags-triggers
           (quote (("CANCELLED" ("CANCELLED" . t))
                   ("WAIT" ("WAIT" . t))
@@ -237,8 +237,8 @@
   ;;; Appearance
 
   (defun mcg-org-setup-appearance ()
-    "设置 Org mode 外观。"
-    ;; 标题层级字体大小
+    "Setup Org mode appearance."
+    ;; Heading level font sizes
     (custom-set-faces
      '(org-level-1 ((t (:height 1.15))))
      '(org-level-2 ((t (:height 1.13))))
@@ -258,7 +258,7 @@
      '(org-special-keyword ((t (:inherit 'fixed-pitch))))
      '(org-headline-done ((t (:inherit 'variable-pitch)))))
 
-    ;; 列表符号美化
+    ;; List bullet beautification
     (with-eval-after-load 'org
       (setq line-spacing 0.25)
       (setq org-list-demote-modify-bullet
@@ -279,7 +279,7 @@
   ;;; Org Superstar
 
   (defun mcg-org-setup-superstar ()
-    "设置 org-superstar 标题美化。"
+    "Setup org-superstar heading beautification."
     (when (mcg-require-extension "org/org-superstar-mode" 'org-superstar)
       (setq org-superstar-leading-bullet ?\s
             org-superstar-special-todo-items t
@@ -299,7 +299,7 @@
   ;;; Org Appear
 
   (defun mcg-org-setup-appear ()
-    "设置 org-appear 自动显示标记。"
+    "Setup org-appear auto-show markers."
     (when (mcg-require-extension "org/org-appear" 'org-appear)
       (mcg-log "Configured org-appear")))
 
@@ -310,10 +310,10 @@
   ;;; Org Modern
 
   (defun mcg-org-setup-modern ()
-    "设置 org-modern 现代化界面。"
+    "Setup org-modern modern interface."
     (when (and mcg-org-enable-org-modern
                (mcg-require-extension "org/org-modern" 'org-modern))
-      ;; org-modern 配置
+      ;; org-modern configuration
       (setq org-modern-star '("◉" "○" "✸" "✿" "✤" "✜" "◆" "▶")
             org-modern-table-vertical 1
             org-modern-table-horizontal 0.2
@@ -345,7 +345,7 @@
   ;;; Org Download
 
   (defun mcg-org-setup-download ()
-    "设置 org-download 图片下载。"
+    "Setup org-download image download."
     (when (mcg-require-extension "org/org-download" 'org-download)
       ;; Drag-and-drop to dired
       (add-hook 'dired-mode-hook 'org-download-enable)
@@ -356,12 +356,12 @@
       (mcg-log "Configured org-download")))
 
   (defun mcg/org-insert-clipboard-image (width)
-    "从剪贴板插入图片到 Org 文件。
-  WIDTH 是图片宽度，默认 800。"
+    "Insert image from clipboard to Org file.
+  WIDTH is image width, default 800."
     (interactive (list
                   (read-string (format "Input image width, default is 800: ")
                                nil nil "800")))
-    ;; 设置图片存放的文件夹位置为 `当前 Org 文件同名.assets'
+    ;; Set image folder location to `current Org file name.assets'
     (let* ((foldername (concat (file-name-base (buffer-file-name)) ".assets/"))
            (imgName (concat "img_" (format-time-string "%Y%m%d_%H%M%S") ".png"))
            (relativeFilename (concat (file-name-base (buffer-name)) ".assets/" imgName)))
@@ -369,7 +369,7 @@
       (unless (file-exists-p foldername)
         (mkdir foldername))
 
-      ;; 根据不同的操作系统设置不同的命令行工具
+      ;; Set different command line tools based on operating system
       (cond
        ((eq system-type 'windows-nt)
         (setq org-download-screenshot-method (concat "magick clipboard: " relativeFilename)))
@@ -378,7 +378,7 @@
        ((eq system-type 'darwin)
         (setq org-download-screenshot-method (concat "pngpaste " relativeFilename))))
 
-      ;; 给粘贴好的图片链接加上宽度属性
+      ;; Add width attribute to pasted image links
       (insert (concat "\n#+DOWNLOADED: screenshot @ "
                       (format-time-string "%Y-%m-%d %a %H:%M:%S" (current-time))
                       "\n#+CAPTION: \n#+ATTR_ORG: :width "
@@ -402,7 +402,7 @@
   ;;; Visual Fill Column
 
   (defun mcg-org-setup-visual-fill ()
-    "设置 visual-fill-column。"
+    "Setup visual-fill-column."
     (when (and mcg-org-enable-visual-fill
                (mcg-require-extension "org/visual-fill-column" 'visual-fill-column))
       (setq visual-fill-column-width mcg-org-visual-fill-width)
@@ -415,10 +415,10 @@
   ;;; Mixed Pitch
 
   (defun mcg-org-setup-mixed-pitch ()
-    "设置 mixed-pitch 混合字体。"
+    "Setup mixed-pitch mixed fonts."
     (when (and mcg-org-enable-mixed-pitch
                (mcg-require-extension "org/mixed-pitch" 'mixed-pitch))
-      ;; 字体配置（带可用性检查）
+      ;; Font configuration (with availability check)
       (when (display-graphic-p)
         (let ((mono-font (cond
                           ((find-font (font-spec :name "FiraCode Nerd Font Mono"))
@@ -445,39 +445,39 @@
   ;;; Chinese Calendar
 
   (defun mcg-org-setup-chinese-calendar ()
-    "设置中文日历。"
+    "Setup Chinese calendar."
     (when (and mcg-org-enable-chinese-calendar
                (mcg-require-extension "org/cal-china-x" 'cal-china-x))
       (with-eval-after-load 'calendar
-        ;; 设置标记今天
+        ;; Mark today
         (add-hook 'calendar-today-visible-hook 'calendar-mark-today)
 
-        ;; 日历基础设置
+        ;; Calendar basic settings
         (setq calendar-chinese-all-holidays-flag nil
               calendar-mark-holidays-flag t
               calendar-mark-diary-entries-flag nil
               calendar-time-zone-style 'numeric
               calendar-date-style 'iso)
 
-        ;; 设置中文天干地支
+        ;; Set Chinese celestial stems and terrestrial branches
         (setq calendar-chinese-celestial-stem
               ["甲" "乙" "丙" "丁" "戊" "己" "庚" "辛" "壬" "癸"])
         (setq calendar-chinese-terrestrial-branch
               ["子" "丑" "寅" "卯" "辰" "巳" "午" "未" "申" "酉" "戌" "亥"])
 
-        ;; 设置中文月份名称
+        ;; Set Chinese month names
         (setq calendar-month-name-array
               ["一月" "二月" "三月" "四月" "五月" "六月"
                "七月" "八月" "九月" "十月" "十一月" "十二月"])
 
-        ;; 设置星期标题显示
+        ;; Set weekday header display
         (setq calendar-day-name-array
               ["日" "一" "二" "三" "四" "五" "六"])
 
-        ;; 设置周一为一周的第一天
+        ;; Set Monday as first day of week
         (setq calendar-week-start-day 1))
 
-      ;; 自动初始化 cal-china-x
+      ;; Auto-initialize cal-china-x
       (add-hook 'after-init-hook 'cal-china-x-setup)
 
       (mcg-log "Configured Chinese calendar")))
@@ -489,7 +489,7 @@
   ;;; Prettify Symbols
 
   (defun mcg/org-prettify-symbols ()
-    "设置 Org mode 符号美化。"
+    "Setup Org mode symbol beautification."
     (setq prettify-symbols-alist
           (mapcan (lambda (x) (list x (cons (upcase (car x)) (cdr x))))
                   '(("#+begin_src"      . "↪")
@@ -530,8 +530,8 @@
   ;;; Chinese-English Spacing
 
   (defun mcg-org-setup-chinese-spacing ()
-    "设置中英文混排空格处理。"
-    ;; 解决中文标记前后空格的问题
+    "Setup Chinese-English mixed text spacing."
+    ;; Fix spacing around Chinese markers
     (font-lock-add-keywords
      'org-mode
      '(("\\cc\\( \\)[/+*_=~][^a-zA-Z0-9]*?[/+*_=~]\\( \\)?\\cc?"
@@ -542,7 +542,7 @@
 
     (with-eval-after-load 'org
       (defun mcg-org--strip-ws-maybe (text _backend _info)
-        "处理导出时的中英文空格。"
+        "Handle Chinese-English spacing during export."
         (let* ((text (replace-regexp-in-string
                       "\\(\\cc\\) *\n *\\(\\cc\\)"
                       "\\1\\2" text))
@@ -564,15 +564,15 @@
   ;;; Time Stamp Format
 
   (defun mcg-org-setup-timestamp ()
-    "设置时间戳格式。"
-    ;; 设置时间戳格式为 [2025-12-08 周一 10:21:23]
+    "Setup timestamp format."
+    ;; Set timestamp format to [2025-12-08 Mon 10:21:23]
     (setq org-time-stamp-custom-formats
           '("<%Y-%m-%d %A %H:%M:%S>" . "<%Y-%m-%d %A %H:%M:%S>"))
 
-    ;; 设置中文星期显示
+    ;; Set Chinese weekday display
     (setq system-time-locale "zh_CN.UTF-8")
 
-    ;; 使用自定义时间格式
+    ;; Use custom time format
     (setq org-display-custom-times t)
 
     (mcg-log "Configured timestamp format"))
@@ -584,7 +584,7 @@
   ;;; Export Configuration
 
   (defun mcg-org-setup-export ()
-    "设置导出配置。"
+    "Setup export configuration."
     (with-eval-after-load 'org
       (require 'ox-gfm nil t)
       (add-to-list 'org-export-backends 'md)
@@ -600,11 +600,11 @@
   ;;; Org Mode Hook
 
   (defun mcg-org-mode-setup ()
-    "Org mode 初始化设置。"
+    "Org mode initialization setup."
     (setq-local line-spacing 2)
     (visual-line-mode 1)
 
-    ;; 按需启用功能
+    ;; Enable features as needed
     (when mcg-org-enable-visual-fill
       (when (fboundp 'visual-fill-column-mode)
         (visual-fill-column-mode 1)))
@@ -626,7 +626,7 @@
                (fboundp 'org-modern-mode))
       (org-modern-mode 1))
 
-    ;; 美化符号
+    ;; Symbol beautification
     (when mcg-org-enable-pretty-symbols
       (mcg/org-prettify-symbols)))
 
@@ -637,7 +637,7 @@
   ;;; Commands
 
   (defun mcg/org-toggle-modern ()
-    "切换 org-modern 模式。"
+    "Toggle org-modern mode."
     (interactive)
     (if (bound-and-true-p org-modern-mode)
         (org-modern-mode -1)
@@ -646,7 +646,7 @@
              (if (bound-and-true-p org-modern-mode) "enabled" "disabled")))
 
   (defun mcg/org-toggle-pretty-symbols ()
-    "切换符号美化。"
+    "Toggle symbol beautification."
     (interactive)
     (if prettify-symbols-mode
         (prettify-symbols-mode -1)
@@ -655,12 +655,12 @@
              (if prettify-symbols-mode "enabled" "disabled")))
 
   (defun mcg/org-open-notes ()
-    "打开笔记目录。"
+    "Open notes directory."
     (interactive)
     (find-file mcg-org-notes-directory))
 
   (defun mcg/org-open-agenda-dir ()
-    "打开 agenda 目录。"
+    "Open agenda directory."
     (interactive)
     (find-file mcg-org-agenda-directory))
 

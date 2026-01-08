@@ -8,7 +8,7 @@
   ;;; init-vertico.el --- Completion System for MCG Emacs -*- lexical-binding: t; -*-
 
   ;; Filename: init-vertico.el
-  ;; Description: 补全系统模块（Vertico + Marginalia + Embark + Consult + Orderless）
+  ;; Description: Completion system module (Vertico + Marginalia + Embark + Consult + Orderless)
   ;; Author: mcge <mcgeq@outlook.com>
   ;; Copyright (C) 2024-2026, mcge, all rights reserved.
   ;; Create   Date: 2026-01-07
@@ -18,15 +18,15 @@
 
   ;;; Commentary:
   ;;
-  ;; MCG Emacs 配置架构的补全系统模块，负责：
-  ;; - Vertico 垂直补全界面
-  ;; - Marginalia 候选项注解
-  ;; - Embark 上下文操作
-  ;; - Consult 咨询式搜索命令
-  ;; - Orderless 模糊匹配
-  ;; - 拼音支持（中文）
+  ;; Completion system module for MCG Emacs, responsible for:
+  ;; - Vertico vertical completion interface
+  ;; - Marginalia candidate annotations
+  ;; - Embark contextual actions
+  ;; - Consult consulting search commands
+  ;; - Orderless fuzzy matching
+  ;; - Pinyin support (Chinese)
   ;;
-  ;; 模块元数据:
+  ;; Module metadata:
   ;; :depends ()
   ;; :defer nil
   ;;
@@ -47,14 +47,14 @@
 ;;; Variables
 
 (defvar mcg-completion-vertico-count 15
-  "Vertico 显示的候选项数量。")
+  "Number of candidates displayed by Vertico.")
 
 (defvar mcg-completion-enable-pinyin t
-  "是否启用拼音补全。")
+  "Whether to enable pinyin completion.")
 
 (defvar mcg-completion-preview-key 'any
-  "Consult 预览触发键。
-可选值: 'any, nil, 或具体按键。")
+  "Consult preview trigger key.
+Options: 'any, nil, or specific key.")
 
 #+END_SRC
 
@@ -63,28 +63,28 @@
 ;;; Orderless Configuration
 
 (defun mcg--setup-orderless ()
-  "设置 Orderless 模糊匹配引擎。"
+  "Setup Orderless fuzzy matching engine."
   (when (mcg-require-extension "completion/orderless" 'orderless)
-    ;; 核心补全样式
+    ;; Core completion styles
     (setq completion-styles '(orderless partial-completion basic)
           completion-category-defaults nil)
     
-    ;; 组件分隔符（空格或 &）
+    ;; Component separator (space or &)
     (setq orderless-component-separator "[ &]")
     
-    ;; 文件补全使用 partial-completion 样式
+    ;; File completion uses partial-completion style
     (setq completion-category-overrides
           '((file (styles partial-completion))
             (buffer (styles orderless))
             (info-menu (styles orderless))))
     
-    ;; 匹配样式
+    ;; Matching styles
     (setq orderless-matching-styles
           '(orderless-literal
             orderless-regexp
             orderless-initialism))
     
-    ;; 样式调度器（! 否定，= 字面，~ 弹性）
+    ;; Style dispatchers (! negation, = literal, ~ flex)
     (setq orderless-style-dispatchers
           '(orderless-affix-dispatch))
     
@@ -97,21 +97,21 @@
 ;;; Pinyin Support (Chinese)
 
 (defun mcg--setup-pinyin ()
-  "设置拼音补全支持。"
+  "Setup pinyin completion support."
   (when (and mcg-completion-enable-pinyin
              (mcg-require-extension "completion/pinyinlib" 'pinyinlib))
     
     (defun mcg/completion-regex-pinyin (str)
-      "拼音匹配 STR。"
+      "Pinyin match STR."
       (orderless-regexp (pinyinlib-build-regexp-string str)))
     
-    ;; 添加拼音匹配到 orderless 样式
+    ;; Add pinyin matching to orderless styles
     (add-to-list 'orderless-matching-styles 'mcg/completion-regex-pinyin)
     
     (mcg-log "Pinyin completion enabled")))
 
 (defun mcg/toggle-pinyin-completion ()
-  "切换拼音补全开关。"
+  "Toggle pinyin completion."
   (interactive)
   (if (member 'mcg/completion-regex-pinyin orderless-matching-styles)
       (progn
@@ -128,28 +128,28 @@
 ;;; Vertico Configuration
 
 (defun mcg--setup-vertico ()
-  "设置 Vertico 垂直补全界面。"
+  "Setup Vertico vertical completion interface."
   (when (mcg-require-extension "completion/vertico" 'vertico)
-    ;; 显示设置
+    ;; Display settings
     (setq vertico-count mcg-completion-vertico-count)
-    (setq vertico-resize nil)              ; 固定高度
-    (setq vertico-cycle t)                 ; 启用循环（顶部 <-> 底部）
-    (setq vertico-scroll-margin 2)         ; 滚动边距
+    (setq vertico-resize nil)              ; Fixed height
+    (setq vertico-cycle t)                 ; Enable cycling (top <-> bottom)
+    (setq vertico-scroll-margin 2)         ; Scroll margin
     
-    ;; 启用 vertico-mode
+    ;; Enable vertico-mode
     (vertico-mode 1)
     
-    ;; 加载 vertico-directory 扩展
+    ;; Load vertico-directory extension
     (require 'vertico-directory nil t)
     
-    ;; 加载 vertico-sort 扩展并设置历史排序
+    ;; Load vertico-sort extension and set history sorting
     (when (require 'vertico-sort nil t)
       (setq vertico-sort-function #'vertico-sort-history-length-alpha))
     
     (mcg-log "Vertico configured")))
 
 (defun mcg--setup-vertico-keybindings ()
-  "设置 Vertico 键绑定。"
+  "Setup Vertico keybindings."
   (when (and (featurep 'vertico) (boundp 'vertico-map))
     (define-key vertico-map (kbd "<tab>") #'vertico-insert)
     (define-key vertico-map (kbd "<escape>") #'vertico-exit)
@@ -170,25 +170,25 @@
 ;;; Marginalia Configuration
 
 (defun mcg--setup-marginalia ()
-  "设置 Marginalia 候选项注解。"
+  "Setup Marginalia candidate annotations."
   (when (mcg-require-extension "completion/marginalia" 'marginalia)
-    ;; 对齐设置
+    ;; Alignment settings
     (setq marginalia-align 'right)
     (setq marginalia-align-offset 0)
     
-    ;; 相对时间显示
+    ;; Relative time display
     (setq marginalia-max-relative-age 3600)
     
-    ;; 启用 marginalia-mode
+    ;; Enable marginalia-mode
     (marginalia-mode 1)
     
-    ;; 循环注解级别的键绑定
+    ;; Keybinding for cycling annotation levels
     (define-key minibuffer-local-map (kbd "M-A") #'marginalia-cycle)
     
     (mcg-log "Marginalia configured")))
 
 (defun mcg/toggle-marginalia ()
-  "切换 Marginalia 模式。"
+  "Toggle Marginalia mode."
   (interactive)
   (if marginalia-mode
       (progn
@@ -204,32 +204,32 @@
 ;;; Consult Configuration
 
 (defun mcg--setup-consult ()
-  "设置 Consult 咨询式搜索命令。"
+  "Setup Consult consulting search commands."
   (when (mcg-require-extension "completion/consult" 'consult)
-    ;; 预览配置
+    ;; Preview configuration
     (setq consult-preview-key mcg-completion-preview-key)
     (setq consult-narrow-key "<")
     (setq consult-widen-key ">")
     
-    ;; 预览限制
+    ;; Preview limits
     (setq consult-preview-max-size 10485760)  ; 10 MB
     (setq consult-preview-max-count 10)
     
-    ;; 异步命令配置
+    ;; Async command configuration
     (setq consult-async-refresh-delay 0.15)
     (setq consult-async-input-throttle 0.2)
     (setq consult-async-input-debounce 0.1)
     
-    ;; Register 集成
+    ;; Register integration
     (setq register-preview-delay 0.5
           register-preview-function #'consult-register-format)
     (advice-add #'register-preview :override #'consult-register-window)
     
-    ;; Xref 集成
+    ;; Xref integration
     (setq xref-show-xrefs-function #'consult-xref
           xref-show-definitions-function #'consult-xref)
     
-    ;; Buffer 过滤
+    ;; Buffer filter
     (setq consult-buffer-filter
           '("\\` "
             "\\`\\*Completions\\*\\'"
@@ -237,7 +237,7 @@
             "\\`\\*Semantic SymRef\\*\\'"
             "\\`\\*tramp/.*\\*\\'"))
     
-    ;; Windows UTF-8 配置
+    ;; Windows UTF-8 configuration
     (when (eq system-type 'windows-nt)
       (setq locale-coding-system 'utf-8)
       (set-default-coding-systems 'utf-8)
@@ -250,17 +250,17 @@
     (mcg-log "Consult configured")))
 
 (defun mcg--setup-consult-keybindings ()
-  "设置 Consult 键绑定。"
+  "Setup Consult keybindings."
   (when (featurep 'consult)
-    ;; 编程模式键绑定
+    ;; Programming mode keybindings
     (with-eval-after-load 'prog-mode
       (define-key prog-mode-map (kbd "C-c C-j") #'consult-outline)
       (define-key prog-mode-map (kbd "C-c C-i") #'consult-imenu))
     
-    ;; Minibuffer 历史
+    ;; Minibuffer history
     (define-key minibuffer-local-map (kbd "C-r") #'consult-history)
     
-    ;; 启用补全列表预览
+    ;; Enable completion list preview
     (add-hook 'completion-list-mode-hook #'consult-preview-at-point-mode)))
 
 #+END_SRC
@@ -270,13 +270,13 @@
 ;;; Consult Custom Functions
 
 (defun mcg/consult-line-symbol-at-point ()
-  "在当前 buffer 中搜索光标处的符号。"
+  "Search for symbol at point in current buffer."
   (interactive)
   (consult-line (thing-at-point 'symbol)))
 
 (defun mcg/consult-find-org-headings (&optional match)
-  "在所有 org 文件中查找标题。
-MATCH 为可选的匹配条件。"
+  "Find headings in all org files.
+MATCH is an optional match condition."
   (interactive)
   (when (and (boundp 'org-directory) org-directory)
     (consult-org-heading
@@ -290,49 +290,49 @@ MATCH 为可选的匹配条件。"
 ;;; Embark Configuration
 
 (defun mcg--setup-embark ()
-  "设置 Embark 上下文操作。"
+  "Setup Embark contextual actions."
   (when (mcg-require-extension "completion/embark" 'embark)
-    ;; 操作行为
+    ;; Action behavior
     (setq embark-quit-after-action nil)
     (setq embark-confirm-act-all nil)
     
-    ;; 指示器设置
+    ;; Indicator settings
     (setq embark-indicators
           '(embark-minimal-indicator
             embark-highlight-indicator
             embark-isearch-highlight-indicator))
     
-    ;; 操作键
+    ;; Action keys
     (setq embark-cycle-key ".")
     (setq embark-help-key "?")
     (setq embark-action-indicator t)
     
-    ;; 使用 embark 作为前缀帮助
+    ;; Use embark as prefix help
     (setq prefix-help-command #'embark-prefix-help-command)
     
-    ;; 使用排序的候选项
+    ;; Use sorted candidates
     (setq embark-candidate-collectors
           (cl-substitute 'embark-sorted-minibuffer-candidates
                          'embark-minibuffer-candidates
                          embark-candidate-collectors))
     
-    ;; Embark Collect 显示配置
+    ;; Embark Collect display configuration
     (add-to-list 'display-buffer-alist
                  '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
                    nil
                    (window-parameters (mode-line-format . none))))
     
-    ;; Embark Collect 设置
+    ;; Embark Collect settings
     (setq embark-collect-live-initial-delay 0.15)
     (setq embark-collect-live-update-delay 0.15)
     
     (mcg-log "Embark configured")))
 
 (defun mcg--setup-embark-consult ()
-  "设置 Embark-Consult 集成。"
+  "Setup Embark-Consult integration."
   (when (and (featurep 'embark) (featurep 'consult))
     (require 'embark-consult nil t)
-    ;; 在 embark collect 中启用 consult 预览
+    ;; Enable consult preview in embark collect
     (add-hook 'embark-collect-mode-hook #'consult-preview-at-point-mode)
     (mcg-log "Embark-Consult integration configured")))
 
@@ -343,7 +343,7 @@ MATCH 为可选的匹配条件。"
 ;;; Embark Custom Actions
 
 (defun mcg/embark-open-externally (&optional arg)
-  "使用系统默认应用打开 ARG 标记或当前文件。"
+  "Open ARG marked or current file with system default application."
   (interactive "P")
   (when (featurep 'dired)
     (require 'dired)
@@ -358,10 +358,10 @@ MATCH 为可选的匹配条件。"
 ;;; Minibuffer Enhancement
 
 (defun mcg--setup-minibuffer ()
-  "设置 Minibuffer 增强。"
-  ;; CRM 指示器
+  "Setup Minibuffer enhancements."
+  ;; CRM indicator
   (defun mcg/crm-indicator (args)
-    "为 ARGS 添加 CRM 指示器。"
+    "Add CRM indicator to ARGS."
     (cons (format "[CRM%s] %s"
                   (replace-regexp-in-string
                    "\\`\\[.*?]\\*\\|\\[.*?]\\*\\'" ""
@@ -370,15 +370,15 @@ MATCH 为可选的匹配条件。"
           (cdr args)))
   (advice-add #'completing-read-multiple :filter-args #'mcg/crm-indicator)
   
-  ;; 防止光标进入 minibuffer 提示
+  ;; Prevent cursor from entering minibuffer prompt
   (setq minibuffer-prompt-properties
         '(read-only t cursor-intangible t face minibuffer-prompt))
   (add-hook 'minibuffer-setup-hook #'cursor-intangible-mode)
   
-  ;; 启用递归 minibuffer
+  ;; Enable recursive minibuffer
   (setq enable-recursive-minibuffers t)
   
-  ;; 显示递归深度
+  ;; Show recursion depth
   (minibuffer-depth-indicate-mode 1)
   
   (mcg-log "Minibuffer enhancements configured"))
@@ -390,14 +390,14 @@ MATCH 为可选的匹配条件。"
 ;;; Performance Tuning
 
 (defun mcg--setup-completion-performance ()
-  "设置补全性能优化。"
-  ;; Minibuffer 中增加 GC 阈值
+  "Setup completion performance optimization."
+  ;; Increase GC threshold in minibuffer
   (defun mcg/minibuffer-setup-hook ()
-    "在 minibuffer 中增加 GC 阈值。"
+    "Increase GC threshold in minibuffer."
     (setq gc-cons-threshold most-positive-fixnum))
   
   (defun mcg/minibuffer-exit-hook ()
-    "退出 minibuffer 后恢复 GC 阈值。"
+    "Restore GC threshold after exiting minibuffer."
     (setq gc-cons-threshold 800000))
   
   (add-hook 'minibuffer-setup-hook #'mcg/minibuffer-setup-hook)
@@ -411,7 +411,7 @@ MATCH 为可选的匹配条件。"
 #+BEGIN_SRC emacs-lisp
 ;;; Initialize
 
-;; 按顺序设置各组件
+;; Setup components in order
 (mcg--setup-orderless)
 (mcg--setup-pinyin)
 (mcg--setup-vertico)

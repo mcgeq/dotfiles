@@ -8,7 +8,7 @@
   ;;; init-theme.el --- Theme Configuration for MCG Emacs -*- lexical-binding: t; -*-
 
   ;; Filename: init-theme.el
-  ;; Description: 主题配置模块
+  ;; Description: Theme configuration module
   ;; Author: mcge <mcgeq@outlook.com>
   ;; Copyright (C) 2024-2026, mcge, all rights reserved.
   ;; Create   Date: 2026-01-07
@@ -18,12 +18,12 @@
 
   ;;; Commentary:
   ;;
-  ;; MCG Emacs 配置架构的主题模块，负责：
-  ;; - ef-themes 配置
-  ;; - 主题切换命令
-  ;; - nerd-icons 配置
+  ;; Theme module for MCG Emacs configuration, responsible for:
+  ;; - ef-themes configuration
+  ;; - Theme switching commands
+  ;; - nerd-icons configuration
   ;;
-  ;; 模块元数据:
+  ;; Module metadata:
   ;; :depends ()
   ;; :defer nil
   ;;
@@ -43,22 +43,22 @@
 ;;; Variables
 
 (defvar mcg-ui-default-theme 'ef-dream
-  "默认主题。")
+  "Default theme.")
 
 (defvar mcg-ui-light-theme 'ef-summer
-  "日间主题。")
+  "Light/day theme.")
 
 (defvar mcg-ui-dark-theme 'ef-bio
-  "夜间主题。")
+  "Dark/night theme.")
 
 (defvar mcg-ui-auto-switch-theme nil
-  "是否根据时间自动切换主题。
-当设置为 t 时，18:00 后使用夜间主题，否则使用日间主题。")
+  "Whether to auto-switch theme based on time.
+When set to t, uses dark theme after 18:00, otherwise uses light theme.")
 
 (defvar mcg-ui-theme-switch-hour 18
-  "主题切换时间（小时）。
-当 `mcg-ui-auto-switch-theme' 为 t 时，
-此时间之后使用夜间主题。")
+  "Theme switch hour.
+When `mcg-ui-auto-switch-theme' is t,
+uses dark theme after this hour.")
 
 #+END_SRC
 
@@ -67,11 +67,11 @@
 ;;; Theme Configuration
 
 (defun mcg--load-ef-themes ()
-  "加载 ef-themes 扩展。"
+  "Load ef-themes extension."
   (mcg-require-extension "ui/themes" 'ef-themes))
 
 (defun mcg--select-theme ()
-  "根据配置选择要加载的主题。"
+  "Select theme to load based on configuration."
   (if mcg-ui-auto-switch-theme
       (if (>= (string-to-number (format-time-string "%H"))
               mcg-ui-theme-switch-hour)
@@ -80,7 +80,7 @@
     mcg-ui-default-theme))
 
 (defun mcg-ui-setup-theme ()
-  "设置主题。"
+  "Set up theme."
   (when (mcg--load-ef-themes)
     (let ((theme (mcg--select-theme)))
       (load-theme theme t)
@@ -93,8 +93,8 @@
 ;;; Theme Commands
 
 (defun mcg/switch-theme ()
-  "交互式切换主题。
-使用 completing-read 选择 ef-themes 中的主题。"
+  "Interactively switch theme.
+Uses completing-read to select from ef-themes."
   (interactive)
   (when (mcg--load-ef-themes)
     (let* ((themes (custom-available-themes))
@@ -110,7 +110,7 @@
       (message "Theme: %s" theme))))
 
 (defun mcg/toggle-dark-light ()
-  "在日间和夜间主题之间切换。"
+  "Toggle between light and dark themes."
   (interactive)
   (when (mcg--load-ef-themes)
     (let* ((current (car custom-enabled-themes))
@@ -126,7 +126,7 @@
       (message "Theme: %s" new-theme))))
 
 (defun mcg/reload-theme ()
-  "重新加载当前主题。"
+  "Reload current theme."
   (interactive)
   (let ((current (car custom-enabled-themes)))
     (when current
@@ -141,18 +141,18 @@
 ;;; Nerd Icons Configuration
 
 (defvar mcg-ui-icon-font-family "FiraCode Nerd Font"
-  "图标字体家族名称。")
+  "Icon font family name.")
 
 (defun mcg-ui-setup-nerd-icons ()
-  "设置 nerd-icons。
-路径已由 core-bootstrap 的 mcg-setup-load-path 添加到 load-path。"
+  "Set up nerd-icons.
+Path is already added to load-path by core-bootstrap's mcg-setup-load-path."
   (require 'nerd-icons nil t)
   
   (when (featurep 'nerd-icons)
-    ;; 设置图标字体
+    ;; Set icon font
     (setq nerd-icons-font-family mcg-ui-icon-font-family)
     
-    ;; 加载 nerd-icons-completion
+    ;; Load nerd-icons-completion
     (require 'nerd-icons-completion nil t)
     
     (when (featurep 'nerd-icons-completion)
@@ -168,10 +168,10 @@
 #+BEGIN_SRC emacs-lisp
 ;;; Initialize
 
-;; 设置主题
+;; Set up theme
 (mcg-ui-setup-theme)
 
-;; 设置图标
+;; Set up icons
 (mcg-ui-setup-nerd-icons)
 
 #+END_SRC

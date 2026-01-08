@@ -8,7 +8,7 @@
 ;;; init-lua.el --- Lua Development for MCG Emacs -*- lexical-binding: t; -*-
 
 ;; Filename: init-lua.el
-;; Description: Lua 开发模块
+;; Description: Lua development module
 ;; Author: mcge <mcgeq@outlook.com>
 ;; Copyright (C) 2024-2026, mcge, all rights reserved.
 ;; Create   Date: 2026-01-07
@@ -18,11 +18,11 @@
 
 ;;; Commentary:
 ;;
-;; MCG Emacs 配置架构的 Lua 开发模块，负责：
-;; - Lua mode 配置
-;; - LSP 集成 (lua-language-server)
+;; Lua development module for MCG Emacs, responsible for:
+;; - Lua mode configuration
+;; - LSP integration (lua-language-server)
 ;;
-;; 模块元数据:
+;; Module metadata:
 ;; :depends (+lsp)
 ;; :defer t
 ;; :mode ("\\.lua\\'")
@@ -43,17 +43,17 @@
 ;;; Lua Mode Configuration
 
 (defun mcg--setup-lua-mode ()
-  "设置 Lua mode。"
+  "Setup Lua mode."
   (when (mcg-require-extension "lang/lua-mode" 'lua-mode)
-    ;; 缩进设置
+    ;; Indentation settings
     (setq lua-indent-level 4)
     (setq lua-indent-nested-block-content-align nil)
     
     (mcg-log "Lua mode configured")))
 
 (defun mcg--lua-mode-hook ()
-  "Lua mode hook。"
-  ;; 启用 LSP
+  "Lua mode hook."
+  ;; Enable LSP
   (when (fboundp 'lsp-bridge-mode)
     (lsp-bridge-mode 1)))
 
@@ -65,7 +65,7 @@
 
 (mcg--setup-lua-mode)
 
-;; 添加 hook
+;; Add hook
 (add-hook 'lua-mode-hook #'mcg--lua-mode-hook)
 
 #+END_SRC

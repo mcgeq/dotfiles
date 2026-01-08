@@ -8,7 +8,7 @@
   ;;; init-web.el --- Web Development Support for MCG Emacs -*- lexical-binding: t; -*-
 
   ;; Filename: init-web.el
-  ;; Description: Web 开发支持模块（Vue/HTML/CSS）
+  ;; Description: Web development support module (Vue/HTML/CSS)
   ;; Author: mcge <mcgeq@outlook.com>
   ;; Copyright (C) 2024-2026, mcge, all rights reserved.
   ;; Create   Date: 2026-01-07
@@ -18,15 +18,15 @@
 
   ;;; Commentary:
   ;;
-  ;; MCG Emacs 配置架构的 Web 开发支持模块，提供：
-  ;; - web-mode 配置（Vue/HTML）
-  ;; - CSS/SCSS/LESS 支持
-  ;; - Vue SFC 支持
-  ;; - LSP 集成（通过 +lsp 模块）
-  ;; - Emmet 展开
-  ;; - 标签高亮和重命名
+  ;; Web development support module for MCG Emacs, providing:
+  ;; - web-mode configuration (Vue/HTML)
+  ;; - CSS/SCSS/LESS support
+  ;; - Vue SFC support
+  ;; - LSP integration (via +lsp module)
+  ;; - Emmet expansion
+  ;; - Tag highlighting and renaming
   ;;
-  ;; 模块元数据:
+  ;; Module metadata:
   ;; :depends (+lsp)
   ;; :defer t
   ;;
@@ -55,37 +55,37 @@
 
 ** Web Mode Configuration
 #+BEGIN_SRC emacs-lisp
-;;; Web Mode 基础配置
+;;; Web Mode Basic Configuration
 
-;; 文件关联
+;; File associations
 (add-to-list 'auto-mode-alist '("\\.vue\\'" . web-mode))
 
-;; HTML 文件：优先使用 html-ts-mode（如果可用）
+;; HTML files: prefer html-ts-mode (if available)
 (if (and (fboundp 'html-ts-mode)
          (fboundp 'treesit-available-p)
          (treesit-available-p))
     (add-to-list 'auto-mode-alist '("\\.html\\'" . html-ts-mode))
   (add-to-list 'auto-mode-alist '("\\.html\\'" . web-mode)))
 
-;; 其他 web 文件
+;; Other web files
 (add-to-list 'auto-mode-alist '("\\.ejs\\'" . web-mode))
 (add-to-list 'auto-mode-alist '("\\.hbs\\'" . web-mode))
 (add-to-list 'auto-mode-alist '("\\.svelte\\'" . web-mode))
 
-;; Web-mode 设置
-(setq web-mode-enable-auto-quoting nil)  ; 禁用自动引号
+;; Web-mode settings
+(setq web-mode-enable-auto-quoting nil)  ; Disable auto-quoting
 (setq web-mode-content-types-alist '(("vue" . "\\.vue\\'")))
 (setq web-mode-css-indent-offset 2)
 (setq web-mode-code-indent-offset 2)
 (setq web-mode-markup-indent-offset 2)
 (setq web-mode-enable-css-colorization t)
-(setq web-mode-enable-auto-indentation nil)  ; 禁用粘贴时自动格式化
+(setq web-mode-enable-auto-indentation nil)  ; Disable auto-format on paste
 (setq web-mode-enable-current-column-highlight nil)
 
-;; Emmet 自动关闭标签
-(setq web-mode-tag-auto-close-style 2)  ; 2 表示用 > 和 </ 自动关闭
+;; Emmet auto-close tags
+(setq web-mode-tag-auto-close-style 2)  ; 2 means auto-close with > and </
 
-;; 启用标签高亮
+;; Enable tag highlighting
 (when (fboundp 'highlight-matching-tag)
   (highlight-matching-tag 1))
 
@@ -93,16 +93,16 @@
 
 ** CSS Configuration
 #+BEGIN_SRC emacs-lisp
-;;; CSS 配置
+;;; CSS Configuration
 
-;; CSS 缩进
+;; CSS indentation
 (setq css-indent-offset 2)
 
-;; SCSS/LESS 文件关联
+;; SCSS/LESS file associations
 (add-to-list 'auto-mode-alist '("\\.scss\\'" . scss-mode))
 (add-to-list 'auto-mode-alist '("\\.less\\'" . less-css-mode))
 
-;; 使用 css-ts-mode（如果可用）
+;; Use css-ts-mode (if available)
 (when (and (fboundp 'css-ts-mode)
            (fboundp 'treesit-available-p)
            (treesit-available-p))
@@ -112,16 +112,16 @@
 
 ** LSP Configuration
 #+BEGIN_SRC emacs-lisp
-;;; LSP 配置
+;;; LSP Configuration
 
 (defun mcg-web-mode-lsp-setup ()
-  "为 web-mode 启用 lsp-bridge。"
+  "Enable lsp-bridge for web-mode."
   (when buffer-file-name
     (let ((ext (file-name-extension buffer-file-name)))
       (when (member ext '("vue" "html" "jsx" "tsx"))
         (when (fboundp 'lsp-bridge-mode)
           (lsp-bridge-mode 1))
-        ;; Vue 特定设置
+        ;; Vue specific settings
         (when (string= ext "vue")
           (setq-local lsp-bridge-enable-completion-in-string t))))))
 
@@ -134,13 +134,13 @@
 
 ** Vue SFC Block Reorder
 #+BEGIN_SRC emacs-lisp
-;;; Vue 单文件组件块排序
+;;; Vue SFC Block Reorder
 
 (defvar mcg-vue-block-order '("script" "template" "style")
-  "Vue SFC 块的期望顺序。")
+  "Expected order of Vue SFC blocks.")
 
 (defun mcg--vue-find-block-bounds (block-name)
-  "查找 Vue 块的起止位置，返回 (start . end) 或 nil。"
+  "Find Vue block start and end positions, return (start . end) or nil."
   (save-excursion
     (goto-char (point-min))
     (let ((start-regex (format "^[ \t]*<%s\\(?:[ \t\n][^>]*\\)?>" block-name))
@@ -151,12 +151,12 @@
             (cons start (point))))))))
 
 (defun mcg--vue-extract-block (block-name)
-  "提取 Vue 块内容，返回字符串或 nil。"
+  "Extract Vue block content, return string or nil."
   (when-let ((bounds (mcg--vue-find-block-bounds block-name)))
     (buffer-substring-no-properties (car bounds) (cdr bounds))))
 
 (defun mcg--vue-get-block-positions ()
-  "获取所有块的位置，返回 ((name . start-pos) ...) 按位置排序。"
+  "Get all block positions, return ((name . start-pos) ...) sorted by position."
   (let (positions)
     (dolist (name mcg-vue-block-order)
       (when-let ((bounds (mcg--vue-find-block-bounds name)))
@@ -164,7 +164,7 @@
     (sort positions (lambda (a b) (< (cdr a) (cdr b))))))
 
 (defun mcg/vue-reorder-blocks ()
-  "重新排序 Vue SFC 块为: script -> template -> style。"
+  "Reorder Vue SFC blocks to: script -> template -> style."
   (interactive)
   (unless (and buffer-file-name
                (string-match-p "\\.vue\\'" buffer-file-name))
@@ -178,13 +178,13 @@
     (if (equal current-order expected-order)
         (message "Vue blocks already in correct order: %s"
                  (string-join current-order " -> "))
-      ;; 提取所有块内容
+      ;; Extract all block contents
       (let ((blocks (mapcar (lambda (name)
                               (cons name (mcg--vue-extract-block name)))
                             expected-order)))
-        ;; 删除所有内容
+        ;; Delete all content
         (erase-buffer)
-        ;; 按正确顺序插入
+        ;; Insert in correct order
         (dolist (block blocks)
           (when (cdr block)
             (unless (bobp)
@@ -193,25 +193,25 @@
         (insert "\n")
         (message "Vue blocks reordered: %s" (string-join expected-order " -> "))))))
 
-;; 保存 Vue 文件前自动排序块
+;; Auto-reorder Vue blocks before save
 (defun mcg--vue-reorder-before-save ()
-  "保存前重排序 Vue 块。"
+  "Reorder Vue blocks before save."
   (when (and (eq major-mode 'web-mode)
              buffer-file-name
              (string-match-p "\\.vue\\'" buffer-file-name))
     (mcg/vue-reorder-blocks)))
 
-;; 启用保存时自动排序（可选，默认禁用）
+;; Enable auto-reorder on save (optional, disabled by default)
 ;; (add-hook 'before-save-hook #'mcg--vue-reorder-before-save)
 
 #+END_SRC
 
 ** Vue Component Templates
 #+BEGIN_SRC emacs-lisp
-;;; Vue 组件模板
+;;; Vue Component Templates
 
 (defun mcg/vue-insert-component ()
-  "插入 Vue 3 组件模板。"
+  "Insert Vue 3 component template."
   (interactive)
   (let ((component-name (read-string "Component name: ")))
     (insert "<script setup lang=\"ts\">\nimport { ref } from 'vue'\n\n</script>\n\n")
@@ -220,7 +220,7 @@
     (insert "<style scoped>\n\n</style>\n")))
 
 (defun mcg/vue-insert-composable ()
-  "插入 Vue 3 Composable 模板。"
+  "Insert Vue 3 Composable template."
   (interactive)
   (let ((name (read-string "Composable name (use prefix): ")))
     (insert (format "import { ref, computed } from 'vue'\n\n"))
@@ -232,10 +232,10 @@
 
 ** Emmet Support
 #+BEGIN_SRC emacs-lisp
-;;; Emmet 支持
+;;; Emmet Support
 
 (defun mcg-web-mode-emmet-setup ()
-  "配置 Emmet 快速展开。"
+  "Configure Emmet quick expansion."
   (when (featurep 'emmet-mode)
     (emmet-mode 1)
     (setq-local emmet-expand-jsx-className? t)
@@ -250,31 +250,31 @@
 
 ** Tag Operations
 #+BEGIN_SRC emacs-lisp
-;;; 标签操作
+;;; Tag Operations
 
 (defun mcg/web-rename-tag ()
-  "重命名当前标签。"
+  "Rename current tag."
   (interactive)
   (if (fboundp 'instant-rename-tag)
       (instant-rename-tag)
     (message "instant-rename-tag not available")))
 
 (defun mcg/web-match-tag ()
-  "跳转到匹配的标签。"
+  "Jump to matching tag."
   (interactive)
   (if (fboundp 'web-mode-tag-match)
       (web-mode-tag-match)
     (message "web-mode-tag-match not available")))
 
 (defun mcg/web-select-element ()
-  "选择当前元素内容。"
+  "Select current element content."
   (interactive)
   (if (fboundp 'web-mode-element-content-select)
       (web-mode-element-content-select)
     (message "web-mode-element-content-select not available")))
 
 (defun mcg/web-clone-element ()
-  "克隆当前元素。"
+  "Clone current element."
   (interactive)
   (if (fboundp 'web-mode-element-clone)
       (web-mode-element-clone)
@@ -284,41 +284,41 @@
 
 ** Vue LSP Diagnostics
 #+BEGIN_SRC emacs-lisp
-;;; Vue LSP 环境诊断
+;;; Vue LSP Environment Diagnostics
 
 (defun mcg/vue-check-lsp-environment ()
-  "检查 Vue LSP 所需的环境配置。"
+  "Check Vue LSP required environment configuration."
   (interactive)
   (let ((results '())
         (tsdk-path (expand-file-name "~/AppData/Roaming/npm/node_modules/typescript/lib")))
-    ;; 检查 vue-language-server
+    ;; Check vue-language-server
     (if (executable-find "vue-language-server")
-        (push "✓ vue-language-server 已安装" results)
-      (push "✗ vue-language-server 未安装 - 运行: npm install -g @vue/language-server" results))
+        (push "✓ vue-language-server installed" results)
+      (push "✗ vue-language-server not installed - run: npm install -g @vue/language-server" results))
     
-    ;; 检查 typescript
+    ;; Check typescript
     (if (executable-find "tsc")
-        (push "✓ TypeScript 已安装" results)
-      (push "✗ TypeScript 未安装 - 运行: npm install -g typescript" results))
+        (push "✓ TypeScript installed" results)
+      (push "✗ TypeScript not installed - run: npm install -g typescript" results))
     
-    ;; 检查 tsdk 路径
+    ;; Check tsdk path
     (if (file-directory-p tsdk-path)
-        (push (format "✓ TypeScript SDK 路径存在: %s" tsdk-path) results)
-      (push (format "✗ TypeScript SDK 路径不存在: %s" tsdk-path) results))
+        (push (format "✓ TypeScript SDK path exists: %s" tsdk-path) results)
+      (push (format "✗ TypeScript SDK path not found: %s" tsdk-path) results))
     
-    ;; 检查当前 buffer
+    ;; Check current buffer
     (when (eq major-mode 'web-mode)
       (if (bound-and-true-p lsp-bridge-mode)
-          (push "✓ 当前 Vue 文件已启用 lsp-bridge-mode" results)
-        (push "✗ 当前 Vue 文件未启用 lsp-bridge-mode" results)))
+          (push "✓ Current Vue file has lsp-bridge-mode enabled" results)
+        (push "✗ Current Vue file does not have lsp-bridge-mode enabled" results)))
     
-    ;; 显示结果
-    (with-current-buffer (get-buffer-create "*Vue LSP 诊断*")
+    ;; Show results
+    (with-current-buffer (get-buffer-create "*Vue LSP Diagnostics*")
       (erase-buffer)
-      (insert "=== Vue LSP 环境检查 ===\n\n")
+      (insert "=== Vue LSP Environment Check ===\n\n")
       (dolist (result (reverse results))
         (insert result "\n"))
-      (insert "\n推荐的全局 npm 包:\n")
+      (insert "\nRecommended global npm packages:\n")
       (insert "  npm install -g typescript\n")
       (insert "  npm install -g @vue/language-server\n")
       (insert "  npm install -g typescript-language-server\n")
@@ -329,23 +329,23 @@
 
 ** Keybindings
 #+BEGIN_SRC emacs-lisp
-;;; 快捷键配置
+;;; Keybindings Configuration
 
 (defun mcg-web-setup-keybindings ()
-  "设置 Web 模式快捷键。"
-  ;; 标签操作
+  "Setup Web mode keybindings."
+  ;; Tag operations
   (local-set-key (kbd "M-R") #'mcg/web-rename-tag)
   (local-set-key (kbd "C-c C-n") #'mcg/web-match-tag)
   (local-set-key (kbd "M-s-SPC") #'mcg/web-select-element)
   (local-set-key (kbd "C-s-l") #'mcg/web-clone-element)
   
-  ;; 折叠
+  ;; Folding
   (local-set-key (kbd "C-c C-f") #'web-mode-fold-or-unfold)
   
-  ;; 注释
+  ;; Comment
   (local-set-key (kbd "C-:") #'web-mode-comment-or-uncomment)
   
-  ;; Vue 特定
+  ;; Vue specific
   (when (and buffer-file-name
              (string-match-p "\\.vue\\'" buffer-file-name))
     (local-set-key (kbd "C-c v") #'mcg/vue-insert-component)
@@ -357,10 +357,10 @@
 
 ** Tool Status Check
 #+BEGIN_SRC emacs-lisp
-;;; 工具状态检查
+;;; Tool Status Check
 
 (defun mcg/web-check-tools ()
-  "检查 Web 开发工具是否已安装。"
+  "Check if Web development tools are installed."
   (interactive)
   (let ((tools '(("vue-language-server" . "npm install -g @vue/language-server")
                  ("typescript-language-server" . "npm install -g typescript-language-server")
@@ -369,7 +369,7 @@
                  ("prettier" . "npm install -g prettier"))))
     (with-help-window "*Web Tools Status*"
       (princ "═══════════════════════════════════════════\n")
-      (princ "   Web 开发工具状态\n")
+      (princ "   Web Development Tools Status\n")
       (princ "═══════════════════════════════════════════\n\n")
       (dolist (tool tools)
         (let ((name (car tool))
@@ -377,10 +377,10 @@
           (princ (format "%-28s %s\n"
                          name
                          (if (executable-find name)
-                             "✓ 已安装"
-                           (format "✗ 未安装 (%s)" install-cmd))))))
+                             "✓ Installed"
+                           (format "✗ Not installed (%s)" install-cmd))))))
       (princ "\n═══════════════════════════════════════════\n")
-      (princ "\n推荐安装命令:\n")
+      (princ "\nRecommended install commands:\n")
       (princ "  npm install -g typescript typescript-language-server\n")
       (princ "  npm install -g @vue/language-server\n")
       (princ "  npm install -g @biomejs/biome\n"))))
@@ -389,26 +389,26 @@
 
 ** Keybindings Summary
 #+BEGIN_SRC emacs-lisp
-;;; 快捷键总结
+;;; Keybindings Summary
 
-;; 标签操作:
-;; M-R           - 重命名标签
-;; C-c C-n       - 跳转到匹配标签
-;; M-s-SPC       - 选择元素内容
-;; C-s-l         - 克隆元素
-;; C-c C-f       - 折叠/展开
-;; C-:           - 注释/取消注释
+;; Tag operations:
+;; M-R           - Rename tag
+;; C-c C-n       - Jump to matching tag
+;; M-s-SPC       - Select element content
+;; C-s-l         - Clone element
+;; C-c C-f       - Fold/unfold
+;; C-:           - Comment/uncomment
 ;;
-;; Vue 特定:
-;; C-c v         - 插入 Vue 组件模板
-;; C-c C-o       - 重排序 Vue 块
+;; Vue specific:
+;; C-c v         - Insert Vue component template
+;; C-c C-o       - Reorder Vue blocks
 ;;
-;; LSP (由 +lsp 模块提供):
-;; M-.           - 跳转定义
-;; M-,           - 返回
-;; M-?           - 查找引用
-;; C-c r r       - 重命名
-;; C-c r f       - 格式化
+;; LSP (provided by +lsp module):
+;; M-.           - Jump to definition
+;; M-,           - Return
+;; M-?           - Find references
+;; C-c r r       - Rename
+;; C-c r f       - Format
 
 #+END_SRC
 

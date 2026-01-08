@@ -8,7 +8,7 @@
   ;;; init-modeline.el --- Modeline Configuration for MCG Emacs -*- lexical-binding: t; -*-
 
   ;; Filename: init-modeline.el
-  ;; Description: 模式行配置模块（使用 awesome-tray）
+  ;; Description: Modeline configuration module (using awesome-tray)
   ;; Author: mcge <mcgeq@outlook.com>
   ;; Copyright (C) 2024-2026, mcge, all rights reserved.
   ;; Create   Date: 2026-01-07
@@ -18,11 +18,11 @@
 
   ;;; Commentary:
   ;;
-  ;; MCG Emacs 配置架构的模式行模块，负责：
-  ;; - awesome-tray 配置
-  ;; - 模式行显示定制
+  ;; Modeline module for MCG Emacs configuration, responsible for:
+  ;; - awesome-tray configuration
+  ;; - Modeline display customization
   ;;
-  ;; 模块元数据:
+  ;; Module metadata:
   ;; :depends ()
   ;; :defer nil
   ;;
@@ -42,50 +42,50 @@
 ;;; Variables
 
 (defvar mcg-modeline-position 'center
-  "awesome-tray 显示位置。
-可选值: 'left, 'center, 'right")
+  "awesome-tray display position.
+Options: 'left, 'center, 'right")
 
 (defvar mcg-modeline-date-format "[%-Y-%-m-%-d %a %-H:%M]"
-  "日期时间显示格式。")
+  "Date and time display format.")
 
 (defvar mcg-modeline-active-modules
-  '("buffer-name"    ; Buffer 名称
-    "mode-name"      ; 主模式
-    "location"       ; 光标位置 (行:列)
-    "belong"         ; 当前函数/类
-    "parent-dir"     ; 父目录名
-    "input-method"   ; 输入法状态
-    "date")          ; 日期时间
-  "awesome-tray 显示的模块列表。
+  '("buffer-name"    ; Buffer name
+    "mode-name"      ; Major mode
+    "location"       ; Cursor position (line:column)
+    "belong"         ; Current function/class
+    "parent-dir"     ; Parent directory name
+    "input-method"   ; Input method status
+    "date")          ; Date and time
+  "List of modules displayed by awesome-tray.
 
-可用模块:
-- git: Git 分支信息
-- location: 光标位置 (行:列)
-- belong: 当前函数/类
-- mode-name: 主模式名称
-- date: 日期时间
-- buffer-name: Buffer 名称
-- parent-dir: 父目录名
-- file-path: 文件完整路径
-- input-method: 输入法状态
-- battery: 电池状态
-- word-count: 字数统计
-- volume: 音量
-- hostname: 主机名
-- github: GitHub 通知
-- anzu: 搜索计数")
+Available modules:
+- git: Git branch info
+- location: Cursor position (line:column)
+- belong: Current function/class
+- mode-name: Major mode name
+- date: Date and time
+- buffer-name: Buffer name
+- parent-dir: Parent directory name
+- file-path: Full file path
+- input-method: Input method status
+- battery: Battery status
+- word-count: Word count
+- volume: Volume
+- hostname: Hostname
+- github: GitHub notifications
+- anzu: Search count")
 
 (defvar mcg-modeline-use-second-line t
-  "是否使用第二行显示。")
+  "Whether to use second line display.")
 
 (defvar mcg-modeline-buffer-name-max-length 30
-  "Buffer 名称最大显示长度。")
+  "Maximum display length for buffer name.")
 
 (defvar mcg-modeline-input-method-default "EN"
-  "英文输入法状态显示文本。")
+  "Display text for English input method status.")
 
-(defvar mcg-modeline-input-method-local "中"
-  "中文输入法状态显示文本。")
+(defvar mcg-modeline-input-method-local "CN"
+  "Display text for Chinese input method status.")
 
 #+END_SRC
 
@@ -94,33 +94,33 @@
 ;;; Awesome Tray Configuration
 
 (defun mcg-modeline-setup-awesome-tray ()
-  "设置 awesome-tray。"
+  "Set up awesome-tray."
   (when (mcg-require-extension "ui/awesome-tray" 'awesome-tray)
-    ;; 位置配置
+    ;; Position configuration
     (setq awesome-tray-position mcg-modeline-position)
     
-    ;; 日期格式
+    ;; Date format
     (setq awesome-tray-date-format mcg-modeline-date-format)
     
-    ;; 活动模块
+    ;; Active modules
     (setq awesome-tray-active-modules mcg-modeline-active-modules)
     
-    ;; 样式配置
+    ;; Style configuration
     (setq awesome-tray-info-padding-right 1)
     (setq awesome-tray-second-line mcg-modeline-use-second-line)
     
-    ;; Buffer 名称配置
+    ;; Buffer name configuration
     (setq awesome-tray-buffer-name-buffer-changed t)
     (setq awesome-tray-buffer-name-max-length mcg-modeline-buffer-name-max-length)
     
-    ;; 输入法样式
+    ;; Input method style
     (setq awesome-tray-input-method-default-style mcg-modeline-input-method-default)
     (setq awesome-tray-input-method-local-style mcg-modeline-input-method-local)
     
-    ;; 隐藏默认 mode-line
+    ;; Hide default mode-line
     (setq-default mode-line-format nil)
     
-    ;; 启用 awesome-tray
+    ;; Enable awesome-tray
     (awesome-tray-mode 1)
     
     (mcg-log "Enabled awesome-tray mode")))
@@ -132,7 +132,7 @@
 ;;; Commands
 
 (defun mcg/toggle-modeline ()
-  "切换 awesome-tray 模式。"
+  "Toggle awesome-tray mode."
   (interactive)
   (if (bound-and-true-p awesome-tray-mode)
       (progn
@@ -143,9 +143,9 @@
     (message "awesome-tray enabled")))
 
 (defun mcg/modeline-add-module (module)
-  "添加模块到 awesome-tray。
+  "Add module to awesome-tray.
 
-MODULE 是模块名称字符串。"
+MODULE is the module name string."
   (interactive
    (list (completing-read "Add module: "
                           '("git" "location" "belong" "mode-name" "date"
@@ -163,9 +163,9 @@ MODULE 是模块名称字符串。"
     (message "Added module: %s" module)))
 
 (defun mcg/modeline-remove-module (module)
-  "从 awesome-tray 移除模块。
+  "Remove module from awesome-tray.
 
-MODULE 是模块名称字符串。"
+MODULE is the module name string."
   (interactive
    (list (completing-read "Remove module: "
                           mcg-modeline-active-modules
@@ -179,7 +179,7 @@ MODULE 是模块名称字符串。"
   (message "Removed module: %s" module))
 
 (defun mcg/modeline-list-modules ()
-  "显示当前活动的 awesome-tray 模块。"
+  "Display currently active awesome-tray modules."
   (interactive)
   (message "Active modules: %s"
            (string-join mcg-modeline-active-modules ", ")))
@@ -190,7 +190,7 @@ MODULE 是模块名称字符串。"
 #+BEGIN_SRC emacs-lisp
 ;;; Initialize
 
-;; 设置 awesome-tray
+;; Set up awesome-tray
 (mcg-modeline-setup-awesome-tray)
 
 #+END_SRC

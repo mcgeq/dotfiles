@@ -8,7 +8,7 @@
   ;;; init-magit.el --- Git Integration for MCG Emacs -*- lexical-binding: t; -*-
 
   ;; Filename: init-magit.el
-  ;; Description: Git 集成模块（Magit）
+  ;; Description: Git integration module (Magit)
   ;; Author: mcge <mcgeq@outlook.com>
   ;; Copyright (C) 2024-2026, mcge, all rights reserved.
   ;; Create   Date: 2026-01-07
@@ -18,12 +18,12 @@
 
   ;;; Commentary:
   ;;
-  ;; MCG Emacs 配置架构的 Git 集成模块，负责：
-  ;; - Magit 配置
-  ;; - 自定义 transient 菜单
-  ;; - Git commit 模式增强
+  ;; Git integration module for MCG Emacs, responsible for:
+  ;; - Magit configuration
+  ;; - Custom transient menus
+  ;; - Git commit mode enhancements
   ;;
-  ;; 模块元数据:
+  ;; Module metadata:
   ;; :depends ()
   ;; :defer t
   ;;
@@ -43,13 +43,13 @@
 ;;; Variables
 
 (defvar mcg-tools-magit-diff-refine t
-  "是否启用 diff 精细高亮。")
+  "Whether to enable diff refined highlighting.")
 
 (defvar mcg-tools-magit-ediff-dwim t
-  "是否在 hunk 上显示 ediff。")
+  "Whether to show ediff on hunks.")
 
 (defvar mcg-tools-magit-flyspell t
-  "是否在 commit 消息中启用拼写检查。")
+  "Whether to enable spell checking in commit messages.")
 
 #+END_SRC
 
@@ -58,13 +58,13 @@
 ;;; Magit Configuration
 
 (defun mcg--setup-magit ()
-  "设置 Magit。"
+  "Setup Magit."
   (when (mcg-require-extension "git/magit" 'magit)
-    ;; Diff 设置
+    ;; Diff settings
     (setq magit-diff-refine-hunk mcg-tools-magit-diff-refine)
     (setq magit-ediff-dwim-show-on-hunks mcg-tools-magit-ediff-dwim)
     
-    ;; Commit 模式设置
+    ;; Commit mode settings
     (when mcg-tools-magit-flyspell
       (add-hook 'git-commit-mode-hook #'flyspell-mode))
     
@@ -77,13 +77,13 @@
 ;;; Transient Menus
 
 (defun mcg--setup-magit-transient-menus ()
-  "设置自定义 Magit transient 菜单。"
+  "Setup custom Magit transient menus."
   (when (featurep 'magit)
     (require 'transient)
     
-    ;; 主菜单
+    ;; Main menu
     (transient-define-prefix mcg/magit-menu ()
-      "自定义 Magit 菜单。"
+      "Custom Magit menu."
       [[("t" "Status" magit-status)]
        [("b" "Branch" mcg/magit-branch-menu)]
        [("l" "Logs" mcg/magit-log-menu)]
@@ -92,9 +92,9 @@
        [("r" "Remote" mcg/magit-remote-menu)]
        [("f" "Files" mcg/magit-file-menu)]])
     
-    ;; 分支菜单
+    ;; Branch menu
     (transient-define-prefix mcg/magit-branch-menu ()
-      "分支操作菜单。"
+      "Branch operations menu."
       [["Branch Operations"
         ("c" "Create       Branch" magit-branch-create)
         ("C" "Checkout     Branch" magit-branch-checkout)
@@ -104,24 +104,24 @@
         ("r" "Rename       Branch" magit-branch-rename)
         ("R" "Reset        Branch" magit-branch-reset)]])
     
-    ;; 子模块菜单
+    ;; Submodule menu
     (transient-define-prefix mcg/magit-submodule-menu ()
-      "子模块操作菜单。"
+      "Submodule operations menu."
       [["Submodules"
         ("a" "Add    Submodule" magit-submodule-add)
         ("r" "Remove Submodule" magit-submodule-remove)
         ("u" "Update Submodule" magit-submodule-update)]])
     
-    ;; 远程菜单
+    ;; Remote menu
     (transient-define-prefix mcg/magit-remote-menu ()
-      "远程操作菜单。"
+      "Remote operations menu."
       [["Remote Operations"
         ("a" "Add    Remote" magit-remote-add)
         ("r" "Rename Remote" magit-remote-rename)]])
     
-    ;; 日志菜单
+    ;; Log menu
     (transient-define-prefix mcg/magit-log-menu ()
-      "日志查看菜单。"
+      "Log viewing menu."
       [["Log"
         ("c" "Log Current" magit-log-current)
         ("l" "Log All" magit-log-all)
@@ -129,16 +129,16 @@
         ("b" "Log Branch" magit-log-branches)
         ("f" "Log Current File" magit-log-buffer-file)]])
     
-    ;; 文件菜单
+    ;; File menu
     (transient-define-prefix mcg/magit-file-menu ()
-      "文件操作菜单。"
+      "File operations menu."
       [["File"
         ("r" "File Rename" magit-file-rename)
         ("d" "File Delete" magit-file-delete)]])
     
-    ;; Diff 菜单
+    ;; Diff menu
     (transient-define-prefix mcg/magit-diff-menu ()
-      "Diff 查看菜单。"
+      "Diff viewing menu."
       [["Diff"
         ("d" "Diff file" magit-diff-buffer-file)]])
     
@@ -151,7 +151,7 @@
 ;;; Commands
 
 (defun mcg/git-status ()
-  "打开 Magit status 缓冲区。"
+  "Open Magit status buffer."
   (interactive)
   (if (featurep 'magit)
       (magit-status)
@@ -160,7 +160,7 @@
       (magit-status))))
 
 (defun mcg/git-blame ()
-  "显示当前文件的 git blame。"
+  "Show git blame for current file."
   (interactive)
   (if (featurep 'magit)
       (magit-blame-addition)
@@ -169,7 +169,7 @@
       (magit-blame-addition))))
 
 (defun mcg/git-log-file ()
-  "显示当前文件的 git log。"
+  "Show git log for current file."
   (interactive)
   (if (featurep 'magit)
       (magit-log-buffer-file)
@@ -183,10 +183,10 @@
 #+BEGIN_SRC emacs-lisp
 ;;; Initialize
 
-;; 设置 Magit
+;; Setup Magit
 (mcg--setup-magit)
 
-;; 设置 transient 菜单（在 magit 加载后）
+;; Setup transient menus (after magit loads)
 (with-eval-after-load 'magit
   (mcg--setup-magit-transient-menus))
 

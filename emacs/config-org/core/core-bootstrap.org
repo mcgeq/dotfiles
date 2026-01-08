@@ -8,7 +8,7 @@
   ;;; core-bootstrap.el --- Core Bootstrap for MCG Emacs -*- lexical-binding: t; -*-
 
   ;; Filename: core-bootstrap.el
-  ;; Description: 核心引导模块，定义路径变量和性能优化
+  ;; Description: Core bootstrap module, defines path variables and performance optimization
   ;; Author: mcge <mcgeq@outlook.com>
   ;; Copyright (C) 2024-2026, mcge, all rights reserved.
   ;; Create   Date: 2026-01-07
@@ -18,20 +18,20 @@
 
   ;;; Commentary:
   ;;
-  ;; MCG Emacs 配置架构的核心引导模块，负责：
-  ;; - 定义所有路径变量
-  ;; - 设置 load-path
-  ;; - 性能优化（GC、file-name-handler）
-  ;; - 启动时间记录
+  ;; Core bootstrap module for MCG Emacs configuration, responsible for:
+  ;; - Defining all path variables
+  ;; - Setting up load-path
+  ;; - Performance optimization (GC, file-name-handler)
+  ;; - Startup time tracking
   ;;
-  ;; 此模块必须在所有其他模块之前加载。
+  ;; This module must be loaded before all other modules.
   ;;
 
 #+END_SRC
 
 ** System Detection
 #+BEGIN_SRC emacs-lisp
-;;; 系统检测
+;;; System Detection
 
 (defconst mcg-is-windows
   (memq system-type '(cygwin windows-nt ms-dos))
@@ -56,154 +56,154 @@
 
 ** Path Variables
 #+BEGIN_SRC emacs-lisp
-;;; 路径变量定义
+;;; Path Variable Definitions
 
 (defvar mcg-emacs-dir nil
-  "Emacs 配置根目录 (emacs/).")
+  "Emacs configuration root directory (emacs/).")
 
 (defvar mcg-core-dir nil
-  "核心配置目录 (site-lisp/config/core/).")
+  "Core configuration directory (site-lisp/config/core/).")
 
 (defvar mcg-modules-dir nil
-  "模块目录 (site-lisp/config/modules/).")
+  "Modules directory (site-lisp/config/modules/).")
 
 (defvar mcg-extensions-dir nil
-  "扩展目录 (site-lisp/extensions/).")
+  "Extensions directory (site-lisp/extensions/).")
 
 (defvar mcg-private-dir nil
-  "私有配置目录 (site-lisp/config/private/).")
+  "Private configuration directory (site-lisp/config/private/).")
 
 (defvar mcg-config-dir nil
-  "配置根目录 (site-lisp/config/).")
+  "Configuration root directory (site-lisp/config/).")
 
 (defvar mcg-config-org-dir nil
-  "Org 源文件目录 (config-org/).")
+  "Org source files directory (config-org/).")
 
 (defvar mcg-site-lisp-dir nil
-  "site-lisp 目录.")
+  "site-lisp directory.")
 
 (defvar mcg-langservers-dir nil
-  "LSP 服务器配置目录.")
+  "LSP server configuration directory.")
 
 (defvar mcg-multiservers-dir nil
-  "LSP 多服务器配置目录.")
+  "LSP multi-server configuration directory.")
 #+END_SRC
 
 ** Path Initialization
 #+BEGIN_SRC emacs-lisp
-;;; 路径初始化
+;;; Path Initialization
 
-;; 用户可配置的基础目录
-;; 在 early-init.el 或 .emacs 中设置此变量（在 require 'core-bootstrap 之前）
-;; 注意：使用 boundp 检查确保不覆盖已设置的值
+;; User-configurable base directory
+;; Set this variable in early-init.el or .emacs (before require 'core-bootstrap)
+;; Note: Using boundp check to ensure we don't override already set values
 (unless (boundp 'mcg-base-dir)
   (defvar mcg-base-dir nil
-    "MCG 配置的基础目录。
+    "Base directory for MCG configuration.
 
-用户应在加载 core-bootstrap 之前设置此变量，例如：
+Users should set this variable before loading core-bootstrap, e.g.:
   (setq mcg-base-dir \"D:/config\")
 
-或通过环境变量 MCG_EMACS_CONFIG_DIR 设置。
+Or set via environment variable MCG_EMACS_CONFIG_DIR.
 
-如果未设置，将使用 ~ 作为默认值。"))
+If not set, ~ will be used as the default value."))
 
 (defun mcg-init-paths (&optional base-dir)
-  "初始化所有路径变量。
+  "Initialize all path variables.
 
-参数:
-- BASE-DIR: 用户自定义根目录（如 D:/config 或 ~）
-            如果为 nil，则按以下优先级获取：
-            1. mcg-base-dir 变量
-            2. 环境变量 MCG_EMACS_CONFIG_DIR
-            3. 默认值 ~
+Arguments:
+- BASE-DIR: User-defined root directory (e.g., D:/config or ~)
+            If nil, obtained in the following priority:
+            1. mcg-base-dir variable
+            2. Environment variable MCG_EMACS_CONFIG_DIR
+            3. Default value ~
 
-此函数设置所有 mcg-* 路径变量，必须在配置加载前调用。
+This function sets all mcg-* path variables and must be called before loading configuration.
 
-使用方式：
-1. 在 .emacs 中: (setq mcg-base-dir \"D:/config\") 然后 (require 'init)
-2. 或在 early-init.el 中设置 mcg-base-dir
-3. 或设置环境变量 MCG_EMACS_CONFIG_DIR"
+Usage:
+1. In .emacs: (setq mcg-base-dir \"D:/config\") then (require 'init)
+2. Or set mcg-base-dir in early-init.el
+3. Or set environment variable MCG_EMACS_CONFIG_DIR"
   (let* ((dir (or base-dir
                   (and (boundp 'mcg-base-dir) mcg-base-dir)
                   (getenv "MCG_EMACS_CONFIG_DIR")
                   "~"))
          (custom-dir (file-truename dir)))
-    ;; 主目录
+    ;; Main directory
     (setq mcg-emacs-dir (expand-file-name "dotfiles/emacs" custom-dir))
     
-    ;; site-lisp 目录
+    ;; site-lisp directory
     (setq mcg-site-lisp-dir (expand-file-name "site-lisp" mcg-emacs-dir))
     (setq mcg-extensions-dir (expand-file-name "extensions" mcg-site-lisp-dir))
     
-    ;; 生成的配置目录 (site-lisp/config/)
+    ;; Generated configuration directory (site-lisp/config/)
     (setq mcg-config-dir (expand-file-name "config" mcg-site-lisp-dir))
     (setq mcg-core-dir (expand-file-name "core" mcg-config-dir))
     (setq mcg-modules-dir (expand-file-name "modules" mcg-config-dir))
     (setq mcg-private-dir (expand-file-name "private" mcg-config-dir))
     
-    ;; Org 源文件目录 (config-org/)
+    ;; Org source files directory (config-org/)
     (setq mcg-config-org-dir (expand-file-name "config-org" mcg-emacs-dir))
     
-    ;; LSP 配置目录
+    ;; LSP configuration directories
     (setq mcg-langservers-dir (expand-file-name "langservers" mcg-emacs-dir))
     (setq mcg-multiservers-dir (expand-file-name "multiservers" mcg-emacs-dir))
     
-    ;; 返回使用的目录，方便调试
+    ;; Return the used directory for debugging
     custom-dir))
 
-;; 自动初始化路径（使用配置的值或默认值）
+;; Auto-initialize paths (using configured values or defaults)
 (mcg-init-paths)
 #+END_SRC
 
 ** Load Path Setup
 #+BEGIN_SRC emacs-lisp
-;;; Load Path 设置
+;;; Load Path Setup
 
 (defun mcg-setup-load-path ()
-  "设置 load-path，添加核心配置和扩展目录。
+  "Set up load-path, adding core configuration and extension directories.
 
-此函数将以下目录添加到 load-path：
-1. site-lisp/config - 生成的 .el 配置文件
-2. site-lisp/config/core - 核心模块
-3. site-lisp/config/modules/* - 功能模块
-4. site-lisp/extensions/* - 所有扩展子目录"
-  ;; 添加配置目录
+This function adds the following directories to load-path:
+1. site-lisp/config - Generated .el configuration files
+2. site-lisp/config/core - Core modules
+3. site-lisp/config/modules/* - Feature modules
+4. site-lisp/extensions/* - All extension subdirectories"
+  ;; Add configuration directory
   (let ((config-dir (expand-file-name "config" mcg-site-lisp-dir)))
     (when (file-directory-p config-dir)
       (add-to-list 'load-path config-dir)
-      ;; 添加 core 目录
+      ;; Add core directory
       (add-to-list 'load-path (expand-file-name "core" config-dir))
-      ;; 添加 modules 子目录
+      ;; Add modules subdirectories
       (let ((modules-dir (expand-file-name "modules" config-dir)))
         (when (file-directory-p modules-dir)
           (dolist (cat-dir (directory-files modules-dir t "^[^.]"))
             (when (file-directory-p cat-dir)
               (add-to-list 'load-path cat-dir)))))))
   
-  ;; 递归添加扩展目录
+  ;; Recursively add extension directories
   (when (file-directory-p mcg-extensions-dir)
     (dolist (category-dir (directory-files mcg-extensions-dir t "^[^.]"))
       (when (file-directory-p category-dir)
-        ;; 添加类别目录
+        ;; Add category directory
         (add-to-list 'load-path category-dir)
-        ;; 添加类别下的子目录
+        ;; Add subdirectories under category
         (dolist (ext-dir (directory-files category-dir t "^[^.]"))
           (when (file-directory-p ext-dir)
             (add-to-list 'load-path ext-dir)
-            ;; 处理二级子目录（如 lsp/clojure/）
+            ;; Handle second-level subdirectories (e.g., lsp/clojure/)
             (dolist (sub-ext-dir (directory-files ext-dir t "^[^.]"))
               (when (file-directory-p sub-ext-dir)
                 (add-to-list 'load-path sub-ext-dir)))))))))
 
-;; 初始化 load-path
+;; Initialize load-path
 (mcg-setup-load-path)
 #+END_SRC
 
 ** Performance Optimization
 #+BEGIN_SRC emacs-lisp
-;;; 性能优化
+;;; Performance Optimization
 
-;; 保存原始值
+;; Save original values
 (defvar mcg--gc-cons-threshold-original gc-cons-threshold
   "Original GC threshold.")
 
@@ -213,28 +213,28 @@
 (defvar mcg--file-name-handler-alist-original file-name-handler-alist
   "Original file-name-handler-alist.")
 
-;; 默认 GC 设置
+;; Default GC settings
 (defvar mcg-gc-cons-threshold-default (* 16 1024 1024)
   "Default GC threshold (16MB) for normal operation.")
 
 (defvar mcg-gc-cons-percentage-default 0.1
   "Default GC percentage for normal operation.")
 
-;; 启动时禁用 GC 和 file-name-handler
+;; Disable GC and file-name-handler during startup
 (setq gc-cons-threshold most-positive-fixnum
       gc-cons-percentage 0.6
       file-name-handler-alist nil)
 
-;; 启动后恢复设置
+;; Restore settings after startup
 (defun mcg--restore-startup-optimizations ()
-  "恢复启动时的性能优化设置。"
+  "Restore performance optimization settings after startup."
   (setq gc-cons-threshold mcg-gc-cons-threshold-default
         gc-cons-percentage mcg-gc-cons-percentage-default
         file-name-handler-alist mcg--file-name-handler-alist-original))
 
 (add-hook 'emacs-startup-hook #'mcg--restore-startup-optimizations)
 
-;; Minibuffer GC 优化
+;; Minibuffer GC optimization
 (defun mcg--minibuffer-gc-setup ()
   "Increase GC threshold in minibuffer."
   (setq gc-cons-threshold most-positive-fixnum))
@@ -246,13 +246,13 @@
 (add-hook 'minibuffer-setup-hook #'mcg--minibuffer-gc-setup)
 (add-hook 'minibuffer-exit-hook #'mcg--minibuffer-gc-restore)
 
-;; 空闲时 GC
+;; GC during idle time
 (run-with-idle-timer 5 t #'garbage-collect)
 #+END_SRC
 
 ** Startup Time Tracking
 #+BEGIN_SRC emacs-lisp
-;;; 启动时间记录
+;;; Startup Time Tracking
 
 (defvar mcg-startup-time nil
   "Emacs startup time in seconds.")
@@ -272,7 +272,7 @@
 
 ** Native Compilation
 #+BEGIN_SRC emacs-lisp
-;;; 本地编译优化
+;;; Native Compilation Optimization
 
 (when (and (fboundp 'native-comp-available-p)
            (native-comp-available-p))
@@ -280,16 +280,16 @@
         native-comp-deferred-compilation t
         native-comp-speed 2))
 
-;; 字节编译警告
+;; Byte compilation warnings
 (setq byte-compile-warnings '(not free-vars unresolved noruntime lexical make-local))
 
-;; 优先加载新文件
+;; Prefer loading newer files
 (setq load-prefer-newer t)
 #+END_SRC
 
 ** Logging
 #+BEGIN_SRC emacs-lisp
-;;; 日志系统
+;;; Logging System
 
 (defvar mcg-debug-mode nil
   "Enable debug mode for verbose logging.")
@@ -298,8 +298,8 @@
   "Enable profiling mode to track load times.")
 
 (defvar mcg-load-times nil
-  "记录各模块/扩展的加载耗时。
-格式为 ((NAME . TIME-MS) ...) 的 alist。")
+  "Record load times for modules/extensions.
+Format is an alist of ((NAME . TIME-MS) ...).")
 
 (defmacro mcg-log (format-string &rest args)
   "Log message with FORMAT-STRING and ARGS.
@@ -309,11 +309,11 @@ Only logs when `mcg-debug-mode' is non-nil."
      (message (concat "[MCG] " ,format-string) ,@args)))
 
 (defmacro mcg-profile (name &rest body)
-  "执行 BODY 并记录耗时到 mcg-load-times。
+  "Execute BODY and record elapsed time to mcg-load-times.
 
-参数:
-- NAME: 标识名称
-- BODY: 要执行的代码"
+Arguments:
+- NAME: Identifier name
+- BODY: Code to execute"
   (declare (indent 1))
   `(if mcg-profile-mode
        (let ((start-time (current-time)))
@@ -324,18 +324,18 @@ Only logs when `mcg-debug-mode' is non-nil."
      (progn ,@body)))
 
 (defun mcg/show-load-times ()
-  "显示所有模块/扩展的加载耗时。"
+  "Display load times for all modules/extensions."
   (interactive)
   (if (null mcg-load-times)
       (message "No load times recorded. Set mcg-profile-mode to t before startup.")
     (with-current-buffer (get-buffer-create "*MCG Load Times*")
       (erase-buffer)
-      (insert "MCG 加载耗时统计\n")
-      (insert "==================\n\n")
+      (insert "MCG Load Time Statistics\n")
+      (insert "========================\n\n")
       (let ((sorted (sort (copy-sequence mcg-load-times)
                           (lambda (a b) (> (cdr a) (cdr b)))))
             (total 0))
-        (insert (format "%-50s %10s\n" "名称" "耗时(ms)"))
+        (insert (format "%-50s %10s\n" "Name" "Time(ms)"))
         (insert (make-string 62 ?─))
         (insert "\n")
         (dolist (entry sorted)
@@ -343,18 +343,18 @@ Only logs when `mcg-debug-mode' is non-nil."
           (cl-incf total (cdr entry)))
         (insert (make-string 62 ?─))
         (insert "\n")
-        (insert (format "%-50s %10.2f\n" "总计" total)))
+        (insert (format "%-50s %10.2f\n" "Total" total)))
       (goto-char (point-min))
       (display-buffer (current-buffer)))))
 
 (defun mcg/toggle-debug-mode ()
-  "切换调试模式。"
+  "Toggle debug mode."
   (interactive)
   (setq mcg-debug-mode (not mcg-debug-mode))
   (message "MCG debug mode %s" (if mcg-debug-mode "enabled" "disabled")))
 
 (defun mcg/toggle-profile-mode ()
-  "切换性能分析模式。"
+  "Toggle profiling mode."
   (interactive)
   (setq mcg-profile-mode (not mcg-profile-mode))
   (message "MCG profile mode %s" (if mcg-profile-mode "enabled" "disabled")))

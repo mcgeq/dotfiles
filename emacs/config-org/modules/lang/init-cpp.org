@@ -8,7 +8,7 @@
 ;;; init-cpp.el --- C/C++ Development for MCG Emacs -*- lexical-binding: t; -*-
 
 ;; Filename: init-cpp.el
-;; Description: C/C++ 开发模块
+;; Description: C/C++ development module
 ;; Author: mcge <mcgeq@outlook.com>
 ;; Copyright (C) 2024-2026, mcge, all rights reserved.
 ;; Create   Date: 2026-01-07
@@ -18,13 +18,13 @@
 
 ;;; Commentary:
 ;;
-;; MCG Emacs 配置架构的 C/C++ 开发模块，负责：
-;; - C/C++ mode 配置
-;; - Modern C++ 字体锁定
-;; - Qt 关键字支持
-;; - LSP 集成 (clangd)
+;; C/C++ development module for MCG Emacs, responsible for:
+;; - C/C++ mode configuration
+;; - Modern C++ font lock
+;; - Qt keyword support
+;; - LSP integration (clangd)
 ;;
-;; 模块元数据:
+;; Module metadata:
 ;; :depends (+lsp)
 ;; :defer t
 ;; :mode ("\\.c\\'" "\\.h\\'" "\\.cpp\\'" "\\.hpp\\'" "\\.cc\\'" "\\.cxx\\'")
@@ -46,7 +46,7 @@
 ;;; Modern C++ Font Lock
 
 (defun mcg--setup-modern-cpp-font-lock ()
-  "设置 Modern C++ 字体锁定。"
+  "Setup Modern C++ font lock."
   (when (mcg-require-extension "lang/modern-cpp-font-lock" 'modern-cpp-font-lock)
     (modern-c++-font-lock-global-mode 1)
     (mcg-log "Modern C++ font lock enabled")))
@@ -58,16 +58,16 @@
 ;;; C/C++ Mode Configuration
 
 (defun mcg--c-mode-style-setup ()
-  "设置 C/C++ 代码风格。"
-  ;; 使用 stroustrup 风格
+  "Setup C/C++ code style."
+  ;; Use stroustrup style
   (c-set-style "stroustrup")
   
-  ;; 缩进设置
+  ;; Indentation settings
   (setq c-basic-offset 4)
   (setq tab-width 4)
   (setq indent-tabs-mode nil)
   
-  ;; Qt 关键字支持
+  ;; Qt keyword support
   (setq c-protection-key
         (concat "\\<\\(public\\|public slot\\|protected"
                 "\\|protected slot\\|private\\|private slot"
@@ -77,7 +77,7 @@
                 "\\|public slots\\|protected slots\\|private slots"
                 "\\)\\>[ \t]*:"))
   
-  ;; Qt 关键字字体
+  ;; Qt keyword fonts
   (font-lock-add-keywords
    'c++-mode
    '(("\\<\\(slots\\|signals\\)\\>" . font-lock-type-face)
@@ -86,10 +86,10 @@
      ("\\<Q[A-Z][A-Za-z]*\\>" . font-lock-type-face))))
 
 (defun mcg--c-mode-hook ()
-  "C/C++ mode hook。"
+  "C/C++ mode hook."
   (mcg--c-mode-style-setup)
   
-  ;; 启用 LSP
+  ;; Enable LSP
   (when (fboundp 'lsp-bridge-mode)
     (lsp-bridge-mode 1)))
 
@@ -101,7 +101,7 @@
 
 (mcg--setup-modern-cpp-font-lock)
 
-;; 添加 hooks
+;; Add hooks
 (add-hook 'c-mode-hook #'mcg--c-mode-hook)
 (add-hook 'c++-mode-hook #'mcg--c-mode-hook)
 (add-hook 'c-mode-common-hook #'mcg--c-mode-hook)

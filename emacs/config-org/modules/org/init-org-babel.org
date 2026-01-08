@@ -8,7 +8,7 @@
 ;;; init-org-babel.el --- Org Babel Configuration for MCG Emacs -*- lexical-binding: t; -*-
 
 ;; Filename: init-org-babel.el
-;; Description: Org Babel 代码执行配置模块
+;; Description: Org Babel code execution configuration module
 ;; Author: mcge <mcgeq@outlook.com>
 ;; Copyright (C) 2024-2026, mcge, all rights reserved.
 ;; Create   Date: 2026-01-07
@@ -18,11 +18,11 @@
 
 ;;; Commentary:
 ;;
-;; MCG Emacs 配置架构的 Org Babel 配置模块，负责：
-;; - 多语言代码块执行支持
-;; - 自定义语言扩展（如 Zig）
-;; - 代码块结果处理和导出
-;; - 安全性和性能优化
+;; Org Babel configuration module for MCG Emacs, responsible for:
+;; - Multi-language code block execution support
+;; - Custom language extensions (e.g., Zig)
+;; - Code block result handling and export
+;; - Security and performance optimization
 ;;
 
 #+END_SRC
@@ -40,21 +40,21 @@
 
 ** Basic Configuration
 #+BEGIN_SRC emacs-lisp
-;;; Org Babel 基础配置
+;;; Org Babel Basic Configuration
 
 (defun mcg-org-babel-setup-basic ()
-  "设置 Org Babel 基础配置。"
-  ;; 执行代码块前的确认设置
+  "Setup Org Babel basic configuration."
+  ;; Confirmation settings before executing code blocks
   (setq org-confirm-babel-evaluate nil
         org-src-fontify-natively t
         org-src-tab-acts-natively t
         org-src-preserve-indentation t
         org-edit-src-content-indentation 0)
   
-  ;; 代码块编辑窗口设置
+  ;; Code block editing window settings
   (setq org-src-window-setup 'current-window)
   
-  ;; 代码块导出设置
+  ;; Code block export settings
   (setq org-export-use-babel t
         org-export-babel-evaluate t)
   
@@ -64,10 +64,10 @@
 
 ** Language Support
 #+BEGIN_SRC emacs-lisp
-;;; 语言支持配置
+;;; Language Support Configuration
 
 (defun mcg-org-babel-setup-languages ()
-  "设置 Org Babel 语言支持。"
+  "Setup Org Babel language support."
   (org-babel-do-load-languages
    'org-babel-load-languages
    '((emacs-lisp . t)
@@ -87,11 +87,11 @@
 
 ** Default Header Arguments
 #+BEGIN_SRC emacs-lisp
-;;; 默认代码块参数
+;;; Default Code Block Arguments
 
 (defun mcg-org-babel-setup-defaults ()
-  "设置 Org Babel 默认参数。"
-  ;; 全局默认参数
+  "Setup Org Babel default arguments."
+  ;; Global default arguments
   (setq org-babel-default-header-args
         '((:session . "none")
           (:results . "replace")
@@ -101,11 +101,11 @@
           (:hlines . "no")
           (:tangle . "no")))
   
-  ;; Python 默认参数
+  ;; Python default arguments
   (setq org-babel-default-header-args:python
         '((:results . "output")))
   
-  ;; Shell 默认参数
+  ;; Shell default arguments
   (setq org-babel-default-header-args:shell
         '((:results . "output")))
   
@@ -115,29 +115,29 @@
 
 ** Zig Language Support
 #+BEGIN_SRC emacs-lisp
-;;; Zig 语言支持
+;;; Zig Language Support
 
 (defvar org-babel-default-header-args:zig '()
-  "Zig 代码块的默认参数。")
+  "Default arguments for Zig code blocks.")
 
 (defun org-babel-execute:zig (body params)
-  "执行 Zig 代码块。
-BODY 是代码内容，PARAMS 是参数。"
+  "Execute Zig code block.
+BODY is the code content, PARAMS are the parameters."
   (let* ((tmp-src-file (org-babel-temp-file "zig-src-" ".zig"))
          (tmp-bin-file (org-babel-temp-file "zig-bin-"))
          (cmdline (cdr (assq :cmdline params)))
          (flags (cdr (assq :flags params)))
          (full-body (org-babel-expand-body:generic body params)))
     
-    ;; 检查 Zig 是否安装
+    ;; Check if Zig is installed
     (unless (executable-find "zig")
       (error "Zig compiler not found"))
     
-    ;; 写入源文件
+    ;; Write source file
     (with-temp-file tmp-src-file
       (insert full-body))
     
-    ;; 编译并运行
+    ;; Compile and run
     (let ((compile-command
            (format "zig build-exe %s %s -femit-bin=%s"
                    (or flags "")
@@ -154,11 +154,11 @@ BODY 是代码内容，PARAMS 是参数。"
           (org-babel-eval run-command ""))))))
 
 (defun mcg-org-babel-setup-zig ()
-  "设置 Zig 语言支持。"
-  ;; 注册 Zig 语言
+  "Setup Zig language support."
+  ;; Register Zig language
   (add-to-list 'org-babel-load-languages '(zig . t))
   
-  ;; Zig 默认参数
+  ;; Zig default arguments
   (setq org-babel-default-header-args:zig
         '((:results . "output")
           (:exports . "both")))
@@ -169,28 +169,28 @@ BODY 是代码内容，PARAMS 是参数。"
 
 ** Helper Functions
 #+BEGIN_SRC emacs-lisp
-;;; 辅助函数
+;;; Helper Functions
 
 (defun mcg/org-babel-execute-buffer ()
-  "执行当前 buffer 中的所有代码块。"
+  "Execute all code blocks in current buffer."
   (interactive)
   (org-babel-execute-buffer)
   (message "Executed all code blocks in buffer"))
 
 (defun mcg/org-babel-tangle-and-compile ()
-  "Tangle 当前文件。"
+  "Tangle current file."
   (interactive)
   (org-babel-tangle)
   (message "Tangled file"))
 
 (defun mcg/org-babel-remove-all-results ()
-  "移除当前 buffer 中所有代码块的结果。"
+  "Remove all code block results in current buffer."
   (interactive)
   (org-babel-remove-result-one-or-many t)
   (message "Removed all results"))
 
 (defun mcg/org-insert-src-block (lang)
-  "插入指定语言 LANG 的代码块。"
+  "Insert a code block for the specified language LANG."
   (interactive
    (list (completing-read "Language: "
                           '("emacs-lisp" "python" "shell" "zig"
@@ -203,10 +203,10 @@ BODY 是代码内容，PARAMS 是参数。"
 
 ** Keybindings
 #+BEGIN_SRC emacs-lisp
-;;; 快捷键绑定
+;;; Keybindings
 
 (defun mcg-org-babel-setup-keybindings ()
-  "设置 Org Babel 快捷键。"
+  "Setup Org Babel keybindings."
   (with-eval-after-load 'org
     (define-key org-mode-map (kbd "C-c C-v C-b") #'mcg/org-babel-execute-buffer)
     (define-key org-mode-map (kbd "C-c C-v C-r") #'mcg/org-babel-remove-all-results)

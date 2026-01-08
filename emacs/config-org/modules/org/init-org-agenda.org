@@ -8,7 +8,7 @@
 ;;; init-org-agenda.el --- Org Agenda Configuration for MCG Emacs -*- lexical-binding: t; -*-
 
 ;; Filename: init-org-agenda.el
-;; Description: Org Agenda 配置模块
+;; Description: Org Agenda configuration module
 ;; Author: mcge <mcgeq@outlook.com>
 ;; Copyright (C) 2024-2026, mcge, all rights reserved.
 ;; Create   Date: 2026-01-07
@@ -18,11 +18,11 @@
 
 ;;; Commentary:
 ;;
-;; MCG Emacs 配置架构的 Org Agenda 配置模块，负责：
-;; - Agenda 文件和视图配置
-;; - 时间网格和日程显示
-;; - 日期格式化（包含农历支持）
-;; - 日出日落函数
+;; Org Agenda configuration module for MCG Emacs, responsible for:
+;; - Agenda files and view configuration
+;; - Time grid and schedule display
+;; - Date formatting (including lunar calendar support)
+;; - Sunrise/sunset functions
 ;;
 
 #+END_SRC
@@ -43,26 +43,26 @@
 
 (defvar mcg-org-agenda-files
   (list (expand-file-name "agenda" mcg-org-directory))
-  "Org agenda 扫描的文件列表或目录。")
+  "Org agenda file list or directories to scan.")
 
 (defvar mcg-org-agenda-diary-file
   (expand-file-name "diary.org" (expand-file-name "agenda" mcg-org-directory))
-  "Org agenda 日记文件。")
+  "Org agenda diary file.")
 
 (defvar mcg-calendar-location-longitude 116.9962
-  "当前位置的经度（用于日出日落计算）。")
+  "Current location longitude (for sunrise/sunset calculation).")
 
 (defvar mcg-calendar-location-latitude 39.91
-  "当前位置的纬度（用于日出日落计算）。")
+  "Current location latitude (for sunrise/sunset calculation).")
 
 #+END_SRC
 
 ** Agenda Files Configuration
 #+BEGIN_SRC emacs-lisp
-;;; Agenda 文件和基础配置
+;;; Agenda files and basic configuration
 
 (defun mcg-org-agenda-setup-files ()
-  "设置 Org Agenda 文件配置。"
+  "Setup Org Agenda file configuration."
   (setq org-agenda-files mcg-org-agenda-files)
   (setq org-agenda-use-time-grid t)
   (setq org-agenda-current-time-string "⏰------------now")
@@ -73,10 +73,10 @@
 
 ** Date Format with Lunar Calendar
 #+BEGIN_SRC emacs-lisp
-;;; 日期格式化（含农历）
+;;; Date formatting (with lunar calendar)
 
 (defun mcg-org-agenda-format-date-aligned (date)
-  "格式化 DATE 用于 agenda 显示，包含农历信息。"
+  "Format DATE for agenda display, including lunar calendar info."
   (require 'cal-iso)
   (let* ((dayname (if (boundp 'cal-china-x-days)
                       (aref cal-china-x-days (calendar-day-of-week date))
@@ -117,7 +117,7 @@
             year month day dayname extra)))
 
 (defun mcg-org-agenda-setup-date-format ()
-  "设置 Agenda 日期格式。"
+  "Setup Agenda date format."
   (setq org-agenda-format-date 'mcg-org-agenda-format-date-aligned)
   (mcg-log "Configured org-agenda date format"))
 
@@ -125,13 +125,13 @@
 
 ** Time Grid Configuration
 #+BEGIN_SRC emacs-lisp
-;;; 时间网格配置
+;;; Time grid configuration
 
 (defun mcg-org-agenda-setup-time-grid ()
-  "设置 Agenda 时间网格。"
-  ;; 八分图时间段
-  ;; 1: 0-3时 午夜  2: 3-6时 破晓  3: 6-9时 早晨  4: 9-12时 明昼
-  ;; 5: 12-15时 午后  6: 15-18时 下午  7: 18-21时 向晚  8: 21-24时 深夜
+  "Setup Agenda time grid."
+  ;; Eight-part time periods
+  ;; 1: 0-3 midnight  2: 3-6 dawn  3: 6-9 morning  4: 9-12 forenoon
+  ;; 5: 12-15 afternoon  6: 15-18 late afternoon  7: 18-21 evening  8: 21-24 night
   (setq org-agenda-time-grid
         '((daily today require-timed)
           (300 600 900 1200 1500 1800 2100 2400)
@@ -144,34 +144,34 @@
 
 ** Display and Format Settings
 #+BEGIN_SRC emacs-lisp
-;;; 显示和格式设置
+;;; Display and format settings
 
 (defun mcg-org-agenda-setup-display ()
-  "设置 Agenda 显示格式。"
-  ;; 日记集成
+  "Setup Agenda display format."
+  ;; Diary integration
   (setq org-agenda-include-diary t
         org-agenda-diary-file mcg-org-agenda-diary-file
         diary-file mcg-org-agenda-diary-file)
   
-  ;; 日程视图的前缀设置
+  ;; Agenda view prefix settings
   (setq org-agenda-prefix-format
         '((agenda . " %i %-25:c %5t %s")
           (todo   . " %i %-25:c ")
           (tags   . " %i %-25:c ")
           (search . " %i %-25:c ")))
   
-  ;; 计划任务显示
+  ;; Scheduled task display
   (setq org-agenda-scheduled-leaders
-        '("计划 " "应在%02d 天前开始 "))
+        '("Scheduled " "Should have started %02d days ago "))
   
-  ;; 截止日期显示
+  ;; Deadline display
   (setq org-agenda-deadline-leaders
-        '("截止 " "还有%02d 天到期 " "已经过期%02d 天 "))
+        '("Deadline " "%02d days until deadline " "Overdue by %02d days "))
   
-  ;; 时间戳格式
+  ;; Timestamp format
   (setq org-time-stamp-formats '("<%Y-%m-%d %A>" . "<%Y-%m-%d %A %H:%M>"))
   
-  ;; 其他显示设置
+  ;; Other display settings
   (setq org-cycle-separator-lines 2
         org-agenda-insert-diary-extract-time t
         org-agenda-sticky t
@@ -185,14 +185,14 @@
 
 ** Location and Sunrise/Sunset
 #+BEGIN_SRC emacs-lisp
-;;; 地理位置和日出日落
+;;; Location and sunrise/sunset
 
 (defun mcg-org-agenda-setup-location ()
-  "设置地理位置。"
+  "Setup geographic location."
   (setq calendar-longitude mcg-calendar-location-longitude
         calendar-latitude mcg-calendar-location-latitude)
   
-  ;; 天干地支配置
+  ;; Celestial stems and terrestrial branches configuration
   (setq calendar-chinese-celestial-stem
         ["甲" "乙" "丙" "丁" "戊" "己" "庚" "辛" "壬" "癸"]
         calendar-chinese-terrestrial-branch
@@ -201,7 +201,7 @@
   (mcg-log "Configured calendar location"))
 
 (defun diary-sunrise ()
-  "获取日出时间。"
+  "Get sunrise time."
   (let ((dss (diary-sunrise-sunset)))
     (with-temp-buffer
       (insert dss)
@@ -213,7 +213,7 @@
       (buffer-substring (point-min) (match-beginning 0)))))
 
 (defun diary-sunset ()
-  "获取日落时间。"
+  "Get sunset time."
   (let ((dss (diary-sunrise-sunset))
         start end)
     (with-temp-buffer

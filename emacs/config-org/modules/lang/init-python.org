@@ -8,7 +8,7 @@
   ;;; init-python.el --- Python Language Support for MCG Emacs -*- lexical-binding: t; -*-
 
   ;; Filename: init-python.el
-  ;; Description: Python 语言支持模块
+  ;; Description: Python language support module
   ;; Author: mcge <mcgeq@outlook.com>
   ;; Copyright (C) 2024-2026, mcge, all rights reserved.
   ;; Create   Date: 2026-01-07
@@ -18,18 +18,18 @@
 
   ;;; Commentary:
   ;;
-  ;; MCG Emacs 配置架构的 Python 语言支持模块，提供：
-  ;; - python-mode / python-ts-mode 配置
-  ;; - ty + ruff LSP 集成（通过 +lsp 模块）
-  ;; - 虚拟环境管理
-  ;; - pytest 测试支持
-  ;; - REPL 集成
+  ;; Python language support module for MCG Emacs, providing:
+  ;; - python-mode / python-ts-mode configuration
+  ;; - ty + ruff LSP integration (via +lsp module)
+  ;; - Virtual environment management
+  ;; - pytest testing support
+  ;; - REPL integration
   ;;
-  ;; 工具链说明:
-  ;; - ty: Astral 出品的 Python 类型检查器，提供补全、跳转、类型检查
-  ;; - ruff: Astral 出品的超快 Python linter/formatter，替代 black/isort/flake8
+  ;; Toolchain description:
+  ;; - ty: Python type checker by Astral, provides completion, navigation, type checking
+  ;; - ruff: Ultra-fast Python linter/formatter by Astral, replaces black/isort/flake8
   ;;
-  ;; 模块元数据:
+  ;; Module metadata:
   ;; :depends (+lsp)
   ;; :defer t
   ;;
@@ -42,7 +42,7 @@
 
 (require 'core-lib)
 
-;; 确保 +lsp 模块已加载
+;; Ensure +lsp module is loaded
 (when (and (boundp 'mcg-module-enabled-p)
            (fboundp 'mcg-module-enabled-p)
            (mcg-module-enabled-p :lang 'lsp))
@@ -52,22 +52,22 @@
 
 ** Python Mode Configuration
 #+BEGIN_SRC emacs-lisp
-;;; Python 基础配置
+;;; Python Basic Configuration
 
-;; Python 缩进设置
+;; Python indentation settings
 (setq python-indent-offset 4
       python-indent-guess-indent-offset nil)
 
-;; 使用 Python 3
+;; Use Python 3
 (setq python-shell-interpreter "python3"
       python-shell-interpreter-args "-i")
 
-;; 使用 python-ts-mode（如果可用）
+;; Use python-ts-mode (if available)
 (when (and (fboundp 'treesit-available-p)
            (treesit-available-p))
   (add-to-list 'major-mode-remap-alist '(python-mode . python-ts-mode)))
 
-;; 文件关联
+;; File associations
 (add-to-list 'auto-mode-alist '("\\.py\\'" . python-mode))
 (add-to-list 'auto-mode-alist '("\\.pyi\\'" . python-mode))
 (add-to-list 'interpreter-mode-alist '("python3" . python-mode))
@@ -77,13 +77,13 @@
 
 ** Virtual Environment
 #+BEGIN_SRC emacs-lisp
-;;; 虚拟环境支持
+;;; Virtual Environment Support
 
 (defvar mcg-python-venv-dirs '(".venv" "venv" ".virtualenv" "env")
-  "虚拟环境目录名列表。")
+  "List of virtual environment directory names.")
 
 (defun mcg-python-setup-venv ()
-  "自动检测并激活 Python 虚拟环境。"
+  "Auto-detect and activate Python virtual environment."
   (when-let* ((project-root (when (project-current)
                               (project-root (project-current))))
               (venv-path (seq-find
@@ -95,7 +95,7 @@
       (setq python-shell-virtualenv-root venv-full-path)
       (mcg-log "Activated Python venv: %s" venv-full-path))))
 
-;; 自动激活虚拟环境
+;; Auto-activate virtual environment
 (add-hook 'python-mode-hook #'mcg-python-setup-venv)
 (add-hook 'python-ts-mode-hook #'mcg-python-setup-venv)
 
@@ -103,16 +103,16 @@
 
 ** Formatting with Ruff
 #+BEGIN_SRC emacs-lisp
-;;; 代码格式化（使用 ruff）
+;;; Code Formatting (using ruff)
 
 (defun mcg-python-format-buffer ()
-  "使用 ruff 格式化 Python 代码。"
+  "Format Python code using ruff."
   (interactive)
   (if (and (bound-and-true-p lsp-bridge-mode)
            (fboundp 'lsp-bridge-code-format))
-      ;; 使用 lsp-bridge 的格式化功能（会调用 ruff）
+      ;; Use lsp-bridge formatting (will call ruff)
       (lsp-bridge-code-format)
-    ;; 回退到直接调用 ruff
+    ;; Fallback to direct ruff call
     (when (executable-find "ruff")
       (let ((temp-file (make-temp-file "ruff-format" nil ".py")))
         (unwind-protect
@@ -131,17 +131,17 @@
 
 ** Linting with Ruff
 #+BEGIN_SRC emacs-lisp
-;;; 代码检查（使用 ruff）
+;;; Code Linting (using ruff)
 
 (defun mcg/python-lint-buffer ()
-  "使用 ruff 检查当前 buffer。"
+  "Lint current buffer using ruff."
   (interactive)
   (if (executable-find "ruff")
       (compile (format "ruff check %s" (buffer-file-name)))
     (message "ruff not found. Install with: uv tool install ruff")))
 
 (defun mcg/python-fix-buffer ()
-  "使用 ruff 自动修复当前 buffer。"
+  "Auto-fix current buffer using ruff."
   (interactive)
   (if (executable-find "ruff")
       (let ((file (buffer-file-name)))
@@ -151,7 +151,7 @@
     (message "ruff not found")))
 
 (defun mcg/python-sort-imports ()
-  "使用 ruff 整理 imports。"
+  "Sort imports using ruff."
   (interactive)
   (if (executable-find "ruff")
       (let ((file (buffer-file-name)))
@@ -168,17 +168,17 @@
 
 ** Type Checking with ty
 #+BEGIN_SRC emacs-lisp
-;;; 类型检查（使用 ty）
+;;; Type Checking (using ty)
 
 (defun mcg/python-type-check ()
-  "使用 ty 进行类型检查。"
+  "Type check using ty."
   (interactive)
   (if (executable-find "ty")
       (compile (format "ty check %s" (buffer-file-name)))
     (message "ty not found. Install with: uv tool install ty")))
 
 (defun mcg/python-type-check-project ()
-  "对整个项目进行类型检查。"
+  "Type check entire project."
   (interactive)
   (if (executable-find "ty")
       (let ((default-directory (or (when (project-current)
@@ -191,10 +191,10 @@
 
 ** Testing Support
 #+BEGIN_SRC emacs-lisp
-;;; 测试支持（pytest）
+;;; Testing Support (pytest)
 
 (defun mcg/python-run-pytest ()
-  "运行 pytest 测试。"
+  "Run pytest tests."
   (interactive)
   (if (executable-find "pytest")
       (let ((compilation-scroll-output t))
@@ -202,7 +202,7 @@
     (message "pytest not found. Install with: pip install pytest")))
 
 (defun mcg/python-run-pytest-file ()
-  "运行当前文件的测试。"
+  "Run tests in current file."
   (interactive)
   (if (executable-find "pytest")
       (let ((compilation-scroll-output t))
@@ -210,7 +210,7 @@
     (message "pytest not found")))
 
 (defun mcg/python-run-pytest-function ()
-  "运行光标所在的测试函数。"
+  "Run test function at cursor."
   (interactive)
   (if (executable-find "pytest")
       (let* ((func-name (python-info-current-defun))
@@ -224,22 +224,22 @@
 
 ** REPL Integration
 #+BEGIN_SRC emacs-lisp
-;;; REPL 集成
+;;; REPL Integration
 
 (defun mcg/python-send-region-to-repl (start end)
-  "发送选中区域到 Python REPL。"
+  "Send selected region to Python REPL."
   (interactive "r")
   (python-shell-send-region start end)
   (python-shell-switch-to-shell))
 
 (defun mcg/python-send-buffer-to-repl ()
-  "发送整个 buffer 到 Python REPL。"
+  "Send entire buffer to Python REPL."
   (interactive)
   (python-shell-send-buffer)
   (python-shell-switch-to-shell))
 
 (defun mcg/python-send-defun-to-repl ()
-  "发送当前函数到 Python REPL。"
+  "Send current function to Python REPL."
   (interactive)
   (python-shell-send-defun)
   (python-shell-switch-to-shell))
@@ -248,10 +248,10 @@
 
 ** Documentation
 #+BEGIN_SRC emacs-lisp
-;;; 文档支持
+;;; Documentation Support
 
 (defun mcg/python-insert-docstring ()
-  "插入 Python docstring 模板。"
+  "Insert Python docstring template."
   (interactive)
   (let ((indent (make-string (current-indentation) ?\s)))
     (insert (format "%s\"\"\"\n%s\n%s\n%s\"\"\"\n"
@@ -266,10 +266,10 @@
 
 ** Project Detection
 #+BEGIN_SRC emacs-lisp
-;;; 项目检测
+;;; Project Detection
 
 (defun mcg-python-project-p ()
-  "检测是否为 Python 项目。"
+  "Detect if current project is a Python project."
   (when-let ((project-root (when (project-current)
                              (project-root (project-current)))))
     (or (file-exists-p (expand-file-name "setup.py" project-root))
@@ -283,21 +283,21 @@
 
 ** Keybindings
 #+BEGIN_SRC emacs-lisp
-;;; 快捷键配置
+;;; Keybindings Configuration
 
 (defun mcg-python-setup-keybindings ()
-  "设置 Python 模式快捷键。"
-  ;; 重构 (C-c r 前缀)
+  "Setup Python mode keybindings."
+  ;; Refactoring (C-c r prefix)
   (local-set-key (kbd "C-c r f") #'mcg-python-format-buffer)
   (local-set-key (kbd "C-c r l") #'mcg/python-lint-buffer)
   (local-set-key (kbd "C-c r x") #'mcg/python-fix-buffer)
   (local-set-key (kbd "C-c r i") #'mcg/python-sort-imports)
   
-  ;; 类型检查
+  ;; Type checking
   (local-set-key (kbd "C-c c") #'mcg/python-type-check)
   (local-set-key (kbd "C-c C") #'mcg/python-type-check-project)
   
-  ;; 测试 (C-c t 前缀)
+  ;; Testing (C-c t prefix)
   (local-set-key (kbd "C-c t t") #'mcg/python-run-pytest)
   (local-set-key (kbd "C-c t f") #'mcg/python-run-pytest-file)
   (local-set-key (kbd "C-c t d") #'mcg/python-run-pytest-function)
@@ -307,7 +307,7 @@
   (local-set-key (kbd "C-c C-b") #'mcg/python-send-buffer-to-repl)
   (local-set-key (kbd "C-c C-d") #'mcg/python-send-defun-to-repl)
   
-  ;; 文档
+  ;; Documentation
   (local-set-key (kbd "C-c d") #'mcg/python-insert-docstring))
 
 (add-hook 'python-mode-hook #'mcg-python-setup-keybindings)
@@ -317,18 +317,18 @@
 
 ** Tool Status Check
 #+BEGIN_SRC emacs-lisp
-;;; 工具状态检查
+;;; Tool Status Check
 
 (defun mcg/python-check-tools ()
-  "检查 Python 开发工具是否已安装。"
+  "Check if Python development tools are installed."
   (interactive)
   (let ((tools '(("ty" . "uv tool install ty")
                  ("ruff" . "uv tool install ruff")
                  ("pytest" . "uv pip install pytest")
-                 ("python3" . "系统安装"))))
+                 ("python3" . "System install"))))
     (with-help-window "*Python Tools Status*"
       (princ "═══════════════════════════════════════════\n")
-      (princ "   Python 开发工具状态\n")
+      (princ "   Python Development Tools Status\n")
       (princ "═══════════════════════════════════════════\n\n")
       (dolist (tool tools)
         (let ((name (car tool))
@@ -336,52 +336,52 @@
           (princ (format "%-12s %s\n"
                          name
                          (if (executable-find name)
-                             "✓ 已安装"
-                           (format "✗ 未安装 (%s)" install-cmd))))))
+                             "✓ Installed"
+                           (format "✗ Not installed (%s)" install-cmd))))))
       (princ "\n═══════════════════════════════════════════\n")
-      (princ "\n推荐安装命令:\n")
+      (princ "\nRecommended install commands:\n")
       (princ "  uv tool install ty\n")
       (princ "  uv tool install ruff\n")
       (princ "  uv pip install pytest\n")
-      (princ "\n或使用 pip:\n")
+      (princ "\nOr using pip:\n")
       (princ "  pip install ty ruff pytest\n"))))
 
 #+END_SRC
 
 ** Keybindings Summary
 #+BEGIN_SRC emacs-lisp
-;;; 快捷键总结
+;;; Keybindings Summary
 
-;; 重构 (C-c r 前缀):
-;; C-c r f   - 格式化代码 (ruff format)
-;; C-c r l   - 检查代码 (ruff check)
-;; C-c r x   - 自动修复 (ruff --fix)
-;; C-c r i   - 整理 imports (ruff)
-;; C-c r r   - 重命名 (lsp-bridge，由 +lsp 提供)
+;; Refactoring (C-c r prefix):
+;; C-c r f   - Format code (ruff format)
+;; C-c r l   - Lint code (ruff check)
+;; C-c r x   - Auto-fix (ruff --fix)
+;; C-c r i   - Sort imports (ruff)
+;; C-c r r   - Rename (lsp-bridge, provided by +lsp)
 ;;
-;; 类型检查:
-;; C-c c     - 类型检查当前文件 (ty)
-;; C-c C     - 类型检查整个项目 (ty)
+;; Type checking:
+;; C-c c     - Type check current file (ty)
+;; C-c C     - Type check entire project (ty)
 ;;
-;; 测试:
-;; C-c t t   - 运行所有测试 (pytest)
-;; C-c t f   - 运行当前文件测试
-;; C-c t d   - 运行当前函数测试
+;; Testing:
+;; C-c t t   - Run all tests (pytest)
+;; C-c t f   - Run current file tests
+;; C-c t d   - Run current function test
 ;;
 ;; REPL:
-;; C-c C-r   - 发送选中区域到 REPL
-;; C-c C-b   - 发送整个 buffer 到 REPL
-;; C-c C-d   - 发送当前函数到 REPL
-;; C-c C-z   - 切换到 REPL (内置)
-;; C-c C-c   - 发送当前定义到 REPL (内置)
+;; C-c C-r   - Send selected region to REPL
+;; C-c C-b   - Send entire buffer to REPL
+;; C-c C-d   - Send current function to REPL
+;; C-c C-z   - Switch to REPL (built-in)
+;; C-c C-c   - Send current definition to REPL (built-in)
 ;;
-;; 其他:
-;; C-c d     - 插入 docstring
+;; Other:
+;; C-c d     - Insert docstring
 ;;
-;; LSP (由 +lsp 模块提供):
-;; M-.       - 跳转定义
-;; M-,       - 返回
-;; M-?       - 查找引用
+;; LSP (provided by +lsp module):
+;; M-.       - Jump to definition
+;; M-,       - Return
+;; M-?       - Find references
 
 #+END_SRC
 

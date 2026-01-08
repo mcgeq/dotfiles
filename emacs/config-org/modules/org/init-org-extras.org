@@ -8,7 +8,7 @@
 ;;; init-org-extras.el --- Org Extras for MCG Emacs -*- lexical-binding: t; -*-
 
 ;; Filename: init-org-extras.el
-;; Description: Org 扩展功能模块
+;; Description: Org extensions module
 ;; Author: mcge <mcgeq@outlook.com>
 ;; Copyright (C) 2024-2026, mcge, all rights reserved.
 ;; Create   Date: 2026-01-07
@@ -18,10 +18,10 @@
 
 ;;; Commentary:
 ;;
-;; MCG Emacs 配置架构的 Org 扩展功能模块，负责：
-;; - Org-download 图片下载
-;; - Org-numbering 标题编号
-;; - Consult-todo 集成
+;; Org extensions module for MCG Emacs, responsible for:
+;; - Org-download image downloading
+;; - Org-numbering heading numbering
+;; - Consult-todo integration
 ;;
 
 #+END_SRC
@@ -39,13 +39,13 @@
 ;;; Org-Download Configuration
 
 (defun mcg--setup-org-download ()
-  "设置 Org-download 图片下载。"
+  "Setup Org-download image downloading."
   (when (mcg-require-extension "org/org-download" 'org-download)
-    ;; Drag-and-drop 支持
+    ;; Drag-and-drop support
     (add-hook 'dired-mode-hook 'org-download-enable)
     (add-hook 'org-mode-hook 'org-download-enable)
     
-    ;; 显示设置
+    ;; Display settings
     (setq org-download-display-inline-images 'posframe)
     
     (mcg-log "Org-download configured")))
@@ -57,22 +57,22 @@
 ;;; Clipboard Image Function
 
 (defun mcg/org-insert-clipboard-image (width)
-  "从剪贴板插入图片到 Org 文件。
-WIDTH 为图片宽度，默认 800。
-图片保存在与 Org 文件同名的 .assets 目录中。"
+  "Insert image from clipboard into Org file.
+WIDTH is the image width, default 800.
+Images are saved in a .assets directory named after the Org file."
   (interactive (list
                 (read-string (format "Input image width, default is 800: ")
                              nil nil "800")))
-  ;; 设置图片存放的文件夹位置
+  ;; Set the folder location for storing images
   (let* ((foldername (concat (file-name-base (buffer-file-name)) ".assets/"))
          (imgName (concat "img_" (format-time-string "%Y%m%d_%H%M%S") ".png"))
          (relativeFilename (concat (file-name-base (buffer-name)) ".assets/" imgName)))
     
-    ;; 创建目录
+    ;; Create directory
     (unless (file-exists-p foldername)
       (mkdir foldername))
     
-    ;; 根据操作系统设置截图命令
+    ;; Set screenshot command based on operating system
     (cond
      ((eq system-type 'windows-nt)
       (setq org-download-screenshot-method
@@ -84,7 +84,7 @@ WIDTH 为图片宽度，默认 800。
       (setq org-download-screenshot-method
             (concat "pngpaste " relativeFilename))))
     
-    ;; 插入图片链接
+    ;; Insert image link
     (insert (concat "\n#+DOWNLOADED: screenshot @ "
                     (format-time-string "%Y-%m-%d %a %H:%M:%S" (current-time))
                     "\n#+CAPTION: \n#+ATTR_ORG: :width "
@@ -98,7 +98,7 @@ WIDTH 为图片宽度，默认 800。
                     width
                     "\n[[file:" relativeFilename "]]\n"))
     
-    ;; 执行截图
+    ;; Execute screenshot
     (when (fboundp 'org-download-screenshot)
       (org-download-screenshot))))
 
@@ -113,9 +113,9 @@ WIDTH 为图片宽度，默认 800。
 ;;; Org-Numbering Configuration
 
 (defun mcg--setup-org-numbering ()
-  "设置 Org-numbering 标题编号。"
+  "Setup Org-numbering heading numbering."
   (when (mcg-require-extension "org/org-numbering" 'org-numbering)
-    ;; 编号方案
+    ;; Numbering scheme
     (setq org-numbering-level-scheme
           '((1 . ((scheme . decimal)      ; 1, 2, 3...
                   (combine . nil)))
@@ -137,9 +137,9 @@ WIDTH 为图片宽度，默认 800。
 ;;; Consult-Todo Configuration
 
 (defun mcg--setup-consult-todo ()
-  "设置 Consult-todo 集成。"
+  "Setup Consult-todo integration."
   (when (mcg-require-extension "org/consult-todo" 'consult-todo)
-    ;; 绑定快捷键
+    ;; Bind keybindings
     (global-set-key (kbd "C-c n T") 'consult-todo)
     
     (mcg-log "Consult-todo configured")))
@@ -151,7 +151,7 @@ WIDTH 为图片宽度，默认 800。
 ;;; Org Mode Keybindings
 
 (defun mcg--setup-org-extras-keybindings ()
-  "设置 Org 扩展功能快捷键。"
+  "Setup Org extensions keybindings."
   (with-eval-after-load 'org
     (define-key org-mode-map (kbd "C-c n e") 'org-edit-src-code)
     (define-key org-mode-map (kbd "C-c n h") 'org-insert-heading)

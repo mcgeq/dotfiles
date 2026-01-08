@@ -8,7 +8,7 @@
 ;;; init-utils.el --- Utility Tools for MCG Emacs -*- lexical-binding: t; -*-
 
 ;; Filename: init-utils.el
-;; Description: 实用工具模块
+;; Description: Utility tools module
 ;; Author: mcge <mcgeq@outlook.com>
 ;; Copyright (C) 2024-2026, mcge, all rights reserved.
 ;; Create   Date: 2026-01-07
@@ -18,11 +18,11 @@
 
 ;;; Commentary:
 ;;
-;; MCG Emacs 配置架构的实用工具模块，负责：
-;; - 自动保存 (idle-auto-save)
-;; - Which-key 快捷键提示
-;; - Recentf 最近文件
-;; - Helpful 增强帮助
+;; Utility tools module for MCG Emacs, responsible for:
+;; - Auto-save (idle-auto-save)
+;; - Which-key keybinding hints
+;; - Recentf recent files
+;; - Helpful enhanced help
 ;;
 
 #+END_SRC
@@ -45,25 +45,25 @@
   :group 'convenience)
 
 (defcustom mcg-auto-save-idle 1
-  "空闲多少秒后自动保存。"
+  "Seconds of idle time before auto-save."
   :type 'integer
   :group 'mcg-auto-save)
 
 (defcustom mcg-auto-save-silent t
-  "是否静默保存（不显示消息）。"
+  "Whether to save silently (no messages)."
   :type 'boolean
   :group 'mcg-auto-save)
 
 (defvar mcg--auto-save-timer nil
-  "自动保存定时器。")
+  "Auto-save timer.")
 
-;; 禁用 Emacs 默认的自动保存
+;; Disable Emacs default auto-save
 (setq make-backup-files nil)
 (setq auto-save-default nil)
 (setq create-lockfiles nil)
 
 (defun mcg--auto-save-buffers ()
-  "自动保存所有修改过的 buffer。"
+  "Auto-save all modified buffers."
   (interactive)
   (let ((saved-buffers nil))
     (save-current-buffer
@@ -84,19 +84,19 @@
         (message "Auto-saved: %s" (string-join saved-buffers ", "))))))
 
 (defun mcg--auto-save-enable ()
-  "启用自动保存。"
+  "Enable auto-save."
   (when mcg--auto-save-timer
     (cancel-timer mcg--auto-save-timer))
   (setq mcg--auto-save-timer
         (run-with-idle-timer mcg-auto-save-idle t #'mcg--auto-save-buffers)))
 
 (defun mcg--auto-save-disable ()
-  "禁用自动保存。"
+  "Disable auto-save."
   (when mcg--auto-save-timer
     (cancel-timer mcg--auto-save-timer)
     (setq mcg--auto-save-timer nil)))
 
-;; 启用自动保存
+;; Enable auto-save
 (mcg--auto-save-enable)
 
 #+END_SRC
@@ -106,11 +106,11 @@
 ;;; Which-Key Configuration
 
 (defun mcg--setup-which-key ()
-  "设置 Which-key 快捷键提示。"
-  ;; which-key 是 Emacs 30+ 内置的
+  "Setup Which-key keybinding hints."
+  ;; which-key is built-in for Emacs 30+
   (require 'which-key)
   
-  ;; 基础设置
+  ;; Basic settings
   (setq which-key-idle-delay 0.3)
   (setq which-key-idle-secondary-delay 0.05)
   (setq which-key-popup-type 'side-window)
@@ -118,14 +118,14 @@
   (setq which-key-side-window-max-height 0.3)
   (setq which-key-min-display-lines 6)
   
-  ;; 排序和外观
+  ;; Sorting and appearance
   (setq which-key-sort-order 'which-key-key-order-alpha)
   (setq which-key-separator "  ")
   (setq which-key-max-description-length 32)
   (setq which-key-add-column-padding 2)
   (setq which-key-ellipsis "..")
   
-  ;; 键名美化
+  ;; Key name beautification
   (setq which-key-special-keys '("SPC" "TAB" "RET" "DEL" "ESC"))
   (setq which-key-key-replacement-alist
         '(("<left>"  . "←")
@@ -140,9 +140,9 @@
           ("TAB"     . "⇥")
           ("DEL"     . "⌫")))
   
-  ;; 前缀描述
+  ;; Prefix descriptions
   (which-key-add-key-based-replacements
-    ;; C-c 前缀组
+    ;; C-c prefix groups
     "C-c"     "⚙ User"
     "C-c f"   "📁 File"
     "C-c g"   " Git"
@@ -157,7 +157,7 @@
     "C-c y"   "✂ Snippet"
     "C-c E"   "⚙ Config"
     
-    ;; C-x 前缀组
+    ;; C-x prefix groups
     "C-x"     "📋 Emacs"
     "C-x r"   "📌 Register/Rect"
     "C-x n"   "📐 Narrow"
@@ -166,27 +166,27 @@
     "C-x 4"   "🪟 Other Window"
     "C-x 5"   "🖼 Frame"
     
-    ;; 帮助
+    ;; Help
     "C-h"     "❓ Help"
     
-    ;; 跳转
+    ;; Goto
     "M-g"     "➡ Goto"
     
-    ;; 搜索
+    ;; Search
     "M-s"     "🔎 Search")
   
-  ;; 性能优化
+  ;; Performance optimization
   (setq which-key-compute-remaps nil)
   (setq which-key-allow-evil-operators nil)
   (setq which-key-show-remaining-keys nil)
   
-  ;; 修复 C-g 取消后 which-key 窗口不关闭的问题
+  ;; Fix which-key window not closing after C-g cancel
   (advice-add 'keyboard-quit :before
               (lambda (&rest _)
                 (when (which-key--popup-showing-p)
                   (which-key--hide-popup))))
   
-  ;; 启用
+  ;; Enable
   (which-key-mode 1)
   
   (mcg-log "Which-key configured"))
@@ -198,12 +198,12 @@
 ;;; Recentf Configuration
 
 (defun mcg--setup-recentf ()
-  "设置 Recentf 最近文件。"
+  "Setup Recentf recent files."
   (setq recentf-max-saved-items 300)
   (setq recentf-auto-cleanup 'never)
   (setq recentf-filename-handlers '(abbreviate-file-name))
   
-  ;; 排除列表
+  ;; Exclude list
   (setq recentf-exclude
         '(".cache"
           ".cask"
@@ -221,7 +221,7 @@
           "/TAGS\\'"
           "COMMIT_EDITMSG\\'"))
   
-  ;; 启用
+  ;; Enable
   (recentf-mode 1)
   
   (mcg-log "Recentf configured"))
@@ -233,9 +233,9 @@
 ;;; Helpful Configuration
 
 (defun mcg--setup-helpful ()
-  "设置 Helpful 增强帮助。"
+  "Setup Helpful enhanced help."
   (when (mcg-require-extension "core/helpful" 'helpful)
-    ;; 替换默认帮助命令
+    ;; Replace default help commands
     (global-set-key (kbd "C-h f") #'helpful-callable)
     (global-set-key (kbd "C-h v") #'helpful-variable)
     (global-set-key (kbd "C-h k") #'helpful-key)
@@ -251,9 +251,9 @@
 ;;; Sort-Tab Configuration
 
 (defun mcg--setup-sort-tab ()
-  "设置 Sort-tab 标签管理。"
+  "Setup Sort-tab tab management."
   (when (mcg-require-extension "ui/sort-tab" 'sort-tab)
-    ;; 显示设置
+    ;; Display settings
     (setq sort-tab-max-length 20)
     (setq sort-tab-show-index t)
     (setq sort-tab-position 'bottom)
@@ -263,7 +263,7 @@
     (setq sort-tab-auto-update t)
     (setq sort-tab-update-interval 0.5)
     
-    ;; 隐藏规则
+    ;; Hide rules
     (setq sort-tab-hide-function
           (lambda (buf)
             (let ((name (buffer-name buf)))
@@ -286,10 +286,10 @@
                  (string-match-p "^\\*.*-preview\\*$" name)
                  (string-match-p "^\\*Completions\\*$" name))))))
     
-    ;; 启用
+    ;; Enable
     (sort-tab-mode 1)
     
-    ;; 快捷键
+    ;; Keybindings
     (global-set-key (kbd "C-c t n") #'sort-tab-select-next-tab)
     (global-set-key (kbd "C-c t p") #'sort-tab-select-prev-tab)
     (global-set-key (kbd "C-c t c") #'sort-tab-close-current-tab)
@@ -303,12 +303,12 @@
 ;;; Symbol-Overlay Configuration
 
 (defun mcg--setup-symbol-overlay ()
-  "设置 Symbol-overlay 符号高亮。"
+  "Setup Symbol-overlay symbol highlighting."
   (when (mcg-require-extension "editor/symbol-overlay" 'symbol-overlay)
-    ;; 在 prog-mode 中启用
+    ;; Enable in prog-mode
     (add-hook 'prog-mode-hook #'symbol-overlay-mode)
     
-    ;; 快捷键 (在 symbol-overlay-map 中)
+    ;; Keybindings (in symbol-overlay-map)
     (with-eval-after-load 'symbol-overlay
       (define-key symbol-overlay-map (kbd "s") #'symbol-overlay-put)
       (define-key symbol-overlay-map (kbd "n") #'symbol-overlay-jump-next)

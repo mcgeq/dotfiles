@@ -8,7 +8,7 @@
   ;;; init-treesit.el --- Tree-sitter Configuration for MCG Emacs -*- lexical-binding: t; -*-
 
   ;; Filename: init-treesit.el
-  ;; Description: Tree-sitter 语法高亮配置模块
+  ;; Description: Tree-sitter syntax highlighting configuration module
   ;; Author: mcge <mcgeq@outlook.com>
   ;; Copyright (C) 2024-2026, mcge, all rights reserved.
   ;; Create   Date: 2026-01-07
@@ -18,13 +18,13 @@
 
   ;;; Commentary:
   ;;
-  ;; MCG Emacs 配置架构的 Tree-sitter 配置模块，负责：
-  ;; - treesit 语法源配置
-  ;; - major-mode 重映射
-  ;; - treesit-auto 自动安装
-  ;; - 文件类型关联
+  ;; Tree-sitter configuration module for MCG Emacs, responsible for:
+  ;; - treesit language source configuration
+  ;; - major-mode remapping
+  ;; - treesit-auto automatic installation
+  ;; - file type associations
   ;;
-  ;; 模块元数据:
+  ;; Module metadata:
   ;; :depends ()
   ;; :defer nil
   ;;
@@ -45,13 +45,13 @@
 ;;; Variables
 
 (defvar mcg-treesit-auto-install nil
-  "是否自动安装缺失的 tree-sitter 语法。
-设置为 t 时，首次打开文件会自动下载语法。")
+  "Whether to automatically install missing tree-sitter grammars.
+When set to t, grammars will be downloaded automatically on first file open.")
 
 (defvar mcg-treesit-font-lock-level 4
-  "Tree-sitter 语法高亮级别 (1-4)。
-1: 最小高亮
-4: 最大高亮")
+  "Tree-sitter syntax highlighting level (1-4).
+1: Minimal highlighting
+4: Maximum highlighting")
 
 #+END_SRC
 
@@ -99,7 +99,7 @@
     (zig . ("https://github.com/GrayJack/tree-sitter-zig"))
     (clojure . ("https://github.com/sogaiu/tree-sitter-clojure"))
     (mojo . ("https://github.com/HerringtonDarkholme/tree-sitter-mojo")))
-  "Tree-sitter 语言语法源列表。")
+  "Tree-sitter language grammar source list.")
 
 #+END_SRC
 
@@ -122,7 +122,7 @@
     (java-mode . java-ts-mode)
     (clojure-mode . clojure-ts-mode)
     (markdown-mode . markdown-ts-mode))
-  "传统模式到 tree-sitter 模式的映射。")
+  "Mapping from traditional modes to tree-sitter modes.")
 
 #+END_SRC
 
@@ -206,7 +206,7 @@
     ("\\.kt\\'" . kotlin-mode)
     ("\\.mojo\\'" . mojo-mode)
     ("\\.fs\\'" . fsharp-mode))
-  "文件扩展名到模式的映射。")
+  "Mapping from file extensions to modes.")
 
 #+END_SRC
 
@@ -232,10 +232,10 @@
     (haskell-mode-hook . haskell)
     (kotlin-mode-hook . kotlin)
     (lua-mode-hook . lua))
-  "模式钩子到 tree-sitter 语言的映射。")
+  "Mapping from mode hooks to tree-sitter languages.")
 
 (defun mcg-treesit--add-parser-hooks ()
-  "为各模式添加 treesit-parser 创建钩子。"
+  "Add treesit-parser creation hooks for various modes."
   (dolist (pair mcg-treesit-parser-hooks)
     (let ((hook (car pair))
           (lang (cdr pair)))
@@ -251,7 +251,7 @@
 ;;; Web Mode Parser
 
 (defun mcg-treesit--web-mode-parser ()
-  "为 web-mode 创建适当的 treesit parser。"
+  "Create appropriate treesit parser for web-mode."
   (let ((file-name (buffer-file-name)))
     (when file-name
       (treesit-parser-create
@@ -291,10 +291,10 @@
     (mojo-mode . "mojo")
     (fsharp-mode . "fsharp-mode")
     (lua-mode . "lang-lua"))
-  "模式到文件的 autoload 映射。")
+  "Autoload mapping from modes to files.")
 
 (defun mcg-treesit--setup-autoloads ()
-  "设置模式 autoloads。"
+  "Setup mode autoloads."
   (dolist (pair mcg-treesit-autoloads)
     (autoload (car pair) (cdr pair) nil t)))
 
@@ -305,35 +305,35 @@
 ;;; Setup Functions
 
 (defun mcg-treesit-setup-sources ()
-  "设置 tree-sitter 语言源。"
+  "Setup tree-sitter language sources."
   (setq treesit-language-source-alist mcg-treesit-language-sources)
   (mcg-log "Configured treesit language sources"))
 
 (defun mcg-treesit-setup-remap ()
-  "设置 major-mode 重映射。"
+  "Setup major-mode remapping."
   (setq major-mode-remap-alist mcg-treesit-major-mode-remap)
   (mcg-log "Configured major-mode remap for tree-sitter"))
 
 (defun mcg-treesit-setup-auto-mode ()
-  "设置 auto-mode-alist。"
+  "Setup auto-mode-alist."
   (dolist (pair mcg-treesit-auto-mode-alist)
     (add-to-list 'auto-mode-alist pair))
   (add-to-list 'interpreter-mode-alist '("coffee" . coffee-mode))
   (mcg-log "Configured auto-mode-alist"))
 
 (defun mcg-treesit-setup-hooks ()
-  "设置 treesit parser 钩子。"
+  "Setup treesit parser hooks."
   (mcg-treesit--add-parser-hooks)
   (add-hook 'web-mode-hook #'mcg-treesit--web-mode-parser)
   (mcg-log "Configured treesit parser hooks"))
 
 (defun mcg-treesit-setup-font-lock ()
-  "设置 tree-sitter 语法高亮级别。"
+  "Setup tree-sitter syntax highlighting level."
   (setq treesit-font-lock-level mcg-treesit-font-lock-level)
   (mcg-log "Set treesit font-lock level to %d" mcg-treesit-font-lock-level))
 
 (defun mcg-treesit-setup-auto ()
-  "设置 treesit-auto（如果可用）。"
+  "Setup treesit-auto (if available)."
   (when (mcg-load-extension "lsp/treesit-auto")
     (require 'treesit-auto nil t)
     (when (featurep 'treesit-auto)
@@ -348,7 +348,7 @@
 ;;; Commands
 
 (defun mcg/treesit-install-all-grammars ()
-  "安装所有配置的 tree-sitter 语法。"
+  "Install all configured tree-sitter grammars."
   (interactive)
   (dolist (lang-source treesit-language-source-alist)
     (let ((lang (car lang-source)))
@@ -358,7 +358,7 @@
   (message "All grammars installed!"))
 
 (defun mcg/treesit-install-grammar (lang)
-  "安装指定语言 LANG 的 tree-sitter 语法。"
+  "Install tree-sitter grammar for specified language LANG."
   (interactive
    (list (intern (completing-read "Language: "
                                   (mapcar #'car treesit-language-source-alist)
@@ -369,7 +369,7 @@
     (message "Installed grammar for %s" lang)))
 
 (defun mcg/treesit-list-available ()
-  "列出所有可用的 tree-sitter 语法。"
+  "List all available tree-sitter grammars."
   (interactive)
   (let ((available nil)
         (missing nil))
@@ -380,19 +380,19 @@
           (push lang missing))))
     (with-current-buffer (get-buffer-create "*Tree-sitter Grammars*")
       (erase-buffer)
-      (insert "Tree-sitter 语法状态\n")
-      (insert "====================\n\n")
-      (insert (format "已安装 (%d):\n" (length available)))
+      (insert "Tree-sitter Grammar Status\n")
+      (insert "==========================\n\n")
+      (insert (format "Installed (%d):\n" (length available)))
       (dolist (lang (sort available #'string<))
         (insert (format "  ✓ %s\n" lang)))
-      (insert (format "\n未安装 (%d):\n" (length missing)))
+      (insert (format "\nNot Installed (%d):\n" (length missing)))
       (dolist (lang (sort missing #'string<))
         (insert (format "  ✗ %s\n" lang)))
       (goto-char (point-min))
       (display-buffer (current-buffer)))))
 
 (defun mcg/treesit-explore ()
-  "打开当前 buffer 的 tree-sitter 语法树浏览器。"
+  "Open tree-sitter syntax tree explorer for current buffer."
   (interactive)
   (if (treesit-parser-list)
       (treesit-explore-mode)
@@ -404,25 +404,25 @@
 #+BEGIN_SRC emacs-lisp
 ;;; Initialize
 
-;; 设置语言源
+;; Setup language sources
 (mcg-treesit-setup-sources)
 
-;; 设置 major-mode 重映射
+;; Setup major-mode remapping
 (mcg-treesit-setup-remap)
 
-;; 设置 auto-mode-alist
+;; Setup auto-mode-alist
 (mcg-treesit-setup-auto-mode)
 
-;; 设置 parser 钩子
+;; Setup parser hooks
 (mcg-treesit-setup-hooks)
 
-;; 设置语法高亮级别
+;; Setup syntax highlighting level
 (mcg-treesit-setup-font-lock)
 
-;; 设置 autoloads
+;; Setup autoloads
 (mcg-treesit--setup-autoloads)
 
-;; 设置 treesit-auto（可选）
+;; Setup treesit-auto (optional)
 (when (mcg-extension-exists-p "lsp/treesit-auto")
   (mcg-treesit-setup-auto))
 

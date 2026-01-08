@@ -8,7 +8,7 @@
 ;;; init-zig.el --- Zig Development for MCG Emacs -*- lexical-binding: t; -*-
 
 ;; Filename: init-zig.el
-;; Description: Zig 开发模块
+;; Description: Zig development module
 ;; Author: mcge <mcgeq@outlook.com>
 ;; Copyright (C) 2024-2026, mcge, all rights reserved.
 ;; Create   Date: 2026-01-07
@@ -18,13 +18,13 @@
 
 ;;; Commentary:
 ;;
-;; MCG Emacs 配置架构的 Zig 开发模块，负责：
-;; - Zig mode 配置
-;; - LSP 集成 (zls)
-;; - 构建系统集成
-;; - 测试支持
+;; Zig development module for MCG Emacs, responsible for:
+;; - Zig mode configuration
+;; - LSP integration (zls)
+;; - Build system integration
+;; - Test support
 ;;
-;; 模块元数据:
+;; Module metadata:
 ;; :depends (+lsp)
 ;; :defer t
 ;; :mode ("\\.zig\\'")
@@ -45,21 +45,21 @@
 ;;; Zig Mode Configuration
 
 (defun mcg--setup-zig-mode ()
-  "设置 Zig mode。"
-  ;; 尝试加载 zig-mode 扩展
+  "Setup Zig mode."
+  ;; Try to load zig-mode extension
   (if (mcg-require-extension "lang/zig-mode" 'zig-mode)
       (mcg-log "Zig mode loaded from extension")
-    ;; 如果没有扩展，定义简单的 zig-mode
+    ;; If no extension, define simple zig-mode
     (unless (fboundp 'zig-mode)
       (define-derived-mode zig-mode prog-mode "Zig"
-        "简单的 Zig mode。"
+        "Simple Zig mode."
         (setq-local comment-start "// ")
         (setq-local comment-end "")
         (setq-local tab-width 4)
         (setq-local indent-tabs-mode nil))
       (mcg-log "Using simple zig-mode")))
   
-  ;; Zig 文件关联
+  ;; Zig file associations
   (add-to-list 'auto-mode-alist '("\\.zig\\'" . zig-mode)))
 
 #+END_SRC
@@ -69,8 +69,8 @@
 ;;; LSP Configuration (zls)
 
 (defun mcg--zig-mode-hook ()
-  "Zig mode hook。"
-  ;; 启用 LSP
+  "Zig mode hook."
+  ;; Enable LSP
   (when (fboundp 'lsp-bridge-mode)
     (lsp-bridge-mode 1)))
 
@@ -81,7 +81,7 @@
 ;;; Formatting
 
 (defun mcg/zig-format-buffer ()
-  "使用 zig fmt 格式化代码。"
+  "Format code using zig fmt."
   (interactive)
   (if (executable-find "zig")
       (let ((output-buffer (get-buffer-create "*zig fmt*"))
@@ -99,7 +99,7 @@
     (message "Zig compiler not found")))
 
 (defun mcg--zig-format-on-save ()
-  "保存时自动格式化。"
+  "Auto-format on save."
   (when (and (eq major-mode 'zig-mode)
              (executable-find "zig"))
     (mcg/zig-format-buffer)))
@@ -111,7 +111,7 @@
 ;;; Build System
 
 (defun mcg/zig-build ()
-  "运行 zig build。"
+  "Run zig build."
   (interactive)
   (if (executable-find "zig")
       (let ((compilation-scroll-output t)
@@ -121,7 +121,7 @@
     (message "Zig compiler not found")))
 
 (defun mcg/zig-build-run ()
-  "构建并运行。"
+  "Build and run."
   (interactive)
   (if (executable-find "zig")
       (let ((compilation-scroll-output t)
@@ -131,7 +131,7 @@
     (message "Zig compiler not found")))
 
 (defun mcg/zig-run-file ()
-  "直接运行当前 Zig 文件。"
+  "Run current Zig file directly."
   (interactive)
   (if (executable-find "zig")
       (let ((compilation-scroll-output t))
@@ -145,7 +145,7 @@
 ;;; Testing Support
 
 (defun mcg/zig-test ()
-  "运行 zig build test。"
+  "Run zig build test."
   (interactive)
   (if (executable-find "zig")
       (let ((compilation-scroll-output t)
@@ -155,7 +155,7 @@
     (message "Zig compiler not found")))
 
 (defun mcg/zig-test-file ()
-  "测试当前文件。"
+  "Test current file."
   (interactive)
   (if (executable-find "zig")
       (let ((compilation-scroll-output t))
@@ -169,7 +169,7 @@
 ;;; Snippets
 
 (defun mcg/zig-insert-main ()
-  "插入 main 函数模板。"
+  "Insert main function template."
   (interactive)
   (insert "const std = @import(\"std\");\n\n")
   (insert "pub fn main() !void {\n")
@@ -178,7 +178,7 @@
   (insert "}\n"))
 
 (defun mcg/zig-insert-test ()
-  "插入测试模板。"
+  "Insert test template."
   (interactive)
   (let ((test-name (read-string "Test name: ")))
     (insert (format "test \"%s\" {\n" test-name))
@@ -193,7 +193,7 @@
 ;;; Keybindings
 
 (defun mcg--setup-zig-keybindings ()
-  "设置 Zig 快捷键。"
+  "Setup Zig keybindings."
   (with-eval-after-load 'zig-mode
     (define-key zig-mode-map (kbd "C-c r f") #'mcg/zig-format-buffer)
     (define-key zig-mode-map (kbd "C-c C-c") #'mcg/zig-build)
@@ -213,10 +213,10 @@
 (mcg--setup-zig-mode)
 (mcg--setup-zig-keybindings)
 
-;; 添加 hook
+;; Add hook
 (add-hook 'zig-mode-hook #'mcg--zig-mode-hook)
 
-;; 保存时格式化 (可选)
+;; Format on save (optional)
 ;; (add-hook 'before-save-hook #'mcg--zig-format-on-save)
 
 #+END_SRC

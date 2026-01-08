@@ -8,7 +8,7 @@
 ;;; init-yasnippet.el --- Snippet System for MCG Emacs -*- lexical-binding: t; -*-
 
 ;; Filename: init-yasnippet.el
-;; Description: 代码片段系统模块
+;; Description: Code snippet system module
 ;; Author: mcge <mcgeq@outlook.com>
 ;; Copyright (C) 2024-2026, mcge, all rights reserved.
 ;; Create   Date: 2026-01-07
@@ -18,10 +18,10 @@
 
 ;;; Commentary:
 ;;
-;; MCG Emacs 配置架构的代码片段模块，负责：
-;; - YASnippet 配置
-;; - 自定义片段目录
-;; - Git 用户信息集成
+;; Code snippet module for MCG Emacs configuration, responsible for:
+;; - YASnippet configuration
+;; - Custom snippet directories
+;; - Git user info integration
 ;;
 
 #+END_SRC
@@ -39,7 +39,7 @@
 ;;; Variables
 
 (defvar mcg-snippet-dirs nil
-  "自定义代码片段目录列表。")
+  "Custom code snippet directory list.")
 
 #+END_SRC
 
@@ -48,14 +48,14 @@
 ;;; Git User Functions
 
 (defun mcg/get-git-user-name ()
-  "获取 Git 配置的用户名。"
+  "Get Git configured username."
   (interactive)
   (replace-regexp-in-string
    "\n$" ""
    (shell-command-to-string "git config --get user.name")))
 
 (defun mcg/get-git-user-email ()
-  "获取 Git 配置的邮箱。"
+  "Get Git configured email."
   (interactive)
   (replace-regexp-in-string
    "\n$" ""
@@ -68,9 +68,9 @@
 ;;; YASnippet Configuration
 
 (defun mcg--setup-yasnippet ()
-  "设置 YASnippet 代码片段系统。"
+  "Set up YASnippet code snippet system."
   (when (mcg-require-extension "completion/yasnippet" 'yasnippet)
-    ;; 设置自定义片段目录
+    ;; Set custom snippet directories
     (let ((custom-dirs
            (list (expand-file-name "site-lisp/snippets" mcg-emacs-dir)
                  (expand-file-name "site-lisp/extensions/snippets/yasnippet-snippet/snippets"
@@ -79,13 +79,13 @@
         (when (file-directory-p dir)
           (add-to-list 'yas-snippet-dirs dir))))
     
-    ;; 重新加载片段
+    ;; Reload snippets
     (yas-reload-all)
     
-    ;; 全局启用
+    ;; Enable globally
     (yas-global-mode 1)
     
-    ;; 在某些模式下禁用
+    ;; Disable in certain modes
     (dolist (hook '(term-mode-hook eshell-mode-hook))
       (add-hook hook (lambda () (yas-minor-mode -1))))
     

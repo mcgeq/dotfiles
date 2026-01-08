@@ -8,7 +8,7 @@
 ;;; init-wraplish.el --- Wraplish Configuration for MCG Emacs -*- lexical-binding: t; -*-
 
 ;; Filename: init-wraplish.el
-;; Description: 中英文混排自动空格模块
+;; Description: Chinese-English mixed text auto-spacing module
 ;; Author: mcge <mcgeq@outlook.com>
 ;; Copyright (C) 2024-2026, mcge, all rights reserved.
 ;; Create   Date: 2026-01-07
@@ -18,8 +18,8 @@
 
 ;;; Commentary:
 ;;
-;; MCG Emacs 配置架构的中英文混排模块，负责：
-;; - 自动在中英文之间添加空格
+;; Chinese-English mixed text module for MCG Emacs, responsible for:
+;; - Automatically adding spaces between Chinese and English text
 ;;
 
 #+END_SRC
@@ -41,7 +41,7 @@
     markdown-ts-mode-hook
     org-mode-hook
     prog-mode-hook)
-  "启用 wraplish 的模式列表。")
+  "List of modes to enable wraplish.")
 
 #+END_SRC
 
@@ -50,7 +50,7 @@
 ;;; Configuration
 
 (defun mcg--setup-wraplish ()
-  "设置 wraplish 中英文混排。"
+  "Setup wraplish Chinese-English mixed text."
   (when (mcg-require-extension "input/wraplish" 'wraplish)
     (dolist (hook mcg-wraplish-modes)
       (add-hook hook (lambda () (wraplish-mode 1))))

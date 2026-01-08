@@ -8,7 +8,7 @@
 ;;; init-lsp-common.el --- Common LSP Configuration for MCG Emacs -*- lexical-binding: t; -*-
 
 ;; Filename: init-lsp-common.el
-;; Description: 统一 LSP 配置，跨语言共享
+;; Description: Unified LSP configuration, shared across languages
 ;; Author: mcge <mcgeq@outlook.com>
 ;; Copyright (C) 2024-2026, mcge, all rights reserved.
 ;; Create   Date: 2026-01-07
@@ -18,11 +18,11 @@
 
 ;;; Commentary:
 ;;
-;; MCG Emacs 配置架构的统一 LSP 配置模块，负责：
-;; - 性能优化
-;; - 通用快捷键
-;; - 共享工具函数
-;; - 一致的行为
+;; Unified LSP configuration module for MCG Emacs, responsible for:
+;; - Performance optimization
+;; - Common keybindings
+;; - Shared utility functions
+;; - Consistent behavior
 ;;
 
 #+END_SRC
@@ -37,25 +37,25 @@
 
 ** LSP Bridge Performance
 #+BEGIN_SRC emacs-lisp
-;;; LSP Bridge 性能优化
+;;; LSP Bridge Performance Optimization
 
 (defun mcg--setup-lsp-bridge-performance ()
-  "设置 LSP Bridge 性能优化。"
+  "Setup LSP Bridge performance optimization."
   (with-eval-after-load 'lsp-bridge
-    ;; 启用诊断
+    ;; Enable diagnostics
     (setq lsp-bridge-enable-diagnostics t
           lsp-bridge-enable-hover-diagnostic t
           lsp-bridge-enable-search-words t
           lsp-bridge-enable-auto-import t)
     
-    ;; 补全性能
+    ;; Completion performance
     (setq lsp-bridge-completion-hide-characters '(":" ";" "(" ")" "[" "]" "{" "}" "," "\"")
           lsp-bridge-completion-popup-predicates '(lsp-bridge-not-match-stop-commands
                                                     lsp-bridge-not-match-hide-characters
                                                     lsp-bridge-not-in-string
                                                     lsp-bridge-not-in-comment))
     
-    ;; 代码格式化
+    ;; Code formatting
     (setq lsp-bridge-enable-signature-help t
           lsp-bridge-signature-show-function 'lsp-bridge-signature-show-with-frame)
     
@@ -65,7 +65,7 @@
 
 ** Common Keybindings
 #+BEGIN_SRC emacs-lisp
-;;; 统一快捷键
+;;; Unified Keybindings
 
 (defvar mcg-lsp-keymap (make-sparse-keymap)
   "Keymap for LSP commands.")
@@ -99,7 +99,7 @@
 
 ** Shared Utilities
 #+BEGIN_SRC emacs-lisp
-;;; 共享工具函数
+;;; Shared Utility Functions
 
 (defun mcg-lsp-format-buffer ()
   "Format current buffer using LSP."
@@ -113,7 +113,7 @@
   "Organize imports based on current major mode."
   (interactive)
   (cond
-   ;; Python: 使用 ruff
+   ;; Python: Use ruff
    ((member major-mode '(python-mode python-ts-mode))
     (if (executable-find "ruff")
         (let ((file (buffer-file-name)))
@@ -125,11 +125,11 @@
                   (message "Sorted imports with ruff"))
               (message "ruff: no import changes needed"))))
       (message "ruff not found")))
-   ;; Rust: 使用 rustfmt (已包含在格式化中)
+   ;; Rust: Use rustfmt (already included in formatting)
    ((member major-mode '(rust-mode rust-ts-mode))
     (lsp-bridge-code-format)
     (message "Rust imports organized via rustfmt"))
-   ;; 其他语言: 尝试 LSP code action
+   ;; Other languages: Try LSP code action
    ((bound-and-true-p lsp-bridge-mode)
     (lsp-bridge-code-action))
    (t
@@ -146,7 +146,7 @@
 
 ** Language Detection
 #+BEGIN_SRC emacs-lisp
-;;; 语言检测
+;;; Language Detection
 
 (defun mcg-lsp-detect-project-type ()
   "Detect project type from project root files."
@@ -188,7 +188,7 @@
 
 ** Auto-Format on Save
 #+BEGIN_SRC emacs-lisp
-;;; 保存时自动格式化
+;;; Auto-Format on Save
 
 (defvar mcg-lsp-format-on-save-modes
   '(python-mode python-ts-mode
@@ -220,7 +220,7 @@
 
 ** Server Status
 #+BEGIN_SRC emacs-lisp
-;;; 服务器状态
+;;; Server Status
 
 (defun mcg-lsp-check-server-available (server-name)
   "Check if LSP server is available in PATH."
@@ -252,7 +252,7 @@
 
 ** Quick Commands
 #+BEGIN_SRC emacs-lisp
-;;; 快速命令
+;;; Quick Commands
 
 (defalias 'lsp-format #'mcg-lsp-format-buffer)
 (defalias 'lsp-imports #'mcg-lsp-organize-imports)
@@ -268,10 +268,10 @@
 
 (mcg--setup-lsp-bridge-performance)
 
-;; 自动设置快捷键
+;; Auto-setup keybindings
 (add-hook 'lsp-bridge-mode-hook #'mcg-lsp-setup-keybindings)
 
-;; 启用保存时格式化
+;; Enable format-on-save
 (add-hook 'before-save-hook #'mcg-lsp-format-on-save)
 
 #+END_SRC

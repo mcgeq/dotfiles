@@ -8,7 +8,7 @@
   ;;; init-sort-tab.el --- Sort Tab Configuration for MCG Emacs -*- lexical-binding: t; -*-
 
   ;; Filename: init-sort-tab.el
-  ;; Description: 标签栏配置模块
+  ;; Description: Tab bar configuration module
   ;; Author: mcge <mcgeq@outlook.com>
   ;; Copyright (C) 2024-2026, mcge, all rights reserved.
   ;; Create   Date: 2026-01-07
@@ -18,12 +18,12 @@
 
   ;;; Commentary:
   ;;
-  ;; MCG Emacs 配置架构的标签栏模块，负责：
-  ;; - sort-tab 配置
-  ;; - 标签显示设置
-  ;; - 标签隐藏规则
+  ;; Tab bar module for MCG Emacs, responsible for:
+  ;; - sort-tab configuration
+  ;; - Tab display settings
+  ;; - Tab hiding rules
   ;;
-  ;; 模块元数据:
+  ;; Module metadata:
   ;; :depends ()
   ;; :defer nil
   ;;
@@ -58,13 +58,13 @@
 #+BEGIN_SRC emacs-lisp
 ;;; Display Settings
 
-(setq sort-tab-max-length 20)           ; 标签最大长度
-(setq sort-tab-show-index t)            ; 显示标签索引号
-(setq sort-tab-position 'bottom)        ; 标签栏位置 (top/bottom)
-(setq sort-tab-close-button-show t)     ; 显示关闭按钮
-(setq sort-tab-icon-show t)             ; 显示图标
-(setq sort-tab-scale-factor 1.0)        ; 标签缩放因子
-(setq sort-tab-auto-update t)           ; 自动更新标签顺序
+(setq sort-tab-max-length 20)           ; Tab max length
+(setq sort-tab-show-index t)            ; Show tab index number
+(setq sort-tab-position 'bottom)        ; Tab bar position (top/bottom)
+(setq sort-tab-close-button-show t)     ; Show close button
+(setq sort-tab-icon-show t)             ; Show icons
+(setq sort-tab-scale-factor 1.0)        ; Tab scale factor
+(setq sort-tab-auto-update t)           ; Auto update tab order
 
 #+END_SRC
 

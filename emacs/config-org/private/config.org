@@ -12,7 +12,7 @@
   ;;; config.el --- Private Configuration -*- lexical-binding: t; -*-
 
   ;; Filename: config.el
-  ;; Description: 用户私有配置
+  ;; Description: User private configuration
   ;; Author: Your Name
   ;; Copyright (C) 2024-2026, Your Name, all rights reserved.
   ;; Create   Date: 2026-01-07
@@ -22,23 +22,23 @@
 
   ;;; Commentary:
   ;;
-  ;; 此文件用于存放用户私有配置，不会被 Git 跟踪。
+  ;; This file is for user private configuration, not tracked by Git.
   ;;
-  ;; 可以在此文件中配置：
-  ;; - 个人信息（用户名、邮箱）
-  ;; - 自定义路径
-  ;; - 私有快捷键
-  ;; - 工作相关配置
-  ;; - 其他个人偏好
+  ;; You can configure:
+  ;; - Personal information (username, email)
+  ;; - Custom paths
+  ;; - Private keybindings
+  ;; - Work-related configuration
+  ;; - Other personal preferences
   ;;
 
 #+END_SRC
 
 ** User Information
 #+BEGIN_SRC emacs-lisp
-;;; 用户信息
+;;; User Information
 
-;; 设置用户名和邮箱
+;; Set username and email
 (setq user-full-name "Your Name"
       user-mail-address "your.email@example.com")
 
@@ -46,27 +46,27 @@
 
 ** Custom Paths
 #+BEGIN_SRC emacs-lisp
-;;; 自定义路径
+;;; Custom Paths
 
-;; 示例：设置 org 文件目录
+;; Example: Set org files directory
 ;; (setq org-directory "~/Documents/org")
 
-;; 示例：设置笔记目录
+;; Example: Set notes directory
 ;; (setq mcg-notes-dir "~/Documents/notes")
 
-;; 示例：设置项目目录
+;; Example: Set projects directory
 ;; (setq mcg-projects-dir "~/Projects")
 
 #+END_SRC
 
 ** Theme Customization
 #+BEGIN_SRC emacs-lisp
-;;; 主题定制
+;;; Theme Customization
 
-;; 示例：设置默认主题
+;; Example: Set default theme
 ;; (setq mcg-default-theme 'ef-maris-light)
 
-;; 示例：设置字体大小
+;; Example: Set font size
 ;; (when mcg-is-gui
 ;;   (set-face-attribute 'default nil :height 140))
 
@@ -74,40 +74,40 @@
 
 ** Editor Preferences
 #+BEGIN_SRC emacs-lisp
-;;; 编辑器偏好
+;;; Editor Preferences
 
-;; 示例：设置缩进宽度
+;; Example: Set indentation width
 ;; (setq-default tab-width 4)
 ;; (setq-default indent-tabs-mode nil)
 
-;; 示例：启用行号
+;; Example: Enable line numbers
 ;; (global-display-line-numbers-mode 1)
 
-;; 示例：设置自动保存
+;; Example: Set auto-save
 ;; (setq auto-save-default t)
 
 #+END_SRC
 
 ** LSP Configuration
 #+BEGIN_SRC emacs-lisp
-;;; LSP 配置
+;;; LSP Configuration
 
-;; 示例：设置 Python LSP 服务器
+;; Example: Set Python LSP server
 ;; (setq mcg-python-lsp-server "python-ty-ruff")
 
-;; 示例：禁用保存时自动格式化
+;; Example: Disable format on save
 ;; (setq mcg-lsp-format-on-save nil)
 
 #+END_SRC
 
 ** Org Mode Configuration
 #+BEGIN_SRC emacs-lisp
-;;; Org Mode 配置
+;;; Org Mode Configuration
 
-;; 示例：设置 agenda 文件
+;; Example: Set agenda files
 ;; (setq org-agenda-files '("~/Documents/org/agenda"))
 
-;; 示例：设置 capture 模板
+;; Example: Set capture templates
 ;; (setq org-capture-templates
 ;;       '(("t" "Todo" entry (file+headline "~/Documents/org/todo.org" "Tasks")
 ;;          "* TODO %?\n  %i\n  %a")
@@ -118,13 +118,13 @@
 
 ** Custom Keybindings
 #+BEGIN_SRC emacs-lisp
-;;; 自定义快捷键
+;;; Custom Keybindings
 
-;; 示例：全局快捷键
+;; Example: Global keybindings
 ;; (global-set-key (kbd "C-c o") #'org-capture)
 ;; (global-set-key (kbd "C-c a") #'org-agenda)
 
-;; 示例：使用 mcg-after! 在模块加载后设置快捷键
+;; Example: Use mcg-after! to set keybindings after module loads
 ;; (mcg-after! magit
 ;;   (global-set-key (kbd "C-c g") #'magit-status))
 
@@ -132,14 +132,14 @@
 
 ** Work-specific Configuration
 #+BEGIN_SRC emacs-lisp
-;;; 工作相关配置
+;;; Work-specific Configuration
 
-;; 示例：设置代理
+;; Example: Set proxy
 ;; (setq url-proxy-services
 ;;       '(("http" . "proxy.example.com:8080")
 ;;         ("https" . "proxy.example.com:8080")))
 
-;; 示例：设置公司特定的代码风格
+;; Example: Set company-specific code style
 ;; (mcg-after! (:lang . typescript)
 ;;   (setq typescript-indent-level 2))
 
@@ -147,12 +147,12 @@
 
 ** Debug Settings
 #+BEGIN_SRC emacs-lisp
-;;; 调试设置
+;;; Debug Settings
 
-;; 启用调试模式（显示详细日志）
+;; Enable debug mode (show verbose logs)
 ;; (setq mcg-debug-mode t)
 
-;; 启用 Emacs 调试
+;; Enable Emacs debugging
 ;; (setq debug-on-error t)
 
 #+END_SRC

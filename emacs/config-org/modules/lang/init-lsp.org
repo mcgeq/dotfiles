@@ -8,7 +8,7 @@
   ;;; init-lsp.el --- Unified LSP Configuration for MCG Emacs -*- lexical-binding: t; -*-
 
   ;; Filename: init-lsp.el
-  ;; Description: 统一的 LSP 配置模块
+  ;; Description: Unified LSP configuration module
   ;; Author: mcge <mcgeq@outlook.com>
   ;; Copyright (C) 2024-2026, mcge, all rights reserved.
   ;; Create   Date: 2026-01-07
@@ -18,14 +18,14 @@
 
   ;;; Commentary:
   ;;
-  ;; MCG Emacs 配置架构的统一 LSP 模块，负责：
-  ;; - LSP Bridge 配置
-  ;; - 统一快捷键绑定
-  ;; - LSP 服务器映射
-  ;; - 保存时自动格式化
-  ;; - LSP 状态查询
+  ;; Unified LSP module for MCG Emacs, responsible for:
+  ;; - LSP Bridge configuration
+  ;; - Unified keybindings
+  ;; - LSP server mapping
+  ;; - Auto-format on save
+  ;; - LSP status queries
   ;;
-  ;; 模块元数据:
+  ;; Module metadata:
   ;; :depends ()
   ;; :defer nil
   ;;
@@ -42,7 +42,7 @@
 
 ** LSP Server Mapping
 #+BEGIN_SRC emacs-lisp
-;;; LSP 服务器映射
+;;; LSP Server Mapping
 
 (defvar mcg-lsp-servers
   '((rust-mode . "rust-analyzer")
@@ -65,54 +65,54 @@
     (lua-ts-mode . "lua-language-server")
     (clojure-mode . "clojure-lsp")
     (clojure-ts-mode . "clojure-lsp"))
-  "语言模式到 LSP 服务器的映射。
+  "Language mode to LSP server mapping.
 
-每个条目格式为 (MODE . SERVER-NAME)。
-SERVER-NAME 对应 lsp-bridge 的服务器配置。")
+Each entry format is (MODE . SERVER-NAME).
+SERVER-NAME corresponds to lsp-bridge server configuration.")
 
 #+END_SRC
 
 ** Unified Keybindings
 #+BEGIN_SRC emacs-lisp
-;;; 统一快捷键
+;;; Unified Keybindings
 
 (defvar mcg-lsp-keymap
-  '(;; Navigation - 导航
+  '(;; Navigation
     ("M-." . lsp-bridge-find-def)
     ("M-," . lsp-bridge-find-def-return)
     ("M-?" . lsp-bridge-find-references)
     
-    ;; Documentation - 文档
+    ;; Documentation
     ("C-h ." . lsp-bridge-lookup-documentation)
     ("C-h ," . lsp-bridge-show-signature)
     
-    ;; Refactoring - 重构
+    ;; Refactoring
     ("C-c r r" . lsp-bridge-rename)
     ("C-c r a" . lsp-bridge-code-action)
     ("C-c r f" . lsp-bridge-code-format)
     ("C-c r i" . mcg-lsp-organize-imports)
     
-    ;; Diagnostics - 诊断 (M-g prefix - standard Emacs "goto" prefix)
+    ;; Diagnostics (M-g prefix - standard Emacs "goto" prefix)
     ("M-g n" . lsp-bridge-diagnostic-jump-next)
     ("M-g p" . lsp-bridge-diagnostic-jump-prev)
     ("M-g l" . lsp-bridge-diagnostic-list)
     
-    ;; Workspace - 工作区
+    ;; Workspace
     ("C-c r s" . lsp-bridge-workspace-list-symbols))
-  "统一的 LSP 快捷键映射。
+  "Unified LSP keybindings mapping.
 
-所有启用 LSP 的语言模式都使用相同的快捷键：
-- M-. 跳转到定义
-- M-, 返回
-- M-? 查找引用
-- C-c r r 重命名
-- C-c r f 格式化")
+All LSP-enabled language modes use the same keybindings:
+- M-. Jump to definition
+- M-, Return
+- M-? Find references
+- C-c r r Rename
+- C-c r f Format")
 
 (defun mcg-lsp-setup-keybindings ()
-  "设置统一的 LSP 快捷键。
+  "Setup unified LSP keybindings.
 
-此函数在 lsp-bridge-mode-hook 中调用，
-为当前 buffer 设置 mcg-lsp-keymap 中定义的快捷键。"
+This function is called in lsp-bridge-mode-hook,
+setting up keybindings defined in mcg-lsp-keymap for current buffer."
   (dolist (binding mcg-lsp-keymap)
     (local-set-key (kbd (car binding)) (cdr binding))))
 
@@ -120,63 +120,63 @@ SERVER-NAME 对应 lsp-bridge 的服务器配置。")
 
 ** LSP Bridge Configuration
 #+BEGIN_SRC emacs-lisp
-;;; LSP Bridge 配置
+;;; LSP Bridge Configuration
 
 (defvar mcg-lsp-user-langserver-dir nil
-  "用户自定义 LSP 服务器配置目录。")
+  "User custom LSP server configuration directory.")
 
 (defvar mcg-lsp-user-multiserver-dir nil
-  "用户自定义多服务器配置目录。")
+  "User custom multi-server configuration directory.")
 
-;; 设置默认的自定义服务器目录
+;; Set default custom server directories
 (setq mcg-lsp-user-langserver-dir (expand-file-name "langservers" mcg-emacs-dir))
 (setq mcg-lsp-user-multiserver-dir (expand-file-name "multiservers" mcg-emacs-dir))
 
 (defun mcg-lsp-setup ()
-  "设置 LSP Bridge 通用配置。
+  "Setup LSP Bridge general configuration.
 
-此函数配置 lsp-bridge 的核心选项，包括：
-- 性能优化
-- 补全设置
-- 诊断设置
-- 签名帮助"
-  ;; 加载 lsp-bridge 扩展
+This function configures lsp-bridge core options, including:
+- Performance optimization
+- Completion settings
+- Diagnostics settings
+- Signature help"
+  ;; Load lsp-bridge extension
   (unless (mcg-require-extension "lsp/lsp-bridge" 'lsp-bridge)
     (mcg-log "Warning: lsp-bridge extension not found")
     (cl-return-from mcg-lsp-setup nil))
   
-  ;; 设置自定义服务器目录
+  ;; Set custom server directories
   (when mcg-lsp-user-langserver-dir
     (setq lsp-bridge-user-langserver-dir mcg-lsp-user-langserver-dir))
   (when mcg-lsp-user-multiserver-dir
     (setq lsp-bridge-user-multiserver-dir mcg-lsp-user-multiserver-dir))
   
-  ;; ===== 核心功能 =====
+  ;; ===== Core Features =====
   (setq lsp-bridge-enable-completion-in-minibuffer t)
   (setq lsp-bridge-signature-show-function 'lsp-bridge-signature-show-with-frame)
   (setq lsp-bridge-signature-show-with-frame-position "bottom-right")
   (setq lsp-bridge-enable-with-tramp t)
   (setq lsp-bridge-enable-org-babel t)
   
-  ;; ===== 性能优化 =====
-  (setq lsp-bridge-enable-inlay-hint nil)  ; 禁用以提升性能
-  (setq lsp-bridge-semantic-tokens nil)    ; 禁用语义 token
+  ;; ===== Performance Optimization =====
+  (setq lsp-bridge-enable-inlay-hint nil)  ; Disable for performance
+  (setq lsp-bridge-semantic-tokens nil)    ; Disable semantic tokens
   (setq lsp-bridge-diagnostic-fetch-idle 0.5)
   (setq lsp-bridge-signature-help-fetch-idle 0.8)
   
-  ;; ===== 诊断设置 =====
+  ;; ===== Diagnostics Settings =====
   (setq lsp-bridge-enable-diagnostics t)
   (setq lsp-bridge-enable-hover-diagnostic t)
   (setq lsp-bridge-code-action-enable-popup-tip t)
   
-  ;; ===== 补全设置 =====
+  ;; ===== Completion Settings =====
   (setq lsp-bridge-enable-search-words t)
   (setq lsp-bridge-enable-auto-import t)
-  (setq lsp-bridge-enable-auto-format-code nil)  ; 手动控制格式化
+  (setq lsp-bridge-enable-auto-format-code nil)  ; Manual format control
   (setq lsp-bridge-find-def-select-in-open-windows t)
   (setq lsp-bridge-enable-rename-file t)
   
-  ;; ===== ACM 配置 =====
+  ;; ===== ACM Configuration =====
   (setq acm-enable-capf t)
   (setq acm-enable-quick-access t)
   (setq acm-backend-yas-match-by-trigger-keyword t)
@@ -195,13 +195,13 @@ SERVER-NAME 对应 lsp-bridge 的服务器配置。")
   (setq acm-enable-search-file-words nil)
   (setq acm-frame-max-width 100)
   
-  ;; ===== 补全触发配置 =====
+  ;; ===== Completion Trigger Configuration =====
   (setq acm-backend-lsp-candidate-min-length 1)
   (setq acm-backend-elisp-candidate-min-length 1)
   (setq acm-backend-yas-candidate-min-length 1)
   (setq acm-backend-search-file-words-candidate-min-length 2)
   
-  ;; ===== 多服务器配置 =====
+  ;; ===== Multi-server Configuration =====
   (with-eval-after-load 'lsp-bridge
     ;; TypeScript/JavaScript with Biome
     (add-to-list 'lsp-bridge-multi-lang-server-extension-list '(("ts") . "typescript-biome"))
@@ -216,10 +216,10 @@ SERVER-NAME 对应 lsp-bridge 的服务器配置。")
     (add-to-list 'lsp-bridge-multi-lang-server-extension-list '(("py") . "python-ty-ruff"))
     (add-to-list 'lsp-bridge-multi-lang-server-extension-list '(("pyi") . "python-ty-ruff")))
   
-  ;; 设置快捷键 hook
+  ;; Setup keybindings hook
   (add-hook 'lsp-bridge-mode-hook #'mcg-lsp-setup-keybindings)
   
-  ;; 启用全局 lsp-bridge-mode
+  ;; Enable global lsp-bridge-mode
   (global-lsp-bridge-mode)
   
   (mcg-log "LSP setup complete"))
@@ -228,7 +228,7 @@ SERVER-NAME 对应 lsp-bridge 的服务器配置。")
 
 ** Format on Save
 #+BEGIN_SRC emacs-lisp
-;;; 保存时自动格式化
+;;; Format on Save
 
 (defvar mcg-lsp-format-on-save-modes
   '(python-mode
@@ -246,7 +246,7 @@ SERVER-NAME 对应 lsp-bridge 的服务器配置。")
     tsx-ts-mode
     js-mode
     js-ts-mode)
-  "启用保存时格式化的模式列表。")
+  "List of modes with format-on-save enabled.")
 
 (defvar mcg-lsp-organize-imports-modes
   '(python-mode
@@ -256,40 +256,40 @@ SERVER-NAME 对应 lsp-bridge 的服务器配置。")
     tsx-ts-mode
     js-mode
     js-ts-mode)
-  "启用保存时整理 imports 的模式列表。")
+  "List of modes with organize-imports-on-save enabled.")
 
 (defvar mcg-lsp-format-on-save-enabled t
-  "是否启用保存时自动格式化。")
+  "Whether format-on-save is enabled.")
 
 (defun mcg-lsp-format-on-save ()
-  "保存时格式化 buffer。
+  "Format buffer on save.
 
-如果 `mcg-lsp-format-on-save-enabled' 为 t，
-且当前模式在 `mcg-lsp-format-on-save-modes' 中，
-则调用 lsp-bridge-code-format。"
+If `mcg-lsp-format-on-save-enabled' is t,
+and current mode is in `mcg-lsp-format-on-save-modes',
+call lsp-bridge-code-format."
   (when (and mcg-lsp-format-on-save-enabled
              (bound-and-true-p lsp-bridge-mode)
              (member major-mode mcg-lsp-format-on-save-modes))
     (lsp-bridge-code-format)))
 
 (defun mcg/toggle-format-on-save ()
-  "切换保存时自动格式化。"
+  "Toggle format-on-save."
   (interactive)
   (setq mcg-lsp-format-on-save-enabled (not mcg-lsp-format-on-save-enabled))
   (message "Format on save: %s"
            (if mcg-lsp-format-on-save-enabled "enabled" "disabled")))
 
-;; 启用保存时格式化
+;; Enable format-on-save
 (add-hook 'before-save-hook #'mcg-lsp-format-on-save)
 
 #+END_SRC
 
 ** Utility Functions
 #+BEGIN_SRC emacs-lisp
-;;; 工具函数
+;;; Utility Functions
 
 (defun mcg-lsp-format-buffer ()
-  "格式化当前 buffer。"
+  "Format current buffer."
   (interactive)
   (if (and (fboundp 'lsp-bridge-mode)
            (bound-and-true-p lsp-bridge-mode))
@@ -297,15 +297,15 @@ SERVER-NAME 对应 lsp-bridge 的服务器配置。")
     (message "LSP not active in current buffer")))
 
 (defun mcg-lsp-organize-imports ()
-  "整理当前 buffer 的 imports。
+  "Organize imports in current buffer.
 
-根据当前 major-mode 选择合适的工具：
-- Python: 使用 ruff
-- Rust: 使用 rustfmt
-- 其他: 尝试 LSP code action"
+Select appropriate tool based on current major-mode:
+- Python: Use ruff
+- Rust: Use rustfmt
+- Others: Try LSP code action"
   (interactive)
   (cond
-   ;; Python: 使用 ruff
+   ;; Python: Use ruff
    ((member major-mode '(python-mode python-ts-mode))
     (if (executable-find "ruff")
         (let ((file (buffer-file-name)))
@@ -318,12 +318,12 @@ SERVER-NAME 对应 lsp-bridge 的服务器配置。")
               (message "ruff: no import changes needed"))))
       (message "ruff not found")))
    
-   ;; Rust: 使用 rustfmt
+   ;; Rust: Use rustfmt
    ((member major-mode '(rust-mode rust-ts-mode))
     (lsp-bridge-code-format)
     (message "Rust imports organized via rustfmt"))
    
-   ;; 其他语言: 尝试 LSP code action
+   ;; Other languages: Try LSP code action
    ((bound-and-true-p lsp-bridge-mode)
     (lsp-bridge-code-action))
    
@@ -331,7 +331,7 @@ SERVER-NAME 对应 lsp-bridge 的服务器配置。")
     (message "No import organizer available for this mode"))))
 
 (defun mcg-lsp-restart ()
-  "重启 LSP 服务器。"
+  "Restart LSP server."
   (interactive)
   (when (bound-and-true-p lsp-bridge-mode)
     (lsp-bridge-restart-process)
@@ -341,21 +341,21 @@ SERVER-NAME 对应 lsp-bridge 的服务器配置。")
 
 ** LSP Status Command
 #+BEGIN_SRC emacs-lisp
-;;; LSP 状态命令
+;;; LSP Status Command
 
 (defun mcg-lsp-check-server-available (server-name)
-  "检查 LSP 服务器是否可用。
+  "Check if LSP server is available.
 
-参数:
-- SERVER-NAME: 服务器可执行文件名
+Arguments:
+- SERVER-NAME: Server executable name
 
-返回 t 如果服务器在 PATH 中可用。"
+Returns t if server is available in PATH."
   (executable-find server-name))
 
 (defun mcg-lsp-status ()
-  "显示所有 LSP 服务器的状态。
+  "Show status of all LSP servers.
 
-交互式命令，显示各语言 LSP 服务器的可用性。"
+Interactive command showing availability of various language LSP servers."
   (interactive)
   (let ((servers '(("Python (ty)" . "ty")
                    ("Python (ruff)" . "ruff")
@@ -394,13 +394,13 @@ SERVER-NAME 对应 lsp-bridge 的服务器配置。")
 
 ** Project Detection
 #+BEGIN_SRC emacs-lisp
-;;; 项目检测
+;;; Project Detection
 
 (defun mcg-lsp-detect-project-type ()
-  "检测当前项目类型。
+  "Detect current project type.
 
-根据项目根目录中的文件检测项目类型。
-返回项目类型符号，如 'python, 'rust, 'javascript 等。"
+Detect project type based on files in project root.
+Returns project type symbol, such as 'python, 'rust, 'javascript, etc."
   (when-let* ((project-root (when (project-current)
                               (project-root (project-current)))))
     (cond
@@ -437,7 +437,7 @@ SERVER-NAME 对应 lsp-bridge 的服务器配置。")
      (t 'unknown))))
 
 (defun mcg/lsp-project-info ()
-  "显示当前项目信息。"
+  "Show current project information."
   (interactive)
   (let ((project-type (mcg-lsp-detect-project-type))
         (project-root (when (project-current)
@@ -450,10 +450,10 @@ SERVER-NAME 对应 lsp-bridge 的服务器配置。")
 
 ** Help Command
 #+BEGIN_SRC emacs-lisp
-;;; 帮助命令
+;;; Help Command
 
 (defun mcg/lsp-help ()
-  "显示 LSP 快捷键和命令帮助。"
+  "Show LSP keybindings and command help."
   (interactive)
   (with-help-window "*MCG LSP Help*"
     (princ "
@@ -508,7 +508,7 @@ Current status:
 
 ** Quick Aliases
 #+BEGIN_SRC emacs-lisp
-;;; 快捷别名
+;;; Quick Aliases
 
 (defalias 'lsp-format #'mcg-lsp-format-buffer)
 (defalias 'lsp-imports #'mcg-lsp-organize-imports)
@@ -521,7 +521,7 @@ Current status:
 
 ** ACM Keybindings Fix
 #+BEGIN_SRC emacs-lisp
-;;; ACM 快捷键修复
+;;; ACM Keybindings Fix
 
 (with-eval-after-load 'acm
   (define-key acm-mode-map (kbd "RET") #'acm-complete)
