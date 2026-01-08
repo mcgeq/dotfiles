@@ -142,6 +142,10 @@
     ;; 加载 vertico-directory 扩展
     (require 'vertico-directory nil t)
     
+    ;; 加载 vertico-sort 扩展并设置历史排序
+    (when (require 'vertico-sort nil t)
+      (setq vertico-sort-function #'vertico-sort-history-length-alpha))
+    
     (mcg-log "Vertico configured")))
 
 (defun mcg--setup-vertico-keybindings ()

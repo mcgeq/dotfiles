@@ -93,14 +93,41 @@
 #+BEGIN_SRC emacs-lisp
 ;;; 路径初始化
 
-(defun mcg-init-paths (base-dir)
+;; 用户可配置的基础目录
+;; 在 early-init.el 或 .emacs 中设置此变量（在 require 'core-bootstrap 之前）
+;; 注意：使用 boundp 检查确保不覆盖已设置的值
+(unless (boundp 'mcg-base-dir)
+  (defvar mcg-base-dir nil
+    "MCG 配置的基础目录。
+
+用户应在加载 core-bootstrap 之前设置此变量，例如：
+  (setq mcg-base-dir \"D:/config\")
+
+或通过环境变量 MCG_EMACS_CONFIG_DIR 设置。
+
+如果未设置，将使用 ~ 作为默认值。"))
+
+(defun mcg-init-paths (&optional base-dir)
   "初始化所有路径变量。
 
 参数:
 - BASE-DIR: 用户自定义根目录（如 D:/config 或 ~）
+            如果为 nil，则按以下优先级获取：
+            1. mcg-base-dir 变量
+            2. 环境变量 MCG_EMACS_CONFIG_DIR
+            3. 默认值 ~
 
-此函数设置所有 mcg-* 路径变量，必须在配置加载前调用。"
-  (let ((custom-dir (file-truename base-dir)))
+此函数设置所有 mcg-* 路径变量，必须在配置加载前调用。
+
+使用方式：
+1. 在 .emacs 中: (setq mcg-base-dir \"D:/config\") 然后 (require 'init)
+2. 或在 early-init.el 中设置 mcg-base-dir
+3. 或设置环境变量 MCG_EMACS_CONFIG_DIR"
+  (let* ((dir (or base-dir
+                  (and (boundp 'mcg-base-dir) mcg-base-dir)
+                  (getenv "MCG_EMACS_CONFIG_DIR")
+                  "~"))
+         (custom-dir (file-truename dir)))
     ;; 主目录
     (setq mcg-emacs-dir (expand-file-name "dotfiles/emacs" custom-dir))
     
@@ -119,14 +146,13 @@
     
     ;; LSP 配置目录
     (setq mcg-langservers-dir (expand-file-name "langservers" mcg-emacs-dir))
-    (setq mcg-multiservers-dir (expand-file-name "multiservers" mcg-emacs-dir))))
+    (setq mcg-multiservers-dir (expand-file-name "multiservers" mcg-emacs-dir))
+    
+    ;; 返回使用的目录，方便调试
+    custom-dir))
 
-;; 自动检测并初始化路径
-(let ((env-config-dir (getenv "MCG_EMACS_CONFIG_DIR")))
-  (if env-config-dir
-      (mcg-init-paths env-config-dir)
-    ;; 默认配置
-    (mcg-init-paths (if mcg-is-windows "D:/config" "~"))))
+;; 自动初始化路径（使用配置的值或默认值）
+(mcg-init-paths)
 #+END_SRC
 
 ** Load Path Setup
