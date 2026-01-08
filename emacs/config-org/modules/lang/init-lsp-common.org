@@ -189,32 +189,8 @@
 ** Auto-Format on Save
 #+BEGIN_SRC emacs-lisp
 ;;; Auto-Format on Save
-
-(defvar mcg-lsp-format-on-save-modes
-  '(python-mode python-ts-mode
-    rust-mode rust-ts-mode
-    zig-mode zig-ts-mode
-    c-mode c-ts-mode c++-mode c++-ts-mode
-    typescript-mode typescript-ts-mode tsx-ts-mode
-    js-mode js-ts-mode)
-  "Modes where format-on-save is enabled.")
-
-(defvar mcg-lsp-format-on-save-enabled t
-  "Whether format-on-save is globally enabled.")
-
-(defun mcg-lsp-format-on-save ()
-  "Format buffer on save if appropriate."
-  (when (and mcg-lsp-format-on-save-enabled
-             (bound-and-true-p lsp-bridge-mode)
-             (member major-mode mcg-lsp-format-on-save-modes))
-    (lsp-bridge-code-format)))
-
-(defun mcg-lsp-toggle-format-on-save ()
-  "Toggle format-on-save globally."
-  (interactive)
-  (setq mcg-lsp-format-on-save-enabled (not mcg-lsp-format-on-save-enabled))
-  (message "Format on save: %s" 
-           (if mcg-lsp-format-on-save-enabled "enabled" "disabled")))
+;; NOTE: Format-on-save functionality is defined in init-lsp.el
+;; This section only adds the hook, the actual function is in init-lsp.el
 
 #+END_SRC
 
@@ -271,8 +247,7 @@
 ;; Auto-setup keybindings
 (add-hook 'lsp-bridge-mode-hook #'mcg-lsp-setup-keybindings)
 
-;; Enable format-on-save
-(add-hook 'before-save-hook #'mcg-lsp-format-on-save)
+;; NOTE: format-on-save hook is added in init-lsp.el
 
 #+END_SRC
 

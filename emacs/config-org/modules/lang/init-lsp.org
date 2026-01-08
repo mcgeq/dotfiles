@@ -261,16 +261,53 @@ This function configures lsp-bridge core options, including:
 (defvar mcg-lsp-format-on-save-enabled t
   "Whether format-on-save is enabled.")
 
+(defvar mcg-lsp-organize-imports-on-save-enabled t
+  "Whether organize-imports-on-save is enabled.")
+
 (defun mcg-lsp-format-on-save ()
   "Format buffer on save.
 
 If `mcg-lsp-format-on-save-enabled' is t,
 and current mode is in `mcg-lsp-format-on-save-modes',
-call lsp-bridge-code-format."
+call lsp-bridge-code-format.
+
+Also organize imports if mode is in `mcg-lsp-organize-imports-modes'."
   (when (and mcg-lsp-format-on-save-enabled
-             (bound-and-true-p lsp-bridge-mode)
-             (member major-mode mcg-lsp-format-on-save-modes))
-    (lsp-bridge-code-format)))
+             (bound-and-true-p lsp-bridge-mode))
+    ;; First organize imports (for supported modes)
+    (when (and mcg-lsp-organize-imports-on-save-enabled
+               (member major-mode mcg-lsp-organize-imports-modes))
+      (mcg-lsp-organize-imports-silent))
+    ;; Then format code
+    (when (member major-mode mcg-lsp-format-on-save-modes)
+      (lsp-bridge-code-format))))
+
+(defun mcg-lsp-organize-imports-silent ()
+  "Organize imports silently (no message output).
+Used internally by format-on-save."
+  (cond
+   ;; Python: Use ruff (process buffer content directly)
+   ((member major-mode '(python-mode python-ts-mode))
+    (when (and (executable-find "ruff") (buffer-file-name))
+      (let ((temp-file (make-temp-file "ruff-isort" nil ".py")))
+        (unwind-protect
+            (progn
+              (write-region (point-min) (point-max) temp-file nil 'silent)
+              (when (zerop (call-process "ruff" nil nil nil
+                                         "check" "--select" "I" "--fix" temp-file))
+                (let ((formatted (with-temp-buffer
+                                   (insert-file-contents temp-file)
+                                   (buffer-string))))
+                  (unless (string= formatted (buffer-string))
+                    (erase-buffer)
+                    (insert formatted)))))
+          (delete-file temp-file)))))
+   
+   ;; TypeScript/JavaScript: Use LSP code action
+   ((member major-mode '(typescript-mode typescript-ts-mode tsx-ts-mode js-mode js-ts-mode))
+    (when (fboundp 'lsp-bridge-code-action)
+      (ignore-errors
+        (lsp-bridge-code-action "source.organizeImports"))))))
 
 (defun mcg/toggle-format-on-save ()
   "Toggle format-on-save."
@@ -278,6 +315,13 @@ call lsp-bridge-code-format."
   (setq mcg-lsp-format-on-save-enabled (not mcg-lsp-format-on-save-enabled))
   (message "Format on save: %s"
            (if mcg-lsp-format-on-save-enabled "enabled" "disabled")))
+
+(defun mcg/toggle-organize-imports-on-save ()
+  "Toggle organize-imports-on-save."
+  (interactive)
+  (setq mcg-lsp-organize-imports-on-save-enabled (not mcg-lsp-organize-imports-on-save-enabled))
+  (message "Organize imports on save: %s"
+           (if mcg-lsp-organize-imports-on-save-enabled "enabled" "disabled")))
 
 ;; Enable format-on-save
 (add-hook 'before-save-hook #'mcg-lsp-format-on-save)
@@ -498,10 +542,14 @@ QUICK COMMANDS:
 SETTINGS:
   M-x mcg/toggle-format-on-save
     Toggle automatic formatting on save
+  M-x mcg/toggle-organize-imports-on-save
+    Toggle automatic import organization on save
 
 Current status:
   Format on save: ")
     (princ (if mcg-lsp-format-on-save-enabled "✓ Enabled" "✗ Disabled"))
+    (princ "\n  Organize imports on save: ")
+    (princ (if mcg-lsp-organize-imports-on-save-enabled "✓ Enabled" "✗ Disabled"))
     (princ "\n\n═══════════════════════════════════════════\n")))
 
 #+END_SRC
