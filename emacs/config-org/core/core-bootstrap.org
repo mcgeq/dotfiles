@@ -87,6 +87,9 @@
 
 (defvar mcg-multiservers-dir nil
   "LSP multi-server configuration directory.")
+
+(defvar mcg-cache-dir nil
+  "Cache directory for Emacs data files.")
 #+END_SRC
 
 ** Path Initialization
@@ -147,6 +150,11 @@ Usage:
     ;; LSP configuration directories
     (setq mcg-langservers-dir (expand-file-name "langservers" mcg-emacs-dir))
     (setq mcg-multiservers-dir (expand-file-name "multiservers" mcg-emacs-dir))
+    
+    ;; Cache directory (use user-emacs-directory for compatibility)
+    (setq mcg-cache-dir (expand-file-name "cache" user-emacs-directory))
+    (unless (file-directory-p mcg-cache-dir)
+      (make-directory mcg-cache-dir t))
     
     ;; Return the used directory for debugging
     custom-dir))
@@ -285,12 +293,62 @@ This function adds the following directories to load-path:
   "Record load times for modules/extensions.
 Format is an alist of ((NAME . TIME-MS) ...).")
 
+(defvar mcg-log-buffer nil
+  "Buffer to store log messages.
+Format is a list of (TIMESTAMP LEVEL MESSAGE).")
+
+(defvar mcg-log-max-entries 500
+  "Maximum number of log entries to keep.")
+
+(defvar mcg-log-levels '(debug info warning error)
+  "Available log levels in order of severity.")
+
+(defun mcg--log-store (level message)
+  "Store log MESSAGE with LEVEL to the log buffer.
+
+Arguments:
+- LEVEL: Log level symbol (debug, info, warning, error)
+- MESSAGE: The log message string"
+  (let ((entry (list (current-time) level message)))
+    (push entry mcg-log-buffer)
+    ;; Trim buffer if too large
+    (when (> (length mcg-log-buffer) mcg-log-max-entries)
+      (setq mcg-log-buffer (seq-take mcg-log-buffer mcg-log-max-entries)))))
+
 (defmacro mcg-log (format-string &rest args)
   "Log message with FORMAT-STRING and ARGS.
 
-Only logs when `mcg-debug-mode' is non-nil."
-  `(when mcg-debug-mode
-     (message (concat "[MCG] " ,format-string) ,@args)))
+Always stores the message to mcg-log-buffer.
+Only outputs to *Messages* when `mcg-debug-mode' is non-nil."
+  `(let ((msg (format ,format-string ,@args)))
+     (mcg--log-store 'info msg)
+     (when mcg-debug-mode
+       (message (concat "[MCG] " msg)))))
+
+(defun mcg-log-warning (format-string &rest args)
+  "Log warning message with FORMAT-STRING and ARGS.
+
+Always stores and displays warning messages."
+  (let ((msg (apply #'format format-string args)))
+    (mcg--log-store 'warning msg)
+    (message "[MCG Warning] %s" msg)))
+
+(defun mcg-log-error (format-string &rest args)
+  "Log error message with FORMAT-STRING and ARGS.
+
+Always stores and displays error messages."
+  (let ((msg (apply #'format format-string args)))
+    (mcg--log-store 'error msg)
+    (message "[MCG Error] %s" msg)))
+
+(defun mcg-log-debug (format-string &rest args)
+  "Log debug message with FORMAT-STRING and ARGS.
+
+Only stores and displays when `mcg-debug-mode' is non-nil."
+  (when mcg-debug-mode
+    (let ((msg (apply #'format format-string args)))
+      (mcg--log-store 'debug msg)
+      (message "[MCG Debug] %s" msg))))
 
 (defmacro mcg-profile (name &rest body)
   "Execute BODY and record elapsed time to mcg-load-times.
@@ -330,6 +388,169 @@ Arguments:
         (insert (format "%-50s %10.2f\n" "Total" total)))
       (goto-char (point-min))
       (display-buffer (current-buffer)))))
+
+(defun mcg--format-log-entry (entry)
+  "Format a log ENTRY for display.
+
+ENTRY is (TIMESTAMP LEVEL MESSAGE)."
+  (let* ((timestamp (car entry))
+         (level (cadr entry))
+         (message (caddr entry))
+         (time-str (format-time-string "%H:%M:%S" timestamp))
+         (level-str (upcase (symbol-name level)))
+         (level-face (pcase level
+                       ('error 'error)
+                       ('warning 'warning)
+                       ('debug 'font-lock-comment-face)
+                       (_ 'default))))
+    (format "[%s] %-7s %s" time-str level-str message)))
+
+(defun mcg--filter-logs-by-level (logs min-level)
+  "Filter LOGS to only include entries at or above MIN-LEVEL.
+
+Arguments:
+- LOGS: List of log entries
+- MIN-LEVEL: Minimum log level symbol"
+  (let ((min-idx (seq-position mcg-log-levels min-level)))
+    (seq-filter
+     (lambda (entry)
+       (let ((entry-level (cadr entry)))
+         (>= (seq-position mcg-log-levels entry-level) min-idx)))
+     logs)))
+
+(defun mcg--generate-logs-content (&optional level)
+  "Generate log content string, optionally filtered by LEVEL."
+  (let* ((logs (if level
+                   (mcg--filter-logs-by-level mcg-log-buffer level)
+                 mcg-log-buffer))
+         (sorted-logs (reverse logs)))  ; Show oldest first
+    (with-temp-buffer
+      (insert "                    MCG Log Messages\n")
+      (insert "    ═══════════════════════════════════════════════════\n\n")
+      (if (null sorted-logs)
+          (insert "    No log messages recorded.\n")
+        (insert (format "    Showing %d entries" (length sorted-logs)))
+        (when level
+          (insert (format " (filtered: %s+)" (symbol-name level))))
+        (insert "\n\n")
+        (dolist (entry sorted-logs)
+          (insert "    " (mcg--format-log-entry entry) "\n")))
+      (insert "\n    ───────────────────────────────────────────────────\n")
+      (insert "    Filter: d=debug i=info w=warning e=error a=all\n")
+      (buffer-string))))
+
+(defvar mcg--logs-popup-buffer "*MCG Logs*"
+  "Buffer name for logs popup.")
+
+(defvar mcg--logs-current-filter nil
+  "Current log level filter.")
+
+(defun mcg--logs-popup-scroll-down ()
+  "Scroll logs popup content down."
+  (when-let* ((buf (get-buffer mcg--logs-popup-buffer))
+              (frame (buffer-local-value 'posframe--frame buf)))
+    (with-selected-frame frame
+      (ignore-errors (scroll-up 3)))))
+
+(defun mcg--logs-popup-scroll-up ()
+  "Scroll logs popup content up."
+  (when-let* ((buf (get-buffer mcg--logs-popup-buffer))
+              (frame (buffer-local-value 'posframe--frame buf)))
+    (with-selected-frame frame
+      (ignore-errors (scroll-down 3)))))
+
+(defun mcg--logs-refresh-popup ()
+  "Refresh the logs popup with current filter."
+  (when-let ((buf (get-buffer mcg--logs-popup-buffer)))
+    (with-current-buffer buf
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (insert (mcg--generate-logs-content mcg--logs-current-filter))))))
+
+(defun mcg/show-logs (&optional level)
+  "Display recent log messages in posframe popup.
+
+Optional LEVEL argument filters logs by minimum level.
+Keys: j/k scroll, d/i/w/e filter by level, a=all, q/ESC exit"
+  (interactive)
+  (require 'posframe)
+  
+  (setq mcg--logs-current-filter level)
+  
+  (let* ((buf (get-buffer-create mcg--logs-popup-buffer))
+         (content (mcg--generate-logs-content level))
+         (hint "j/k scroll | d/i/w/e/a filter | q/ESC exit")
+         (padding (make-string (/ (- 60 (string-width hint)) 2) ?\s)))
+    
+    (with-current-buffer buf
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (insert content))
+      (setq-local buffer-read-only t)
+      (setq-local cursor-type nil)
+      (setq-local header-line-format
+                  (propertize (concat padding hint)
+                              'face '(:foreground "#61AFEF" :weight bold)))
+      (goto-char (point-min)))
+    
+    ;; Use posframe to display centered popup
+    (posframe-show buf
+                   :position (point)
+                   :poshandler #'posframe-poshandler-frame-center
+                   :internal-border-width 2
+                   :internal-border-color "#61AFEF"
+                   :background-color "#282C34"
+                   :foreground-color "#ABB2BF"
+                   :width 65
+                   :height 35
+                   :respect-header-line t
+                   :accept-focus nil)
+    
+    ;; Use read-key loop to handle keys
+    (unwind-protect
+        (catch 'exit-popup
+          (while t
+            (let ((key (read-key)))
+              (cond
+               ;; Exit
+               ((memq key '(?q 27))  ; q or ESC
+                (throw 'exit-popup nil))
+               ;; Scroll down
+               ((memq key '(?j ?n 14))  ; j, n, C-n
+                (mcg--logs-popup-scroll-down))
+               ((equal key 'down)
+                (mcg--logs-popup-scroll-down))
+               ;; Scroll up
+               ((memq key '(?k ?p 16))  ; k, p, C-p
+                (mcg--logs-popup-scroll-up))
+               ((equal key 'up)
+                (mcg--logs-popup-scroll-up))
+               ;; Filter by level
+               ((eq key ?d)
+                (setq mcg--logs-current-filter 'debug)
+                (mcg--logs-refresh-popup))
+               ((eq key ?i)
+                (setq mcg--logs-current-filter 'info)
+                (mcg--logs-refresh-popup))
+               ((eq key ?w)
+                (setq mcg--logs-current-filter 'warning)
+                (mcg--logs-refresh-popup))
+               ((eq key ?e)
+                (setq mcg--logs-current-filter 'error)
+                (mcg--logs-refresh-popup))
+               ((eq key ?a)
+                (setq mcg--logs-current-filter nil)
+                (mcg--logs-refresh-popup))
+               ;; Ignore other keys
+               (t nil)))))
+      ;; Cleanup
+      (posframe-hide mcg--logs-popup-buffer))))
+
+(defun mcg/clear-logs ()
+  "Clear all log messages."
+  (interactive)
+  (setq mcg-log-buffer nil)
+  (message "MCG logs cleared."))
 
 (defun mcg/toggle-debug-mode ()
   "Toggle debug mode."
