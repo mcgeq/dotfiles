@@ -64,12 +64,12 @@
   (interactive)
   (find-file (expand-file-name "init.el" mcg-config-dir)))
 
-;; Basic editing
-(global-set-key (kbd "C-a") 'mcg/smart-beginning-of-line)
-(global-set-key (kbd "C-c E") 'mcg/open-init-file)
-(global-set-key (kbd "C-c R") 'replace-string)
-(global-set-key (kbd "C-c M-r") 'replace-regexp)
-(global-set-key (kbd "C-c D") 'make-directory)
+;; Basic editing - using mcg-bind-key for registry tracking
+(mcg-bind-key "C-a" mcg/smart-beginning-of-line "init-keybindings")
+(mcg-bind-key "C-c E" mcg/open-init-file "init-keybindings")
+(mcg-bind-key "C-c R" replace-string "init-keybindings")
+(mcg-bind-key "C-c M-r" replace-regexp "init-keybindings")
+(mcg-bind-key "C-c D" make-directory "init-keybindings")
 
 #+END_SRC
 
@@ -77,38 +77,41 @@
 #+BEGIN_SRC emacs-lisp
 ;;; Line Manipulation
 
-;; Insert new line below
-(global-set-key (kbd "C-c <down>")
-                (lambda ()
-                  (interactive)
-                  (end-of-line)
-                  (newline-and-indent)))
+;; Define named functions for line manipulation
+(defun mcg/insert-line-below ()
+  "Insert new line below current line."
+  (interactive)
+  (end-of-line)
+  (newline-and-indent))
 
-;; Insert new line above
-(global-set-key (kbd "C-c <up>")
-                (lambda ()
-                  (interactive)
-                  (beginning-of-line)
-                  (newline)
-                  (forward-line -1)
-                  (indent-according-to-mode)))
+(defun mcg/insert-line-above ()
+  "Insert new line above current line."
+  (interactive)
+  (beginning-of-line)
+  (newline)
+  (forward-line -1)
+  (indent-according-to-mode))
 
-;; Move line up
-(global-set-key (kbd "M-<up>")
-                (lambda ()
-                  (interactive)
-                  (transpose-lines 1)
-                  (forward-line -2)
-                  (indent-according-to-mode)))
+(defun mcg/move-line-up ()
+  "Move current line up."
+  (interactive)
+  (transpose-lines 1)
+  (forward-line -2)
+  (indent-according-to-mode))
 
-;; Move line down
-(global-set-key (kbd "M-<down>")
-                (lambda ()
-                  (interactive)
-                  (forward-line 1)
-                  (transpose-lines 1)
-                  (forward-line -1)
-                  (indent-according-to-mode)))
+(defun mcg/move-line-down ()
+  "Move current line down."
+  (interactive)
+  (forward-line 1)
+  (transpose-lines 1)
+  (forward-line -1)
+  (indent-according-to-mode))
+
+;; Line manipulation keybindings
+(mcg-bind-key "C-c <down>" mcg/insert-line-below "init-keybindings")
+(mcg-bind-key "C-c <up>" mcg/insert-line-above "init-keybindings")
+(mcg-bind-key "M-<up>" mcg/move-line-up "init-keybindings")
+(mcg-bind-key "M-<down>" mcg/move-line-down "init-keybindings")
 
 #+END_SRC
 
@@ -126,8 +129,8 @@
   (interactive)
   (scroll-down (/ (window-body-height) 3)))
 
-(global-set-key (kbd "M-n") 'mcg/scroll-down-third)
-(global-set-key (kbd "M-p") 'mcg/scroll-up-third)
+(mcg-bind-key "M-n" mcg/scroll-down-third "init-keybindings")
+(mcg-bind-key "M-p" mcg/scroll-up-third "init-keybindings")
 
 #+END_SRC
 
@@ -145,9 +148,9 @@
 #+BEGIN_SRC emacs-lisp
 ;;; Yasnippet Keys
 
-(global-set-key (kbd "C-c y n") 'yas-new-snippet)
-(global-set-key (kbd "C-c y v") 'yas-visit-snippet-file)
-(global-set-key (kbd "C-c y r") 'yas-reload-all)
+(mcg-bind-key "C-c y n" yas-new-snippet "init-keybindings")
+(mcg-bind-key "C-c y v" yas-visit-snippet-file "init-keybindings")
+(mcg-bind-key "C-c y r" yas-reload-all "init-keybindings")
 
 #+END_SRC
 
@@ -178,20 +181,20 @@
   "Setup sort-tab keybindings."
   (with-eval-after-load 'sort-tab
     ;; Navigation
-    (global-set-key (kbd "C-c t n") 'sort-tab-select-next-tab)
-    (global-set-key (kbd "C-c t p") 'sort-tab-select-prev-tab)
-    (global-set-key (kbd "C-c t f") 'sort-tab-select-first-tab)
-    (global-set-key (kbd "C-c t l") 'sort-tab-select-last-tab)
+    (mcg-bind-key "C-c t n" sort-tab-select-next-tab "init-keybindings")
+    (mcg-bind-key "C-c t p" sort-tab-select-prev-tab "init-keybindings")
+    (mcg-bind-key "C-c t f" sort-tab-select-first-tab "init-keybindings")
+    (mcg-bind-key "C-c t l" sort-tab-select-last-tab "init-keybindings")
     
     ;; Management
-    (global-set-key (kbd "C-c t k") 'sort-tab-close-current-tab)
-    (global-set-key (kbd "C-c t o") 'sort-tab-close-other-tabs)
-    (global-set-key (kbd "C-c t K") 'sort-tab-close-all-tabs)
+    (mcg-bind-key "C-c t k" sort-tab-close-current-tab "init-keybindings")
+    (mcg-bind-key "C-c t o" sort-tab-close-other-tabs "init-keybindings")
+    (mcg-bind-key "C-c t K" sort-tab-close-all-tabs "init-keybindings")
     
     ;; Number quick selection
-    (global-set-key (kbd "C-c t 1") 'mcg-select-tab-1)
-    (global-set-key (kbd "C-c t 2") 'mcg-select-tab-2)
-    (global-set-key (kbd "C-c t 3") 'mcg-select-tab-3)
+    (mcg-bind-key "C-c t 1" mcg-select-tab-1 "init-keybindings")
+    (mcg-bind-key "C-c t 2" mcg-select-tab-2 "init-keybindings")
+    (mcg-bind-key "C-c t 3" mcg-select-tab-3 "init-keybindings")
     
     (mcg-log "Sort-tab keybindings configured")))
 
@@ -209,31 +212,37 @@
   (autoload 'consult-mark "consult" nil t)
   (autoload 'consult-buffer "consult" nil t)
   (autoload 'consult-recent-file "consult" nil t)
+  (autoload 'consult-project-buffer "consult" nil t)
   
-  (global-set-key (kbd "C-c s l") #'consult-line)
-  (global-set-key (kbd "C-c s i") #'consult-imenu)
-  (global-set-key (kbd "C-c s m") #'consult-mark)
-  (global-set-key (kbd "C-c s b") #'consult-buffer)
-  (global-set-key (kbd "C-c s r") #'consult-recent-file)
+  (mcg-bind-key "C-c s l" consult-line "init-keybindings")
+  (mcg-bind-key "C-c s i" consult-imenu "init-keybindings")
+  (mcg-bind-key "C-c s m" consult-mark "init-keybindings")
+  (mcg-bind-key "C-c s b" consult-buffer "init-keybindings")
+  (mcg-bind-key "C-c s r" consult-recent-file "init-keybindings")
+  
+  ;; Buffer management with project filtering
+  (mcg-bind-key "C-c b b" consult-buffer "init-keybindings")
+  (mcg-bind-key "C-c b p" consult-project-buffer "init-keybindings")
+  (mcg-bind-key "C-c b r" consult-recent-file "init-keybindings")
   
   ;; Embark
   (autoload 'embark-act "embark" nil t)
   (autoload 'embark-dwim "embark" nil t)
-  (global-set-key (kbd "C-.") #'embark-act)
-  (global-set-key (kbd "C-,") #'embark-dwim)
+  (mcg-bind-key "C-." embark-act "init-keybindings")
+  (mcg-bind-key "C-," embark-dwim "init-keybindings")
   
   ;; Color-rg search
   (with-eval-after-load 'color-rg
-    (global-set-key (kbd "C-c s g") #'color-rg-search-input)
-    (global-set-key (kbd "C-c s G") #'color-rg-search-input-in-project)
-    (global-set-key (kbd "C-c s s") #'color-rg-search-symbol)
-    (global-set-key (kbd "C-c s S") #'color-rg-search-symbol-in-project)
-    (global-set-key (kbd "C-c s .") #'color-rg-search-symbol-in-current-file)
-    (global-set-key (kbd "C-c s ,") #'color-rg-search-input-in-current-file))
+    (mcg-bind-key "C-c s g" color-rg-search-input "init-keybindings")
+    (mcg-bind-key "C-c s G" color-rg-search-input-in-project "init-keybindings")
+    (mcg-bind-key "C-c s s" color-rg-search-symbol "init-keybindings")
+    (mcg-bind-key "C-c s S" color-rg-search-symbol-in-project "init-keybindings")
+    (mcg-bind-key "C-c s ." color-rg-search-symbol-in-current-file "init-keybindings")
+    (mcg-bind-key "C-c s ," color-rg-search-input-in-current-file "init-keybindings"))
   
   ;; Blink-search
   (with-eval-after-load 'blink-search
-    (global-set-key (kbd "C-c s B") #'blink-search))
+    (mcg-bind-key "C-c s B" blink-search "init-keybindings"))
   
   (mcg-log "Search keybindings configured"))
 
@@ -246,7 +255,7 @@
 (defun mcg--setup-file-keys ()
   "Setup file-related keybindings."
   ;; Recent files (consult-recent-file already autoloaded in search keys)
-  (global-set-key (kbd "C-c f r") #'consult-recent-file)
+  (mcg-bind-key "C-c f r" consult-recent-file "init-keybindings")
   
   (mcg-log "File keybindings configured"))
 
@@ -260,26 +269,26 @@
   "Setup Git-related keybindings."
   (with-eval-after-load 'magit
     ;; Main commands
-    (global-set-key (kbd "C-x g") 'magit-status)
-    (global-set-key (kbd "C-x M-g") 'magit-dispatch)
-    (global-set-key (kbd "C-c g s") 'magit-status)
-    (global-set-key (kbd "C-c g l") 'magit-log)
-    (global-set-key (kbd "C-c g d") 'magit-dispatch)
-    (global-set-key (kbd "C-c g f") 'magit-file-dispatch)
+    (mcg-bind-key "C-x g" magit-status "init-keybindings")
+    (mcg-bind-key "C-x M-g" magit-dispatch "init-keybindings")
+    (mcg-bind-key "C-c g s" magit-status "init-keybindings")
+    (mcg-bind-key "C-c g l" magit-log "init-keybindings")
+    (mcg-bind-key "C-c g d" magit-dispatch "init-keybindings")
+    (mcg-bind-key "C-c g f" magit-file-dispatch "init-keybindings")
     
     ;; Push/Pull
-    (global-set-key (kbd "C-c g p") 'magit-push)
-    (global-set-key (kbd "C-c g P") 'magit-pull)
+    (mcg-bind-key "C-c g p" magit-push "init-keybindings")
+    (mcg-bind-key "C-c g P" magit-pull "init-keybindings")
     
     ;; Branch
-    (global-set-key (kbd "C-c g b b") 'magit-branch-create)
-    (global-set-key (kbd "C-c g b r") 'magit-branch-rename)
-    (global-set-key (kbd "C-c g b d") 'magit-branch-delete)
+    (mcg-bind-key "C-c g b b" magit-branch-create "init-keybindings")
+    (mcg-bind-key "C-c g b r" magit-branch-rename "init-keybindings")
+    (mcg-bind-key "C-c g b d" magit-branch-delete "init-keybindings")
     
     ;; Submodules
-    (global-set-key (kbd "C-c g m a") 'magit-submodule-add)
-    (global-set-key (kbd "C-c g m r") 'magit-submodule-remove)
-    (global-set-key (kbd "C-c g m u") 'magit-submodule-update)
+    (mcg-bind-key "C-c g m a" magit-submodule-add "init-keybindings")
+    (mcg-bind-key "C-c g m r" magit-submodule-remove "init-keybindings")
+    (mcg-bind-key "C-c g m u" magit-submodule-update "init-keybindings")
     
     (mcg-log "Git keybindings configured")))
 
@@ -293,28 +302,28 @@
   "Setup LSP-related keybindings (standard bindings)."
   (with-eval-after-load 'lsp-bridge
     ;; Navigation (standard LSP bindings)
-    (global-set-key (kbd "M-.") 'lsp-bridge-find-def)
-    (global-set-key (kbd "M-,") 'lsp-bridge-find-def-return)
-    (global-set-key (kbd "M-?") 'lsp-bridge-find-references)
-    (global-set-key (kbd "C-M-.") 'lsp-bridge-find-def-other-window)
+    (mcg-bind-key "M-." lsp-bridge-find-def "init-keybindings")
+    (mcg-bind-key "M-," lsp-bridge-find-def-return "init-keybindings")
+    (mcg-bind-key "M-?" lsp-bridge-find-references "init-keybindings")
+    (mcg-bind-key "C-M-." lsp-bridge-find-def-other-window "init-keybindings")
     
     ;; Documentation (C-h prefix for help)
-    (global-set-key (kbd "C-h .") 'lsp-bridge-popup-documentation)
-    (global-set-key (kbd "C-h ,") 'lsp-bridge-show-signature)
-    (global-set-key (kbd "C-h <up>") 'lsp-bridge-popup-documentation-scroll-up)
-    (global-set-key (kbd "C-h <down>") 'lsp-bridge-popup-documentation-scroll-down)
+    (mcg-bind-key "C-h ." lsp-bridge-popup-documentation "init-keybindings")
+    (mcg-bind-key "C-h ," lsp-bridge-show-signature "init-keybindings")
+    (mcg-bind-key "C-h <up>" lsp-bridge-popup-documentation-scroll-up "init-keybindings")
+    (mcg-bind-key "C-h <down>" lsp-bridge-popup-documentation-scroll-down "init-keybindings")
     
     ;; Code actions (C-c r prefix for refactoring)
-    (global-set-key (kbd "C-c r r") 'lsp-bridge-rename)
-    (global-set-key (kbd "C-c r a") 'lsp-bridge-code-action)
-    (global-set-key (kbd "C-c r f") 'lsp-bridge-code-format)
-    (global-set-key (kbd "C-c r l") 'lsp-bridge-find-impl)
-    (global-set-key (kbd "C-c r s") 'lsp-bridge-workspace-list-symbols)
+    (mcg-bind-key "C-c r r" lsp-bridge-rename "init-keybindings")
+    (mcg-bind-key "C-c r a" lsp-bridge-code-action "init-keybindings")
+    (mcg-bind-key "C-c r f" lsp-bridge-code-format "init-keybindings")
+    (mcg-bind-key "C-c r l" lsp-bridge-find-impl "init-keybindings")
+    (mcg-bind-key "C-c r s" lsp-bridge-workspace-list-symbols "init-keybindings")
     
     ;; Diagnostics (M-g prefix - standard Emacs "goto" prefix)
-    (global-set-key (kbd "M-g n") 'lsp-bridge-diagnostic-jump-next)
-    (global-set-key (kbd "M-g p") 'lsp-bridge-diagnostic-jump-prev)
-    (global-set-key (kbd "M-g l") 'lsp-bridge-diagnostic-list))
+    (mcg-bind-key "M-g n" lsp-bridge-diagnostic-jump-next "init-keybindings")
+    (mcg-bind-key "M-g p" lsp-bridge-diagnostic-jump-prev "init-keybindings")
+    (mcg-bind-key "M-g l" lsp-bridge-diagnostic-list "init-keybindings"))
   
   (mcg-log "LSP keybindings configured"))
 
@@ -327,10 +336,10 @@
 (defun mcg--setup-org-keys ()
   "Setup Org-related keybindings."
   (with-eval-after-load 'org
-    (global-set-key (kbd "C-c n c") 'org-capture)
-    (global-set-key (kbd "C-c n a") 'org-agenda)
-    (global-set-key (kbd "C-c n l") 'org-store-link)
-    (global-set-key (kbd "C-c n t") 'org-todo-list))
+    (mcg-bind-key "C-c n c" org-capture "init-keybindings")
+    (mcg-bind-key "C-c n a" org-agenda "init-keybindings")
+    (mcg-bind-key "C-c n l" org-store-link "init-keybindings")
+    (mcg-bind-key "C-c n t" org-todo-list "init-keybindings"))
   
   (mcg-log "Org keybindings configured"))
 
@@ -368,7 +377,27 @@
         ("." "Symbol here" color-rg-search-symbol-in-current-file)
         ("," "Input here" color-rg-search-input-in-current-file)]])
     
-    (global-set-key (kbd "C-c s ?") 'mcg-search-menu)
+    (mcg-bind-key "C-c s ?" mcg-search-menu "init-keybindings")
+    
+    ;; Buffer menu - enhanced with project filtering
+    (transient-define-prefix mcg-buffer-menu ()
+      "Buffer management menu with project filtering"
+      [["Switch"
+        ("b" "All buffers" consult-buffer)
+        ("p" "Project buffers" consult-project-buffer)
+        ("r" "Recent files" consult-recent-file)
+        ("m" "By mode" mcg/consult-buffer-by-mode)]
+       ["Actions"
+        ("k" "Kill buffer" kill-buffer)
+        ("K" "Kill project buffers" mcg/kill-project-buffers)
+        ("s" "Save buffer" save-buffer)
+        ("S" "Save all" save-some-buffers)]
+       ["Navigate"
+        ("n" "Next buffer" next-buffer)
+        ("P" "Previous buffer" previous-buffer)
+        ("o" "Other window" switch-to-buffer-other-window)]])
+    
+    (mcg-bind-key "C-c b ?" mcg-buffer-menu "init-keybindings")
     
     ;; Git menu
     (transient-define-prefix mcg-git-menu ()
@@ -385,7 +414,7 @@
         ("P" "Pull" magit-pull)
         ("f" "Fetch" magit-fetch)]])
     
-    (global-set-key (kbd "C-c g ?") 'mcg-git-menu)
+    (mcg-bind-key "C-c g ?" mcg-git-menu "init-keybindings")
     
     ;; Window menu
     (transient-define-prefix mcg-window-menu ()
@@ -404,7 +433,25 @@
         ("u" "Undo layout" winner-undo)
         ("r" "Redo layout" winner-redo)]])
     
-    (global-set-key (kbd "C-c w ?") 'mcg-window-menu)
+    (mcg-bind-key "C-c w ?" mcg-window-menu "init-keybindings")
+    
+    ;; Help menu - unified help system
+    (transient-define-prefix mcg-help-menu ()
+      "MCG Help Menu - unified help system"
+      [["Documentation"
+        ("k" "Keybindings" mcg/show-keybindings)
+        ("m" "Modules" mcg-list-modules)
+        ("e" "Extensions" mcg/list-extensions)]
+       ["Diagnostics"
+        ("d" "Doctor" mcg-doctor)
+        ("t" "Load times" mcg/show-load-times)
+        ("l" "Logs" mcg/show-logs)]
+       ["Configuration"
+        ("c" "Open config" mcg/open-init-file)
+        ("r" "Reload module" mcg/reload-module)
+        ("R" "Rebuild cache" mcg/rebuild-extension-cache)]])
+    
+    (mcg-bind-key "C-h M" mcg-help-menu "init-keybindings")
     
     (mcg-log "Transient menus configured")))
 
@@ -421,14 +468,93 @@
 (defun mcg/show-keybindings ()
   "Show keybindings reference in posframe popup."
   (interactive)
-  (mcg-popup-show "*MCG Keybindings*" (mcg--keybindings-content) 60 40))
+  (mcg-popup-show "*MCG Keybindings*" (mcg--keybindings-content) 70 45))
+
+(defun mcg--format-keybinding-entry (key command source)
+  "Format a single keybinding entry for display.
+KEY is the key sequence, COMMAND is the command symbol, SOURCE is the module."
+  (format "  %-16s %-30s %s" key command source))
+
+(defun mcg--keybindings-by-category ()
+  "Group registered keybindings by category prefix.
+Returns an alist of (CATEGORY . BINDINGS)."
+  (let ((categories '(("C-c s" . "搜索 Search")
+                      ("C-c g" . "Git")
+                      ("C-c t" . "标签页 Tabs")
+                      ("C-c n" . "Org/笔记")
+                      ("C-c r" . "重构 Refactor")
+                      ("C-c y" . "Yasnippet")
+                      ("C-c f" . "文件 Files")
+                      ("C-c w" . "窗口 Window")
+                      ("C-c e" . "Eshell")
+                      ("M-g" . "跳转 Goto")
+                      ("M-." . "LSP 导航")
+                      ("M-," . "LSP 导航")
+                      ("M-?" . "LSP 导航")
+                      ("C-h" . "帮助 Help")
+                      ("C-." . "Embark")
+                      ("C-," . "Embark")))
+        (result nil)
+        (other nil))
+    ;; Group bindings by category
+    (dolist (binding (mcg-list-keybindings))
+      (let* ((key (car binding))
+             (command (cadr binding))
+             (source (caddr binding))
+             (found nil))
+        (dolist (cat categories)
+          (when (and (not found) (string-prefix-p (car cat) key))
+            (let ((existing (assoc (cdr cat) result)))
+              (if existing
+                  (setcdr existing (cons binding (cdr existing)))
+                (push (cons (cdr cat) (list binding)) result)))
+            (setq found t)))
+        (unless found
+          (push binding other))))
+    ;; Add "Other" category if there are uncategorized bindings
+    (when other
+      (push (cons "其他 Other" (nreverse other)) result))
+    (nreverse result)))
 
 (defun mcg--keybindings-content ()
-  "Generate keybindings reference content."
-  "
-                   MCG Emacs 快捷键速查                    
-    ═══════════════════════════════════════════════════  
+  "Generate keybindings reference content from registry."
+  (let ((grouped (mcg--keybindings-by-category))
+        (conflicts (mcg-list-keybinding-conflicts)))
+    (with-temp-buffer
+      (insert "                MCG Emacs 快捷键速查 (Registry)\n")
+      (insert "    ═══════════════════════════════════════════════════\n\n")
+      
+      ;; Show conflicts if any
+      (when conflicts
+        (insert "    ⚠️  检测到快捷键冲突:\n")
+        (dolist (conflict conflicts)
+          (insert (format "       %s: %s vs %s\n"
+                          (car conflict)
+                          (cadr conflict)
+                          (nth 3 conflict))))
+        (insert "\n"))
+      
+      ;; Show bindings by category
+      (if grouped
+          (dolist (category grouped)
+            (insert (format "    【%s】\n" (car category)))
+            (dolist (binding (sort (cdr category)
+                                   (lambda (a b) (string< (car a) (car b)))))
+              (insert (format "    %-16s %s\n"
+                              (car binding)
+                              (cadr binding))))
+            (insert "\n"))
+        ;; Fallback to static content if registry is empty
+        (insert (mcg--keybindings-static-content)))
+      
+      (insert "    ───────────────────────────────────────────────────\n")
+      (insert (format "    共 %d 个快捷键已注册\n" (length mcg-keybinding-registry)))
+      
+      (buffer-string))))
 
+(defun mcg--keybindings-static-content ()
+  "Static keybindings content as fallback."
+  "
     【LSP】                                               
     M-.             跳转到定义                            
     M-,             返回                                  
@@ -442,7 +568,6 @@
     C-x g           Magit 状态                            
     C-c g s         Magit 状态                            
     C-c g p/P       推送/拉取                             
-    C-c g H         Git 帮助弹窗                          
 
     【搜索】 C-c s                                        
     C-c s l         搜索行 (consult-line)                 
@@ -455,37 +580,14 @@
     C-c t k         关闭当前标签                          
     C-c t 1/2/3     快速选择标签                          
 
-    【Org/笔记】 C-c n                                    
-    C-c n c         Capture                               
-    C-c n a         Agenda                                
-    C-c n ?         Org 帮助弹窗                          
-
     【编辑】                                              
     C-a             智能行首                              
     C-c E           打开配置文件                          
     M-n/M-p         滚动 1/3 窗口                         
     M-UP/DOWN       移动行                                
-    C-c u           可视化撤销 (vundo)                    
-
-    【窗口】 C-c w                                        
-    M-O             Ace window 切换                       
-    C-c w ?         窗口菜单                              
-
-    【跳转】 Avy                                          
-    C-;             跳转到字符                            
-    C-'             跳转到两个字符                        
-    M-g w           跳转到单词                            
-
-    【Eshell】 C-c e                                      
-    C-c e e         切换 Eshell                           
-    C-c e h         当前目录打开                          
-    C-c e ?         Eshell 帮助弹窗                       
-
-    【帮助弹窗】                                          
-    C-h K           快捷键速查 (本页)                     
 ")
 
-(global-set-key (kbd "C-h K") 'mcg/show-keybindings)
+(mcg-bind-key "C-h K" mcg/show-keybindings "init-keybindings")
 
 #+END_SRC
 

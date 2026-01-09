@@ -10,12 +10,12 @@
 
 ;; Set up test environment
 (defvar test-v3-root-dir
-  (expand-file-name "../site-lisp/config-v3"
+  (expand-file-name "../site-lisp/config"
                     (file-name-directory (or load-file-name buffer-file-name)))
   "Root directory for V3 config (tangled .el files).")
 
 (defvar test-v3-source-dir
-  (expand-file-name "../config-org-v3"
+  (expand-file-name "../config-org"
                     (file-name-directory (or load-file-name buffer-file-name)))
   "Source directory for V3 config (.org files).")
 
@@ -41,7 +41,7 @@
   "Property 3: 模块文件存在性
 
 *For any* mcg-modules-alist 中的模块，对应的配置文件必须存在于
-modules/{category}/+{module}.el 路径下
+modules/{category}/init-{module}.org 路径下
 
 **Validates: Requirements 3.1, 3.2**"
   (let ((ui-source-dir (expand-file-name "ui" test-v3-source-modules-dir))
@@ -49,34 +49,34 @@ modules/{category}/+{module}.el 路径下
     ;; Check that UI modules source directory exists
     (should (file-directory-p ui-source-dir))
     
-    ;; Check that +theme.org exists (source)
-    (let ((theme-org (expand-file-name "+theme.org" ui-source-dir)))
+    ;; Check that init-theme.org exists (source)
+    (let ((theme-org (expand-file-name "init-theme.org" ui-source-dir)))
       (should (file-exists-p theme-org)))
     
-    ;; Check that +modeline.org exists (source)
-    (let ((modeline-org (expand-file-name "+modeline.org" ui-source-dir)))
+    ;; Check that init-modeline.org exists (source)
+    (let ((modeline-org (expand-file-name "init-modeline.org" ui-source-dir)))
       (should (file-exists-p modeline-org)))
     
     ;; Check that tangled .el files exist
-    (let ((theme-el (expand-file-name "+theme.el" ui-modules-dir)))
+    (let ((theme-el (expand-file-name "init-theme.el" ui-modules-dir)))
       (should (file-exists-p theme-el)))
     
-    (let ((modeline-el (expand-file-name "+modeline.el" ui-modules-dir)))
+    (let ((modeline-el (expand-file-name "init-modeline.el" ui-modules-dir)))
       (should (file-exists-p modeline-el)))))
 
 (ert-deftest test-property-3-ui-module-naming-convention ()
   "Property 3 (extended): UI modules follow naming convention
 
-*For any* UI module file, it must be named with + prefix.
+*For any* UI module file, it must be named with init- prefix.
 
 **Validates: Requirements 3.1**"
   (let ((ui-source-dir (expand-file-name "ui" test-v3-source-modules-dir)))
     (when (file-directory-p ui-source-dir)
       (let ((files (directory-files ui-source-dir nil "\\.org$")))
-        ;; All .org files (except .gitkeep) should start with +
+        ;; All .org files (except .gitkeep) should start with init-
         (dolist (file files)
           (unless (string= file ".gitkeep")
-            (should (string-prefix-p "+" file))))))))
+            (should (string-prefix-p "init-" file))))))))
 
 (ert-deftest test-property-3-module-path-generation ()
   "Property 3 (extended): Module path generation is correct
@@ -95,14 +95,14 @@ the correct path.
       (load lib-file nil t)
       (load modules-file nil t)
       
-      ;; Test path generation for UI modules
+      ;; Test path generation for UI modules (using init- prefix naming convention)
       (let ((theme-path (mcg-module-path :ui 'theme)))
         (should theme-path)
-        (should (string-match-p "ui/\\+theme\\.el$" theme-path)))
+        (should (string-match-p "ui/init-theme\\.el$" theme-path)))
       
       (let ((modeline-path (mcg-module-path :ui 'modeline)))
         (should modeline-path)
-        (should (string-match-p "ui/\\+modeline\\.el$" modeline-path))))))
+        (should (string-match-p "ui/init-modeline\\.el$" modeline-path))))))
 
 ;;; ============================================================
 ;;; Property 4: 模块 feature 提供正确性

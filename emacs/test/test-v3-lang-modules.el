@@ -10,12 +10,12 @@
 
 ;; Set up test environment
 (defvar test-v3-root-dir
-  (expand-file-name "../site-lisp/config-v3"
+  (expand-file-name "../site-lisp/config"
                     (file-name-directory (or load-file-name buffer-file-name)))
   "Root directory for V3 config (tangled .el files).")
 
 (defvar test-v3-source-dir
-  (expand-file-name "../config-org-v3"
+  (expand-file-name "../config-org"
                     (file-name-directory (or load-file-name buffer-file-name)))
   "Source directory for V3 config (.org files).")
 
@@ -47,12 +47,12 @@
     ;; Check that lang modules source directory exists
     (should (file-directory-p lang-source-dir))
     
-    ;; Check that language module .org files exist
-    (should (file-exists-p (expand-file-name "+rust.org" lang-source-dir)))
-    (should (file-exists-p (expand-file-name "+python.org" lang-source-dir)))
-    (should (file-exists-p (expand-file-name "+typescript.org" lang-source-dir)))
-    (should (file-exists-p (expand-file-name "+web.org" lang-source-dir)))
-    (should (file-exists-p (expand-file-name "+lsp.org" lang-source-dir)))))
+    ;; Check that language module .org files exist (using init- prefix)
+    (should (file-exists-p (expand-file-name "init-rust.org" lang-source-dir)))
+    (should (file-exists-p (expand-file-name "init-python.org" lang-source-dir)))
+    (should (file-exists-p (expand-file-name "init-typescript.org" lang-source-dir)))
+    (should (file-exists-p (expand-file-name "init-web.org" lang-source-dir)))
+    (should (file-exists-p (expand-file-name "init-lsp.org" lang-source-dir)))))
 
 (ert-deftest test-property-5-lang-modules-declare-lsp-dependency ()
   "Property 5: Language modules declare +lsp dependency

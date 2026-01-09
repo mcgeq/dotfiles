@@ -146,10 +146,58 @@ Used to avoid repeated directory scanning.")
 (defvar mcg-extension-cache-file nil
   "Extension cache file path.")
 
+(defvar mcg-extension-cache-mtime nil
+  "Modification time of the extension cache file.")
+
 (defun mcg--init-cache-file ()
   "Initialize cache file path."
   (setq mcg-extension-cache-file
         (expand-file-name "extension-cache.el" mcg-config-dir)))
+
+(defun mcg--get-extensions-dir-mtime ()
+  "Get the latest modification time of extensions directory.
+
+Returns the most recent mtime of any subdirectory in mcg-extensions-dir."
+  (when (and mcg-extensions-dir (file-directory-p mcg-extensions-dir))
+    (let ((latest-mtime 0))
+      (dolist (category-dir (directory-files mcg-extensions-dir t "^[^.]"))
+        (when (file-directory-p category-dir)
+          (let ((mtime (float-time (file-attribute-modification-time
+                                    (file-attributes category-dir)))))
+            (when (> mtime latest-mtime)
+              (setq latest-mtime mtime)))
+          ;; Also check subdirectories
+          (dolist (ext-dir (directory-files category-dir t "^[^.]"))
+            (when (file-directory-p ext-dir)
+              (let ((mtime (float-time (file-attribute-modification-time
+                                        (file-attributes ext-dir)))))
+                (when (> mtime latest-mtime)
+                  (setq latest-mtime mtime)))))))
+      latest-mtime)))
+
+(defun mcg--cache-stale-p ()
+  "Check if the extension cache is stale.
+
+Returns t if cache needs to be rebuilt, nil otherwise."
+  (mcg--init-cache-file)
+  (cond
+   ;; No cache file exists
+   ((not (file-exists-p mcg-extension-cache-file))
+    (mcg-log "Cache file does not exist, needs rebuild")
+    t)
+   ;; Cache is empty
+   ((null mcg-extension-cache)
+    (mcg-log "Cache is empty, needs rebuild")
+    t)
+   ;; Compare mtimes
+   (t
+    (let* ((cache-mtime (float-time (file-attribute-modification-time
+                                     (file-attributes mcg-extension-cache-file))))
+           (dir-mtime (mcg--get-extensions-dir-mtime)))
+      (when (> dir-mtime cache-mtime)
+        (mcg-log "Extensions directory modified after cache (dir: %.0f, cache: %.0f)"
+                 dir-mtime cache-mtime)
+        t)))))
 
 (defun mcg-save-extension-cache ()
   "Save extension cache to file."
@@ -157,10 +205,14 @@ Used to avoid repeated directory scanning.")
   (when (and mcg-extension-cache mcg-extension-cache-file)
     (with-temp-file mcg-extension-cache-file
       (insert ";; MCG Extension Cache - Auto-generated\n")
-      (insert ";; Do not edit manually\n\n")
+      (insert ";; Do not edit manually\n")
+      (insert (format ";; Generated: %s\n\n" (current-time-string)))
       (insert "(setq mcg-extension-cache\n  '")
       (prin1 mcg-extension-cache (current-buffer))
       (insert ")\n"))
+    (setq mcg-extension-cache-mtime
+          (float-time (file-attribute-modification-time
+                       (file-attributes mcg-extension-cache-file))))
     (mcg-log "Saved extension cache: %d entries" (length mcg-extension-cache))))
 
 (defun mcg-load-extension-cache ()
@@ -171,11 +223,26 @@ Used to avoid repeated directory scanning.")
     (condition-case err
         (progn
           (load mcg-extension-cache-file nil t)
+          (setq mcg-extension-cache-mtime
+                (float-time (file-attribute-modification-time
+                             (file-attributes mcg-extension-cache-file))))
           (mcg-log "Loaded extension cache: %d entries" (length mcg-extension-cache))
           t)
       (error
        (mcg-log "Failed to load cache: %s" (error-message-string err))
        nil))))
+
+(defun mcg-ensure-cache-fresh ()
+  "Ensure extension cache is fresh, rebuild if stale.
+
+Returns t if cache is fresh (either already fresh or successfully rebuilt)."
+  (if (mcg--cache-stale-p)
+      (progn
+        (mcg-log "Cache is stale, rebuilding...")
+        (mcg/rebuild-extension-cache)
+        t)
+    (mcg-log "Cache is fresh")
+    t))
 
 (defun mcg-cache-lookup (mode-file)
   "Look up extension path for MODE-FILE from cache."
@@ -227,13 +294,15 @@ Also updates mcg-extension-cache."
   "Auto-discover all extensions and generate registry.
 
 Scans mcg-extensions-dir directory, auto-infers extension paths and features.
-Prioritizes cache, scans and saves if cache doesn't exist."
+Prioritizes cache, scans and saves if cache doesn't exist or is stale."
   (when (and mcg-extensions-dir (file-directory-p mcg-extensions-dir))
     ;; Try to load cache
     (unless mcg-extension-cache
       (mcg-load-extension-cache))
-    ;; If cache is empty, scan and save
-    (unless mcg-extension-cache
+    ;; Check if cache is stale and rebuild if needed
+    (when (mcg--cache-stale-p)
+      (mcg-log "Cache stale, rescanning extensions...")
+      (setq mcg-extension-cache nil)
       (let ((discovered (mcg--scan-extension-dir mcg-extensions-dir)))
         (mcg-save-extension-cache)
         ;; Update mcg-extensions
@@ -396,6 +465,166 @@ Arguments:
 
 ;; use-package style alias
 (defalias 'use-ext 'mcg-use-ext)
+
+#+END_SRC
+
+** Extension Auto-Registration
+#+BEGIN_SRC emacs-lisp
+;;; Extension Auto-Registration
+
+(defun mcg--parse-pkg-file (pkg-file)
+  "Parse -pkg.el file for extension metadata.
+
+Arguments:
+- PKG-FILE: Path to the -pkg.el file
+
+Returns a plist with :provides and :depends keys."
+  (condition-case err
+      (with-temp-buffer
+        (insert-file-contents pkg-file)
+        (goto-char (point-min))
+        (let* ((form (read (current-buffer)))
+               (name (nth 1 form))
+               (deps-raw (nth 4 form))
+               (deps (when (and deps-raw (listp deps-raw))
+                       (mapcar (lambda (dep)
+                                 (if (listp dep) (car dep) dep))
+                               (if (eq (car deps-raw) 'quote)
+                                   (cadr deps-raw)
+                                 deps-raw)))))
+          (list :provides (list (if (stringp name) (intern name) name))
+                :depends deps)))
+    (error
+     (mcg-log "Failed to parse pkg file %s: %s" pkg-file (error-message-string err))
+     nil)))
+
+(defun mcg--parse-el-headers (el-file)
+  "Parse .el file headers for Package-Requires.
+
+Arguments:
+- EL-FILE: Path to the .el file
+
+Returns a plist with :provides and :depends keys."
+  (condition-case err
+      (with-temp-buffer
+        (insert-file-contents el-file nil 0 2000)  ; Only read first 2KB
+        (goto-char (point-min))
+        (let ((provides nil)
+              (depends nil))
+          ;; Look for (provide 'feature)
+          (when (re-search-forward "(provide '\\([^)]+\\))" nil t)
+            (setq provides (list (intern (match-string 1)))))
+          ;; Look for Package-Requires header
+          (goto-char (point-min))
+          (when (re-search-forward ";; Package-Requires: \\((.+)\\)" nil t)
+            (let ((deps-str (match-string 1)))
+              (condition-case nil
+                  (let ((deps-form (read deps-str)))
+                    (setq depends
+                          (mapcar (lambda (dep)
+                                    (if (listp dep) (car dep) dep))
+                                  deps-form)))
+                (error nil))))
+          ;; Fallback: infer provides from filename
+          (unless provides
+            (setq provides (list (intern (file-name-sans-extension
+                                          (file-name-nondirectory el-file))))))
+          (list :provides provides :depends depends)))
+    (error
+     (mcg-log "Failed to parse el headers %s: %s" el-file (error-message-string err))
+     nil)))
+
+(defun mcg--infer-extension-from-dir (dir-path)
+  "Infer extension metadata from directory name.
+
+Arguments:
+- DIR-PATH: Path to the extension directory
+
+Returns a plist with :provides and :depends keys."
+  (let ((name (file-name-nondirectory dir-path)))
+    (list :provides (list (intern name))
+          :depends nil)))
+
+(defun mcg-auto-register-extension (path)
+  "Auto-register extension at PATH.
+
+Infers provides and depends from package metadata.
+Tries in order:
+1. Parse -pkg.el file if exists
+2. Parse main .el file headers
+3. Fallback to directory name inference
+
+Arguments:
+- PATH: Full path to the extension directory
+
+Returns a plist with :provides and :depends keys, or nil on failure."
+  (when (and path (file-directory-p path))
+    (let* ((name (file-name-nondirectory path))
+           (pkg-file (expand-file-name (concat name "-pkg.el") path))
+           (main-file (expand-file-name (concat name ".el") path)))
+      (cond
+       ;; Has -pkg.el file
+       ((file-exists-p pkg-file)
+        (mcg-log "Auto-registering %s from pkg file" name)
+        (mcg--parse-pkg-file pkg-file))
+       ;; Has main .el file with headers
+       ((file-exists-p main-file)
+        (mcg-log "Auto-registering %s from el headers" name)
+        (mcg--parse-el-headers main-file))
+       ;; Fallback: infer from directory name
+       (t
+        (mcg-log "Auto-registering %s from directory name" name)
+        (mcg--infer-extension-from-dir path))))))
+
+(defun mcg--resolve-extension-dep-path (dep-symbol)
+  "Resolve a dependency symbol to an extension path.
+
+Arguments:
+- DEP-SYMBOL: A symbol like 'dash or 'f
+
+Returns the extension path string or nil if not found."
+  (catch 'found
+    (dolist (entry mcg-extensions)
+      (let ((provides (plist-get (cdr entry) :provides)))
+        (when (memq dep-symbol provides)
+          (throw 'found (car entry)))))
+    nil))
+
+(defun mcg-auto-discover-and-register ()
+  "Auto-discover extensions and register them.
+
+Scans mcg-extensions-dir, auto-registers new extensions
+that are not already in mcg-extensions."
+  (interactive)
+  (let ((registered-count 0)
+        (updated-count 0))
+    (when (and mcg-extensions-dir (file-directory-p mcg-extensions-dir))
+      (dolist (category-dir (directory-files mcg-extensions-dir t "^[^.]"))
+        (when (file-directory-p category-dir)
+          (let ((category (file-name-nondirectory category-dir)))
+            (dolist (ext-dir (directory-files category-dir t "^[^.]"))
+              (when (file-directory-p ext-dir)
+                (let* ((ext-name (file-name-nondirectory ext-dir))
+                       (ext-path (concat category "/" ext-name))
+                       (existing (assoc ext-path mcg-extensions)))
+                  ;; Only register if not already registered
+                  (unless existing
+                    (let ((metadata (mcg-auto-register-extension ext-dir)))
+                      (when metadata
+                        (let ((provides (plist-get metadata :provides))
+                              (depends (plist-get metadata :depends)))
+                          ;; Convert dependency symbols to paths
+                          (let ((dep-paths
+                                 (when depends
+                                   (delq nil
+                                         (mapcar #'mcg--resolve-extension-dep-path
+                                                 depends)))))
+                            (push (append (list ext-path :provides provides)
+                                          (when dep-paths (list :depends dep-paths)))
+                                  mcg-extensions)
+                            (cl-incf registered-count)))))))))))))
+    (message "Auto-registered %d new extensions" registered-count)
+    registered-count))
 
 #+END_SRC
 

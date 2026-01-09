@@ -15,11 +15,11 @@
   "Root directory for emacs config.")
 
 (defvar test-v3-makefile-src-dir
-  (expand-file-name "config-org-v3" test-v3-makefile-root-dir)
+  (expand-file-name "config-org" test-v3-makefile-root-dir)
   "V3 source directory.")
 
 (defvar test-v3-makefile-dst-dir
-  (expand-file-name "site-lisp/config-v3" test-v3-makefile-root-dir)
+  (expand-file-name "site-lisp/config" test-v3-makefile-root-dir)
   "V3 destination directory.")
 
 ;;; ============================================================
@@ -149,52 +149,53 @@ corresponding .org file is newer.
     (should (file-exists-p makefile))))
 
 (ert-deftest test-makefile-has-v3-target ()
-  "Test that Makefile has v3 target."
+  "Test that Makefile has all target (equivalent to v3)."
   (let ((makefile (expand-file-name "Makefile" test-v3-makefile-root-dir)))
     (when (file-exists-p makefile)
       (with-temp-buffer
         (insert-file-contents makefile)
-        (should (search-forward "v3:" nil t))))))
+        (should (search-forward "all:" nil t))))))
 
 (ert-deftest test-makefile-has-clean-v3-target ()
-  "Test that Makefile has clean-v3 target."
+  "Test that Makefile has clean target (equivalent to clean-v3)."
   (let ((makefile (expand-file-name "Makefile" test-v3-makefile-root-dir)))
     (when (file-exists-p makefile)
       (with-temp-buffer
         (insert-file-contents makefile)
-        (should (search-forward "clean-v3:" nil t))))))
+        (should (search-forward "clean:" nil t))))))
 
 (ert-deftest test-makefile-has-test-v3-target ()
-  "Test that Makefile has test-v3 target."
+  "Test that Makefile has test target (equivalent to test-v3)."
   (let ((makefile (expand-file-name "Makefile" test-v3-makefile-root-dir)))
     (when (file-exists-p makefile)
       (with-temp-buffer
         (insert-file-contents makefile)
-        (should (search-forward "test-v3:" nil t))))))
+        (should (search-forward "test:" nil t))))))
 
 (ert-deftest test-makefile-v3-uses-secondary-expansion ()
-  "Test that Makefile uses .SECONDEXPANSION for v3 rules."
+  "Test that Makefile uses template function for rules (alternative to .SECONDEXPANSION)."
   (let ((makefile (expand-file-name "Makefile" test-v3-makefile-root-dir)))
     (when (file-exists-p makefile)
       (with-temp-buffer
         (insert-file-contents makefile)
-        (should (search-forward ".SECONDEXPANSION:" nil t))))))
+        ;; The current Makefile uses define/endef template instead of .SECONDEXPANSION
+        (should (search-forward "define tangle_template" nil t))))))
 
 (ert-deftest test-makefile-v3-src-dir-defined ()
-  "Test that V3_SRC_DIR is defined in Makefile."
+  "Test that SRC_DIR is defined in Makefile."
   (let ((makefile (expand-file-name "Makefile" test-v3-makefile-root-dir)))
     (when (file-exists-p makefile)
       (with-temp-buffer
         (insert-file-contents makefile)
-        (should (search-forward "V3_SRC_DIR" nil t))))))
+        (should (search-forward "SRC_DIR" nil t))))))
 
 (ert-deftest test-makefile-v3-dst-dir-defined ()
-  "Test that V3_DST_DIR is defined in Makefile."
+  "Test that DST_DIR is defined in Makefile."
   (let ((makefile (expand-file-name "Makefile" test-v3-makefile-root-dir)))
     (when (file-exists-p makefile)
       (with-temp-buffer
         (insert-file-contents makefile)
-        (should (search-forward "V3_DST_DIR" nil t))))))
+        (should (search-forward "DST_DIR" nil t))))))
 
 ;;; ============================================================
 ;;; Directory Structure Tests
@@ -227,7 +228,7 @@ corresponding .org file is newer.
     (should (file-directory-p (expand-file-name "org" modules-dir)))))
 
 (ert-deftest test-v3-org-files-follow-naming-convention ()
-  "Test that V3 module .org files follow +name.org naming convention."
+  "Test that V3 module .org files follow init-name.org naming convention."
   (let ((modules-dir (expand-file-name "modules" test-v3-makefile-src-dir)))
     (dolist (category '("ui" "editor" "completion" "tools" "lang" "org"))
       (let ((category-dir (expand-file-name category modules-dir)))
@@ -235,8 +236,8 @@ corresponding .org file is newer.
           (dolist (file (directory-files category-dir nil "\\.org$"))
             ;; Skip .gitkeep and similar files
             (unless (string-prefix-p "." file)
-              ;; Module files should start with +
-              (should (string-prefix-p "+" file)))))))))
+              ;; Module files should start with init-
+              (should (string-prefix-p "init-" file)))))))))
 
 (provide 'test-v3-makefile)
 ;;; test-v3-makefile.el ends here

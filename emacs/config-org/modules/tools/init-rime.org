@@ -64,6 +64,15 @@ Options: 'posframe, 'popup, 'minibuffer")
 (defvar mcg-tools-rime-default-cursor-color nil
   "Default cursor color (auto-detected).")
 
+(defvar mcg-rime-auto-enable nil
+  "Whether to auto-enable rime when entering text-mode.
+When non-nil, rime will be automatically enabled in text-mode
+after being disabled in prog-mode.")
+
+(defvar mcg-rime-prog-mode-disabled nil
+  "Internal variable to track if rime was disabled by prog-mode hook.
+Used to restore rime state when switching to text-mode.")
+
 #+END_SRC
 
 ** Rime Configuration
@@ -214,6 +223,58 @@ Options: 'posframe, 'popup, 'minibuffer")
 
 #+END_SRC
 
+** Prog-mode Integration
+#+BEGIN_SRC emacs-lisp
+;;; Prog-mode Integration
+
+(defun mcg--rime-disable-in-prog-mode ()
+  "Auto-disable rime in programming modes.
+This function is added to `prog-mode-hook' to automatically
+disable Chinese input when editing code."
+  (when (and (featurep 'rime)
+             (boundp 'current-input-method)
+             current-input-method
+             (string= current-input-method "rime"))
+    ;; Mark that we disabled rime due to prog-mode
+    (setq mcg-rime-prog-mode-disabled t)
+    ;; Disable rime input method
+    (deactivate-input-method)
+    (mcg-log "Rime auto-disabled in prog-mode: %s" major-mode)))
+
+(defun mcg--rime-enable-in-text-mode ()
+  "Auto-enable rime in text modes.
+This function is added to `text-mode-hook' to automatically
+re-enable Chinese input when editing text, if it was previously
+disabled by prog-mode and `mcg-rime-auto-enable' is non-nil."
+  (when (and (featurep 'rime)
+             mcg-rime-auto-enable
+             mcg-rime-prog-mode-disabled)
+    ;; Reset the flag
+    (setq mcg-rime-prog-mode-disabled nil)
+    ;; Re-enable rime input method
+    (activate-input-method "rime")
+    (mcg-log "Rime auto-enabled in text-mode: %s" major-mode)))
+
+(defun mcg--setup-rime-prog-mode ()
+  "Setup auto-disable rime in programming modes."
+  (when (featurep 'rime)
+    ;; Disable rime when entering prog-mode
+    (add-hook 'prog-mode-hook #'mcg--rime-disable-in-prog-mode)
+    
+    ;; Re-enable rime when entering text-mode (if configured)
+    (add-hook 'text-mode-hook #'mcg--rime-enable-in-text-mode)
+    
+    (mcg-log "Rime prog-mode integration configured")))
+
+(defun mcg/toggle-rime-auto-enable ()
+  "Toggle automatic rime re-enable in text-mode."
+  (interactive)
+  (setq mcg-rime-auto-enable (not mcg-rime-auto-enable))
+  (message "Rime auto-enable in text-mode: %s"
+           (if mcg-rime-auto-enable "enabled" "disabled")))
+
+#+END_SRC
+
 ** Symbol to Rime
 #+BEGIN_SRC emacs-lisp
 ;;; Symbol to Rime
@@ -245,6 +306,61 @@ Options: 'posframe, 'popup, 'minibuffer")
 
 #+END_SRC
 
+** Modeline Indicator
+#+BEGIN_SRC emacs-lisp
+;;; Modeline Indicator
+
+(defvar mcg-rime-modeline-indicator " 中"
+  "Modeline indicator when rime is active.
+This string is displayed in the modeline to show Chinese input is enabled.")
+
+(defvar mcg-rime-modeline-indicator-ascii " En"
+  "Modeline indicator when rime is in ASCII mode.
+This string is displayed in the modeline to show English input is active.")
+
+(defun mcg--rime-get-modeline-indicator ()
+  "Get the current rime modeline indicator string.
+Returns the appropriate indicator based on rime state."
+  (if (and (featurep 'rime)
+           (boundp 'current-input-method)
+           current-input-method
+           (string= current-input-method "rime"))
+      (if (and (fboundp 'rime--should-inline-ascii-p)
+               (rime--should-inline-ascii-p))
+          mcg-rime-modeline-indicator-ascii
+        mcg-rime-modeline-indicator)
+    ""))
+
+(defun mcg--setup-rime-modeline ()
+  "Setup rime indicator in modeline."
+  (when (featurep 'rime)
+    ;; Use posframe for candidate display (enhanced visual feedback)
+    (setq rime-show-candidate 'posframe)
+    (setq rime-posframe-style 'vertical)
+    
+    ;; Set the rime title for modeline display
+    (setq rime-title mcg-rime-modeline-indicator)
+    
+    ;; Add rime indicator to mode-line-misc-info if not already present
+    (unless (member '(:eval (mcg--rime-get-modeline-indicator)) mode-line-misc-info)
+      (push '(:eval (mcg--rime-get-modeline-indicator)) mode-line-misc-info))
+    
+    (mcg-log "Rime modeline indicator configured")))
+
+(defun mcg/toggle-rime-modeline-indicator ()
+  "Toggle rime modeline indicator visibility."
+  (interactive)
+  (if (member '(:eval (mcg--rime-get-modeline-indicator)) mode-line-misc-info)
+      (progn
+        (setq mode-line-misc-info
+              (remove '(:eval (mcg--rime-get-modeline-indicator)) mode-line-misc-info))
+        (message "Rime modeline indicator hidden"))
+    (push '(:eval (mcg--rime-get-modeline-indicator)) mode-line-misc-info)
+    (message "Rime modeline indicator shown"))
+  (force-mode-line-update t))
+
+#+END_SRC
+
 ** Initialize
 #+BEGIN_SRC emacs-lisp
 ;;; Initialize
@@ -256,7 +372,9 @@ Options: 'posframe, 'popup, 'minibuffer")
 (with-eval-after-load 'rime
   (mcg--setup-rime-keybindings)
   (mcg--setup-rime-predicates)
-  (mcg--setup-rime-cursor-color))
+  (mcg--setup-rime-cursor-color)
+  (mcg--setup-rime-prog-mode)
+  (mcg--setup-rime-modeline))
 
 #+END_SRC
 

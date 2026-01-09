@@ -140,14 +140,16 @@
 ;; Load editor modules immediately
 (mcg-load-modules-by-category :editor)
 
-;; Load completion modules immediately
-(mcg-load-modules-by-category :completion)
+;; Setup idle loading for completion modules
+;; These are loaded after Emacs becomes idle
+(mcg-add-idle-load-category :completion)
 
 ;; Load tools modules immediately
 (mcg-load-modules-by-category :tools)
 
-;; Load enhance modules immediately
-(mcg-load-modules-by-category :enhance)
+;; Setup idle loading for enhance modules
+;; These are loaded after Emacs becomes idle
+(mcg-add-idle-load-category :enhance)
 
 ;; Load Org modules immediately
 (mcg-load-modules-by-category :org)
@@ -162,6 +164,9 @@
 
 ;; Setup deferred loading for language modules
 (mcg-setup-deferred-loading)
+
+;; Setup idle loading (starts loading after idle delay)
+(mcg-setup-idle-loading)
 
 #+END_SRC
 
@@ -185,9 +190,10 @@
           (lambda ()
             (let ((loaded (length mcg-loaded-modules))
                   (deferred (length mcg-deferred-modules))
+                  (idle-pending (length mcg-idle-load-modules))
                   (errors (length mcg-module-load-errors)))
-              (mcg-log "Modules: %d loaded, %d deferred, %d errors"
-                       loaded deferred errors)
+              (mcg-log "Modules: %d loaded, %d deferred, %d idle-pending, %d errors"
+                       loaded deferred idle-pending errors)
               ;; Show warning if there are errors
               (when (> errors 0)
                 (message "⚠️ %d module(s) failed to load. Run M-x mcg-list-modules for details."

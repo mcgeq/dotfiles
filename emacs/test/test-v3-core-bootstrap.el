@@ -11,7 +11,7 @@
 
 ;; Set up test environment
 (defvar test-v3-root-dir
-  (expand-file-name "../site-lisp/config-v3"
+  (expand-file-name "../site-lisp/config"
                     (file-name-directory (or load-file-name buffer-file-name))))
 
 ;;; ============================================================

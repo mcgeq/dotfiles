@@ -139,12 +139,93 @@ Use =mcg!= macro in =init.org= to declare enabled modules:
 |------------+---------+-----------------------------------+-----------|
 | ui         |       4 | Theme, modeline, font, icons      | Immediate |
 | editor     |       8 | Editing features                  | Immediate |
-| completion |       2 | Vertico, yasnippet                | Immediate |
-| tools      |       5 | Magit, search, rime, tabs, eshell | Immediate |
-| enhance    |       5 | Autosave, which-key, helpful, etc.| Immediate |
-| org        |       5 | Org Mode ecosystem                | Immediate |
-| writing    |       2 | Markdown, vale                    | Immediate |
+| completion |       2 | Vertico, yasnippet                | Idle      |
+| tools      |       5 | Magit, search, rime, tabs, eshell | Deferred  |
+| enhance    |       5 | Autosave, which-key, helpful, etc.| Idle      |
+| org        |       5 | Org Mode ecosystem                | Deferred  |
+| writing    |       2 | Markdown, vale                    | Deferred  |
 | lang       |       9 | LSP and language support          | Deferred  |
+
+* Module Loading Strategy
+
+The configuration uses a three-tier loading strategy:
+
+** Immediate Loading (At Startup)
+
+Essential modules loaded immediately:
+- Core: bootstrap, lib, modules, autoload
+- UI: theme, modeline, font
+- Editor: defaults, keybindings
+
+** Idle Loading (After Startup)
+
+Non-essential modules loaded during idle time:
+
+#+begin_src emacs-lisp
+;; Configure idle loading delay (default: 2 seconds)
+(setq mcg-idle-load-delay 2)
+
+;; Add modules to idle loading
+(mcg-add-idle-load-module :completion 'vertico)
+(mcg-add-idle-load-category :enhance)
+#+end_src
+
+** Deferred Loading (On Demand)
+
+Language modules loaded when opening files:
+
+#+begin_src emacs-lisp
+;; Triggers defined in mcg-module-triggers
+;; Example: Opening .rs file loads :lang rust module
+#+end_src
+
+* Keybinding Registry
+
+All keybindings are registered in a central registry for conflict detection.
+
+** Using mcg-bind-key
+
+#+begin_src emacs-lisp
+;; Instead of global-set-key, use:
+(mcg-bind-key "C-c s l" consult-line "init-keybindings")
+
+;; With optional keymap
+(mcg-bind-key "C-c C-b" eval-buffer "init-keybindings" emacs-lisp-mode-map)
+#+end_src
+
+** Conflict Detection
+
+Conflicts are automatically detected and logged:
+
+#+begin_example
+Warning: Keybinding conflict: C-c s l
+  Was: old-command (from module-a)
+  Now: new-command (from module-b)
+#+end_example
+
+** Query Functions
+
+#+begin_src emacs-lisp
+(mcg-list-keybindings)           ; List all registered keybindings
+(mcg-keybinding-source "C-c s l") ; Get source module for a key
+(mcg-keybindings-by-source "init-keybindings") ; Get all keys from a module
+#+end_src
+
+* Help System
+
+Press =C-h M= to access the unified help menu:
+
+| Key | Command                    |
+|-----+----------------------------|
+| k   | Show keybindings reference |
+| m   | List all modules           |
+| e   | List extensions            |
+| d   | Run doctor                 |
+| t   | Show load times            |
+| l   | Show logs                  |
+| c   | Open config file           |
+| r   | Reload module              |
+| R   | Rebuild extension cache    |
 
 * Migration Guide
 
@@ -201,12 +282,18 @@ make st           # View submodule status
 
 * Common Commands
 
-| Command                       | Description                 |
-|-------------------------------+-----------------------------|
-| M-x mcg-list-modules          | Show all modules and status |
-| M-x mcg/reload-module         | Reload specified module     |
-| M-x mcg/show-keybindings      | Show keybindings reference  |
-| M-x mcg/toggle-format-on-save | Toggle format on save       |
+| Command                          | Description                    |
+|----------------------------------+--------------------------------|
+| M-x mcg-list-modules             | Show all modules and status    |
+| M-x mcg/reload-module            | Reload specified module        |
+| M-x mcg/show-keybindings         | Show keybindings reference     |
+| M-x mcg/toggle-format-on-save    | Toggle format on save          |
+| M-x mcg-doctor                   | Check configuration issues     |
+| M-x mcg/show-load-times          | View module loading times      |
+| M-x mcg/show-logs                | View recent log messages       |
+| M-x mcg/list-extensions          | Show extension status          |
+| M-x mcg-show-startup-errors      | Show startup error summary     |
+| M-x mcg/rebuild-extension-cache  | Rebuild extension cache        |
 
 * Changelog
 

@@ -19,7 +19,7 @@
   "V3 source directory.")
 
 (defvar tangle-v3-target-dir
-  (expand-file-name "site-lisp/config-v3" tangle-v3-root-dir)
+  (expand-file-name "site-lisp/config" tangle-v3-root-dir)
   "V3 target directory for tangled files.")
 
 (defun tangle-v3-file (org-file target-subdir)

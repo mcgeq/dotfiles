@@ -229,13 +229,23 @@ Options: 'any, nil, or specific key.")
     (setq xref-show-xrefs-function #'consult-xref
           xref-show-definitions-function #'consult-xref)
     
-    ;; Buffer filter
+    ;; Buffer filter - hide internal buffers
     (setq consult-buffer-filter
           '("\\` "
             "\\`\\*Completions\\*\\'"
             "\\`\\*Flymake log\\*\\'"
             "\\`\\*Semantic SymRef\\*\\'"
-            "\\`\\*tramp/.*\\*\\'"))
+            "\\`\\*tramp/.*\\*\\'"
+            "\\`\\*Messages\\*\\'"
+            "\\`\\*Warnings\\*\\'"
+            "\\`\\*Backtrace\\*\\'"
+            "\\`\\*Native-compile-Log\\*\\'"))
+    
+    ;; Project function for project-based filtering
+    (setq consult-project-function
+          (lambda (_)
+            (when-let ((project (project-current)))
+              (project-root project))))
     
     ;; Windows UTF-8 configuration
     (when (eq system-type 'windows-nt)
@@ -262,6 +272,147 @@ Options: 'any, nil, or specific key.")
     
     ;; Enable completion list preview
     (add-hook 'completion-list-mode-hook #'consult-preview-at-point-mode)))
+
+#+END_SRC
+
+** Consult Buffer Sources Configuration
+#+BEGIN_SRC emacs-lisp
+;;; Consult Buffer Sources Configuration
+
+(defun mcg--setup-consult-buffer-sources ()
+  "Setup consult-buffer with project filtering and buffer grouping."
+  (when (featurep 'consult)
+    ;; Custom buffer source for project buffers (higher priority)
+    (defvar mcg--source-project-buffer
+      `(:name "Project Buffer"
+        :narrow ?p
+        :category buffer
+        :face consult-buffer
+        :history buffer-name-history
+        :state ,#'consult--buffer-state
+        :enabled ,(lambda () (project-current))
+        :items
+        ,(lambda ()
+           (when-let ((project (project-current)))
+             (let ((root (project-root project)))
+               (consult--buffer-query
+                :sort 'visibility
+                :as #'buffer-name
+                :predicate
+                (lambda (buf)
+                  (when-let ((file (buffer-file-name buf)))
+                    (string-prefix-p root file))))))))
+      "Project buffer source for `consult-buffer'.")
+    
+    ;; Custom buffer source for modified buffers
+    (defvar mcg--source-modified-buffer
+      `(:name "Modified Buffer"
+        :narrow ?m
+        :category buffer
+        :face (:foreground "orange" :weight bold)
+        :history buffer-name-history
+        :state ,#'consult--buffer-state
+        :items
+        ,(lambda ()
+           (consult--buffer-query
+            :sort 'visibility
+            :as #'buffer-name
+            :predicate
+            (lambda (buf)
+              (and (buffer-file-name buf)
+                   (buffer-modified-p buf))))))
+      "Modified buffer source for `consult-buffer'.")
+    
+    ;; Custom buffer source for special buffers (like *scratch*, *Messages*)
+    (defvar mcg--source-special-buffer
+      `(:name "Special Buffer"
+        :narrow ?*
+        :category buffer
+        :face font-lock-comment-face
+        :history buffer-name-history
+        :state ,#'consult--buffer-state
+        :items
+        ,(lambda ()
+           (consult--buffer-query
+            :sort 'visibility
+            :as #'buffer-name
+            :predicate
+            (lambda (buf)
+              (let ((name (buffer-name buf)))
+                (and (string-prefix-p "*" name)
+                     (string-suffix-p "*" name)
+                     ;; Exclude hidden buffers
+                     (not (string-prefix-p " " name))))))))
+      "Special buffer source for `consult-buffer'.")
+    
+    ;; Configure buffer sources with project filtering
+    ;; Order: Project buffers > Modified > Regular > Special > Recent files > Bookmarks
+    (setq consult-buffer-sources
+          '(mcg--source-project-buffer
+            mcg--source-modified-buffer
+            consult--source-buffer
+            mcg--source-special-buffer
+            consult--source-recent-file
+            consult--source-bookmark))
+    
+    (mcg-log "Consult buffer sources configured with project filtering")))
+
+#+END_SRC
+
+** Consult Project Buffer Functions
+#+BEGIN_SRC emacs-lisp
+;;; Consult Project Buffer Functions
+
+(defun mcg/consult-project-buffer ()
+  "Switch to a buffer within the current project.
+If not in a project, falls back to `consult-buffer'."
+  (interactive)
+  (if (project-current)
+      (consult-project-buffer)
+    (consult-buffer)))
+
+(defun mcg/consult-buffer-by-mode ()
+  "Switch to a buffer filtered by major mode.
+Prompts for a major mode, then shows only buffers with that mode."
+  (interactive)
+  (let* ((modes (delete-dups
+                 (mapcar (lambda (buf)
+                           (buffer-local-value 'major-mode buf))
+                         (buffer-list))))
+         (mode (intern (completing-read "Major mode: "
+                                        (mapcar #'symbol-name modes)
+                                        nil t))))
+    (consult-buffer
+     `(:sources
+       ((:name ,(format "%s Buffers" mode)
+         :narrow ?m
+         :category buffer
+         :face consult-buffer
+         :history buffer-name-history
+         :state ,#'consult--buffer-state
+         :items
+         ,(lambda ()
+            (consult--buffer-query
+             :sort 'visibility
+             :as #'buffer-name
+             :predicate
+             (lambda (buf)
+               (eq (buffer-local-value 'major-mode buf) mode))))))))))
+
+(defun mcg/kill-project-buffers ()
+  "Kill all buffers belonging to the current project."
+  (interactive)
+  (when-let ((project (project-current)))
+    (let* ((root (project-root project))
+           (buffers (seq-filter
+                     (lambda (buf)
+                       (when-let ((file (buffer-file-name buf)))
+                         (string-prefix-p root file)))
+                     (buffer-list)))
+           (count (length buffers)))
+      (when (yes-or-no-p (format "Kill %d project buffers? " count))
+        (mapc #'kill-buffer buffers)
+        (message "Killed %d project buffers" count)))))
 
 #+END_SRC
 
@@ -419,6 +570,7 @@ MATCH is an optional match condition."
 (mcg--setup-marginalia)
 (mcg--setup-consult)
 (mcg--setup-consult-keybindings)
+(mcg--setup-consult-buffer-sources)
 (mcg--setup-embark)
 (mcg--setup-embark-consult)
 (mcg--setup-minibuffer)

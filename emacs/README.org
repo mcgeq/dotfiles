@@ -222,6 +222,129 @@ If migrating from an older configuration version:
 
 The system automatically detects old names and shows warnings.
 
+* ⚡ Performance Optimization
+
+** Module Loading Strategy
+
+The configuration uses a three-tier loading strategy for optimal startup performance:
+
+| Loading Type | When Loaded | Modules |
+|--------------+-------------+---------|
+| Immediate    | At startup  | core, ui (theme, modeline, font), editor (defaults, keybindings) |
+| Idle         | After 2s idle | completion (vertico, yasnippet), enhance (which-key, helpful) |
+| Deferred     | On demand   | lang (rust, python, etc.), tools (magit), writing (markdown) |
+
+** Idle Loading Configuration
+
+Non-essential modules are loaded during idle time to speed up startup:
+
+#+begin_src emacs-lisp
+;; Configure idle loading delay (default: 2 seconds)
+(setq mcg-idle-load-delay 2)
+
+;; Modules loaded during idle time are defined in init.org
+;; You can add modules to idle loading:
+(mcg-add-idle-load-module :completion 'vertico)
+(mcg-add-idle-load-category :enhance)  ; Add entire category
+#+end_src
+
+** Deferred Loading
+
+Language modules are loaded on-demand when you open a file:
+
+| File Extension | Module Loaded |
+|----------------+---------------|
+| =.rs=          | rust          |
+| =.py=          | python        |
+| =.ts=, =.tsx=  | typescript    |
+| =.vue=         | web           |
+| =.lua=         | lua           |
+| =.zig=         | zig           |
+| =.cpp=, =.h=   | cpp           |
+
+** Startup Time Diagnostics
+
+#+begin_src emacs-lisp
+;; View detailed module loading times
+M-x mcg/show-load-times
+
+;; Check which modules are loaded
+M-x mcg-list-modules
+#+end_src
+
+* 🔑 Keybinding Registry
+
+The configuration uses a centralized keybinding registry system for conflict detection and documentation.
+
+** Using the Registry
+
+#+begin_src emacs-lisp
+;; Register a keybinding (instead of global-set-key)
+(mcg-bind-key "C-c s l" consult-line "init-keybindings")
+
+;; With optional keymap
+(mcg-bind-key "C-c C-b" eval-buffer "init-keybindings" emacs-lisp-mode-map)
+#+end_src
+
+** Conflict Detection
+
+When a keybinding conflict is detected, a warning is displayed:
+
+#+begin_example
+Warning: Keybinding conflict: C-c s l
+  Was: old-command (from module-a)
+  Now: new-command (from module-b)
+#+end_example
+
+** Query Keybindings
+
+#+begin_src emacs-lisp
+;; Show all registered keybindings
+M-x mcg/show-keybindings  ; or C-h K
+
+;; Get keybindings from a specific module
+(mcg-keybindings-by-source "init-keybindings")
+
+;; Check which module defined a keybinding
+(mcg-keybinding-source "C-c s l")
+#+end_src
+
+* 📚 Help System
+
+Press =C-h M= to access the unified help menu:
+
+** Help Menu (C-h M)
+
+| Section       | Key | Command                    |
+|---------------+-----+----------------------------|
+| Documentation | k   | Show keybindings reference |
+|               | m   | List all modules           |
+|               | e   | List extensions            |
+| Diagnostics   | d   | Run doctor                 |
+|               | t   | Show load times            |
+|               | l   | Show logs                  |
+| Configuration | c   | Open config file           |
+|               | r   | Reload module              |
+|               | R   | Rebuild extension cache    |
+
+** Diagnostic Commands
+
+| Command                        | Description                          |
+|--------------------------------+--------------------------------------|
+| =M-x mcg-doctor=               | Check for configuration issues       |
+| =M-x mcg/show-load-times=      | View module loading performance      |
+| =M-x mcg/show-logs=            | View recent log messages             |
+| =M-x mcg-show-startup-errors=  | Show startup error summary           |
+| =M-x mcg/list-extensions=      | Show extension status with icons     |
+
+** Module Management
+
+| Command                   | Description                    |
+|---------------------------+--------------------------------|
+| =M-x mcg-list-modules=    | Show all modules and status    |
+| =M-x mcg/reload-module=   | Reload a specific module       |
+| =M-x mcg/describe-module= | Show detailed module info      |
+
 * ⌨️ Key Bindings
 
 All custom bindings use =C-c= prefix (user reserved area) with which-key descriptions.
@@ -256,6 +379,9 @@ All custom bindings use =C-c= prefix (user reserved area) with which-key descrip
 | C-c w w | Switch window      |
 | C-c w d | Delete window      |
 | C-c w s | Swap windows       |
+| C-c w u | Undo layout        |
+| C-c w r | Redo layout        |
+| C-c w ? | Window menu        |
 
 ** Search
 
@@ -264,6 +390,13 @@ All custom bindings use =C-c= prefix (user reserved area) with which-key descrip
 | C-c s l | Search line (consult)    |
 | C-c s g | Search content (color-rg)|
 | C-c s B | Blink search             |
+
+** Help
+
+| Key   | Description              |
+|-------+--------------------------|
+| C-h K | Show keybindings         |
+| C-h M | Help menu (transient)    |
 
 For complete keybinding reference, press =C-h K= in Emacs.
 

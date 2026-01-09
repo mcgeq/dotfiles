@@ -53,10 +53,13 @@
     ;; Ignore certain buffers
     (setq aw-ignored-buffers '("*Calc Trail*" "*LV*"))
     
-    ;; Switch directly when only two windows
-    (setq aw-dispatch-always nil)
+    ;; Always show dispatch menu for more actions
+    (setq aw-dispatch-always t)
     
-    ;; Custom dispatch alist
+    ;; Scope: only current frame
+    (setq aw-scope 'frame)
+    
+    ;; Custom dispatch alist with enhanced actions
     (setq aw-dispatch-alist
           '((?x aw-delete-window "Delete Window")
             (?m aw-swap-window "Swap Windows")
@@ -65,9 +68,12 @@
             (?j aw-switch-buffer-in-window "Select Buffer")
             (?n aw-flip-window "Flip Window")
             (?u aw-switch-buffer-other-window "Switch Buffer Other Window")
+            (?e aw-execute-command-other-window "Execute Command Other Window")
+            (?F aw-split-window-fair "Split Fair Window")
             (?v aw-split-window-vert "Split Vertically")
             (?b aw-split-window-horz "Split Horizontally")
             (?o delete-other-windows "Delete Other Windows")
+            (?T aw-transpose-frame "Transpose Frame")
             (?? aw-show-dispatch-help)))
     
     ;; Window label style
@@ -114,15 +120,17 @@
 ;;; Winner Mode Configuration
 
 (defun mcg--setup-winner-mode ()
-  "Set up Winner-mode for window layout undo."
+  "Set up Winner-mode for window layout undo/redo."
   ;; winner-mode is built-in
   (winner-mode 1)
   
-  ;; Keybindings:
-  ;; C-c <left>  - Undo window layout change
-  ;; C-c <right> - Redo window layout change
+  ;; Custom keybindings for winner-mode
+  ;; Default: C-c <left> for undo, C-c <right> for redo
+  ;; Add more convenient bindings
+  (global-set-key (kbd "C-c w u") 'winner-undo)
+  (global-set-key (kbd "C-c w r") 'winner-redo)
   
-  (mcg-log "Winner-mode enabled"))
+  (mcg-log "Winner-mode enabled with layout undo/redo"))
 
 #+END_SRC
 
@@ -224,6 +232,86 @@
 
 #+END_SRC
 
+** Window Management Transient Menu
+#+BEGIN_SRC emacs-lisp
+;;; Window Management Transient Menu
+
+(defun mcg--setup-window-transient ()
+  "Setup window management transient menu."
+  (when (require 'transient nil t)
+    ;; Window management transient menu
+    (transient-define-prefix mcg-window-transient ()
+      "Window management transient menu.
+Provides quick access to window operations including:
+- Window switching with ace-window
+- Window splitting (vertical/horizontal)
+- Window deletion and layout management
+- Layout undo/redo with winner-mode"
+      [["Switch"
+        ("w" "Ace window" ace-window)
+        ("o" "Other window" other-window)
+        ("n" "Next window" other-window)
+        ("p" "Previous window" (lambda () (interactive) (other-window -1)))]
+       ["Split"
+        ("v" "Split vertical" split-window-right)
+        ("h" "Split horizontal" split-window-below)
+        ("=" "Balance windows" balance-windows)]
+       ["Delete"
+        ("d" "Delete window" ace-delete-window)
+        ("D" "Delete others" delete-other-windows)
+        ("k" "Kill buffer & window" kill-buffer-and-window)]
+       ["Layout"
+        ("u" "Undo layout" winner-undo)
+        ("r" "Redo layout" winner-redo)
+        ("s" "Swap windows" ace-swap-window)
+        ("m" "Move window" aw-move-window)]]
+      [["Resize"
+        ("{" "Shrink horizontal" shrink-window-horizontally)
+        ("}" "Enlarge horizontal" enlarge-window-horizontally)
+        ("^" "Enlarge vertical" enlarge-window)
+        ("-" "Shrink vertical" shrink-window)]
+       ["Buffer in Window"
+        ("b" "Switch buffer" ace-window)
+        ("j" "Buffer in window" aw-switch-buffer-in-window)
+        ("B" "Buffer other window" switch-to-buffer-other-window)]
+       ["Quick Actions"
+        ("1" "Delete other windows" delete-other-windows)
+        ("2" "Split below" split-window-below)
+        ("3" "Split right" split-window-right)
+        ("0" "Delete this window" delete-window)]])
+    
+    ;; Bind the transient menu
+    (global-set-key (kbd "C-c w W") 'mcg-window-transient)
+    
+    (mcg-log "Window management transient menu configured")))
+
+;; Custom window functions
+(defun mcg/maximize-window ()
+  "Maximize current window (delete other windows)."
+  (interactive)
+  (delete-other-windows))
+
+(defun mcg/split-window-right-and-focus ()
+  "Split window right and move focus to new window."
+  (interactive)
+  (split-window-right)
+  (other-window 1))
+
+(defun mcg/split-window-below-and-focus ()
+  "Split window below and move focus to new window."
+  (interactive)
+  (split-window-below)
+  (other-window 1))
+
+(defun mcg/close-window-or-frame ()
+  "Close current window, or frame if only one window."
+  (interactive)
+  (if (one-window-p)
+      (delete-frame)
+    (delete-window)))
+
+#+END_SRC
+
 ** Initialize
 #+BEGIN_SRC emacs-lisp
 ;;; Initialize
@@ -233,6 +321,7 @@
 (mcg--setup-winner-mode)
 (mcg--setup-avy)
 (mcg--setup-avy-keybindings)
+(mcg--setup-window-transient)
 
 #+END_SRC
 

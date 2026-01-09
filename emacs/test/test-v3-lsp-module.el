@@ -10,12 +10,12 @@
 
 ;; Set up test environment
 (defvar test-v3-root-dir
-  (expand-file-name "../site-lisp/config-v3"
+  (expand-file-name "../site-lisp/config"
                     (file-name-directory (or load-file-name buffer-file-name)))
   "Root directory for V3 config (tangled .el files).")
 
 (defvar test-v3-source-dir
-  (expand-file-name "../config-org-v3"
+  (expand-file-name "../config-org"
                     (file-name-directory (or load-file-name buffer-file-name)))
   "Source directory for V3 config (.org files).")
 
@@ -40,7 +40,7 @@
 (ert-deftest test-property-9-lsp-module-file-exists ()
   "Property 9 (prerequisite): LSP module file exists
 
-*For any* LSP configuration, the +lsp.el module file must exist.
+*For any* LSP configuration, the init-lsp.el module file must exist.
 
 **Validates: Requirements 5.1**"
   (let ((lsp-source-dir (expand-file-name "lang" test-v3-source-modules-dir))
@@ -48,12 +48,12 @@
     ;; Check that lang modules source directory exists
     (should (file-directory-p lsp-source-dir))
     
-    ;; Check that +lsp.org exists (source)
-    (let ((lsp-org (expand-file-name "+lsp.org" lsp-source-dir)))
+    ;; Check that init-lsp.org exists (source)
+    (let ((lsp-org (expand-file-name "init-lsp.org" lsp-source-dir)))
       (should (file-exists-p lsp-org)))
     
     ;; Check that tangled .el file exists
-    (let ((lsp-el (expand-file-name "+lsp.el" lsp-modules-dir)))
+    (let ((lsp-el (expand-file-name "init-lsp.el" lsp-modules-dir)))
       (should (file-exists-p lsp-el)))))
 
 (ert-deftest test-property-9-lsp-keymap-defines-navigation-keys ()
