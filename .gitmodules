@@ -102,7 +102,7 @@
 	url = https://github.com/mooz/js2-mode.git
 [submodule "emacs-lsp-bridge"]
 	path = emacs/site-lisp/extensions/lsp/lsp-bridge
-	url = https://github.com/manateelazycat/lsp-bridge.git
+	url = https://github.com/mcgeq/lsp-bridge.git
 [submodule "emacs-rust-mode"]
 	path = emacs/site-lisp/extensions/lsp/rust-mode
 	url = https://github.com/rust-lang/rust-mode.git
