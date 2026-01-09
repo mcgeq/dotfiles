@@ -209,7 +209,7 @@ This function configures lsp-bridge core options, including:
     (add-to-list 'lsp-bridge-multi-lang-server-extension-list '(("js") . "typescript-biome"))
     (add-to-list 'lsp-bridge-multi-lang-server-extension-list '(("jsx") . "typescript-biome"))
     
-    ;; Vue with full stack
+    ;; Vue with volar + emmet-ls + biome
     (add-to-list 'lsp-bridge-multi-lang-server-extension-list '(("vue") . "vue-full"))
     
     ;; Python with ty + ruff (use official lsp-bridge config)
