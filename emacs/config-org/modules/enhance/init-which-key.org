@@ -1,0 +1,140 @@
+* init-which-key.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle init-which-key.el :lexical t
+:END:
+
+** Headers
+#+BEGIN_SRC emacs-lisp
+;;; init-which-key.el --- Which-Key Configuration for MCG Emacs -*- lexical-binding: t; -*-
+
+;; Filename: init-which-key.el
+;; Description: Which-key keybinding hints module
+;; Author: mcge <mcgeq@outlook.com>
+;; Copyright (C) 2024-2026, mcge, all rights reserved.
+;; Create   Date: 2026-01-09
+;; Version: 3.0
+;; Keywords: which-key, keybindings, hints
+;; Compatibility: GNU Emacs 29.0+
+
+;;; Commentary:
+;;
+;; Which-key module for MCG Emacs, responsible for:
+;; - Displaying keybinding hints in a popup
+;; - Customizing key descriptions and prefixes
+;;
+
+#+END_SRC
+
+** Dependencies
+#+BEGIN_SRC emacs-lisp
+;;; Dependencies
+
+(require 'core-lib)
+
+#+END_SRC
+
+** Which-Key Configuration
+#+BEGIN_SRC emacs-lisp
+;;; Which-Key Configuration
+
+(defun mcg--setup-which-key ()
+  "Setup Which-key keybinding hints."
+  ;; which-key is built-in for Emacs 30+
+  (require 'which-key)
+  
+  ;; Basic settings
+  (setq which-key-idle-delay 0.3)
+  (setq which-key-idle-secondary-delay 0.05)
+  (setq which-key-popup-type 'side-window)
+  (setq which-key-side-window-location 'bottom)
+  (setq which-key-side-window-max-height 0.3)
+  (setq which-key-min-display-lines 6)
+  
+  ;; Sorting and appearance
+  (setq which-key-sort-order 'which-key-key-order-alpha)
+  (setq which-key-separator "  ")
+  (setq which-key-max-description-length 32)
+  (setq which-key-add-column-padding 2)
+  (setq which-key-ellipsis "..")
+  
+  ;; Key name beautification
+  (setq which-key-special-keys '("SPC" "TAB" "RET" "DEL" "ESC"))
+  (setq which-key-key-replacement-alist
+        '(("<left>"  . "←")
+          ("<right>" . "→")
+          ("<up>"    . "↑")
+          ("<down>"  . "↓")
+          ("<return>" . "⏎")
+          ("<tab>"   . "⇥")
+          ("<escape>" . "⎋")
+          ("SPC"     . "␣")
+          ("RET"     . "⏎")
+          ("TAB"     . "⇥")
+          ("DEL"     . "⌫")))
+  
+  ;; Prefix descriptions
+  (which-key-add-key-based-replacements
+    ;; C-c prefix groups
+    "C-c"     "⚙ User"
+    "C-c f"   "📁 File"
+    "C-c g"   " Git"
+    "C-c g b" " Branch"
+    "C-c g m" " Submodule"
+    "C-c m"   "✎ Markmacro"
+    "C-c n"   "📝 Notes/Org"
+    "C-c r"   "🔧 Refactor"
+    "C-c s"   "🔍 Search"
+    "C-c t"   "📑 Tabs"
+    "C-c u"   "↩ Undo"
+    "C-c y"   "✂ Snippet"
+    "C-c E"   "⚙ Config"
+    
+    ;; C-x prefix groups
+    "C-x"     "📋 Emacs"
+    "C-x r"   "📌 Register/Rect"
+    "C-x n"   "📐 Narrow"
+    "C-x p"   "📂 Project"
+    "C-x t"   "🗂 Tab-bar"
+    "C-x 4"   "🪟 Other Window"
+    "C-x 5"   "🖼 Frame"
+    
+    ;; Help
+    "C-h"     "❓ Help"
+    
+    ;; Goto
+    "M-g"     "➡ Goto"
+    
+    ;; Search
+    "M-s"     "🔎 Search")
+  
+  ;; Performance optimization
+  (setq which-key-compute-remaps nil)
+  (setq which-key-allow-evil-operators nil)
+  (setq which-key-show-remaining-keys nil)
+  
+  ;; Fix which-key window not closing after C-g cancel
+  (advice-add 'keyboard-quit :before
+              (lambda (&rest _)
+                (when (which-key--popup-showing-p)
+                  (which-key--hide-popup))))
+  
+  ;; Enable
+  (which-key-mode 1)
+  
+  (mcg-log "Which-key configured"))
+
+#+END_SRC
+
+** Initialize
+#+BEGIN_SRC emacs-lisp
+;;; Initialize
+
+(mcg--setup-which-key)
+
+#+END_SRC
+
+** Provide
+#+BEGIN_SRC emacs-lisp
+(provide 'init-which-key)
+;;; init-which-key.el ends here
+#+END_SRC

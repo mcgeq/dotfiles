@@ -1,0 +1,84 @@
+* init-recentf.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle init-recentf.el :lexical t
+:END:
+
+** Headers
+#+BEGIN_SRC emacs-lisp
+;;; init-recentf.el --- Recentf Configuration for MCG Emacs -*- lexical-binding: t; -*-
+
+;; Filename: init-recentf.el
+;; Description: Recentf recent files module
+;; Author: mcge <mcgeq@outlook.com>
+;; Copyright (C) 2024-2026, mcge, all rights reserved.
+;; Create   Date: 2026-01-09
+;; Version: 3.0
+;; Keywords: recentf, recent-files
+;; Compatibility: GNU Emacs 29.0+
+
+;;; Commentary:
+;;
+;; Recentf module for MCG Emacs, responsible for:
+;; - Tracking recently opened files
+;; - Configuring exclusion patterns
+;;
+
+#+END_SRC
+
+** Dependencies
+#+BEGIN_SRC emacs-lisp
+;;; Dependencies
+
+(require 'core-lib)
+(require 'recentf)
+
+#+END_SRC
+
+** Recentf Configuration
+#+BEGIN_SRC emacs-lisp
+;;; Recentf Configuration
+
+(defun mcg--setup-recentf ()
+  "Setup Recentf recent files."
+  (setq recentf-max-saved-items 300)
+  (setq recentf-auto-cleanup 'never)
+  (setq recentf-filename-handlers '(abbreviate-file-name))
+  
+  ;; Exclude list
+  (setq recentf-exclude
+        '(".cache"
+          ".cask"
+          ".elfeed"
+          "bookmarks"
+          "cache"
+          "ido.*"
+          "recentf"
+          "undo-tree-hist"
+          "url"
+          "^/tmp/"
+          "/ssh\\(x\\)?:"
+          "/su\\(do\\)?:"
+          "^/usr/include/"
+          "/TAGS\\'"
+          "COMMIT_EDITMSG\\'"))
+  
+  ;; Enable
+  (recentf-mode 1)
+  
+  (mcg-log "Recentf configured"))
+
+#+END_SRC
+
+** Initialize
+#+BEGIN_SRC emacs-lisp
+;;; Initialize
+
+(mcg--setup-recentf)
+
+#+END_SRC
+
+** Provide
+#+BEGIN_SRC emacs-lisp
+(provide 'init-recentf)
+;;; init-recentf.el ends here
+#+END_SRC

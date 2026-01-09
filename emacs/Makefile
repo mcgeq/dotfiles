@@ -11,7 +11,7 @@ SRC_DIR = config-org
 DST_DIR = site-lisp/config
 
 # 需要处理的目录
-DIRS = core modules/ui modules/editor modules/completion modules/tools modules/input modules/org modules/docs modules/lang private
+DIRS = core modules/ui modules/editor modules/completion modules/tools modules/enhance modules/org modules/writing modules/lang private
 
 # =============================================================================
 # Build System

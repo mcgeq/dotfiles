@@ -1,0 +1,242 @@
+#+TITLE: Emacs 配置 - 声明式模块化架构
+#+AUTHOR: mcge
+#+DATE: 2026-01-09
+#+OPTIONS: toc:3 num:t
+
+[[file:README.org][English Documentation]]
+
+* 概述
+
+MCG Emacs 配置采用声明式模块系统，借鉴 Doom Emacs 设计理念，同时保留 Org Babel 文学编程的优势。
+
+** 核心特性
+
+- 声明式模块配置（mcg! 宏）
+- 延迟加载支持
+- 模块依赖管理
+- 统一扩展管理
+- 完整测试覆盖
+- 废弃模块迁移支持
+
+* 目录结构
+
+#+begin_src text
+config-org/
+├── init.org                      # 入口文件（mcg! 声明）
+├── early-init.org                # 早期初始化配置
+├── core/                         # 核心层（必须加载）
+│   ├── core-bootstrap.org        # 路径定义、性能优化
+│   ├── core-lib.org              # 工具函数、扩展管理
+│   ├── core-modules.org          # mcg! 宏、模块系统
+│   └── core-autoload.org         # 自动 tangle 和 autoload
+├── modules/                      # 功能模块（8 类别，35 模块）
+│   ├── ui/                       # UI 相关（4 模块）
+│   │   ├── init-theme.org            # 主题配置
+│   │   ├── init-modeline.org         # 状态栏（awesome-tray）
+│   │   ├── init-font.org             # 字体配置
+│   │   └── init-icons.org            # Nerd 图标
+│   ├── editor/                   # 编辑器功能（8 模块）
+│   │   ├── init-defaults.org         # 编辑器默认配置
+│   │   ├── init-treesit.org          # Tree-sitter 支持
+│   │   ├── init-navigation.org       # 导航（avy, ace-window）
+│   │   ├── init-keybindings.org      # 全局快捷键
+│   │   ├── init-paredit.org          # 结构化编辑（fingertip）
+│   │   ├── init-format.org           # 文本格式化（wraplish）
+│   │   ├── init-undo.org             # 可视化撤销（vundo）
+│   │   └── init-multicursor.org      # 多光标（markmacro）
+│   ├── completion/               # 补全系统（2 模块）
+│   │   ├── init-vertico.org          # 垂直补全
+│   │   └── init-yasnippet.org        # 代码片段
+│   ├── tools/                    # 工具（5 模块）
+│   │   ├── init-magit.org            # Git 客户端
+│   │   ├── init-search.org           # 搜索工具
+│   │   ├── init-rime.org             # 中文输入法
+│   │   ├── init-tabs.org             # 标签栏（sort-tab）
+│   │   └── init-eshell.org           # Eshell shell
+│   ├── enhance/                  # 增强功能（5 模块）
+│   │   ├── init-autosave.org         # 空闲自动保存
+│   │   ├── init-which-key.org        # 快捷键提示
+│   │   ├── init-helpful.org          # 增强帮助
+│   │   ├── init-recentf.org          # 最近文件
+│   │   └── init-symbol.org           # 符号高亮
+│   ├── org/                      # Org-mode（5 模块）
+│   │   ├── init-org.org              # 核心配置
+│   │   ├── init-org-agenda.org       # 议程
+│   │   ├── init-org-babel.org        # 代码执行
+│   │   ├── init-org-capture.org      # 捕获 & Hugo
+│   │   └── init-org-extras.org       # 扩展
+│   ├── writing/                  # 写作工具（2 模块）
+│   │   ├── init-markdown.org         # Markdown 支持
+│   │   └── init-vale.org             # 语法检查
+│   └── lang/                     # 编程语言（9 模块）
+│       ├── init-lsp.org              # LSP 配置
+│       ├── init-lsp-common.org       # LSP 通用工具
+│       ├── init-rust.org             # Rust
+│       ├── init-python.org           # Python
+│       ├── init-typescript.org       # TypeScript
+│       ├── init-web.org              # Web（Vue, HTML, CSS）
+│       ├── init-cpp.org              # C/C++
+│       ├── init-lua.org              # Lua
+│       └── init-zig.org              # Zig
+└── private/                      # 私有配置（不提交到 Git）
+    └── config.org
+#+end_src
+
+* 快速开始
+
+** 1. 初始化子模块
+
+#+begin_src bash
+make init
+#+end_src
+
+** 2. 编译配置
+
+#+begin_src bash
+make
+#+end_src
+
+** 3. 启动 Emacs
+
+#+begin_src bash
+emacs -Q -l site-lisp/config/init.el
+#+end_src
+
+* 模块声明
+
+在 =init.org= 中使用 =mcg!= 宏声明启用的模块：
+
+#+begin_src emacs-lisp
+(mcg! :ui
+      theme modeline font icons
+
+      :editor
+      defaults treesit navigation keybindings
+      paredit format undo multicursor
+
+      :completion
+      vertico yasnippet
+
+      :tools
+      magit search rime tabs eshell
+
+      :enhance
+      autosave which-key helpful recentf symbol
+
+      :org
+      org org-agenda org-babel org-capture org-extras
+
+      :writing
+      markdown vale
+
+      :lang
+      lsp lsp-common rust python typescript web cpp lua zig)
+#+end_src
+
+* 模块类别
+
+| 类别       | 模块数 | 描述                       | 加载时机 |
+|------------+--------+----------------------------+----------|
+| ui         |      4 | 主题、状态栏、字体、图标   | 立即     |
+| editor     |      8 | 编辑功能                   | 立即     |
+| completion |      2 | Vertico、yasnippet         | 立即     |
+| tools      |      5 | Magit、搜索、Rime、标签页  | 立即     |
+| enhance    |      5 | 自动保存、which-key 等     | 立即     |
+| org        |      5 | Org Mode 生态系统          | 立即     |
+| writing    |      2 | Markdown、vale             | 立即     |
+| lang       |      9 | LSP 和语言支持             | 延迟     |
+
+* 迁移指南
+
+如果从旧版本配置迁移：
+
+** 类别变更
+
+| 旧类别   | 新类别   | 说明                     |
+|----------+----------+--------------------------|
+| :input   | :editor  | 输入模块合并到编辑器类别 |
+| :docs    | :writing | 文档类别重命名为写作类别 |
+| (无)     | :enhance | 新增增强功能类别         |
+
+** 模块重命名
+
+| 旧模块名             | 新模块名          | 说明         |
+|----------------------+-------------------+--------------|
+| :input fingertip     | :editor paredit   | 结构化编辑   |
+| :input wraplish      | :editor format    | 文本格式化   |
+| :docs markdown       | :writing markdown | Markdown     |
+| :tools sort-tab      | :tools tabs       | 标签页管理   |
+| :tools utils         | :enhance (拆分)   | 工具模块拆分 |
+
+** 新增模块
+
+| 类别     | 模块名      | 功能             |
+|----------+-------------+------------------|
+| :ui      | icons       | Nerd icons 配置  |
+| :editor  | undo        | 可视化撤销       |
+| :editor  | multicursor | 多光标编辑       |
+| :enhance | autosave    | 空闲自动保存     |
+| :enhance | which-key   | 快捷键提示       |
+| :enhance | helpful     | 增强帮助系统     |
+| :enhance | recentf     | 最近文件         |
+| :enhance | symbol      | 符号高亮         |
+| :writing | vale        | 语法检查         |
+
+** 自动迁移支持
+
+系统会自动检测旧的类别/模块名称并显示警告：
+
+#+begin_example
+Warning: Category :input is deprecated, use :editor instead
+Warning: Module fingertip is renamed to paredit
+#+end_example
+
+* 私有配置
+
+创建私有配置文件：
+
+#+begin_src bash
+cp config-org/private/config.org.example config-org/private/config.org
+#+end_src
+
+私有配置不会提交到 Git。
+
+* Makefile 命令
+
+#+begin_src bash
+make              # 编译配置
+make clean        # 清理生成文件
+make list         # 查看文件列表
+make test         # 运行测试
+make init         # 初始化子模块
+make up           # 更新子模块
+make st           # 查看子模块状态
+#+end_src
+
+* 常用命令
+
+| 命令                          | 描述               |
+|-------------------------------+--------------------|
+| M-x mcg-list-modules          | 显示所有模块和状态 |
+| M-x mcg/reload-module         | 重新加载指定模块   |
+| M-x mcg/show-keybindings      | 显示快捷键参考     |
+| M-x mcg/toggle-format-on-save | 切换保存时格式化   |
+
+* 更新日志
+
+** 2026-01-09 - 模块重构
+
+- 将 init-utils.org 拆分为 enhance 类别模块
+- 将 :input 类别合并到 :editor
+- 将 :docs 类别重命名为 :writing
+- 新增 :enhance 类别
+- 模块重命名：fingertip → paredit, wraplish → format, sort-tab → tabs
+- 添加废弃模块迁移支持
+- 提取 icons, undo, multicursor, vale 模块
+
+** 2026-01-07 - 初始发布
+
+- 声明式模块系统（mcg! 宏）
+- 延迟加载支持
+- 完整测试覆盖
+- 统一扩展管理

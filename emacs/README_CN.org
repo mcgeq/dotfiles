@@ -1,0 +1,384 @@
+#+title: Emacs 配置
+#+author: mcge
+#+email: mcgeq@outlook.com
+#+date: 2025-02-16
+#+language: zh-CN
+
+[[file:README.org][English Documentation]]
+
+* 欢迎使用我的 Emacs 配置
+
+这是一个现代化、模块化的 Emacs 配置，使用 Org Mode 文学编程编写。
+专为 Emacs 29+ 设计，提供丰富的语言支持、LSP 集成和生产力功能。
+
+* 设计理念
+
+** 内置优先
+   尽可能使用 Emacs 内置功能，减少不必要的插件
+
+** 模块化设计
+   配置按功能拆分为逻辑模块
+
+** 文学编程
+   使用 Org Mode 编写，便于文档化和维护
+
+** 性能优化
+   延迟加载、快速启动、最小开销
+
+* 🎯 功能特性
+
+** 核心技术栈
+   - Emacs 29+ 支持 tree-sitter
+   - LSP Bridge 语言服务器集成
+   - Vertico + Marginalia + Embark 补全系统
+   - Magit Git 操作
+
+** 语言支持
+   完整的开发支持：
+   - *系统编程*: C/C++, Rust (rust-analyzer), Lua
+   - *Web 开发*: TypeScript, JavaScript, HTML/CSS, JSX/React
+   - *动态语言*: Python, Bash
+   - *标记语言*: Markdown, Org Mode
+
+** 主要功能
+   - [[https://github.com/minad/vertico][Vertico]]: 现代化补全
+   - [[https://github.com/minad/marginalia][Marginalia]]: 丰富注解
+   - [[https://github.com/oantolin/embark][Embark]]: 上下文操作
+   - [[https://github.com/manateelazycat/lsp-bridge][LSP Bridge]]: 极速 LSP
+   - [[https://magit.vc/][Magit]]: Git 界面
+   - [[https://github.com/manateelazycat/blink-search][Blink-search]]: 通用搜索
+   - [[https://github.com/manateelazycat/color-rg][Color-rg]]: 快速 grep
+   - [[https://github.com/manateelazycat/awesome-tray][Awesome-tray]]: 轻量状态栏
+   - [[https://github.com/manateelazycat/emacs-rime][Rime]]: 中文输入
+   - [[https://github.com/justbur/emacs-which-key][Which-key]]: 快捷键提示 ⭐
+   - [[https://github.com/abo-abo/ace-window][Ace-window]]: 快速窗口切换 ⭐
+   - [[https://github.com/abo-abo/avy][Avy]]: 快速跳转导航 ⭐
+
+* 📦 安装
+
+** 前置要求
+   - Emacs 29+（推荐）或 Emacs 28+ 配合 tree-sitter
+   - Git 用于包管理
+   - Node.js 用于 lsp-bridge
+   - （可选）Universal Ctags 用于符号导航
+
+** 快速安装
+
+*** 步骤 1: 克隆仓库
+    #+begin_src bash
+    git clone <repository-url> ~/dotfiles
+    cd ~/dotfiles/emacs
+    #+end_src
+
+*** 步骤 2: 初始化 Git 子模块
+    #+begin_src bash
+    make init
+    #+end_src
+
+*** 步骤 3: 创建用户配置
+    #+begin_src bash
+    cp custom-example.el custom.el
+    #+end_src
+
+*** 步骤 4: 生成配置
+    #+begin_src bash
+    make generate
+    #+end_src
+
+*** 步骤 5: 链接到 Emacs
+
+**** 方式 A: 符号链接（推荐）
+     #+begin_src bash
+     # Linux/macOS
+     ln -s ~/dotfiles/emacs ~/.emacs.d
+     
+     # Windows (以管理员身份运行 PowerShell)
+     New-Item -ItemType SymbolicLink -Path $env:USERPROFILE\.emacs.d -Target D:\config\dotfiles\emacs
+     #+end_src
+
+**** 方式 B: 手动加载
+     #+begin_src emacs-lisp
+     (load-file "~/dotfiles/emacs/site-lisp/config/init.el")
+     #+end_src
+
+*** 步骤 6: 首次启动
+    #+begin_src bash
+    emacs
+    #+end_src
+
+** 故障排除
+   #+begin_src bash
+   make st        # 检查包状态
+   make clean     # 清理生成文件
+   make generate  # 重新生成配置
+   make h         # 查看所有命令
+   #+end_src
+
+* 🗂️ 配置结构
+
+详细的目录结构和模块系统说明请参阅 [[file:config-org/README_CN.org][config-org/README_CN.org]]。
+
+** 概览
+
+#+begin_src text
+emacs/
+├── Makefile                     # 构建系统
+├── README.org                   # 英文文档
+├── README_CN.org                # 本文件（中文）
+├── config-org/                  # 源码：Org Mode 文学配置
+│   ├── README.org               # 详细模块文档
+│   ├── init.org                 # 主入口
+│   ├── core/                    # 核心配置（4 个文件）
+│   ├── modules/                 # 功能模块（8 类别，35 模块）
+│   └── private/                 # 私有配置
+├── site-lisp/                   # 生成：编译后的 EL 文件
+│   ├── config/                  # 与 config-org/ 结构相同
+│   └── extensions/              # Git 子模块
+├── snippets/                    # 代码片段
+└── langservers/                 # 语言服务器配置
+#+end_src
+
+** 模块类别
+
+| 类别       | 模块数 | 描述                       |
+|------------+--------+----------------------------|
+| ui         |      4 | 主题、状态栏、字体、图标   |
+| editor     |      8 | 编辑功能                   |
+| completion |      2 | Vertico、yasnippet         |
+| tools      |      5 | Magit、搜索、Rime、标签页  |
+| enhance    |      5 | 自动保存、which-key 等     |
+| org        |      5 | Org Mode 生态系统          |
+| writing    |      2 | Markdown、vale             |
+| lang       |      9 | LSP 和语言支持             |
+
+* ⚙️ 配置管理
+
+** Makefile 命令
+
+| 命令              | 描述                 |
+|-------------------+----------------------|
+| make              | 从 Org 文件生成配置  |
+| make clean        | 清理生成文件         |
+| make test         | 运行所有测试         |
+| make init         | 初始化 Git 子模块    |
+| make st           | 检查包状态           |
+| make up           | 安全更新包           |
+| make lock-packages| 锁定当前包版本       |
+| make h            | 显示帮助             |
+
+** 模块声明
+
+在 =init.org= 中使用 =mcg!= 宏声明启用的模块：
+
+#+begin_src emacs-lisp
+(mcg! :ui
+      theme modeline font icons
+      
+      :editor
+      defaults treesit navigation keybindings
+      paredit format undo multicursor
+      
+      :completion
+      vertico yasnippet
+      
+      :tools
+      magit search rime tabs eshell
+      
+      :enhance
+      autosave which-key helpful recentf symbol
+      
+      :org
+      org org-agenda org-babel org-capture org-extras
+      
+      :writing
+      markdown vale
+      
+      :lang
+      lsp lsp-common rust python typescript web cpp lua zig)
+#+end_src
+
+** 迁移指南 ⭐
+
+如果从旧版本配置迁移：
+
+*** 类别变更
+
+| 旧类别   | 新类别   | 说明                         |
+|----------+----------+------------------------------|
+| :input   | :editor  | 输入模块合并到编辑器类别     |
+| :docs    | :writing | 文档类别重命名为写作类别     |
+| (无)     | :enhance | 新增增强功能类别             |
+
+*** 模块重命名
+
+| 旧模块名             | 新模块名          | 说明         |
+|----------------------+-------------------+--------------|
+| :input fingertip     | :editor paredit   | 结构化编辑   |
+| :input wraplish      | :editor format    | 文本格式化   |
+| :docs markdown       | :writing markdown | Markdown     |
+| :tools sort-tab      | :tools tabs       | 标签页管理   |
+| :tools utils         | :enhance (拆分)   | 工具模块拆分 |
+
+*** 新增模块
+
+| 类别     | 模块名      | 功能             |
+|----------+-------------+------------------|
+| :ui      | icons       | Nerd icons 配置  |
+| :editor  | undo        | 可视化撤销       |
+| :editor  | multicursor | 多光标编辑       |
+| :enhance | autosave    | 空闲自动保存     |
+| :enhance | which-key   | 快捷键提示       |
+| :enhance | helpful     | 增强帮助系统     |
+| :enhance | recentf     | 最近文件         |
+| :enhance | symbol      | 符号高亮         |
+| :writing | vale        | 语法检查         |
+
+*** 自动迁移支持
+
+系统会自动检测旧的类别/模块名称并显示警告：
+
+#+begin_example
+Warning: Category :input is deprecated, use :editor instead
+Warning: Module fingertip is renamed to paredit
+#+end_example
+
+* ⌨️ 快捷键
+
+所有自定义绑定使用 =C-c= 前缀（用户保留区），并提供 which-key 描述。
+
+** 快速参考
+
+| 前缀    | 描述           |
+|---------+----------------|
+| C-c g   | Git (Magit)    |
+| C-c w   | 窗口           |
+| C-c s   | 搜索           |
+| C-c r   | 重构           |
+| C-c t   | 标签页         |
+| C-c n   | 笔记/Org       |
+| C-c m   | 多光标         |
+| M-g     | 跳转 (Avy)     |
+
+** LSP 导航
+
+| 快捷键 | 描述         |
+|--------+--------------|
+| M-.    | 跳转到定义   |
+| M-,    | 返回         |
+| M-?    | 查找引用     |
+| C-h .  | 显示文档     |
+
+** 窗口操作
+
+| 快捷键  | 描述           |
+|---------+----------------|
+| M-O     | 快速切换 (ace) |
+| C-c w w | 切换窗口       |
+| C-c w d | 删除窗口       |
+| C-c w s | 交换窗口       |
+
+** 搜索
+
+| 快捷键  | 描述                   |
+|---------+------------------------|
+| C-c s l | 搜索行 (consult)       |
+| C-c s g | 搜索内容 (color-rg)    |
+| C-c s B | Blink 搜索             |
+
+完整快捷键参考，在 Emacs 中按 =C-h K=。
+
+* 🔧 自定义
+
+** 用户设置
+
+编辑 =custom.el= 进行个人设置：
+
+#+begin_src emacs-lisp
+(setq mcg-theme 'doom-one)
+(setq mcg-font-size 14)
+#+end_src
+
+** 添加新模块
+
+1. 在 =config-org/modules/CATEGORY/= 创建 Org 文件
+2. 使用 =:tangle= 指令编写代码块
+3. 在 =init.org= 的 =mcg!= 声明中添加模块
+4. 运行 =make generate=
+
+* 📝 Org Mode
+
+** 模块化配置系统 ⭐
+
+本配置采用全新的模块化 Org mode 配置系统：
+
+- *统一变量管理* :: 所有变量使用 =mcg-org-*= 命名空间
+- *模块化加载* :: 按需加载，智能依赖管理
+- *功能开关* :: 通过变量轻松启用/禁用功能
+- *错误诊断* :: 内置状态查看和验证工具
+
+** 主要功能
+
+- *Agenda* :: 任务管理和日程安排
+- *Capture* :: 快速笔记捕获（多种模板）
+- *Export* :: 多格式导出 (HTML, Markdown, PDF)
+- *Babel* :: 文档内代码执行（支持 Zig！）✨
+- *Hugo* :: 博客发布集成（可选）
+- *中文日历* :: 农历、节气、日出日落
+
+** Org Babel 支持的语言
+
+- ✅ Emacs Lisp - Emacs 配置和脚本
+- ✅ Python - 数据分析、脚本
+- ✅ Shell/Bash - 系统命令
+- ✅ Zig - 系统编程 🦎
+- ✅ JavaScript - 前端脚本
+- ✅ C/C++ - 系统编程
+- ✅ SQL - 数据库查询
+
+** 管理命令
+
+#+begin_src emacs-lisp
+M-x mcg-org-show-status      ; 显示配置状态
+M-x mcg-org-list-modules     ; 列出所有模块
+M-x mcg-org-load-module      ; 加载指定模块
+M-x mcg-org-reload-module    ; 重新加载模块
+#+end_src
+
+* 🔍 调试
+
+** 常见错误
+
+*** 扩展加载错误
+#+begin_src bash
+# 初始化所有子模块
+make init
+#+end_src
+
+*** 循环依赖
+#+begin_src emacs-lisp
+M-x mcg-check-circular-dependencies
+#+end_src
+
+*** 诊断命令
+#+begin_src emacs-lisp
+M-x mcg-validate-all              ; 验证所有配置
+M-x mcg-display-categories-status ; 查看类别状态
+M-x mcg-display-platform-info     ; 查看平台信息
+#+end_src
+
+* 📚 资源
+
+** 文档
+   - [[https://www.gnu.org/software/emacs/manual/][Emacs 手册]]
+   - [[https://orgmode.org/manual/][Org Mode 手册]]
+   - [[https://github.com/manateelazycat/lsp-bridge][lsp-bridge]]
+   - [[https://magit.vc/][Magit]]
+
+** 提示
+   - 使用 =C-h v= 查看变量
+   - 使用 =C-h k= 查看按键功能
+   - 检查 =*Messages*= buffer 查看错误
+
+* 📄 许可证
+
+与父 dotfiles 仓库相同。

@@ -82,6 +82,95 @@ Declared in module files via mcg-module-depends.")
 
 #+END_SRC
 
+** Deprecated Module Support
+#+BEGIN_SRC emacs-lisp
+;;; Deprecated Module Support
+
+(defvar mcg-deprecated-modules
+  '((:input . :editor)
+    (:docs . :writing))
+  "Deprecated category mappings for migration.
+
+Format is alist: ((OLD-CATEGORY . NEW-CATEGORY) ...)
+
+When a user references a deprecated category, the system will
+warn and suggest the new category name.")
+
+(defvar mcg-renamed-modules
+  '(((:input . fingertip) . (:editor . paredit))
+    ((:input . wraplish) . (:editor . format))
+    ((:docs . markdown) . (:writing . markdown))
+    ((:tools . sort-tab) . (:tools . tabs))
+    ((:tools . utils) . nil))  ; utils is split into multiple modules
+  "Renamed module mappings for migration.
+
+Format is alist: (((OLD-CAT . OLD-MOD) . (NEW-CAT . NEW-MOD)) ...)
+
+When a user references a renamed module, the system will warn
+and suggest the new module name. A nil value indicates the module
+has been split into multiple modules.")
+
+(defun mcg--warn-deprecated-category (category)
+  "Warn about deprecated CATEGORY usage and return new category.
+
+Arguments:
+- CATEGORY: The category keyword being used
+
+Returns the new category if deprecated, or the original category."
+  (let ((mapping (assq category mcg-deprecated-modules)))
+    (if mapping
+        (let ((new-category (cdr mapping)))
+          (display-warning 'mcg
+                           (format "Category '%s' is deprecated. Use '%s' instead."
+                                   category new-category)
+                           :warning)
+          new-category)
+      category)))
+
+(defun mcg--warn-deprecated-module (category module)
+  "Warn about deprecated MODULE in CATEGORY and return new module info.
+
+Arguments:
+- CATEGORY: The category keyword
+- MODULE: The module symbol
+
+Returns (NEW-CATEGORY . NEW-MODULE) if renamed, or (CATEGORY . MODULE)."
+  (let* ((mod-key (cons category module))
+         (mapping (assoc mod-key mcg-renamed-modules)))
+    (if mapping
+        (let ((new-mod (cdr mapping)))
+          (if new-mod
+              (progn
+                (display-warning 'mcg
+                                 (format "Module '%s/%s' has been renamed to '%s/%s'."
+                                         category module
+                                         (car new-mod) (cdr new-mod))
+                                 :warning)
+                new-mod)
+            ;; Module was split
+            (display-warning 'mcg
+                             (format "Module '%s/%s' has been split into multiple modules. See documentation for migration guide."
+                                     category module)
+                             :warning)
+            nil))
+      (cons category module))))
+
+(defun mcg--check-deprecated (category module)
+  "Check for deprecated category/module and return resolved values.
+
+Arguments:
+- CATEGORY: The category keyword
+- MODULE: The module symbol
+
+Returns (RESOLVED-CATEGORY . RESOLVED-MODULE) after checking deprecations.
+Returns nil if the module was split and cannot be automatically resolved."
+  ;; First check category deprecation
+  (let ((resolved-category (mcg--warn-deprecated-category category)))
+    ;; Then check module deprecation with resolved category
+    (mcg--warn-deprecated-module resolved-category module)))
+
+#+END_SRC
+
 ** Module Path Functions
 #+BEGIN_SRC emacs-lisp
 ;;; Module Path Functions
@@ -146,14 +235,20 @@ Arguments:
 - CATEGORY: Module category (keyword)
 - MODULE: Module name (symbol)
 
-Internal function, called by mcg! macro."
-  (let ((entry (assq category mcg-modules-alist)))
-    (if entry
-        ;; Category exists, add module (if not already present)
-        (unless (memq module (cdr entry))
-          (setcdr entry (append (cdr entry) (list module))))
-      ;; Category doesn't exist, create new entry
-      (push (cons category (list module)) mcg-modules-alist))))
+Internal function, called by mcg! macro.
+Checks for deprecated categories/modules and warns if necessary."
+  ;; Check for deprecated category/module and get resolved values
+  (let* ((resolved (mcg--check-deprecated category module))
+         (resolved-category (if resolved (car resolved) category))
+         (resolved-module (if resolved (cdr resolved) module)))
+    (when resolved  ; Only register if not a split module (which returns nil)
+      (let ((entry (assq resolved-category mcg-modules-alist)))
+        (if entry
+            ;; Category exists, add module (if not already present)
+            (unless (memq resolved-module (cdr entry))
+              (setcdr entry (append (cdr entry) (list resolved-module))))
+          ;; Category doesn't exist, create new entry
+          (push (cons resolved-category (list resolved-module)) mcg-modules-alist))))))
 
 (defun mcg--disable-module (category module)
   "Disable module, record to mcg-disabled-modules.
@@ -162,12 +257,18 @@ Arguments:
 - CATEGORY: Module category (keyword)
 - MODULE: Module name (symbol)
 
-Internal function, called by mcg! macro."
-  (let ((entry (assq category mcg-disabled-modules)))
-    (if entry
-        (unless (memq module (cdr entry))
-          (setcdr entry (append (cdr entry) (list module))))
-      (push (cons category (list module)) mcg-disabled-modules))))
+Internal function, called by mcg! macro.
+Checks for deprecated categories/modules and warns if necessary."
+  ;; Check for deprecated category/module and get resolved values
+  (let* ((resolved (mcg--check-deprecated category module))
+         (resolved-category (if resolved (car resolved) category))
+         (resolved-module (if resolved (cdr resolved) module)))
+    (when resolved  ; Only disable if not a split module (which returns nil)
+      (let ((entry (assq resolved-category mcg-disabled-modules)))
+        (if entry
+            (unless (memq resolved-module (cdr entry))
+              (setcdr entry (append (cdr entry) (list resolved-module))))
+          (push (cons resolved-category (list resolved-module)) mcg-disabled-modules))))))
 
 (defun mcg-module-enabled-p (category module)
   "Check if module is enabled.
@@ -457,7 +558,10 @@ TRIGGER can be:
     ((:lang . lua) . ("\\.lua\\'" . lua-mode))
     ((:lang . zig) . ("\\.zig\\'" . zig-mode))
     ((:lang . cpp) . ("\\.\\(cpp\\|cc\\|cxx\\|h\\|hpp\\)\\'" . c++-mode))
-    ((:lang . clojure) . ("\\.clj[sc]?\\'" . clojure-mode)))
+    ((:lang . clojure) . ("\\.clj[sc]?\\'" . clojure-mode))
+    ;; Writing module triggers
+    ((:writing . markdown) . ("\\.md\\'" . markdown-ts-mode))
+    ((:writing . vale) . ("\\.md\\'" . markdown-ts-mode)))
   "Module trigger mapping.
 
 Format is alist of ((CATEGORY . MODULE) . (PATTERN . MODE)).

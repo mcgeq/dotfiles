@@ -1,0 +1,75 @@
+* init-symbol.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle init-symbol.el :lexical t
+:END:
+
+** Headers
+#+BEGIN_SRC emacs-lisp
+;;; init-symbol.el --- Symbol-Overlay Configuration for MCG Emacs -*- lexical-binding: t; -*-
+
+;; Filename: init-symbol.el
+;; Description: Symbol-overlay symbol highlighting module
+;; Author: mcge <mcgeq@outlook.com>
+;; Copyright (C) 2024-2026, mcge, all rights reserved.
+;; Create   Date: 2026-01-09
+;; Version: 3.0
+;; Keywords: symbol-overlay, highlighting
+;; Compatibility: GNU Emacs 29.0+
+
+;;; Commentary:
+;;
+;; Symbol-overlay module for MCG Emacs, responsible for:
+;; - Highlighting symbols at point
+;; - Providing navigation between symbol occurrences
+;; - Symbol renaming and query-replace
+;;
+
+#+END_SRC
+
+** Dependencies
+#+BEGIN_SRC emacs-lisp
+;;; Dependencies
+
+(require 'core-lib)
+
+#+END_SRC
+
+** Symbol-Overlay Configuration
+#+BEGIN_SRC emacs-lisp
+;;; Symbol-Overlay Configuration
+
+(defun mcg--setup-symbol-overlay ()
+  "Setup Symbol-overlay symbol highlighting."
+  (when (mcg-require-extension "editor/symbol-overlay" 'symbol-overlay)
+    ;; Enable in prog-mode
+    (add-hook 'prog-mode-hook #'symbol-overlay-mode)
+    
+    ;; Keybindings (in symbol-overlay-map)
+    (with-eval-after-load 'symbol-overlay
+      (define-key symbol-overlay-map (kbd "s") #'symbol-overlay-put)
+      (define-key symbol-overlay-map (kbd "n") #'symbol-overlay-jump-next)
+      (define-key symbol-overlay-map (kbd "p") #'symbol-overlay-jump-prev)
+      (define-key symbol-overlay-map (kbd "w") #'symbol-overlay-save-symbol)
+      (define-key symbol-overlay-map (kbd "t") #'symbol-overlay-toggle-in-scope)
+      (define-key symbol-overlay-map (kbd "d") #'symbol-overlay-jump-to-definition)
+      (define-key symbol-overlay-map (kbd "r") #'symbol-overlay-rename)
+      (define-key symbol-overlay-map (kbd "R") #'symbol-overlay-query-replace)
+      (define-key symbol-overlay-map (kbd "q") #'symbol-overlay-remove-all))
+    
+    (mcg-log "Symbol-overlay configured")))
+
+#+END_SRC
+
+** Initialize
+#+BEGIN_SRC emacs-lisp
+;;; Initialize
+
+(mcg--setup-symbol-overlay)
+
+#+END_SRC
+
+** Provide
+#+BEGIN_SRC emacs-lisp
+(provide 'init-symbol)
+;;; init-symbol.el ends here
+#+END_SRC

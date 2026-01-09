@@ -1,13 +1,13 @@
-* init-sort-tab.el
+* init-tabs.el
 :PROPERTIES:
-:HEADER-ARGS: :tangle init-sort-tab.el :lexical t
+:HEADER-ARGS: :tangle init-tabs.el :lexical t
 :END:
 
 ** Headers
 #+BEGIN_SRC emacs-lisp
-  ;;; init-sort-tab.el --- Sort Tab Configuration for MCG Emacs -*- lexical-binding: t; -*-
+  ;;; init-tabs.el --- Tab Configuration for MCG Emacs -*- lexical-binding: t; -*-
 
-  ;; Filename: init-sort-tab.el
+  ;; Filename: init-tabs.el
   ;; Description: Tab bar configuration module
   ;; Author: mcge <mcgeq@outlook.com>
   ;; Copyright (C) 2024-2026, mcge, all rights reserved.
@@ -169,6 +169,6 @@
 
 ** Provide
 #+BEGIN_SRC emacs-lisp
-(provide 'init-sort-tab)
-;;; init-sort-tab.el ends here
+(provide 'init-tabs)
+;;; init-tabs.el ends here
 #+END_SRC

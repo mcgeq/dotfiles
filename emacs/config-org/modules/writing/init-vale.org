@@ -1,0 +1,78 @@
+* init-vale.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle init-vale.el :lexical t
+:END:
+
+** Headers
+#+BEGIN_SRC emacs-lisp
+;;; init-vale.el --- Vale Grammar Checking for MCG Emacs -*- lexical-binding: t; -*-
+
+;; Filename: init-vale.el
+;; Description: Vale grammar checking module
+;; Author: mcge <mcgeq@outlook.com>
+;; Copyright (C) 2024-2026, mcge, all rights reserved.
+;; Create   Date: 2026-01-09
+;; Version: 3.0
+;; Keywords: vale, grammar, writing
+;; Compatibility: GNU Emacs 29.0+
+
+;;; Commentary:
+;;
+;; Vale grammar checking module for MCG Emacs, responsible for:
+;; - Flymake-vale integration
+;; - Grammar checking for text modes
+;;
+;; Module metadata:
+;; :defer t
+;; :mode ("\\.md\\'" "\\.org\\'" "\\.txt\\'")
+;;
+
+#+END_SRC
+
+** Dependencies
+#+BEGIN_SRC emacs-lisp
+;;; Dependencies
+
+(require 'core-lib)
+
+#+END_SRC
+
+** Flymake Vale Integration
+#+BEGIN_SRC emacs-lisp
+;;; Flymake Vale Integration
+
+(defun mcg--setup-flymake-vale ()
+  "Setup flymake-vale grammar checking."
+  (when (mcg-require-extension "docs/flymake-vale" 'flymake-vale)
+    ;; Enable vale for various text modes
+    (add-hook 'text-mode-hook #'flymake-vale-load)
+    (add-hook 'markdown-mode-hook #'flymake-vale-load)
+    (add-hook 'markdown-ts-mode-hook #'flymake-vale-load)
+    (add-hook 'org-mode-hook #'flymake-vale-load)
+    (add-hook 'latex-mode-hook #'flymake-vale-load)
+    (add-hook 'message-mode-hook #'flymake-vale-load)
+    
+    ;; Auto-detect and load
+    (add-hook 'find-file-hook 'flymake-vale-maybe-load)
+    
+    ;; Add extra mode support
+    (when (boundp 'flymake-vale-modes)
+      (add-to-list 'flymake-vale-modes 'adoc-mode))
+    
+    (mcg-log "Flymake-vale configured")))
+
+#+END_SRC
+
+** Initialize
+#+BEGIN_SRC emacs-lisp
+;;; Initialize
+
+(mcg--setup-flymake-vale)
+
+#+END_SRC
+
+** Provide
+#+BEGIN_SRC emacs-lisp
+(provide 'init-vale)
+;;; init-vale.el ends here
+#+END_SRC

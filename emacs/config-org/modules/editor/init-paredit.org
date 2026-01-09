@@ -1,17 +1,18 @@
-* init-fingertip.el
+* init-paredit.el
 :PROPERTIES:
-:HEADER-ARGS: :tangle init-fingertip.el :lexical t
+:HEADER-ARGS: :tangle init-paredit.el :lexical t
 :END:
 
 ** Headers
 #+BEGIN_SRC emacs-lisp
-;;; init-fingertip.el --- Fingertip Configuration for MCG Emacs -*- lexical-binding: t; -*-
+;;; init-paredit.el --- Structural Editing Configuration for MCG Emacs -*- lexical-binding: t; -*-
 
-;; Filename: init-fingertip.el
-;; Description: Structural editing module
+;; Filename: init-paredit.el
+;; Description: Structural editing module (formerly init-fingertip)
 ;; Author: mcge <mcgeq@outlook.com>
 ;; Copyright (C) 2024-2026, mcge, all rights reserved.
 ;; Create   Date: 2026-01-07
+;; Modified Date: 2026-01-09
 ;; Version: 3.0
 ;; Keywords: fingertip, paredit, structural-editing
 ;; Compatibility: GNU Emacs 29.0+
@@ -21,6 +22,9 @@
 ;; Structural editing module for MCG Emacs, responsible for:
 ;; - fingertip smart parenthesis handling
 ;; - Structural editing keybindings
+;;
+;; This module was renamed from init-fingertip to init-paredit
+;; as part of the input -> editor category merge.
 ;;
 
 #+END_SRC
@@ -86,7 +90,7 @@
 
 (defun mcg--setup-fingertip ()
   "Setup fingertip structural editing."
-  (when (mcg-require-extension "input/fingertip" 'fingertip)
+  (when (mcg-require-extension "editor/fingertip" 'fingertip)
     ;; Enable fingertip for various modes
     (dolist (hook mcg-fingertip-modes)
       (add-hook hook
@@ -171,6 +175,6 @@
 
 ** Provide
 #+BEGIN_SRC emacs-lisp
-(provide 'init-fingertip)
-;;; init-fingertip.el ends here
+(provide 'init-paredit)
+;;; init-paredit.el ends here
 #+END_SRC

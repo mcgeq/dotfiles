@@ -1,0 +1,66 @@
+* init-helpful.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle init-helpful.el :lexical t
+:END:
+
+** Headers
+#+BEGIN_SRC emacs-lisp
+;;; init-helpful.el --- Helpful Configuration for MCG Emacs -*- lexical-binding: t; -*-
+
+;; Filename: init-helpful.el
+;; Description: Helpful enhanced help module
+;; Author: mcge <mcgeq@outlook.com>
+;; Copyright (C) 2024-2026, mcge, all rights reserved.
+;; Create   Date: 2026-01-09
+;; Version: 3.0
+;; Keywords: helpful, help, documentation
+;; Compatibility: GNU Emacs 29.0+
+
+;;; Commentary:
+;;
+;; Helpful module for MCG Emacs, responsible for:
+;; - Providing enhanced help buffers with more context
+;; - Replacing default help commands with helpful alternatives
+;;
+
+#+END_SRC
+
+** Dependencies
+#+BEGIN_SRC emacs-lisp
+;;; Dependencies
+
+(require 'core-lib)
+
+#+END_SRC
+
+** Helpful Configuration
+#+BEGIN_SRC emacs-lisp
+;;; Helpful Configuration
+
+(defun mcg--setup-helpful ()
+  "Setup Helpful enhanced help."
+  (when (mcg-require-extension "utils/helpful" 'helpful)
+    ;; Replace default help commands
+    (global-set-key (kbd "C-h f") #'helpful-callable)
+    (global-set-key (kbd "C-h v") #'helpful-variable)
+    (global-set-key (kbd "C-h k") #'helpful-key)
+    (global-set-key (kbd "C-h x") #'helpful-command)
+    (global-set-key (kbd "C-c C-d") #'helpful-at-point)
+    
+    (mcg-log "Helpful configured")))
+
+#+END_SRC
+
+** Initialize
+#+BEGIN_SRC emacs-lisp
+;;; Initialize
+
+(mcg--setup-helpful)
+
+#+END_SRC
+
+** Provide
+#+BEGIN_SRC emacs-lisp
+(provide 'init-helpful)
+;;; init-helpful.el ends here
+#+END_SRC

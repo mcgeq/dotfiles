@@ -20,9 +20,11 @@
 ;;
 ;; Keybindings module for MCG Emacs configuration, responsible for:
 ;; - Global keybindings setup
-;; - Markmacro multi-cursor editing
-;; - Vundo visual undo
 ;; - Keybindings reference
+;;
+;; Note: Vundo and Markmacro have been moved to separate modules:
+;; - init-undo.org for visual undo (vundo)
+;; - init-multicursor.org for multi-cursor editing (markmacro)
 ;;
 
 #+END_SRC
@@ -129,134 +131,13 @@
 
 #+END_SRC
 
-** Markmacro Configuration
+** Vundo and Multicursor Modules
 #+BEGIN_SRC emacs-lisp
-;;; Markmacro Configuration
-
-(defun mcg--setup-markmacro ()
-  "Setup Markmacro multi-cursor editing."
-  (when (mcg-require-extension "editor/markmacro" 'markmacro)
-    ;; C-c m prefix
-    (global-set-key (kbd "C-c m s") 'markmacro-rect-set)
-    (global-set-key (kbd "C-c m d") 'markmacro-rect-delete)
-    (global-set-key (kbd "C-c m r") 'markmacro-rect-replace)
-    (global-set-key (kbd "C-c m i") 'markmacro-rect-insert)
-    (global-set-key (kbd "C-c m c") 'markmacro-rect-mark-columns)
-    (global-set-key (kbd "C-c m S") 'markmacro-rect-mark-symbols)
-    (global-set-key (kbd "C-c m a") 'markmacro-apply-all)
-    (global-set-key (kbd "C-c m e") 'markmacro-apply-all-except-first)
-    
-    ;; Super key shortcuts
-    (global-set-key (kbd "s-/") 'markmacro-mark-words)
-    (global-set-key (kbd "s-?") 'markmacro-mark-lines)
-    (global-set-key (kbd "s-:") 'markmacro-mark-chars)
-    (global-set-key (kbd "s-L") 'markmacro-mark-imenus)
-    
-    (mcg-log "Markmacro configured")))
-
-#+END_SRC
-
-** Vundo Configuration
-#+BEGIN_SRC emacs-lisp
-;;; Vundo Configuration
-
-(defun mcg--setup-vundo ()
-  "Setup Vundo visual undo."
-  (when (mcg-require-extension "editor/vundo" 'vundo)
-    ;; Use Unicode symbols
-    (setq vundo-glyph-alist vundo-unicode-symbols)
-    (setq vundo-roll-back-on-quit nil)
-    (setq vundo-compact-display t)
-    (setq vundo-diff-quit 'bury)
-    
-    ;; Fix vundo buffer becoming read-only after exit
-    (defun mcg--vundo-force-writable (&rest _)
-      "Force buffer to be writable after vundo command."
-      (run-with-timer 0.01 nil
-                      (lambda ()
-                        (when (and (not (eq major-mode 'vundo-mode))
-                                   buffer-read-only)
-                          (read-only-mode -1)))))
-    
-    ;; Add advice to all vundo commands
-    (advice-add 'vundo-backward :after #'mcg--vundo-force-writable)
-    (advice-add 'vundo-forward :after #'mcg--vundo-force-writable)
-    (advice-add 'vundo-next :after #'mcg--vundo-force-writable)
-    (advice-add 'vundo-previous :after #'mcg--vundo-force-writable)
-    (advice-add 'vundo-stem-root :after #'mcg--vundo-force-writable)
-    (advice-add 'vundo-stem-end :after #'mcg--vundo-force-writable)
-    (advice-add 'vundo-goto-last-saved :after #'mcg--vundo-force-writable)
-    (advice-add 'vundo-quit :after #'mcg--vundo-force-writable)
-    (advice-add 'vundo-confirm :after #'mcg--vundo-force-writable)
-    
-    ;; Keybindings
-    (global-set-key (kbd "C-x u") 'vundo)
-    (global-set-key (kbd "C-c u") 'vundo)
-    (global-set-key (kbd "C-/") 'vundo)      ; 使用 vundo 替代默认 undo
-    (global-set-key (kbd "C-?") 'undo-redo)
-    
-    (mcg-log "Vundo configured")))
-
-#+END_SRC
-
-** Vundo Hydra
-#+BEGIN_SRC emacs-lisp
-;;; Vundo Hydra
-
-(defun mcg--setup-vundo-hydra ()
-  "Setup Vundo Hydra menu."
-  (when (and (featurep 'vundo)
-             (mcg-require-extension "utils/hydra" 'hydra))
-    
-    (defhydra hydra-vundo (:color pink :hint nil)
-      "
-╭────────^Movement^─────────┬─────^Branch^──────┬──────^Saved^──────┬─────^Diff^────┬───^Actions^───╮
-│ _f_ forward  _b_ backward │ _n_ next branch   │ _l_ last saved    │ _m_ mark      │ _RET_ confirm │
-│ _a_ to branch _e_ to tip  │ _p_ prev branch   │ _r_ next saved    │ _u_ unmark    │ _q_ quit      │
-│                          │                   │                   │ _d_ diff      │ _Q_ abort     │
-╰──────────────────────────┴───────────────────┴───────────────────┴───────────────┴───────────────╯
-      "
-      ;; Basic movement
-      ("f" vundo-forward "forward")
-      ("b" vundo-backward "backward")
-      
-      ;; Branch navigation
-      ("n" vundo-next "next branch")
-      ("p" vundo-previous "prev branch")
-      ("a" vundo-stem-root "to branch point")
-      ("e" vundo-stem-end "to end")
-      
-      ;; Saved state navigation
-      ("l" vundo-goto-last-saved "last saved")
-      ("r" vundo-goto-next-saved "next saved")
-      
-      ;; Diff operations
-      ("m" vundo-diff-mark "mark for diff")
-      ("u" vundo-diff-unmark "unmark")
-      ("d" vundo-diff "show diff")
-      
-      ;; Actions
-      ("RET" vundo-confirm "confirm" :color blue)
-      ("q" vundo-quit "quit" :color blue)
-      ("Q" (progn (setq vundo-roll-back-on-quit t) (vundo-quit)) "abort" :color blue)
-      ("C-g" vundo-quit "quit" :color blue)
-      
-      ;; Debug (hidden)
-      ("i" vundo--inspect)
-      ("D" vundo--debug))
-    
-    ;; Bind hydra to vundo-mode
-    (define-key vundo-mode-map (kbd ".") 'hydra-vundo/body)
-    (define-key vundo-mode-map (kbd "?") 'hydra-vundo/body)
-    
-    ;; Auto-show hydra when vundo opens
-    (add-hook 'vundo-mode-hook #'hydra-vundo/body)
-    
-    (mcg-log "Vundo hydra configured")))
-
-;; Delayed load hydra
-(with-eval-after-load 'vundo
-  (mcg--setup-vundo-hydra))
+;;; Vundo and Multicursor Modules
+;; These features have been moved to separate modules for better modularity.
+;; - init-undo: Visual undo with vundo
+;; - init-multicursor: Multi-cursor editing with markmacro
+;; Load them via mcg! macro: :editor undo multicursor
 
 #+END_SRC
 
@@ -612,8 +493,6 @@
 #+BEGIN_SRC emacs-lisp
 ;;; Initialize
 
-(mcg--setup-markmacro)
-(mcg--setup-vundo)
 (mcg--setup-sort-tab-keys)
 (mcg--setup-search-keys)
 (mcg--setup-file-keys)

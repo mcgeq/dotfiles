@@ -1,0 +1,105 @@
+* init-autosave.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle init-autosave.el :lexical t
+:END:
+
+** Headers
+#+BEGIN_SRC emacs-lisp
+;;; init-autosave.el --- Idle Auto-Save for MCG Emacs -*- lexical-binding: t; -*-
+
+;; Filename: init-autosave.el
+;; Description: Idle auto-save module
+;; Author: mcge <mcgeq@outlook.com>
+;; Copyright (C) 2024-2026, mcge, all rights reserved.
+;; Create   Date: 2026-01-09
+;; Version: 3.0
+;; Keywords: auto-save, idle
+;; Compatibility: GNU Emacs 29.0+
+
+;;; Commentary:
+;;
+;; Idle auto-save module for MCG Emacs, responsible for:
+;; - Automatically saving modified buffers when Emacs is idle
+;; - Disabling Emacs default backup and auto-save mechanisms
+;;
+
+#+END_SRC
+
+** Dependencies
+#+BEGIN_SRC emacs-lisp
+;;; Dependencies
+
+(require 'core-lib)
+
+#+END_SRC
+
+** Idle Auto-Save
+#+BEGIN_SRC emacs-lisp
+;;; Idle Auto-Save
+
+(defgroup mcg-auto-save nil
+  "Auto save files when Emacs is idle."
+  :group 'convenience)
+
+(defcustom mcg-auto-save-idle 1
+  "Seconds of idle time before auto-save."
+  :type 'integer
+  :group 'mcg-auto-save)
+
+(defcustom mcg-auto-save-silent t
+  "Whether to save silently (no messages)."
+  :type 'boolean
+  :group 'mcg-auto-save)
+
+(defvar mcg--auto-save-timer nil
+  "Auto-save timer.")
+
+;; Disable Emacs default auto-save
+(setq make-backup-files nil)
+(setq auto-save-default nil)
+(setq create-lockfiles nil)
+
+(defun mcg--auto-save-buffers ()
+  "Auto-save all modified buffers."
+  (interactive)
+  (let ((saved-buffers nil))
+    (save-current-buffer
+      (dolist (buf (buffer-list))
+        (set-buffer buf)
+        (when (and (buffer-file-name)
+                   (buffer-modified-p)
+                   (not (bound-and-true-p yas--active-snippets))
+                   (not (bound-and-true-p company-candidates))
+                   (or (not (bound-and-true-p corfu--total))
+                       (zerop corfu--total)))
+          (push (buffer-name) saved-buffers)
+          (let ((inhibit-message mcg-auto-save-silent)
+                (message-log-max (unless mcg-auto-save-silent message-log-max)))
+            (basic-save-buffer)))))
+    (unless mcg-auto-save-silent
+      (when saved-buffers
+        (message "Auto-saved: %s" (string-join saved-buffers ", "))))))
+
+(defun mcg--auto-save-enable ()
+  "Enable auto-save."
+  (when mcg--auto-save-timer
+    (cancel-timer mcg--auto-save-timer))
+  (setq mcg--auto-save-timer
+        (run-with-idle-timer mcg-auto-save-idle t #'mcg--auto-save-buffers)))
+
+(defun mcg--auto-save-disable ()
+  "Disable auto-save."
+  (when mcg--auto-save-timer
+    (cancel-timer mcg--auto-save-timer)
+    (setq mcg--auto-save-timer nil)))
+
+;; Enable auto-save
+(mcg--auto-save-enable)
+
+#+END_SRC
+
+** Provide
+#+BEGIN_SRC emacs-lisp
+(provide 'init-autosave)
+;;; init-autosave.el ends here
+#+END_SRC

@@ -1,0 +1,76 @@
+* init-multicursor.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle init-multicursor.el :lexical t
+:END:
+
+** Headers
+#+BEGIN_SRC emacs-lisp
+;;; init-multicursor.el --- Multi-cursor editing for MCG Emacs -*- lexical-binding: t; -*-
+
+;; Filename: init-multicursor.el
+;; Description: Multi-cursor editing configuration module using markmacro
+;; Author: mcge <mcgeq@outlook.com>
+;; Copyright (C) 2024-2026, mcge, all rights reserved.
+;; Create   Date: 2026-01-09
+;; Version: 3.0
+;; Keywords: multicursor, markmacro, editing
+;; Compatibility: GNU Emacs 29.0+
+
+;;; Commentary:
+;;
+;; Multi-cursor editing module for MCG Emacs configuration, responsible for:
+;; - Markmacro multi-cursor editing
+;; - Rectangle operations
+;; - Symbol and line marking
+;;
+
+#+END_SRC
+
+** Dependencies
+#+BEGIN_SRC emacs-lisp
+;;; Dependencies
+
+(require 'core-lib)
+
+#+END_SRC
+
+** Markmacro Configuration
+#+BEGIN_SRC emacs-lisp
+;;; Markmacro Configuration
+
+(defun mcg--setup-markmacro ()
+  "Setup Markmacro multi-cursor editing."
+  (when (mcg-require-extension "editor/markmacro" 'markmacro)
+    ;; C-c m prefix
+    (global-set-key (kbd "C-c m s") 'markmacro-rect-set)
+    (global-set-key (kbd "C-c m d") 'markmacro-rect-delete)
+    (global-set-key (kbd "C-c m r") 'markmacro-rect-replace)
+    (global-set-key (kbd "C-c m i") 'markmacro-rect-insert)
+    (global-set-key (kbd "C-c m c") 'markmacro-rect-mark-columns)
+    (global-set-key (kbd "C-c m S") 'markmacro-rect-mark-symbols)
+    (global-set-key (kbd "C-c m a") 'markmacro-apply-all)
+    (global-set-key (kbd "C-c m e") 'markmacro-apply-all-except-first)
+    
+    ;; Super key shortcuts
+    (global-set-key (kbd "s-/") 'markmacro-mark-words)
+    (global-set-key (kbd "s-?") 'markmacro-mark-lines)
+    (global-set-key (kbd "s-:") 'markmacro-mark-chars)
+    (global-set-key (kbd "s-L") 'markmacro-mark-imenus)
+    
+    (mcg-log "Markmacro configured")))
+
+#+END_SRC
+
+** Initialize
+#+BEGIN_SRC emacs-lisp
+;;; Initialize
+
+(mcg--setup-markmacro)
+
+#+END_SRC
+
+** Provide
+#+BEGIN_SRC emacs-lisp
+(provide 'init-multicursor)
+;;; init-multicursor.el ends here
+#+END_SRC

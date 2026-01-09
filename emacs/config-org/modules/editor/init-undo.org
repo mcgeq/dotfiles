@@ -1,0 +1,152 @@
+* init-undo.el
+:PROPERTIES:
+:HEADER-ARGS: :tangle init-undo.el :lexical t
+:END:
+
+** Headers
+#+BEGIN_SRC emacs-lisp
+;;; init-undo.el --- Visual undo configuration for MCG Emacs -*- lexical-binding: t; -*-
+
+;; Filename: init-undo.el
+;; Description: Visual undo configuration module using vundo
+;; Author: mcge <mcgeq@outlook.com>
+;; Copyright (C) 2024-2026, mcge, all rights reserved.
+;; Create   Date: 2026-01-09
+;; Version: 3.0
+;; Keywords: undo, vundo, visual
+;; Compatibility: GNU Emacs 29.0+
+
+;;; Commentary:
+;;
+;; Visual undo module for MCG Emacs configuration, responsible for:
+;; - Vundo visual undo tree
+;; - Vundo hydra menu for navigation
+;;
+
+#+END_SRC
+
+** Dependencies
+#+BEGIN_SRC emacs-lisp
+;;; Dependencies
+
+(require 'core-lib)
+
+#+END_SRC
+
+** Vundo Configuration
+#+BEGIN_SRC emacs-lisp
+;;; Vundo Configuration
+
+(defun mcg--setup-vundo ()
+  "Setup Vundo visual undo."
+  (when (mcg-require-extension "editor/vundo" 'vundo)
+    ;; Use Unicode symbols
+    (setq vundo-glyph-alist vundo-unicode-symbols)
+    (setq vundo-roll-back-on-quit nil)
+    (setq vundo-compact-display t)
+    (setq vundo-diff-quit 'bury)
+    
+    ;; Fix vundo buffer becoming read-only after exit
+    (defun mcg--vundo-force-writable (&rest _)
+      "Force buffer to be writable after vundo command."
+      (run-with-timer 0.01 nil
+                      (lambda ()
+                        (when (and (not (eq major-mode 'vundo-mode))
+                                   buffer-read-only)
+                          (read-only-mode -1)))))
+    
+    ;; Add advice to all vundo commands
+    (advice-add 'vundo-backward :after #'mcg--vundo-force-writable)
+    (advice-add 'vundo-forward :after #'mcg--vundo-force-writable)
+    (advice-add 'vundo-next :after #'mcg--vundo-force-writable)
+    (advice-add 'vundo-previous :after #'mcg--vundo-force-writable)
+    (advice-add 'vundo-stem-root :after #'mcg--vundo-force-writable)
+    (advice-add 'vundo-stem-end :after #'mcg--vundo-force-writable)
+    (advice-add 'vundo-goto-last-saved :after #'mcg--vundo-force-writable)
+    (advice-add 'vundo-quit :after #'mcg--vundo-force-writable)
+    (advice-add 'vundo-confirm :after #'mcg--vundo-force-writable)
+    
+    ;; Keybindings
+    (global-set-key (kbd "C-x u") 'vundo)
+    (global-set-key (kbd "C-c u") 'vundo)
+    (global-set-key (kbd "C-/") 'vundo)      ; 使用 vundo 替代默认 undo
+    (global-set-key (kbd "C-?") 'undo-redo)
+    
+    (mcg-log "Vundo configured")))
+
+#+END_SRC
+
+** Vundo Hydra
+#+BEGIN_SRC emacs-lisp
+;;; Vundo Hydra
+
+(defun mcg--setup-vundo-hydra ()
+  "Setup Vundo Hydra menu."
+  (when (and (featurep 'vundo)
+             (mcg-require-extension "utils/hydra" 'hydra))
+    
+    (defhydra hydra-vundo (:color pink :hint nil)
+      "
+╭────────^Movement^─────────┬─────^Branch^──────┬──────^Saved^──────┬─────^Diff^────┬───^Actions^───╮
+│ _f_ forward  _b_ backward │ _n_ next branch   │ _l_ last saved    │ _m_ mark      │ _RET_ confirm │
+│ _a_ to branch _e_ to tip  │ _p_ prev branch   │ _r_ next saved    │ _u_ unmark    │ _q_ quit      │
+│                          │                   │                   │ _d_ diff      │ _Q_ abort     │
+╰──────────────────────────┴───────────────────┴───────────────────┴───────────────┴───────────────╯
+      "
+      ;; Basic movement
+      ("f" vundo-forward "forward")
+      ("b" vundo-backward "backward")
+      
+      ;; Branch navigation
+      ("n" vundo-next "next branch")
+      ("p" vundo-previous "prev branch")
+      ("a" vundo-stem-root "to branch point")
+      ("e" vundo-stem-end "to end")
+      
+      ;; Saved state navigation
+      ("l" vundo-goto-last-saved "last saved")
+      ("r" vundo-goto-next-saved "next saved")
+      
+      ;; Diff operations
+      ("m" vundo-diff-mark "mark for diff")
+      ("u" vundo-diff-unmark "unmark")
+      ("d" vundo-diff "show diff")
+      
+      ;; Actions
+      ("RET" vundo-confirm "confirm" :color blue)
+      ("q" vundo-quit "quit" :color blue)
+      ("Q" (progn (setq vundo-roll-back-on-quit t) (vundo-quit)) "abort" :color blue)
+      ("C-g" vundo-quit "quit" :color blue)
+      
+      ;; Debug (hidden)
+      ("i" vundo--inspect)
+      ("D" vundo--debug))
+    
+    ;; Bind hydra to vundo-mode
+    (define-key vundo-mode-map (kbd ".") 'hydra-vundo/body)
+    (define-key vundo-mode-map (kbd "?") 'hydra-vundo/body)
+    
+    ;; Auto-show hydra when vundo opens
+    (add-hook 'vundo-mode-hook #'hydra-vundo/body)
+    
+    (mcg-log "Vundo hydra configured")))
+
+;; Delayed load hydra
+(with-eval-after-load 'vundo
+  (mcg--setup-vundo-hydra))
+
+#+END_SRC
+
+** Initialize
+#+BEGIN_SRC emacs-lisp
+;;; Initialize
+
+(mcg--setup-vundo)
+
+#+END_SRC
+
+** Provide
+#+BEGIN_SRC emacs-lisp
+(provide 'init-undo)
+;;; init-undo.el ends here
+#+END_SRC

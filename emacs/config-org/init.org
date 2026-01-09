@@ -75,12 +75,17 @@
       theme           ; Theme configuration (ef-themes)
       modeline        ; Status bar (awesome-tray)
       font            ; Font configuration
+      icons           ; Nerd icons configuration
 
       :editor
       defaults        ; Editor default configuration
       treesit         ; Tree-sitter support
       navigation      ; Navigation (avy, ace-window)
-      keybindings     ; Keybindings (markmacro, vundo)
+      keybindings     ; Keybindings
+      paredit         ; Structural editing (fingertip)
+      format          ; Text formatting (wraplish)
+      undo            ; Visual undo (vundo)
+      multicursor     ; Multi-cursor editing (markmacro)
 
       :completion
       vertico         ; Vertical completion framework
@@ -90,13 +95,15 @@
       magit           ; Git client
       search          ; Search tools (blink-search, color-rg)
       rime            ; Chinese input method
-      utils           ; Utilities (auto-save, which-key, recentf, helpful)
-      sort-tab        ; Tab bar
+      tabs            ; Tab bar (sort-tab)
       eshell          ; Eshell shell
 
-      :input
-      fingertip       ; Structural editing
-      wraplish        ; CJK-English mixed spacing
+      :enhance
+      autosave        ; Idle auto-save
+      which-key       ; Keybinding hints
+      helpful         ; Enhanced help system
+      recentf         ; Recent files
+      symbol          ; Symbol overlay
 
       :org
       org             ; Org-mode basic configuration
@@ -105,8 +112,9 @@
       org-capture     ; Capture templates and Hugo integration
       org-extras      ; Org extensions (download, numbering, consult-todo)
 
-      :docs
+      :writing
       markdown        ; Markdown support
+      vale            ; Grammar checking
 
       :lang
       lsp             ; LSP unified configuration (lsp-bridge)
@@ -138,14 +146,14 @@
 ;; Load tools modules immediately
 (mcg-load-modules-by-category :tools)
 
-;; Load input modules immediately
-(mcg-load-modules-by-category :input)
+;; Load enhance modules immediately
+(mcg-load-modules-by-category :enhance)
 
 ;; Load Org modules immediately
 (mcg-load-modules-by-category :org)
 
-;; Load docs modules immediately
-(mcg-load-modules-by-category :docs)
+;; Load writing modules immediately
+(mcg-load-modules-by-category :writing)
 
 ;; Setup lazy loading for language modules
 ;; LSP module loads immediately (other language modules depend on it)

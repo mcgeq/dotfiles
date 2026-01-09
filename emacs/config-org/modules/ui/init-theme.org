@@ -21,7 +21,6 @@
   ;; Theme module for MCG Emacs configuration, responsible for:
   ;; - ef-themes configuration
   ;; - Theme switching commands
-  ;; - nerd-icons configuration
   ;;
   ;; Module metadata:
   ;; :depends ()
@@ -136,43 +135,12 @@ Uses completing-read to select from ef-themes."
 
 #+END_SRC
 
-** Nerd Icons Configuration
-#+BEGIN_SRC emacs-lisp
-;;; Nerd Icons Configuration
-
-(defvar mcg-ui-icon-font-family "FiraCode Nerd Font"
-  "Icon font family name.")
-
-(defun mcg-ui-setup-nerd-icons ()
-  "Set up nerd-icons.
-Path is already added to load-path by core-bootstrap's mcg-setup-load-path."
-  (require 'nerd-icons nil t)
-  
-  (when (featurep 'nerd-icons)
-    ;; Set icon font
-    (setq nerd-icons-font-family mcg-ui-icon-font-family)
-    
-    ;; Load nerd-icons-completion
-    (require 'nerd-icons-completion nil t)
-    
-    (when (featurep 'nerd-icons-completion)
-      (nerd-icons-completion-mode 1)
-      (add-hook 'marginalia-mode-hook #'nerd-icons-completion-marginalia-setup)
-      (mcg-log "nerd-icons-completion configured")))
-  
-  (mcg-log "nerd-icons configured"))
-
-#+END_SRC
-
 ** Initialize
 #+BEGIN_SRC emacs-lisp
 ;;; Initialize
 
 ;; Set up theme
 (mcg-ui-setup-theme)
-
-;; Set up icons
-(mcg-ui-setup-nerd-icons)
 
 #+END_SRC
 

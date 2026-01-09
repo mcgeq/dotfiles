@@ -358,6 +358,120 @@ Returns the extension path, or nil if not found."
 
 
 
+** Posframe Popup Utility
+#+BEGIN_SRC emacs-lisp
+;;; Posframe Popup Utility
+
+(defgroup mcg-popup nil
+  "Posframe popup utilities."
+  :group 'convenience)
+
+(defcustom mcg-popup-width 60
+  "Default width of popup."
+  :type 'integer
+  :group 'mcg-popup)
+
+(defcustom mcg-popup-height 35
+  "Default height of popup."
+  :type 'integer
+  :group 'mcg-popup)
+
+(defvar mcg--popup-current-buffer nil
+  "Current popup buffer name.")
+
+(defun mcg--popup-get-border-color ()
+  "Get border color from current theme."
+  (or (face-foreground 'font-lock-keyword-face nil t)
+      (face-foreground 'link nil t)
+      "#61AFEF"))
+
+(defun mcg--popup-get-background-color ()
+  "Get background color from current theme."
+  (or (face-background 'tooltip nil t)
+      (face-background 'default nil t)
+      "#282C34"))
+
+(defun mcg--popup-get-foreground-color ()
+  "Get foreground color from current theme."
+  (or (face-foreground 'default nil t)
+      "#ABB2BF"))
+
+(defun mcg--popup-scroll-down ()
+  "Scroll popup content down."
+  (when-let* ((buf (get-buffer mcg--popup-current-buffer))
+              (frame (buffer-local-value 'posframe--frame buf)))
+    (with-selected-frame frame
+      (ignore-errors (scroll-up 3)))))
+
+(defun mcg--popup-scroll-up ()
+  "Scroll popup content up."
+  (when-let* ((buf (get-buffer mcg--popup-current-buffer))
+              (frame (buffer-local-value 'posframe--frame buf)))
+    (with-selected-frame frame
+      (ignore-errors (scroll-down 3)))))
+
+(defun mcg-popup-show (buffer-name content &optional width height)
+  "Show CONTENT in a centered posframe popup.
+BUFFER-NAME is the buffer name for the popup.
+WIDTH and HEIGHT are optional dimensions.
+
+Keys: j/k scroll, q/ESC exit"
+  (require 'posframe)
+  
+  (setq mcg--popup-current-buffer buffer-name)
+  
+  (let* ((buf (get-buffer-create buffer-name))
+         (hint "j/k scroll | q/ESC exit")
+         (w (or width mcg-popup-width))
+         (h (or height mcg-popup-height))
+         (padding (make-string (/ (- w (string-width hint)) 2) ?\s))
+         (border-color (mcg--popup-get-border-color))
+         (bg-color (mcg--popup-get-background-color))
+         (fg-color (mcg--popup-get-foreground-color)))
+    
+    (with-current-buffer buf
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (insert content))
+      (setq-local buffer-read-only t)
+      (setq-local cursor-type nil)
+      (setq-local header-line-format
+                  (propertize (concat padding hint)
+                              'face `(:foreground ,border-color :weight bold)))
+      (goto-char (point-min)))
+    
+    (posframe-show buf
+                   :position (point)
+                   :poshandler #'posframe-poshandler-frame-center
+                   :internal-border-width 2
+                   :internal-border-color border-color
+                   :background-color bg-color
+                   :foreground-color fg-color
+                   :width w
+                   :height h
+                   :respect-header-line t
+                   :accept-focus nil)
+    
+    (unwind-protect
+        (catch 'exit-popup
+          (while t
+            (let ((key (read-key)))
+              (cond
+               ((memq key '(?q 27))
+                (throw 'exit-popup nil))
+               ((memq key '(?j ?n 14))
+                (mcg--popup-scroll-down))
+               ((equal key 'down)
+                (mcg--popup-scroll-down))
+               ((memq key '(?k ?p 16))
+                (mcg--popup-scroll-up))
+               ((equal key 'up)
+                (mcg--popup-scroll-up))
+               (t nil)))))
+      (posframe-hide buffer-name))))
+
+#+END_SRC
+
 ** Configuration Validation System
 #+BEGIN_SRC emacs-lisp
 ;;; Configuration Validation System

@@ -4,6 +4,8 @@
 #+date: 2025-02-16
 #+language: en
 
+[[file:README_CN.org][中文文档]]
+
 * Welcome to My Emacs Configuration
 
 This is a modern, modular Emacs configuration written using literate programming
@@ -50,10 +52,9 @@ LSP integration, and productivity features.
    - [[https://github.com/manateelazycat/color-rg][Color-rg]]: Fast grep
    - [[https://github.com/manateelazycat/awesome-tray][Awesome-tray]]: Lightweight status display
    - [[https://github.com/manateelazycat/emacs-rime][Rime]]: Chinese input
-   - [[https://github.com/justbur/emacs-which-key][Which-key]]: 快捷键提示 ⭐
-   - [[https://github.com/abo-abo/ace-window][Ace-window]]: 快速窗口切换 ⭐
-   - [[https://github.com/abo-abo/avy][Avy]]: 快速跳转导航 ⭐
-   - *Org Mode V2.1*: 新模块化配置系统（统一变量、智能加载）
+   - [[https://github.com/justbur/emacs-which-key][Which-key]]: Keybinding hints
+   - [[https://github.com/abo-abo/ace-window][Ace-window]]: Quick window switching
+   - [[https://github.com/abo-abo/avy][Avy]]: Fast navigation
 
 * 📦 Installation
 
@@ -73,30 +74,18 @@ LSP integration, and productivity features.
 
 *** Step 2: Initialize Git Submodules
     #+begin_src bash
-    # Using make (recommended)
     make init
-    
-    # Or directly
-    git submodule update --init --recursive
     #+end_src
 
 *** Step 3: Create User Configuration
     #+begin_src bash
-    # Copy template to custom.el
     cp custom-example.el custom.el
-    
-    # Edit your settings (optional)
-    # emacs custom.el
     #+end_src
 
 *** Step 4: Generate Configuration
     #+begin_src bash
-    # Generate Emacs Lisp from Org files
     make generate
     #+end_src
-    
-    This compiles the Org Mode files in =config-org/= to Emacs Lisp files in
-    =site-lisp/config/=.
 
 *** Step 5: Link to Emacs
 
@@ -110,7 +99,6 @@ LSP integration, and productivity features.
      #+end_src
 
 **** Option B: Manual Load
-     Add to your =~/.emacs= or =~/.emacs.d/init.el=:
      #+begin_src emacs-lisp
      (load-file "~/dotfiles/emacs/site-lisp/config/init.el")
      #+end_src
@@ -119,1116 +107,197 @@ LSP integration, and productivity features.
     #+begin_src bash
     emacs
     #+end_src
-    
-    Emacs will automatically compile the configuration on first run.
 
 ** Troubleshooting
-
-   If you encounter issues:
-   
    #+begin_src bash
-   # Check package status
-   make st
-   
-   # Clean and regenerate
-   make clean
-   make generate
-   
-   # Check Emacs version
-   emacs --version  # Should be 28+ (29+ recommended)
-   
-   # View all commands
-   make h
+   make st        # Check package status
+   make clean     # Clean generated files
+   make generate  # Regenerate config
+   make h         # View all commands
    #+end_src
 
 * 🗂️ Configuration Structure
 
+For detailed directory structure and module system documentation, see [[file:config-org/README.org][config-org/README.org]].
+
+** Overview
+
 #+begin_src text
 emacs/
-├── Makefile                     # Build system for Org → EL compilation
-├── README.org                   # This file
+├── Makefile                     # Build system
+├── README.org                   # This file (English)
+├── README_CN.org                # Chinese documentation
 ├── config-org/                  # Source: Org Mode literate config
+│   ├── README.org               # Detailed module documentation
 │   ├── init.org                 # Main entry point
-│   ├── core/                    # Core configuration
-│   │   ├── init-paths.org       # Path management
-│   │   ├── init-loadpath.org    # Load-path setup
-│   │   ├── init-const.org       # Constants
-│   │   ├── init-font.org        # Font configuration
-│   │   ├── init-function.org    # Custom functions
-│   │   ├── init-builtin.org     # Built-in features
-│   │   └── init-verify.org      # Configuration validation
-│   ├── ui/                      # User interface
-│   ├── editor/                  # Editor features
-│   ├── completion/              # Completions
-│   ├── tools/                   # Tools
-│   ├── lang/                    # Language support
-│   ├── org/                     # Org Mode (新模块化系统 V2.1)
-│   │   ├── init-org-vars.org    # 变量定义
-│   │   ├── init-org-loader.org  # 配置加载器
-│   │   ├── init-org.org         # 核心配置
-│   │   ├── init-org-agenda.org  # Agenda
-│   │   └── init-capture-hugo.org # Capture & Hugo
-│   ├── docs/                    # Documentation
-│   └── etc/                     # Miscellaneous
+│   ├── core/                    # Core configuration (4 files)
+│   ├── modules/                 # Feature modules (8 categories, 35 modules)
+│   └── private/                 # Private configuration
 ├── site-lisp/                   # Generated: Compiled EL files
 │   ├── config/                  # Same structure as config-org/
 │   └── extensions/              # Git submodules
-│       ├── lsp/                 # LSP bridge
-│       ├── magit/               # Git interface
-│       ├── vertico/             # Completions
-│       ├── org/                 # Org Mode
-│       ├── blink-search/        # Search
-│       └── ...                  # Other extensions
 ├── snippets/                    # Snippets
 └── langservers/                 # Language server configs
 #+end_src
+
+** Module Categories
+
+| Category   | Modules | Description                       |
+|------------+---------+-----------------------------------|
+| ui         |       4 | Theme, modeline, font, icons      |
+| editor     |       8 | Editing features                  |
+| completion |       2 | Vertico, yasnippet                |
+| tools      |       5 | Magit, search, rime, tabs, eshell |
+| enhance    |       5 | Autosave, which-key, helpful, etc.|
+| org        |       5 | Org Mode ecosystem                |
+| writing    |       2 | Markdown, vale                    |
+| lang       |       9 | LSP and language support          |
 
 * ⚙️ Configuration Management
 
 ** Makefile Commands
 
-*** Configuration
-    #+begin_src bash
-    make generate        # Generate config from Org files
-    make clean           # Clean generated files
-    make generate-elc    # Generate and byte-compile
-    #+end_src
+| Command           | Description                    |
+|-------------------+--------------------------------|
+| make              | Generate config from Org files |
+| make clean        | Clean generated files          |
+| make test         | Run all tests                  |
+| make init         | Initialize Git Submodules      |
+| make st           | Check package status           |
+| make up           | Update packages safely         |
+| make lock-packages| Lock current package versions  |
+| make h            | Show help                      |
 
-*** Package Management
-    #+begin_src bash
-    make init            # Initialize Git Submodules (first time)
-    make st              # Check package status (with remote check)
-    make up              # Update packages safely (with branch check)
-    make lock-packages   # Lock current package versions
-    make restore-packages # Restore to locked versions
-    #+end_src
+** Module Declaration
 
-*** Testing
-    #+begin_src bash
-    make test            # Run all tests
-    make test-verbose    # Run tests with verbose output
-    #+end_src
+Use =mcg!= macro in =init.org= to declare enabled modules:
 
-*** Quick Reference
-    #+begin_src bash
-    make h               # Show help (all commands)
-    #+end_src
-
-    Shortcuts: =init=, =st=, =up=, =h=
-
-** User Configuration
-
-*** Custom Settings
-    All user-specific settings should go in =custom.el= (automatically loaded):
-
-    #+begin_src emacs-lisp
-    ;; Copy template
-    ;; make init
-    ;; cp custom-example.el custom.el
-    
-    ;; Then edit custom.el with your settings:
-    
-    ;; Module declarations (optional, declarative style)
-    (mcg! 
-     :core                    ; Core modules
-     :ui                      ; UI (awesome-tray enabled by default)
-     :completion vertico embark
-     :lang lsp-bridge (rust lua typescript))
-    
-    ;; Custom settings
-    (setq mcg-theme 'doom-one)
-    (setq mcg-font-size 14)
-    #+end_src
-
-    Note: =custom.el= is gitignored (personal settings)
-
-** Module System
-
-   Configuration is organized into phases:
-   
-   1. *Phase 1*: Core Infrastructure
-      - Path management
-      - Load-path setup
-      - Configuration validation
-      - Constants and utilities
-   
-   2. *Phase 2*: UI and Themes
-      - Doom modeline
-      - Awesome tray
-      - UI customization
-   
-   3. *Phase 3*: Editor Enhancement
-      - Line numbers
-      - Indentation
-      - Tree-sitter
-      - Auto-save
-      - Ace-window (窗口切换)
-      - Avy (快速跳转)
-      - Which-key (快捷键提示)
-   
-   4. *Phase 4*: Completions
-      - Vertico
-      - Marginalia
-      - Embark
-      - Yasnippet
-   
-   5. *Phase 5*: Keybindings
-      - Global bindings
-      - Mode-specific bindings
-   
-   6. *Phase 6*: LSP and Languages* (delayed)
-      - lsp-bridge
-      - Language-specific configs
-   
-   7. *Phase 7*: Org and Docs* (delayed)
-      - Org Mode (新模块化加载器)
-      - init-org-loader (智能依赖管理)
-      - Markdown
-      - Documentation tools
-
-** Adding New Modules
-
-   #+begin_example org
-   1. Create an Org file in the appropriate config-org/ directory
-   2. Use Org Babel with :tangle directive:
-      * module-name.el
-      :PROPERTIES:
-      :HEADER-ARGS: :tangle path/to/module-name.el :lexical t
-      :END:
+#+begin_src emacs-lisp
+(mcg! :ui
+      theme modeline font icons
       
-      #+BEGIN_SRC emacs-lisp
-      ;; Your code here
-      #+END_SRC
-   3. Add (require 'module-name) to the appropriate phase in init.org
-   4. Run make generate
-   #+end_example
+      :editor
+      defaults treesit navigation keybindings
+      paredit format undo multicursor
+      
+      :completion
+      vertico yasnippet
+      
+      :tools
+      magit search rime tabs eshell
+      
+      :enhance
+      autosave which-key helpful recentf symbol
+      
+      :org
+      org org-agenda org-babel org-capture org-extras
+      
+      :writing
+      markdown vale
+      
+      :lang
+      lsp lsp-common rust python typescript web cpp lua zig)
+#+end_src
 
-** Extension Registry V2 ⭐
+** Migration Guide
 
-   本配置采用增强的扩展注册表系统（V2），提供依赖管理、版本追踪和元数据支持。
+If migrating from an older configuration version:
 
-*** 特性
+*** Category Changes
 
-    - *依赖管理* :: 自动解析和加载扩展依赖
-    - *版本追踪* :: 记录扩展版本和上游信息
-    - *分类组织* :: 按功能分类管理扩展
-    - *延迟加载* :: 非核心扩展延迟加载以提升启动速度
-    - *循环依赖检测* :: 自动检测并警告循环依赖
+| Old Category | New Category | Notes                          |
+|--------------+--------------+--------------------------------|
+| :input       | :editor      | Input modules merged to editor |
+| :docs        | :writing     | Docs renamed to writing        |
+| (none)       | :enhance     | New enhancement category       |
 
-*** 扩展类别
+*** Module Renames
 
-    | 类别       | 描述                 | 加载阶段 |
-    |------------+----------------------+----------|
-    | core       | 核心库和基础设施     | 立即     |
-    | ui         | 用户界面和主题       | 立即     |
-    | completion | 补全和选择框架       | 立即     |
-    | editor     | 编辑器功能增强       | 立即     |
-    | search     | 搜索和导航工具       | 立即     |
-    | utils      | 通用实用工具         | 立即     |
-    | snippets   | 代码片段系统         | 立即     |
-    | input      | 输入法和输入增强     | 立即     |
-    | git        | 版本控制工具         | 延迟     |
-    | lsp        | LSP和语言支持        | 延迟     |
-    | org        | Org Mode生态系统     | 延迟     |
-    | docs       | 文档编辑和预览       | 延迟     |
+| Old Module          | New Module        |
+|---------------------+-------------------|
+| :input fingertip    | :editor paredit   |
+| :input wraplish     | :editor format    |
+| :docs markdown      | :writing markdown |
+| :tools sort-tab     | :tools tabs       |
 
-*** 管理命令
-
-    #+begin_src emacs-lisp
-    ;; 查询扩展信息
-    M-x mcg-info-extension       ; 交互式查看扩展详情
-    
-    ;; 搜索扩展
-    M-x mcg-search-extension     ; 模糊搜索扩展（按名称或类别）
-    
-    ;; 查看分类状态
-    M-x mcg-display-categories-status  ; 显示所有类别的加载状态
-    
-    ;; 验证配置
-    M-x mcg-validate-all         ; 执行完整配置验证
-    M-x mcg-validate-extensions  ; 验证扩展目录存在
-    M-x mcg-validate-dependencies ; 验证依赖关系
-    
-    ;; 检查循环依赖
-    M-x mcg-check-circular-dependencies
-    #+end_src
-
-** Version Management (版本管理) ⭐
-
-   支持锁定和恢复 Git Submodule 版本，确保配置可复现。
-
-*** 锁定版本
-
-    #+begin_src bash
-    # 使用 Makefile
-    make lock-packages
-    
-    # 或使用 PowerShell 脚本
-    powershell -File scripts/Save-PackageVersions.ps1
-    #+end_src
-
-    这会生成 =site-lisp/packages-lock.el= 文件，包含：
-    - 所有 submodule 的 commit hash
-    - 分支信息
-    - 锁定时间戳
-    - Emacs 版本和平台信息
-
-*** 恢复版本
-
-    #+begin_src bash
-    # 使用 Makefile
-    make restore-packages
-    
-    # 或使用 PowerShell 脚本
-    powershell -File scripts/Restore-PackageVersions.ps1
-    #+end_src
-
-*** Emacs 内命令
-
-    #+begin_src emacs-lisp
-    ;; 锁定当前版本
-    M-x mcg-lock-packages
-    
-    ;; 恢复到锁定版本
-    M-x mcg-restore-packages
-    
-    ;; 回滚单个包
-    M-x mcg-rollback-package
-    
-    ;; 比较当前版本与锁定版本
-    M-x mcg-compare-versions
-    #+end_src
-
-** Cross-Platform Support (跨平台支持) ⭐
-
-   配置自动检测运行平台并适配相应设置。
-
-*** 支持的平台
-
-    - Windows (PowerShell/CMD)
-    - macOS
-    - Linux
-    - BSD
-
-*** 平台检测
-
-    #+begin_src emacs-lisp
-    ;; 检测当前平台
-    M-x mcg-display-platform-info
-    
-    ;; 平台判断函数
-    (mcg-platform-windows-p)  ; 是否 Windows
-    (mcg-platform-macos-p)    ; 是否 macOS
-    (mcg-platform-linux-p)    ; 是否 Linux
-    (mcg-platform-unix-like-p) ; 是否类 Unix
-    #+end_src
-
-*** 外部工具检测
-
-    #+begin_src emacs-lisp
-    ;; 检测外部工具
-    M-x mcg-detect-external-tools
-    
-    ;; 检查工具是否可用
-    (mcg-tool-available-p 'git)
-    (mcg-tool-available-p 'ripgrep)
-    (mcg-tool-available-p 'python)
-    
-    ;; 获取工具路径
-    (mcg-get-tool-path 'git)
-    #+end_src
-
-*** 优雅降级
-
-    当平台特定功能不可用时，系统会：
-    1. 显示警告信息
-    2. 提供替代方案建议
-    3. 继续加载其他功能
-
-    #+begin_src emacs-lisp
-    ;; 查看降级警告
-    M-x mcg-display-degradation-warnings
-    #+end_src
+The system automatically detects old names and shows warnings.
 
 * ⌨️ Key Bindings
 
-本配置采用模块化、符合 Emacs 标准的快捷键设计。所有自定义绑定都使用 =C-c= 前缀（用户保留区），并提供 which-key 描述以便发现。
-
-** 快捷键查询
-   - =C-h K= :: 显示快捷键速查表（完整列表）
-   - =C-c w ?= :: Which-key 使用提示
-   - =C-c w p= :: 显示所有定义的前缀
-   - =C-c w m= :: 显示当前 major mode 的快捷键
-   - =C-h b= :: Emacs 标准：显示所有绑定
-
-** LSP / 代码导航 (标准绑定)
-
-*** 导航
-    - =M-.= :: 跳转到定义 (lsp-bridge-find-def)
-    - =M-,= :: 返回 (lsp-bridge-find-def-return)
-    - =M-?= :: 查找引用 (lsp-bridge-find-references)
-    - =C-M-.= :: 在另一窗口打开定义
-
-*** 文档
-    - =C-h .= :: 显示文档 (lsp-bridge-popup-documentation)
-    - =C-h ,= :: 显示函数签名 (lsp-bridge-show-signature)
-    - =C-h <up>= :: 文档向上滚动
-    - =C-h <down>= :: 文档向下滚动
-
-*** 重构 (C-c r 前缀)
-    - =C-c r r= :: 重命名符号 (lsp-bridge-rename)
-    - =C-c r i= :: 代码操作 (lsp-bridge-code-action)
-    - =C-c r f= :: 格式化代码 (lsp-bridge-code-format)
-    - =C-c r l= :: 查找实现 (lsp-bridge-find-impl)
-    - =C-c r s= :: 工作区符号列表
-
-*** 诊断 (M-g 前缀 - Emacs 标准)
-    - =M-g n= :: 下一个错误 (lsp-bridge-diagnostic-jump-next)
-    - =M-g p= :: 上一个错误 (lsp-bridge-diagnostic-jump-prev)
-    - =M-g l= :: 错误列表 (lsp-bridge-diagnostic-list)
-
-** 窗口操作 / Window (C-c w 前缀) ⭐
-
-*** 窗口切换 (Ace-window)
-    - =M-O= :: 快速切换窗口 (Shift+M-o)
-    - =C-x o= :: 切换窗口 (替换默认)
-    - =C-c w w= :: 切换窗口
-    - =C-c w d= :: 删除窗口
-    - =C-c w s= :: 交换窗口
-    - =C-c w m= :: 移动窗口
-    - =C-c w o= :: 只保留当前窗口
-    - =C-c w v= :: 垂直分割
-    - =C-c w h= :: 水平分割
-
-*** 窗口布局撤销 (Winner-mode)
-    - =C-c <left>= :: 撤销窗口布局
-    - =C-c <right>= :: 重做窗口布局
-
-** 快速跳转 / Avy (M-g 前缀) ⭐
-
-*** 基础跳转
-    - =C-;= :: 跳转到字符 (输入1个字符)
-    - =C-'= :: 跳转到字符 (输入2个字符，更精确)
-    - =M-g w= :: 跳转到单词
-    - =M-g g= :: 跳转到行
-    - =M-g c= :: 定时跳转
-    - =M-g j= :: 跳转到当前行字符
-
-*** 高级操作
-    - =M-g y= :: 复制跳转位置的行
-    - =M-g m= :: 移动跳转位置的行
-    - =M-g k= :: 删除跳转位置的行
-    - =M-g Y= :: 复制区域 (当前位置到跳转位置)
-    - =M-g K= :: 删除区域
-    - =M-g (= :: 跳转到开括号
-    - =M-g )= :: 跳转到闭括号
-
-** Git / Magit (C-c g 前缀)
-
-*** 主要命令
-    - =C-x g= :: Magit 状态 (标准绑定)
-    - =C-x M-g= :: Magit dispatch
-    - =C-c g s= :: Magit 状态 (magit-status)
-    - =C-c g l= :: Git 日志 (magit-log)
-    - =C-c g d= :: Magit dispatch (magit-dispatch)
-    - =C-c g f= :: 文件操作 (magit-file-dispatch)
-    - =C-c g ?= :: Git 菜单 (mcg-git-menu)
-
-*** 分支操作 (C-c g b 子前缀)
-    - =C-c g b b= :: 创建分支
-    - =C-c g b r= :: 重命名分支
-    - =C-c g b d= :: 删除分支
-
-*** 远程操作 (C-c g r 子前缀)
-    - =C-c g r a= :: 添加远程
-    - =C-c g r r= :: 重命名远程
-    - =C-c g r d= :: 删除远程
-
-*** 推送/拉取
-    - =C-c g p= :: Push (magit-push)
-    - =C-c g f= :: Pull (magit-pull)
-
-*** 子模块 (C-c g m 子前缀)
-    - =C-c g m a= :: 添加子模块
-    - =C-c g m r= :: 删除子模块
-    - =C-c g m u= :: 更新子模块
-
-*** 文件操作 (C-c g F 子前缀)
-    - =C-c g F r= :: 重命名文件
-    - =C-c g F d= :: 删除文件
-
-** 搜索 / Search (C-c s 前缀)
-
-*** Buffer 内搜索
-    - =C-c s l= :: 搜索行 (consult-line)
-    - =C-c s i= :: Imenu 导航 (consult-imenu)
-    - =C-c s m= :: Mark 导航 (consult-mark)
-
-*** 项目搜索（color-rg - 无中文编码问题）
-    - =C-c s g= :: 搜索内容 (color-rg-search-input)
-    - =C-c s G= :: 项目内搜索内容 (color-rg-search-input-in-project)
-    - =C-c s s= :: 搜索符号 (color-rg-search-symbol)
-    - =C-c s S= :: 项目内搜索符号 (color-rg-search-symbol-in-project)
-    - =C-c s .= :: 当前文件搜索符号 (color-rg-search-symbol-in-current-file)
-    - =C-c s ,= :: 当前文件搜索内容 (color-rg-search-input-in-current-file)
-
-*** Blink Search（快速搜索）
-    - =C-c s B= :: 多后端搜索（主入口）
-    - =C-c s D= :: 当前目录文件（立即显示）
-    - =C-c s P= :: 项目文件（立即显示）
-
-*** Buffer/文件切换
-    - =C-c s b= :: 切换 Buffer (consult-buffer)
-    - =C-c s r= :: 最近文件 (consult-recent-file)
-    - =C-c s o= :: Org 标题导航 (mcg/consult-find-org-headings)
-
-*** 菜单
-    - =C-c s ?= :: 搜索菜单 (transient)
-
-*** Embark (上下文操作)
-    - =C-.= :: Embark act (对当前项执行操作)
-    - =C-,= :: Embark dwim (智能操作)
-
-*** 💡 搜索使用提示
-
-**** 工具选择（方案 B：混合配置）
-    - *Buffer 内搜索*：使用 =consult-line/imenu= （最佳体验）
-    - *文件查找*：使用 =blink-search= （立即显示，无编码问题）
-    - *内容/符号搜索*：使用 =color-rg= （专业搜索，UTF-8 友好）
-
-**** Color-rg 使用说明
-    - 交互式搜索界面，支持实时编辑结果
-    - 智能符号识别，自动高亮匹配
-    - 支持项目范围和文件范围搜索
-    - *完美的中文支持*，无编码问题
-
-**** Blink Search 使用说明
-    - =C-c s B= 打开后，按 =TAB= 切换不同后端
-    - 立即显示文件列表，无需等待输入
-    - Python 后端，UTF-8 原生支持
-    - 需要 Python 3 和依赖：~pip3 install epc orjson rapidfuzz~
-
-**** 依赖工具
-    - =color-rg= 和 =blink-search= 需要 =ripgrep= : ~scoop install ripgrep~
-    - =blink-search= 需要 Python 3 环境
-    - *已移除*：=consult-find= （Windows 编码问题）和 =consult-ripgrep= （color-rg 更好）
-
-** 标签页 / Tabs (C-c t 前缀)
-
-*** 导航
-    - =C-c t n= :: 下一个标签页
-    - =C-c t p= :: 上一个标签页
-    - =C-c t f= :: 第一个标签页
-    - =C-c t l= :: 最后一个标签页
-
-*** 管理
-    - =C-c t k= :: 关闭当前标签页
-    - =C-c t o= :: 关闭其他标签页
-    - =C-c t K= :: 关闭所有标签页
-
-*** 快速访问
-    - =C-c t 1/2/3= :: 跳转到标签页 1/2/3
-
-** Org Mode / 笔记 (C-c n 前缀)
-
-*** 捕获和议程
-    - =C-c n c= :: Org capture (快速捕获)
-    - =C-c n a= :: Org agenda (议程视图)
-    - =C-c n l= :: 存储链接 (org-store-link)
-    - =C-c n t= :: Todo 列表 (org-todo-list)
-
-*** Org Buffer 内（标准快捷键）
-    - =C-c C-w= :: Org refile (重新归档)
-    - =C-c C-t= :: 切换 TODO 状态
-    - =C-c C-s= :: 设置计划时间
-    - =C-c C-d= :: 设置截止日期
-    - =C-c C-c= :: 执行代码块 / 更新复选框
-    - =C-c C-e= :: 导出 (Export dispatcher)
-    - =C-c C-l= :: 插入/编辑链接
-    - =C-c C-o= :: 打开链接
-    - =TAB= :: 折叠/展开标题
-    - =S-TAB= :: 全局折叠/展开
-
-*** 配置管理（新增）
-    - =M-x mcg-org-show-status= :: 显示配置状态
-    - =M-x mcg-org-list-modules= :: 列出所有模块
-    - =M-x mcg-org-load-module= :: 加载指定模块
-    - =M-x mcg-org-reload-module= :: 重新加载模块
-
-** 多光标 / Markmacro (C-c m 前缀)
-
-*** 矩形操作
-    - =C-c m s= :: 设置矩形
-    - =C-c m d= :: 删除矩形
-    - =C-c m r= :: 替换矩形
-    - =C-c m i= :: 插入矩形
-
-*** Mark 转换
-    - =C-c m c= :: Mark 列
-    - =C-c m S= :: Mark 符号
-
-*** 应用宏
-    - =C-c m a= :: 应用到所有
-    - =C-c m e= :: 应用到除第一个外的所有
-
-** 编辑增强
-
-*** 行操作
-    - =C-a= :: 智能行首 (跳过缩进)
-    - =C-c <up>= :: 在上方插入新行
-    - =C-c <down>= :: 在下方插入新行
-    - =M-<up>= :: 向上移动行
-    - =M-<down>= :: 向下移动行
-
-*** 滚动
-    - =M-n= :: 向下滚动 1/3 窗口
-    - =M-p= :: 向上滚动 1/3 窗口
-
-*** 撤销/重做
-    - =C-/= :: 撤销
-    - =C-?= :: 重做
-    - =C-c u= :: Vundo (可视化撤销树)
-
-*** 替换
-    - =C-c R= :: 替换字符串
-    - =C-c M-r= :: 替换正则表达式
-    - =M-%=  :: 交互式替换 (query-replace，Emacs 标准)
-
-** Yasnippet 代码片段
-
-   - =C-c y n= :: 新建代码片段
-   - =C-c y v= :: 访问代码片段文件
-   - =C-c y r= :: 重新加载所有片段
-
-** Elisp 开发
-
-*** Emacs Lisp Mode
-    - =C-c C-b= :: 执行 Buffer (eval-buffer)
-    - =C-c C-c= :: 执行并注释结果 (eval-to-comment)
-    - =C-c C-r= :: 执行选区 (eval-region)
-
-** 文件和 Buffer
-
-   - =C-c E= :: 打开配置文件
-   - =C-c D= :: 创建目录
-   - =C-c f r= :: 打开最近文件
-
-** 帮助系统 (Helpful 增强)
-
-   - =C-h f= :: 查看函数 (helpful-callable)
-   - =C-h v= :: 查看变量 (helpful-variable)
-   - =C-h k= :: 查看按键 (helpful-key)
-   - =C-h x= :: 查看命令 (helpful-command)
-   - =C-c C-d= :: 查看当前点的文档
-
-** Transient 菜单
-
-某些复杂功能提供了 transient 菜单，按下前缀键后加 =?= 可查看菜单：
-
-   - =C-c g ?= :: Git 菜单
-   - =C-c s ?= :: 搜索菜单
-
-** 标准 Emacs 绑定（保留）
-
-本配置保留了所有标准 Emacs 快捷键：
-
-   - =C-x C-f= :: 打开文件
-   - =C-x C-s= :: 保存文件
-   - =C-x b= :: 切换 Buffer
-   - =C-x k= :: 关闭 Buffer
-   - =M-x= :: 执行命令
-   - =C-g= :: 取消操作
-   - =M-g g= :: 跳转到行 (avy-goto-line)
-   - =M-g M-g= :: 跳转到行号 (goto-line, Emacs 默认)
-
-** Which-key 集成 ⭐
-
-所有前缀键都提供了 which-key 描述。按下任意前缀键（如 =C-c g=）并等待 0.3 秒，which-key 会自动显示所有可用的补全选项。
-
-*** 美化特性
-    - 图标前缀描述 (📁 Files, 🔍 Search, 🪟 Window 等)
-    - 符号替换 (←↑→↓, ⏎, ⇥, ␣ 等)
-    - 自定义颜色方案 (Tokyo Night 风格)
-    - 分组显示，清晰易读
-
-*** 主要前缀
-    - =C-c= :: ⚙ User (用户自定义)
-    - =C-c g= ::  Git
-    - =C-c w= :: 🪟 Window
-    - =C-c s= :: 🔍 Search
-    - =C-c r= :: 🔧 Refactor
-    - =C-c t= :: 📑 Tabs
-    - =C-c n= :: 📝 Notes/Org
-    - =M-g= :: ➡ Goto (Avy 跳转)
-
-在 which-key 显示时：
-   - =C-h n= :: 下一页
-   - =C-h p= :: 上一页
-   - =C-h u= :: 撤销/返回
+All custom bindings use =C-c= prefix (user reserved area) with which-key descriptions.
+
+** Quick Reference
+
+| Prefix  | Description      |
+|---------+------------------|
+| C-c g   | Git (Magit)      |
+| C-c w   | Window           |
+| C-c s   | Search           |
+| C-c r   | Refactor         |
+| C-c t   | Tabs             |
+| C-c n   | Notes/Org        |
+| C-c m   | Multi-cursor     |
+| M-g     | Goto (Avy)       |
+
+** LSP Navigation
+
+| Key   | Description          |
+|-------+----------------------|
+| M-.   | Go to definition     |
+| M-,   | Return               |
+| M-?   | Find references      |
+| C-h . | Show documentation   |
+
+** Window Operations
+
+| Key     | Description        |
+|---------+--------------------|
+| M-O     | Quick switch (ace) |
+| C-c w w | Switch window      |
+| C-c w d | Delete window      |
+| C-c w s | Swap windows       |
+
+** Search
+
+| Key     | Description              |
+|---------+--------------------------|
+| C-c s l | Search line (consult)    |
+| C-c s g | Search content (color-rg)|
+| C-c s B | Blink search             |
+
+For complete keybinding reference, press =C-h K= in Emacs.
 
 * 🔧 Customization
 
-** Paths
+** User Settings
 
-   Edit =config-org/core/init-paths.org= to set custom paths:
-   
-   #+begin_src emacs-lisp
-   (defvar mcg/project-dir "~/projects"
-     "Projects directory")
-   #+end_src
+Edit =custom.el= for personal settings:
 
-** Fonts
+#+begin_src emacs-lisp
+(setq mcg-theme 'doom-one)
+(setq mcg-font-size 14)
+#+end_src
 
-   Edit =config-org/core/init-font.org=:
-   
-   #+begin_src emacs-lisp
-   (set-face-attribute 'default nil
-                       :family "Consolas"
-                       :height 120)
-   #+end_src
+** Adding New Modules
 
-** Languages
-
-   Add language support in =config-org/lang/=:
-   
-   #+begin_src emacs-lisp
-   (use-package lang-python
-     :custom
-     (python-shell-interpreter "python3"))
-   #+end_src
-
-** Themes
-
-   Themes are in =site-lisp/extensions/themes/=
-   
-   #+begin_src emacs-lisp
-   (load-theme 'doom-one t)
-   #+end_src
-
-* 📝 Org Mode
-
-** 新的模块化配置系统 ⭐
-
-   本配置采用全新的模块化 Org mode 配置系统（Version 2.1）：
-   
-   - *统一变量管理* :: 所有变量使用 =mcg-org-*= 命名空间
-   - *模块化加载* :: 按需加载，智能依赖管理
-   - *功能开关* :: 通过变量轻松启用/禁用功能
-   - *错误诊断* :: 内置状态查看和验证工具
-
-** 配置结构
-
-   #+begin_src text
-   config-org/org/
-   ├── init-org-vars.org          # 🔧 变量定义（必需）
-   ├── init-org-loader.org        # 🚀 配置加载器
-   ├── init-org.org               # 📝 核心配置
-   ├── init-org-agenda.org        # 📅 Agenda 配置
-   ├── init-capture-hugo.org      # ✍️ Capture & Hugo 集成
-   ├── README-ORG-CONFIG.org      # 📖 完整文档
-   └── HOWTO-USE-NEW-CONFIG.org   # 💡 使用指南
-   #+end_src
-
-** Features
-
-   核心功能：
-   
-   - *Agenda* :: 任务管理和日程安排
-   - *Capture* :: 快速笔记捕获（多种模板）
-   - *Export* :: 多格式导出 (HTML, Markdown, PDF)
-   - *Babel* :: 文档内代码执行（支持 Zig！）✨
-   - *Hugo* :: 博客发布集成（可选）
-   - *中文日历* :: 农历、节气、日出日落
-
-** Org Babel 文学编程 ✨
-
-   本配置支持 Org Babel 文学编程，可以在 Org 文件中执行代码块。
-
-*** 支持的语言
-    
-    - ✅ *Emacs Lisp* - Emacs 配置和脚本
-    - ✅ *Python* - 数据分析、脚本
-    - ✅ *Shell/Bash* - 系统命令
-    - ✅ *Zig* - 系统编程（自定义支持！）🦎
-    - ✅ *JavaScript* - 前端脚本
-    - ✅ *C/C++* - 系统编程
-    - ✅ *SQL* - 数据库查询
-    - ✅ *CSS* - 样式表
-    - ✅ *PlantUML* - 图表绘制
-
-*** 快捷键
-    
-    #+begin_example
-    C-c C-c         执行当前代码块
-    C-c C-v b       执行整个 buffer
-    C-c C-v t       Tangle 文件（提取代码）
-    C-c '           编辑代码块（专用窗口）
-    C-c C-v C-r     移除所有结果
-    C-c C-v i       插入新代码块
-    #+end_example
-
-*** 使用示例
-
-    **** Zig 示例
-    #+begin_example
-    #+begin_src zig :results output
-    const std = @import("std");
-    
-    pub fn main() !void {
-        const stdout = std.io.getStdOut().writer();
-        try stdout.print("Hello from Zig!\n", .{});
-    }
-    #+end_src
-    #+end_example
-
-    **** Python 示例
-    #+begin_example
-    #+begin_src python :results output
-    for i in range(5):
-        print(f"Count: {i}")
-    #+end_src
-    #+end_example
-
-    **** Shell 示例
-    #+begin_example
-    #+begin_src shell :results output
-    echo "Current directory:"
-    pwd
-    ls -la
-    #+end_src
-    #+end_example
-
-*** 常用参数
-
-    - =:results output= :: 捕获标准输出
-    - =:results value= :: 返回最后一个表达式的值
-    - =:exports both= :: 导出代码和结果
-    - =:session NAME= :: 使用持久化会话
-    - =:file OUTPUT.png= :: 将结果保存到文件
-
-*** 配置位置
-
-    Babel 配置文件：=config-org/org/init-org-babel.org=
-
-** 配置变量
-
-   主要可自定义变量：
-   
-   #+begin_src emacs-lisp
-   mcg-org-directory                # Org 根目录
-   mcg-org-agenda-directory         # Agenda 目录
-   mcg-blog-base-directory          # 博客根目录
-   mcg-org-enable-hugo-integration  # Hugo 集成开关
-   mcg-org-enable-chinese-calendar  # 中文日历开关
-   mcg-calendar-location-longitude  # 地理位置（经度）
-   mcg-calendar-location-latitude   # 地理位置（纬度）
-   #+end_src
-
-** 管理命令
-
-   新增的配置管理命令：
-   
-   #+begin_src emacs-lisp
-   M-x mcg-org-show-status      # 显示配置状态（推荐）
-   M-x mcg-org-list-modules     # 列出所有模块
-   M-x mcg-org-load-module      # 加载指定模块
-   M-x mcg-org-reload-module    # 重新加载模块
-   M-x mcg-org-validate-config  # 验证配置
-   #+end_src
-
-** Capture Templates
-
-   配置在 =config-org/org/init-capture-hugo.org=:
-   
-   - *任务* :: 工作任务、阅读任务
-   - *日记* :: 每日 TODO、随笔
-   - *笔记* :: 快速笔记、灵感
-   - *日志* :: 工作日志
-   - *账单* :: 财务记录
-   - *密码* :: 密码管理（加密）
-   - *博客* :: Hugo 博客文章（多分类）
-
-** 文档
-
-   完整文档位于 =config-org/org/=:
-   
-   - =README-ORG-CONFIG.org= :: 完整配置文档
-   - =HOWTO-USE-NEW-CONFIG.org= :: 快速使用指南 ⭐
-   - =CHANGELOG-VAR-MIGRATION.org= :: 变更日志
-
-* 🔍 Debugging
-
-** Common Errors and Solutions ⭐
-
-*** Extension Loading Errors
-
-**** Error: Required extension not found
-     #+begin_example
-     Error: Required extension core/dash failed: Directory not found
-     Suggestion: Run 'make init' to initialize submodules
-     #+end_example
-
-     *Solution:*
-     #+begin_src bash
-     # Initialize all submodules
-     make init
-     
-     # Or manually
-     git submodule update --init --recursive
-     #+end_src
-
-**** Error: Circular dependency detected
-     #+begin_example
-     Warning: Circular dependency detected: pkg-a -> pkg-b -> pkg-a
-     #+end_example
-
-     *Solution:*
-     1. Run =M-x mcg-check-circular-dependencies= to identify the cycle
-     2. Review the extension registry in =init-loadpath.el=
-     3. Remove or restructure the circular dependency
-
-**** Error: Extension dependency failed
-     #+begin_example
-     Warning: Failed to load dependency core/dash for completion/vertico
-     #+end_example
-
-     *Solution:*
-     #+begin_src bash
-     # Check if the dependency exists
-     ls site-lisp/extensions/core/dash
-     
-     # If missing, reinitialize
-     make init
-     #+end_src
-
-*** Git Submodule Errors
-
-**** Error: Submodule not initialized
-     #+begin_example
-     fatal: no submodule mapping found in .gitmodules for path 'site-lisp/extensions/...'
-     #+end_example
-
-     *Solution:*
-     #+begin_src bash
-     git submodule update --init --recursive
-     #+end_src
-
-**** Error: Submodule has conflicts
-     #+begin_example
-     error: Your local changes to the following files would be overwritten by checkout
-     #+end_example
-
-     *Solution:*
-     #+begin_src bash
-     # Option 1: Stash changes
-     cd site-lisp/extensions/[package]
-     git stash
-     cd ../../..
-     make up
-     
-     # Option 2: Force update (loses local changes)
-     git submodule update --force [path]
-     #+end_src
-
-**** Error: Detached HEAD in submodule
-     #+begin_example
-     HEAD detached at abc1234
-     #+end_example
-
-     *Note:* This is normal for submodules. If you need to make changes:
-     #+begin_src bash
-     cd site-lisp/extensions/[package]
-     git checkout main  # or master
-     #+end_src
-
-*** Version Lock Errors
-
-**** Error: Lock file not found
-     #+begin_example
-     Warning: packages-lock.el not found
-     #+end_example
-
-     *Solution:*
-     #+begin_src bash
-     # Create a new lock file
-     make lock-packages
-     #+end_src
-
-**** Error: Cannot restore to locked version
-     #+begin_example
-     error: pathspec 'abc1234' did not match any file(s) known to git
-     #+end_example
-
-     *Solution:*
-     #+begin_src bash
-     # Fetch latest from remote first
-     cd site-lisp/extensions/[package]
-     git fetch --all
-     cd ../../..
-     make restore-packages
-     #+end_src
-
-*** Configuration Validation Errors
-
-**** Error: Invalid Elisp syntax
-     #+begin_example
-     Syntax error in generated file: site-lisp/config/core/init-loadpath.el
-     #+end_example
-
-     *Solution:*
-     1. Check the source Org file for syntax errors
-     2. Regenerate the configuration:
-        #+begin_src bash
-        make clean
-        make generate
-        #+end_src
-
-**** Error: Missing required feature
-     #+begin_example
-     Cannot open load file: No such file or directory, some-feature
-     #+end_example
-
-     *Solution:*
-     1. Check if the extension providing the feature is registered
-     2. Verify the extension directory exists
-     3. Run =M-x mcg-validate-extensions=
-
-*** Platform-Specific Errors
-
-**** Windows: PowerShell execution policy
-     #+begin_example
-     File cannot be loaded because running scripts is disabled on this system
-     #+end_example
-
-     *Solution:*
-     #+begin_src powershell
-     # Run as Administrator
-     Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
-     #+end_src
-
-**** Windows: Path too long
-     #+begin_example
-     Filename too long
-     #+end_example
-
-     *Solution:*
-     #+begin_src powershell
-     # Enable long paths (requires Windows 10 1607+)
-     git config --system core.longpaths true
-     #+end_src
-
-**** Unix: Permission denied
-     #+begin_example
-     Permission denied: scripts/some-script.sh
-     #+end_example
-
-     *Solution:*
-     #+begin_src bash
-     chmod +x scripts/*.sh
-     #+end_src
-
-*** Diagnostic Commands
-
-    Use these commands to diagnose issues:
-
-    #+begin_src emacs-lisp
-    ;; Validate all configuration
-    M-x mcg-validate-all
-    
-    ;; Check extension status
-    M-x mcg-display-categories-status
-    
-    ;; View platform info
-    M-x mcg-display-platform-info
-    
-    ;; Check external tools
-    M-x mcg-detect-external-tools
-    
-    ;; View degradation warnings
-    M-x mcg-display-degradation-warnings
-    
-    ;; Check load status
-    M-x mcg-load-status
-    #+end_src
-
-** Enable Debug Mode
-   #+begin_src emacs-lisp
-   (setq debug-on-error t)
-   (setq debug-on-quit t)
-   #+end_src
-
-** View Startup Log
-   #+begin_src bash
-   emacs --debug-init 2>&1 | tee debug.log
-   #+end_src
-
-** Check Loaded Modules
-   #+begin_src emacs-lisp
-   M-x mcg-list-loaded-modules
-   #+end_src
-
-** Profiling
-   #+begin_src emacs-lisp
-   (require 'profiler)
-   (profiler-start 'cpu+mem)
-   ;; ... do work ...
-   (profiler-report)
-   (profiler-stop)
-   #+end_src
-
-* 🚀 Performance
-
-   Configuration is optimized for fast startup:
-   
-   - *Lazy Loading* :: Language and Org support load on idle
-   - *Fast GC* :: Increased GC threshold during startup
-   - *Deferred* :: Heavy features load after 1-2 seconds
-   
-   Expected startup time: *< 1 second* on modern hardware.
-   
-   Startup time is displayed after loading:
-   
-   #+begin_example
-   Emacs configuration loaded in 0.85 seconds
-   #+end_example
+1. Create an Org file in =config-org/modules/CATEGORY/=
+2. Use =:tangle= directive for code blocks
+3. Add module to =mcg!= declaration in =init.org=
+4. Run =make generate=
 
 * 📚 Resources
-
-** Learning Emacs
-   - Press =C-h t= for the Emacs tutorial
-   - Press =C-h i m org RET= for Org Mode manual
-   - Visit [[https://www.emacswiki.org/][EmacsWiki]]
 
 ** Documentation
    - [[https://www.gnu.org/software/emacs/manual/][Emacs Manual]]
    - [[https://orgmode.org/manual/][Org Mode Manual]]
-   - [[https://github.com/minad/vertico][Vertico]]
-   - [[https://github.com/minad/marginalia][Marginalia]]
-   - [[https://github.com/oantolin/embark][Embark]]
    - [[https://github.com/manateelazycat/lsp-bridge][lsp-bridge]]
    - [[https://magit.vc/][Magit]]
 
 ** Tips
    - Use =C-h v= to view variables
    - Use =C-h k= to see what a key does
-   - Use Helpful (=C-c h=) for better documentation
    - Check =*Messages*= buffer for errors
-
-* 🤝 Contributing
-
-   This is a personal configuration. Feel free to:
-   
-   1. Fork it for your own use
-   2. Adapt it to your workflow
-   3. Report issues or suggestions
-
-* 🙏 Acknowledgments
-
-   - All Emacs package maintainers
-   - Org Mode community
-   - Emacs Reddit/Discord communities
-   - Language server protocol authors
 
 * 📄 License
 
-   Same as the parent dotfiles repository.
+Same as the parent dotfiles repository.

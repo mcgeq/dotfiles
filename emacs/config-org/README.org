@@ -1,7 +1,9 @@
 #+TITLE: Emacs Configuration - Declarative Modular Architecture
 #+AUTHOR: mcge
-#+DATE: 2026-01-07
+#+DATE: 2026-01-09
 #+OPTIONS: toc:3 num:t
+
+[[file:README_CN.org][中文文档]]
 
 * Overview
 
@@ -14,52 +16,68 @@ MCG Emacs configuration adopts a declarative module system, inspired by Doom Ema
 - Module dependency management
 - Unified extension management
 - Complete test coverage
+- Deprecated module migration support
 
 * Directory Structure
 
 #+begin_src text
 config-org/
-├── init.org                      # Entry file (only contains mcg! declaration)
+├── init.org                      # Entry file (mcg! declaration)
+├── early-init.org                # Early init configuration
 ├── core/                         # Core layer (must be loaded)
 │   ├── core-bootstrap.org        # Path definitions, performance optimization
 │   ├── core-lib.org              # Utility functions, extension management
-│   └── core-modules.org          # mcg! macro, module system
-├── modules/                      # Feature modules
-│   ├── ui/                       # UI related
+│   ├── core-modules.org          # mcg! macro, module system
+│   └── core-autoload.org         # Auto tangle and autoload
+├── modules/                      # Feature modules (8 categories, 35 modules)
+│   ├── ui/                       # UI related (4 modules)
 │   │   ├── init-theme.org
 │   │   ├── init-modeline.org
-│   │   └── init-font.org
-│   ├── editor/                   # Editor features
+│   │   ├── init-font.org
+│   │   └── init-icons.org
+│   ├── editor/                   # Editor features (8 modules)
 │   │   ├── init-defaults.org
 │   │   ├── init-treesit.org
 │   │   ├── init-navigation.org
-│   │   └── init-keybindings.org
-│   ├── completion/               # Completion system
+│   │   ├── init-keybindings.org
+│   │   ├── init-paredit.org
+│   │   ├── init-format.org
+│   │   ├── init-undo.org
+│   │   └── init-multicursor.org
+│   ├── completion/               # Completion system (2 modules)
 │   │   ├── init-vertico.org
 │   │   └── init-yasnippet.org
-│   ├── tools/                    # Tools
+│   ├── tools/                    # Tools (5 modules)
 │   │   ├── init-magit.org
 │   │   ├── init-search.org
 │   │   ├── init-rime.org
-│   │   ├── init-utils.org
-│   │   └── init-sort-tab.org
-│   ├── input/                    # Input enhancement
-│   │   ├── init-fingertip.org
-│   │   └── init-wraplish.org
-│   ├── org/                      # Org-mode
+│   │   ├── init-tabs.org
+│   │   └── init-eshell.org
+│   ├── enhance/                  # Enhancement features (5 modules)
+│   │   ├── init-autosave.org
+│   │   ├── init-which-key.org
+│   │   ├── init-helpful.org
+│   │   ├── init-recentf.org
+│   │   └── init-symbol.org
+│   ├── org/                      # Org-mode (5 modules)
 │   │   ├── init-org.org
 │   │   ├── init-org-agenda.org
 │   │   ├── init-org-babel.org
 │   │   ├── init-org-capture.org
 │   │   └── init-org-extras.org
-│   ├── docs/                     # Documentation
-│   │   └── init-markdown.org
-│   └── lang/                     # Programming languages
+│   ├── writing/                  # Writing tools (2 modules)
+│   │   ├── init-markdown.org
+│   │   └── init-vale.org
+│   └── lang/                     # Programming languages (9 modules)
 │       ├── init-lsp.org
 │       ├── init-lsp-common.org
 │       ├── init-rust.org
 │       ├── init-python.org
-│       └── ...
+│       ├── init-typescript.org
+│       ├── init-web.org
+│       ├── init-cpp.org
+│       ├── init-lua.org
+│       └── init-zig.org
 └── private/                      # Private configuration (not committed to Git)
     └── config.org
 #+end_src
@@ -90,32 +108,74 @@ Use =mcg!= macro in =init.org= to declare enabled modules:
 
 #+begin_src emacs-lisp
 (mcg! :ui
-      theme           ; Theme configuration
-      modeline        ; Status bar
-      font            ; Font configuration
+      theme modeline font icons
 
       :editor
-      defaults        ; Editor default configuration
-      treesit         ; Tree-sitter support
-      navigation      ; Navigation (avy, ace-window)
-      keybindings     ; Keybindings
+      defaults treesit navigation keybindings
+      paredit format undo multicursor
 
       :completion
-      vertico         ; Vertical completion framework
-      yasnippet       ; Code snippets
+      vertico yasnippet
 
       :tools
-      magit           ; Git client
-      search          ; Search tools
-      rime            ; Chinese input method
-      utils           ; Utilities
+      magit search rime tabs eshell
+
+      :enhance
+      autosave which-key helpful recentf symbol
+
+      :org
+      org org-agenda org-babel org-capture org-extras
+
+      :writing
+      markdown vale
 
       :lang
-      lsp             ; LSP configuration
-      rust            ; Rust development
-      -lua            ; Disable Lua (with - prefix)
-      )
+      lsp lsp-common rust python typescript web cpp lua zig)
 #+end_src
+
+* Module Categories
+
+| Category   | Modules | Description                       | Loading   |
+|------------+---------+-----------------------------------+-----------|
+| ui         |       4 | Theme, modeline, font, icons      | Immediate |
+| editor     |       8 | Editing features                  | Immediate |
+| completion |       2 | Vertico, yasnippet                | Immediate |
+| tools      |       5 | Magit, search, rime, tabs, eshell | Immediate |
+| enhance    |       5 | Autosave, which-key, helpful, etc.| Immediate |
+| org        |       5 | Org Mode ecosystem                | Immediate |
+| writing    |       2 | Markdown, vale                    | Immediate |
+| lang       |       9 | LSP and language support          | Deferred  |
+
+* Migration Guide
+
+If migrating from an older configuration version:
+
+** Category Changes
+
+| Old Category | New Category | Notes                          |
+|--------------+--------------+--------------------------------|
+| :input       | :editor      | Input modules merged to editor |
+| :docs        | :writing     | Docs renamed to writing        |
+| (none)       | :enhance     | New enhancement category       |
+
+** Module Renames
+
+| Old Module          | New Module        | Notes              |
+|---------------------+-------------------+--------------------|
+| :input fingertip    | :editor paredit   | Structural editing |
+| :input wraplish     | :editor format    | Text formatting    |
+| :docs markdown      | :writing markdown | Markdown support   |
+| :tools sort-tab     | :tools tabs       | Tab management     |
+| :tools utils        | :enhance (split)  | Utils split up     |
+
+** Auto Migration
+
+The system automatically detects old category/module names and shows warnings:
+
+#+begin_example
+Warning: Category :input is deprecated, use :editor instead
+Warning: Module fingertip is renamed to paredit
+#+end_example
 
 * Private Configuration
 
@@ -130,39 +190,37 @@ Private configuration will not be committed to Git.
 * Makefile Commands
 
 #+begin_src bash
-# Compile configuration
-make
-
-# Clean generated files
-make clean
-
-# View file list
-make list
-
-# Run tests
-make test
-
-# Initialize submodules
-make init
-
-# Update submodules
-make up
-
-# View submodule status
-make st
+make              # Compile configuration
+make clean        # Clean generated files
+make list         # View file list
+make test         # Run tests
+make init         # Initialize submodules
+make up           # Update submodules
+make st           # View submodule status
 #+end_src
 
 * Common Commands
 
-| Command                  | Description                    |
-|--------------------------+--------------------------------|
-| M-x mcg-list-modules     | Show all modules and status    |
-| M-x mcg/reload-module    | Reload specified module        |
-| M-x mcg/show-keybindings | Show keybindings reference     |
+| Command                       | Description                 |
+|-------------------------------+-----------------------------|
+| M-x mcg-list-modules          | Show all modules and status |
+| M-x mcg/reload-module         | Reload specified module     |
+| M-x mcg/show-keybindings      | Show keybindings reference  |
+| M-x mcg/toggle-format-on-save | Toggle format on save       |
 
 * Changelog
 
-** 2026-01-07 - Release
+** 2026-01-09 - Module Refactor
+
+- Split init-utils.org into enhance category modules
+- Merged :input category into :editor
+- Renamed :docs category to :writing
+- Added new :enhance category
+- Module renames: fingertip → paredit, wraplish → format, sort-tab → tabs
+- Added deprecated module migration support
+- Extracted icons, undo, multicursor, vale modules
+
+** 2026-01-07 - Initial Release
 
 - Declarative module system (mcg! macro)
 - Lazy loading support

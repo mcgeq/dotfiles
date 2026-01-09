@@ -13,7 +13,7 @@
 ;; Copyright (C) 2024-2026, mcge, all rights reserved.
 ;; Create   Date: 2026-01-07
 ;; Version: 3.0
-;; Keywords: markdown, docs
+;; Keywords: markdown, writing
 ;; Compatibility: GNU Emacs 29.0+
 
 ;;; Commentary:
@@ -21,7 +21,7 @@
 ;; Markdown documentation module for MCG Emacs, responsible for:
 ;; - Markdown mode configuration
 ;; - Tree-sitter support
-;; - Flymake-vale grammar checking
+;; - Grip mode live preview
 ;;
 ;; Module metadata:
 ;; :defer t
@@ -49,32 +49,6 @@
     (add-to-list 'auto-mode-alist '("\\.md\\'" . markdown-ts-mode))
     (add-to-list 'auto-mode-alist '("\\.markdown\\'" . markdown-ts-mode))
     (mcg-log "Markdown tree-sitter mode configured")))
-
-#+END_SRC
-
-** Flymake Vale Integration
-#+BEGIN_SRC emacs-lisp
-;;; Flymake Vale Integration
-
-(defun mcg--setup-flymake-vale ()
-  "Setup flymake-vale grammar checking."
-  (when (mcg-require-extension "docs/flymake-vale" 'flymake-vale)
-    ;; Enable vale for various text modes
-    (add-hook 'text-mode-hook #'flymake-vale-load)
-    (add-hook 'markdown-mode-hook #'flymake-vale-load)
-    (add-hook 'markdown-ts-mode-hook #'flymake-vale-load)
-    (add-hook 'org-mode-hook #'flymake-vale-load)
-    (add-hook 'latex-mode-hook #'flymake-vale-load)
-    (add-hook 'message-mode-hook #'flymake-vale-load)
-    
-    ;; Auto-detect and load
-    (add-hook 'find-file-hook 'flymake-vale-maybe-load)
-    
-    ;; Add extra mode support
-    (when (boundp 'flymake-vale-modes)
-      (add-to-list 'flymake-vale-modes 'adoc-mode))
-    
-    (mcg-log "Flymake-vale configured")))
 
 #+END_SRC
 
@@ -127,7 +101,6 @@
 ;;; Initialize
 
 (mcg--setup-markdown-mode)
-(mcg--setup-flymake-vale)
 (mcg--setup-grip-mode)
 
 ;; 添加 hook

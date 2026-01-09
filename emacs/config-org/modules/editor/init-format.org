@@ -1,25 +1,29 @@
-* init-wraplish.el
+* init-format.el
 :PROPERTIES:
-:HEADER-ARGS: :tangle init-wraplish.el :lexical t
+:HEADER-ARGS: :tangle init-format.el :lexical t
 :END:
 
 ** Headers
 #+BEGIN_SRC emacs-lisp
-;;; init-wraplish.el --- Wraplish Configuration for MCG Emacs -*- lexical-binding: t; -*-
+;;; init-format.el --- Text Formatting Configuration for MCG Emacs -*- lexical-binding: t; -*-
 
-;; Filename: init-wraplish.el
-;; Description: Chinese-English mixed text auto-spacing module
+;; Filename: init-format.el
+;; Description: Text formatting module (formerly init-wraplish)
 ;; Author: mcge <mcgeq@outlook.com>
 ;; Copyright (C) 2024-2026, mcge, all rights reserved.
 ;; Create   Date: 2026-01-07
+;; Modified Date: 2026-01-09
 ;; Version: 3.0
-;; Keywords: wraplish, chinese, spacing
+;; Keywords: wraplish, chinese, spacing, format
 ;; Compatibility: GNU Emacs 29.0+
 
 ;;; Commentary:
 ;;
-;; Chinese-English mixed text module for MCG Emacs, responsible for:
+;; Text formatting module for MCG Emacs, responsible for:
 ;; - Automatically adding spaces between Chinese and English text
+;;
+;; This module was renamed from init-wraplish to init-format
+;; as part of the input -> editor category merge.
 ;;
 
 #+END_SRC
@@ -51,7 +55,7 @@
 
 (defun mcg--setup-wraplish ()
   "Setup wraplish Chinese-English mixed text."
-  (when (mcg-require-extension "input/wraplish" 'wraplish)
+  (when (mcg-require-extension "editor/wraplish" 'wraplish)
     (dolist (hook mcg-wraplish-modes)
       (add-hook hook (lambda () (wraplish-mode 1))))
     
@@ -69,6 +73,6 @@
 
 ** Provide
 #+BEGIN_SRC emacs-lisp
-(provide 'init-wraplish)
-;;; init-wraplish.el ends here
+(provide 'init-format)
+;;; init-format.el ends here
 #+END_SRC
