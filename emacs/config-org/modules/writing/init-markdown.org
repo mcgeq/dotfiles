@@ -73,25 +73,41 @@
 (defun mcg--setup-grip-mode ()
   "Setup grip-mode live preview."
   (when (mcg-require-extension "docs/grip-mode" 'grip-mode)
-    ;; Bind shortcut to markdown-mode-command-map
+    ;; Bind shortcut to markdown-mode-command-map: C-c C-c g
     (with-eval-after-load 'markdown-mode
       (define-key markdown-mode-command-map (kbd "g") #'grip-mode))
-    
+
     ;; Command selection: auto, grip, go-grip or mdopen
     (setq grip-command 'auto)
-    
+
     ;; Theme selection
     (setq grip-theme 'auto)
-    
+
     ;; Use embedded webkit preview (requires Emacs 26+ compiled with --with-xwidgets)
+    ;; mdopen doesn't support webkit preview
     (setq grip-preview-use-webkit t)
-    
+
+    ;; GitHub API configuration (only available for `grip')
+    ;; Base URL to another GitHub API
+    (setq grip-github-api-url "")
+    ;; GitHub username for API authentication
+    (setq grip-github-user "")
+    ;; GitHub password or auth token for API auth
+    (setq grip-github-password "")
+
+    ;; Preview hostname (only available for `grip')
+    (setq grip-preview-host "localhost")
+
     ;; Update preview after save, not after every text change
     (setq grip-update-after-change nil)
-    
+
     ;; Wait time for server startup
     (setq grip-sleep-time 2)
-    
+
+    ;; Auto start grip-mode when opening markdown/org files
+    (add-hook 'markdown-mode-hook #'grip-mode)
+    (add-hook 'org-mode-hook #'grip-mode)
+
     (mcg-log "Grip-mode configured")))
 
 #+END_SRC
@@ -103,7 +119,7 @@
 (mcg--setup-markdown-mode)
 (mcg--setup-grip-mode)
 
-;; 添加 hook
+;; Add hooks
 (add-hook 'markdown-mode-hook #'mcg--markdown-mode-hook)
 (add-hook 'markdown-ts-mode-hook #'mcg--markdown-mode-hook)
 
