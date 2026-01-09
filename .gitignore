@@ -6,6 +6,7 @@ vimrc/pack/mcge/start/ultisnips/tags
 emacs/site-lisp/config/*
 emacs/site-lisp/config-v3/*
 emacs/config-org/**/*.md
+emacs/config-org/**/*.el
 emacs/custom.el
 emacs/site-lisp/packages-lock.el
 
