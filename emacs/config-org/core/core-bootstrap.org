@@ -446,8 +446,8 @@ TIME is startup time, MODULES is module count, ERRORS is error count, GCS is GC 
                    :internal-border-color border-color
                    :background-color bg-color
                    :foreground-color fg-color
-                   :width 45
-                   :height 8
+                   :width 28
+                   :height 7
                    :accept-focus nil)
     ;; Auto-hide after timeout
     (run-with-timer mcg-startup-posframe-timeout nil
@@ -462,19 +462,16 @@ TIME is startup time, MODULES is module count, ERRORS is error count, GCS is GC 
 (defun mcg--format-startup-content (time modules errors gcs)
   "Format startup content for posframe display.
 TIME is startup time, MODULES is module count, ERRORS is error count, GCS is GC count."
-  (let ((status-icon (if (> errors 0) "⚠" "✓")))
-    (concat
-     "\n"
-     "    ╭─────────────────────────────────╮\n"
-     "    │     MCG Emacs Ready             │\n"
-     "    ├─────────────────────────────────┤\n"
-     (format "    │  %s Time: %.2fs                  │\n" status-icon time)
-     (format "    │  📦 Modules: %-3d                │\n" modules)
-     (if (> errors 0)
-         (format "    │  ❌ Errors: %-3d            │\n" errors)
-       "")
-     (format "    │  🔄 GCs: %-3d                    │\n" gcs)
-     "    ╰─────────────────────────────────╯\n")))
+  (concat
+   "\n"
+   "       MCG Emacs Ready\n"
+   "  ─────────────────────────\n"
+   (format "   ⏱️  %.2fs\n" time)
+   (format "   📦  %d\n" modules)
+   (if (> errors 0)
+       (format "   ❌  %d\n" errors)
+     "")
+   (format "   🔄  %d\n" gcs)))
 #+end_src
 
 *** Color Helpers
