@@ -1,10 +1,18 @@
-* init-org-capture.el
-:PROPERTIES:
-:HEADER-ARGS: :tangle init-org-capture.el :lexical t
-:END:
+#+TITLE: Org Capture Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-org-capture.el :lexical t
 
-** Headers
-#+BEGIN_SRC emacs-lisp
+* Org Capture Module
+
+本模块负责 MCG Emacs 的 Org Capture 配置，包括：
+- Capture 模板配置
+- Hugo 博客集成
+- 密码管理辅助函数
+- 账单记录功能
+
+** File Header
+
+#+begin_src emacs-lisp
 ;;; init-org-capture.el --- Org Capture and Hugo for MCG Emacs -*- lexical-binding: t; -*-
 
 ;; Filename: init-org-capture.el
@@ -19,75 +27,29 @@
 ;;; Commentary:
 ;;
 ;; Org Capture module for MCG Emacs, responsible for:
-;; - Org variable definitions
 ;; - Capture templates
 ;; - Hugo blog integration
 ;; - Password management helper functions
 ;;
+#+end_src
 
-#+END_SRC
+** Require
 
-** Dependencies
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
+;;; Code:
+
 ;;; Dependencies
 
 (require 'core-lib)
 (require 'org-capture)
+#+end_src
 
-#+END_SRC
+** Additional File Variables
 
-** Org Variables
-#+BEGIN_SRC emacs-lisp
-;;; Org Variables
+额外的文件变量定义，包括日记、日志、账单和密码文件路径。
 
-(defgroup mcg-org nil
-  "Org mode configuration variables."
-  :group 'org
-  :prefix "mcg-org-")
-
-;; Base directories
-(defcustom mcg-org-directory
-  (expand-file-name "~/org")
-  "Root directory for Org mode files."
-  :type 'directory
-  :group 'mcg-org)
-
-(defcustom mcg-org-agenda-directory
-  (expand-file-name "agenda" mcg-org-directory)
-  "Org agenda files directory."
-  :type 'directory
-  :group 'mcg-org)
-
-(defcustom mcg-org-notes-directory
-  (expand-file-name "notes" mcg-org-directory)
-  "Org notes files directory."
-  :type 'directory
-  :group 'mcg-org)
-
-(defcustom mcg-org-blog-directory
-  (expand-file-name "blog" mcg-org-directory)
-  "Blog-related Org files directory."
-  :type 'directory
-  :group 'mcg-org)
-
-(defcustom mcg-org-archive-directory
-  (expand-file-name "archive" mcg-org-directory)
-  "Org archive files directory."
-  :type 'directory
-  :group 'mcg-org)
-
-;; Main file paths
-(defcustom mcg-org-default-notes-file
-  (expand-file-name "notes.org" mcg-org-notes-directory)
-  "Default notes file."
-  :type 'file
-  :group 'mcg-org)
-
-(defcustom mcg-org-task-file
-  (expand-file-name "tasks.org" mcg-org-agenda-directory)
-  "Tasks file."
-  :type 'file
-  :group 'mcg-org)
+#+begin_src emacs-lisp
+;;; Additional File Variables
 
 (defcustom mcg-org-diary-file
   (expand-file-name "diary.org" mcg-org-agenda-directory)
@@ -112,7 +74,13 @@
   "Password management file (recommend encryption)."
   :type 'file
   :group 'mcg-org)
+#+end_src
 
+** Hugo Blog Configuration
+
+Hugo 博客相关的配置变量。
+
+#+begin_src emacs-lisp
 ;; Hugo blog configuration
 (defcustom mcg-blog-base-directory
   (expand-file-name "~/blog")
@@ -155,36 +123,13 @@
   "Whether to enable Hugo blog integration."
   :type 'boolean
   :group 'mcg-org)
-
-#+END_SRC
-
-** Directory Initialization
-#+BEGIN_SRC emacs-lisp
-;;; Directory Initialization
-
-(defun mcg-org-ensure-directory (dir)
-  "Ensure directory DIR exists, create if not."
-  (unless (file-exists-p dir)
-    (make-directory dir t)
-    (message "Created directory: %s" dir)))
-
-(defun mcg-org-initialize-directories ()
-  "Initialize all Org mode directories."
-  (interactive)
-  (mapc #'mcg-org-ensure-directory
-        (list mcg-org-directory
-              mcg-org-agenda-directory
-              mcg-org-notes-directory
-              mcg-org-blog-directory
-              mcg-org-archive-directory)))
-
-;; Initialize directories
-(mcg-org-initialize-directories)
-
-#+END_SRC
+#+end_src
 
 ** Password Helper Functions
-#+BEGIN_SRC emacs-lisp
+
+密码生成和管理的辅助函数。
+
+#+begin_src emacs-lisp
 ;;; Password Helper Functions
 
 (defun mcg/random-alphanum ()
@@ -205,11 +150,13 @@
     (if (string= password "")
         (mcg/create-password)
       password)))
-
-#+END_SRC
+#+end_src
 
 ** Billing Helper Functions
-#+BEGIN_SRC emacs-lisp
+
+账单记录的辅助函数，用于按年月组织账单条目。
+
+#+begin_src emacs-lisp
 ;;; Billing Helper Functions
 
 (defun mcg/get-year-and-month ()
@@ -236,11 +183,13 @@
       (setq level (1+ level))
       (setq end (save-excursion (org-end-of-subtree t t))))
     (org-end-of-subtree)))
-
-#+END_SRC
+#+end_src
 
 ** Basic Capture Configuration
-#+BEGIN_SRC emacs-lisp
+
+Org Capture 基本配置。
+
+#+begin_src emacs-lisp
 ;;; Basic Capture Configuration
 
 (defun mcg--setup-org-capture ()
@@ -255,11 +204,15 @@
   (setq org-capture-use-agenda-date nil)
   
   (mcg-log "Org capture basic configuration done"))
-
-#+END_SRC
+#+end_src
 
 ** Capture Templates
-#+BEGIN_SRC emacs-lisp
+
+Capture 模板配置，包括任务、日记、笔记、日志、账单和密码模板。
+
+*** Task Templates
+
+#+begin_src emacs-lisp
 ;;; Capture Templates
 
 (defun mcg--setup-capture-templates ()
@@ -279,7 +232,11 @@
                  entry (file+headline mcg-org-task-file "Work")
                  "* TODO %^{任务名}\n%u\n%a\n"
                  :clock-in t :clock-resume t))
-  
+#+end_src
+
+*** Diary Templates
+
+#+begin_src emacs-lisp
   ;; Diary-related templates
   (add-to-list 'org-capture-templates '("d" "Diary"))
   (add-to-list 'org-capture-templates
@@ -294,7 +251,11 @@
                  "* %?\n%T\n\n%i"
                  :empty-lines 1
                  :jump-to-captured t))
-  
+#+end_src
+
+*** Notes and Journal Templates
+
+#+begin_src emacs-lisp
   ;; Notes and journal templates
   (add-to-list 'org-capture-templates
                '("n" "Notes"
@@ -307,7 +268,11 @@
                  entry (file+datetree mcg-org-journal-file)
                  "* %U - %^{heading} %^g\n %?\n"
                  :empty-lines 1))
-  
+#+end_src
+
+*** Billing and Password Templates
+
+#+begin_src emacs-lisp
   ;; Billing template
   (add-to-list 'org-capture-templates
                '("b" "Billing"
@@ -324,18 +289,22 @@
                  :kill-buffer t))
   
   (mcg-log "Capture templates configured"))
-
-#+END_SRC
+#+end_src
 
 ** Hugo Integration
-#+BEGIN_SRC emacs-lisp
+
+Hugo 博客集成配置。
+
+*** Hugo Template Generator
+
+#+begin_src emacs-lisp
 ;;; Hugo Integration
 
 (defun mcg--setup-hugo-integration ()
   "Setup Hugo blog integration."
   (when mcg-org-enable-hugo-integration
     ;; Load ox-hugo
-    (when (mcg-require-extension "org/ox-hugo" 'ox-hugo)
+    (when (mcg-require-extension "ox-hugo" 'ox-hugo)
       (setq org-hugo-base-dir (concat mcg-blog-base-directory "/")))
     
     ;; Hugo capture template generator function
@@ -352,7 +321,11 @@
                      ":END:"
                      "%?\n")
                    "\n")))
-    
+#+end_src
+
+*** Hugo Capture Templates
+
+#+begin_src emacs-lisp
     ;; Hugo blog capture templates
     (add-to-list 'org-capture-templates '("h" "Hugo Post"))
     (add-to-list 'org-capture-templates '("hl" "About Development Language"))
@@ -377,7 +350,11 @@
                    entry
                    (file+headline mcg-org-blog-mcu-file "MCU")
                    (function mcg/org-hugo-new-subtree-post-capture-template)))
-    
+#+end_src
+
+*** Other Hugo Categories
+
+#+begin_src emacs-lisp
     ;; Other categories
     (add-to-list 'org-capture-templates
                  '("he" "About Emacs"
@@ -398,28 +375,32 @@
                    (function mcg/org-hugo-new-subtree-post-capture-template)))
     
     (mcg-log "Hugo integration configured")))
-
-#+END_SRC
+#+end_src
 
 ** Easy Hugo Configuration
-#+BEGIN_SRC emacs-lisp
+
+Easy Hugo 配置。
+
+#+begin_src emacs-lisp
 ;;; Easy Hugo Configuration
 
 (defun mcg--setup-easy-hugo ()
   "Setup Easy Hugo."
   (when (and mcg-org-enable-hugo-integration
-             (mcg-require-extension "org/easy-hugo" 'easy-hugo))
+             (mcg-require-extension "easy-hugo" 'easy-hugo))
     (setq easy-hugo-postdir "content-org"
           easy-hugo-default-ext ".org"
           easy-hugo-url "https://www.gemc.club"
           easy-hugo-basedir (concat mcg-blog-base-directory "/"))
     
     (mcg-log "Easy Hugo configured")))
-
-#+END_SRC
+#+end_src
 
 ** Keybindings
-#+BEGIN_SRC emacs-lisp
+
+Capture 相关快捷键配置（C-c n 前缀）。
+
+#+begin_src emacs-lisp
 ;;; Keybindings (C-c n prefix)
 
 (defun mcg--setup-capture-keybindings ()
@@ -430,11 +411,13 @@
   (global-set-key (kbd "C-c n t") 'org-todo-list)
   
   (mcg-log "Capture keybindings configured"))
-
-#+END_SRC
+#+end_src
 
 ** Initialize
-#+BEGIN_SRC emacs-lisp
+
+初始化配置。
+
+#+begin_src emacs-lisp
 ;;; Initialize
 
 (mcg--setup-org-capture)
@@ -442,11 +425,11 @@
 (mcg--setup-hugo-integration)
 (mcg--setup-easy-hugo)
 (mcg--setup-capture-keybindings)
+#+end_src
 
-#+END_SRC
+** Provide Feature
 
-** Provide
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (provide 'init-org-capture)
 ;;; init-org-capture.el ends here
-#+END_SRC
+#+end_src

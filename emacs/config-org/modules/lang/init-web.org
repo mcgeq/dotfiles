@@ -1,417 +1,387 @@
-* init-web.el
-:PROPERTIES:
-:HEADER-ARGS: :tangle init-web.el :lexical t
-:END:
+#+TITLE: Web Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-web.el :lexical t
 
-** Headers
-#+BEGIN_SRC emacs-lisp
-  ;;; init-web.el --- Web Development Support for MCG Emacs -*- lexical-binding: t; -*-
+* Web Module
 
-  ;; Filename: init-web.el
-  ;; Description: Web development support module (Vue/HTML/CSS)
-  ;; Author: mcge <mcgeq@outlook.com>
-  ;; Copyright (C) 2024-2026, mcge, all rights reserved.
-  ;; Create   Date: 2026-01-07
-  ;; Version: 3.0
-  ;; Keywords: web, vue, html, css, web-mode
-  ;; Compatibility: GNU Emacs 29.0+
+本模块负责 MCG Emacs 的 Web 开发支持，包括：
+- web-mode 用于 Vue/HTML 模板
+- instant-rename-tag 用于标签重命名
+- highlight-matching-tag 用于标签高亮
+- CSS/SCSS 支持
+- Emmet 集成
 
-  ;;; Commentary:
-  ;;
-  ;; Web development support module for MCG Emacs, providing:
-  ;; - web-mode configuration (Vue/HTML)
-  ;; - CSS/SCSS/LESS support
-  ;; - Vue SFC support
-  ;; - LSP integration (via +lsp module)
-  ;; - Emmet expansion
-  ;; - Tag highlighting and renaming
-  ;;
-  ;; Module metadata:
-  ;; :depends (+lsp)
-  ;; :defer t
-  ;;
+** File Header
 
-#+END_SRC
+#+begin_src emacs-lisp
+;;; init-web.el --- Web development support for MCG Emacs -*- lexical-binding: t; -*-
 
-** Dependencies
-#+BEGIN_SRC emacs-lisp
-;;; Dependencies
+;; Copyright (C) 2024-2026 MCG
+;; Author: mcge <mcgeq@outlook.com>
+;; Keywords: languages, web, vue, html, css
+;; Compatibility: GNU Emacs 29.0+
+
+;;; Commentary:
+;; Web development support module for MCG Emacs:
+;; - web-mode for Vue/HTML templates
+;; - instant-rename-tag for tag renaming
+;; - highlight-matching-tag for tag highlighting
+;; - CSS/SCSS support
+;; - Emmet integration
+;;
+#+end_src
+
+** Require
+
+#+begin_src emacs-lisp
+;;; Code:
 
 (require 'core-lib)
+#+end_src
 
-;; 直接添加 web-mode 路径到 load-path（确保在 require 之前）
-(let ((web-mode-path (expand-file-name "lsp/web-mode" mcg-extensions-dir)))
-  (when (file-directory-p web-mode-path)
+** Variables
+
+Web 模块的配置变量。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Variables
+;;; ============================================================
+
+(defvar mcg-web-format-on-save t
+  "Whether to format web files on save.")
+#+end_src
+
+** web-mode Configuration
+
+web-mode 的配置，包括缩进、自动配对和高亮设置。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; web-mode Configuration
+;;; ============================================================
+
+(defun mcg-web-mode-setup ()
+  "Setup function for web-mode."
+  ;; Indentation
+  (setq-local indent-tabs-mode nil)
+  (setq-local tab-width 2)
+  
+  ;; web-mode specific indentation
+  (setq web-mode-markup-indent-offset 2)
+  (setq web-mode-css-indent-offset 2)
+  (setq web-mode-code-indent-offset 2)
+  (setq web-mode-script-padding 2)
+  (setq web-mode-style-padding 2)
+  (setq web-mode-block-padding 2)
+  
+  ;; Auto-pairing
+  (setq web-mode-enable-auto-pairing t)
+  (setq web-mode-enable-auto-closing t)
+  (setq web-mode-enable-auto-quoting t)
+  
+  ;; Highlighting
+  (setq web-mode-enable-current-element-highlight t)
+  (setq web-mode-enable-current-column-highlight nil)
+  
+  ;; Enable subword mode
+  (subword-mode 1)
+  
+  ;; Setup tag helpers
+  (mcg-web-setup-tag-helpers)
+  
+  (mcg-log "Web mode setup complete"))
+
+;; Load web-mode extension
+(let ((web-mode-path (mcg-extension-path "web-mode")))
+  (when web-mode-path
     (add-to-list 'load-path web-mode-path)))
 
-;; 加载 web-mode
-(require 'web-mode)
-
-;; 加载辅助扩展
-(mcg-require-extension "utils/instant-rename-tag" 'instant-rename-tag)
-(mcg-require-extension "utils/highlight-matching-tag" 'highlight-matching-tag)
-
-#+END_SRC
-
-** Web Mode Configuration
-#+BEGIN_SRC emacs-lisp
-;;; Web Mode Basic Configuration
-
-;; File associations
-(add-to-list 'auto-mode-alist '("\\.vue\\'" . web-mode))
-
-;; HTML files: prefer html-ts-mode (if available)
-(if (and (fboundp 'html-ts-mode)
-         (fboundp 'treesit-available-p)
-         (treesit-available-p))
-    (add-to-list 'auto-mode-alist '("\\.html\\'" . html-ts-mode))
-  (add-to-list 'auto-mode-alist '("\\.html\\'" . web-mode)))
-
-;; Other web files
-(add-to-list 'auto-mode-alist '("\\.ejs\\'" . web-mode))
-(add-to-list 'auto-mode-alist '("\\.hbs\\'" . web-mode))
-(add-to-list 'auto-mode-alist '("\\.svelte\\'" . web-mode))
-
-;; Web-mode settings
-(setq web-mode-enable-auto-quoting nil)  ; Disable auto-quoting
-(setq web-mode-content-types-alist '(("vue" . "\\.vue\\'")))
-(setq web-mode-css-indent-offset 2)
-(setq web-mode-code-indent-offset 2)
-(setq web-mode-markup-indent-offset 2)
-(setq web-mode-enable-css-colorization t)
-(setq web-mode-enable-auto-indentation nil)  ; Disable auto-format on paste
-(setq web-mode-enable-current-column-highlight nil)
-
-;; Emmet auto-close tags
-(setq web-mode-tag-auto-close-style 2)  ; 2 means auto-close with > and </
-
-;; Enable tag highlighting
-(when (fboundp 'highlight-matching-tag)
-  (highlight-matching-tag 1))
-
-#+END_SRC
-
-** CSS Configuration
-#+BEGIN_SRC emacs-lisp
-;;; CSS Configuration
-
-;; CSS indentation
-(setq css-indent-offset 2)
-
-;; SCSS/LESS file associations
-(add-to-list 'auto-mode-alist '("\\.scss\\'" . scss-mode))
-(add-to-list 'auto-mode-alist '("\\.less\\'" . less-css-mode))
-
-;; Use css-ts-mode (if available)
-(when (and (fboundp 'css-ts-mode)
-           (fboundp 'treesit-available-p)
-           (treesit-available-p))
-  (add-to-list 'major-mode-remap-alist '(css-mode . css-ts-mode)))
-
-#+END_SRC
-
-** LSP Configuration
-#+BEGIN_SRC emacs-lisp
-;;; LSP Configuration
-
-(defun mcg-web-mode-lsp-setup ()
-  "Setup web-mode specific LSP settings."
-  (when buffer-file-name
-    (let ((ext (file-name-extension buffer-file-name)))
-      ;; LSP is handled by global-lsp-bridge-mode, no need to enable manually
-      ;; Vue specific settings
-      (when (string= ext "vue")
-        (setq-local lsp-bridge-enable-completion-in-string t)))))
-
-(add-hook 'web-mode-hook #'mcg-web-mode-lsp-setup)
-(add-hook 'html-mode-hook #'mcg-web-mode-lsp-setup)
-(when (fboundp 'html-ts-mode)
-  (add-hook 'html-ts-mode-hook #'mcg-web-mode-lsp-setup))
-
-#+END_SRC
-
-** Vue SFC Block Reorder
-#+BEGIN_SRC emacs-lisp
-;;; Vue SFC Block Reorder
-
-(defvar mcg-vue-block-order '("script" "template" "style")
-  "Expected order of Vue SFC blocks.")
-
-(defun mcg--vue-find-block-bounds (block-name)
-  "Find Vue block start and end positions, return (start . end) or nil."
-  (save-excursion
-    (goto-char (point-min))
-    (let ((start-regex (format "^[ \t]*<%s\\(?:[ \t\n][^>]*\\)?>" block-name))
-          (end-regex (format "^[ \t]*</%s>" block-name)))
-      (when (re-search-forward start-regex nil t)
-        (let ((start (match-beginning 0)))
-          (when (re-search-forward end-regex nil t)
-            (cons start (point))))))))
-
-(defun mcg--vue-extract-block (block-name)
-  "Extract Vue block content, return string or nil."
-  (when-let* ((bounds (mcg--vue-find-block-bounds block-name)))
-    (buffer-substring-no-properties (car bounds) (cdr bounds))))
-
-(defun mcg--vue-get-block-positions ()
-  "Get all block positions, return ((name . start-pos) ...) sorted by position."
-  (let (positions)
-    (dolist (name mcg-vue-block-order)
-      (when-let* ((bounds (mcg--vue-find-block-bounds name)))
-        (push (cons name (car bounds)) positions)))
-    (sort positions (lambda (a b) (< (cdr a) (cdr b))))))
-
-(defun mcg/vue-reorder-blocks ()
-  "Reorder Vue SFC blocks to: script -> template -> style."
-  (interactive)
-  (unless (and buffer-file-name
-               (string-match-p "\\.vue\\'" buffer-file-name))
-    (user-error "Not a Vue file"))
+(with-eval-after-load 'web-mode
+  ;; File associations
+  (add-to-list 'auto-mode-alist '("\\.vue\\'" . web-mode))
+  (add-to-list 'auto-mode-alist '("\\.html?\\'" . web-mode))
+  (add-to-list 'auto-mode-alist '("\\.erb\\'" . web-mode))
+  (add-to-list 'auto-mode-alist '("\\.ejs\\'" . web-mode))
+  (add-to-list 'auto-mode-alist '("\\.svelte\\'" . web-mode))
   
-  (let* ((positions (mcg--vue-get-block-positions))
-         (current-order (mapcar #'car positions))
-         (expected-order (seq-filter (lambda (b) (member b current-order))
-                                     mcg-vue-block-order)))
-    
-    (if (equal current-order expected-order)
-        (message "Vue blocks already in correct order: %s"
-                 (string-join current-order " -> "))
-      ;; Extract all block contents
-      (let ((blocks (mapcar (lambda (name)
-                              (cons name (mcg--vue-extract-block name)))
-                            expected-order)))
-        ;; Delete all content
-        (erase-buffer)
-        ;; Insert in correct order
-        (dolist (block blocks)
-          (when (cdr block)
-            (unless (bobp)
-              (insert "\n\n"))
-            (insert (cdr block))))
-        (insert "\n")
-        (message "Vue blocks reordered: %s" (string-join expected-order " -> "))))))
+  ;; Content types
+  (setq web-mode-content-types-alist
+        '(("vue" . "\\.vue\\'")
+          ("jsx" . "\\.jsx\\'")))
+  
+  ;; Engines
+  (setq web-mode-engines-alist
+        '(("vue" . "\\.vue\\'")))
+  
+  ;; Hook
+  (add-hook 'web-mode-hook #'mcg-web-mode-setup))
 
-;; Auto-reorder Vue blocks before save
-(defun mcg--vue-reorder-before-save ()
-  "Reorder Vue blocks before save."
-  (when (and (eq major-mode 'web-mode)
-             buffer-file-name
-             (string-match-p "\\.vue\\'" buffer-file-name))
-    (mcg/vue-reorder-blocks)))
+;; Auto-load web-mode for Vue files
+(add-to-list 'auto-mode-alist '("\\.vue\\'" . web-mode))
+(add-to-list 'auto-mode-alist '("\\.html?\\'" . web-mode))
+#+end_src
 
-;; Enable auto-reorder on save (optional, disabled by default)
-;; (add-hook 'before-save-hook #'mcg--vue-reorder-before-save)
+** instant-rename-tag
 
-#+END_SRC
+instant-rename-tag 配置，用于快速重命名 HTML 标签。
 
-** Vue Component Templates
-#+BEGIN_SRC emacs-lisp
-;;; Vue Component Templates
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; instant-rename-tag
+;;; ============================================================
 
-(defun mcg/vue-insert-component ()
-  "Insert Vue 3 component template."
-  (interactive)
-  (let ((component-name (read-string "Component name: ")))
-    (insert "<script setup lang=\"ts\">\nimport { ref } from 'vue'\n\n</script>\n\n")
-    (insert (format "<template>\n  <div class=\"%s\">\n    \n  </div>\n</template>\n\n"
-                    (downcase component-name)))
-    (insert "<style scoped>\n\n</style>\n")))
+(defun mcg-web-setup-instant-rename-tag ()
+  "Setup instant-rename-tag for web-mode."
+  (let ((path (mcg-extension-path "instant-rename-tag")))
+    (when path
+      (add-to-list 'load-path path)
+      (require 'instant-rename-tag nil t))))
 
-(defun mcg/vue-insert-composable ()
-  "Insert Vue 3 Composable template."
-  (interactive)
-  (let ((name (read-string "Composable name (use prefix): ")))
-    (insert (format "import { ref, computed } from 'vue'\n\n"))
-    (insert (format "export function %s() {\n" name))
-    (insert "  const state = ref()\n\n")
-    (insert "  return {\n    state,\n  }\n}\n")))
+(with-eval-after-load 'instant-rename-tag
+  (mcg-log "instant-rename-tag loaded"))
+#+end_src
 
-#+END_SRC
+** highlight-matching-tag
 
-** Emmet Support
-#+BEGIN_SRC emacs-lisp
-;;; Emmet Support
+highlight-matching-tag 配置，用于高亮匹配的 HTML 标签。
 
-(defun mcg-web-mode-emmet-setup ()
-  "Configure Emmet quick expansion."
-  (when (featurep 'emmet-mode)
-    (emmet-mode 1)
-    (setq-local emmet-expand-jsx-className? t)
-    (setq-local emmet-move-cursor-between-quotes t)))
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; highlight-matching-tag
+;;; ============================================================
 
-(add-hook 'web-mode-hook #'mcg-web-mode-emmet-setup)
-(add-hook 'html-mode-hook #'mcg-web-mode-emmet-setup)
-(when (fboundp 'html-ts-mode)
-  (add-hook 'html-ts-mode-hook #'mcg-web-mode-emmet-setup))
+(defun mcg-web-setup-highlight-matching-tag ()
+  "Setup highlight-matching-tag for web-mode."
+  (let ((path (mcg-extension-path "highlight-matching-tag")))
+    (when path
+      (add-to-list 'load-path path)
+      (require 'highlight-matching-tag nil t)
+      (when (fboundp 'highlight-matching-tag-on)
+        (highlight-matching-tag-on)))))
 
-#+END_SRC
+(with-eval-after-load 'highlight-matching-tag
+  ;; Customize face
+  (when (facep 'highlight-matching-tag-face)
+    (set-face-attribute 'highlight-matching-tag-face nil
+                        :inherit 'highlight))
+  (mcg-log "highlight-matching-tag loaded"))
+#+end_src
 
-** Tag Operations
-#+BEGIN_SRC emacs-lisp
-;;; Tag Operations
+** Tag Helpers Setup
+
+标签辅助功能的统一设置。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Tag Helpers Setup
+;;; ============================================================
+
+(defun mcg-web-setup-tag-helpers ()
+  "Setup tag helper packages for web-mode."
+  ;; instant-rename-tag
+  (mcg-web-setup-instant-rename-tag)
+  ;; highlight-matching-tag
+  (mcg-web-setup-highlight-matching-tag))
+#+end_src
+
+** CSS/SCSS Support
+
+CSS、SCSS 和 Less 的支持配置。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; CSS/SCSS Support
+;;; ============================================================
+
+(defun mcg-css-mode-setup ()
+  "Setup function for css-mode and scss-mode."
+  (setq-local indent-tabs-mode nil)
+  (setq-local tab-width 2)
+  (setq-local css-indent-offset 2)
+  (subword-mode 1))
+
+;; css-ts-mode (Emacs 29+)
+(when (and (fboundp 'treesit-available-p)
+           (treesit-available-p))
+  (add-to-list 'auto-mode-alist '("\\.css\\'" . css-ts-mode))
+  (add-hook 'css-ts-mode-hook #'mcg-css-mode-setup))
+
+;; css-mode fallback
+(add-hook 'css-mode-hook #'mcg-css-mode-setup)
+
+;; SCSS
+(add-to-list 'auto-mode-alist '("\\.scss\\'" . scss-mode))
+(add-hook 'scss-mode-hook #'mcg-css-mode-setup)
+
+;; Less
+(add-to-list 'auto-mode-alist '("\\.less\\'" . less-css-mode))
+(add-hook 'less-css-mode-hook #'mcg-css-mode-setup)
+#+end_src
+
+** Emmet Integration
+
+Emmet 集成，提供快速 HTML/CSS 代码片段展开。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Emmet Integration
+;;; ============================================================
+
+(defun mcg-web-setup-emmet ()
+  "Setup emmet-mode for web development."
+  (let ((path (mcg-extension-path "emmet-mode")))
+    (when path
+      (add-to-list 'load-path path)
+      (require 'emmet-mode nil t)
+      (when (fboundp 'emmet-mode)
+        (emmet-mode 1)))))
+
+(with-eval-after-load 'emmet-mode
+  (setq emmet-indentation 2)
+  (setq emmet-move-cursor-between-quotes t)
+  (mcg-log "emmet-mode loaded"))
+
+;; Enable emmet in web-mode
+(add-hook 'web-mode-hook #'mcg-web-setup-emmet)
+(add-hook 'css-mode-hook #'mcg-web-setup-emmet)
+(add-hook 'css-ts-mode-hook #'mcg-web-setup-emmet)
+#+end_src
+
+** Web Commands
+
+Web 模式的交互命令。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Web Commands
+;;; ============================================================
 
 (defun mcg/web-rename-tag ()
-  "Rename current tag."
+  "Rename current HTML tag."
   (interactive)
   (if (fboundp 'instant-rename-tag)
-      (instant-rename-tag)
+      (call-interactively #'instant-rename-tag)
     (message "instant-rename-tag not available")))
 
-(defun mcg/web-match-tag ()
-  "Jump to matching tag."
+(defun mcg/web-close-tag ()
+  "Close current HTML tag."
   (interactive)
-  (if (fboundp 'web-mode-tag-match)
-      (web-mode-tag-match)
-    (message "web-mode-tag-match not available")))
+  (if (fboundp 'web-mode-element-close)
+      (call-interactively #'web-mode-element-close)
+    (message "web-mode not available")))
 
-(defun mcg/web-select-element ()
-  "Select current element content."
+(defun mcg/web-wrap-tag ()
+  "Wrap selection with HTML tag."
   (interactive)
-  (if (fboundp 'web-mode-element-content-select)
-      (web-mode-element-content-select)
-    (message "web-mode-element-content-select not available")))
+  (if (fboundp 'web-mode-element-wrap)
+      (call-interactively #'web-mode-element-wrap)
+    (message "web-mode not available")))
 
-(defun mcg/web-clone-element ()
-  "Clone current element."
+(defun mcg/web-kill-tag ()
+  "Kill current HTML element."
   (interactive)
-  (if (fboundp 'web-mode-element-clone)
-      (web-mode-element-clone)
-    (message "web-mode-element-clone not available")))
+  (if (fboundp 'web-mode-element-kill)
+      (call-interactively #'web-mode-element-kill)
+    (message "web-mode not available")))
 
-#+END_SRC
-
-** Vue LSP Diagnostics
-#+BEGIN_SRC emacs-lisp
-;;; Vue LSP Environment Diagnostics
-
-(defun mcg/vue-check-lsp-environment ()
-  "Check Vue LSP required environment configuration."
+(defun mcg/web-select-tag ()
+  "Select current HTML element."
   (interactive)
-  (let ((results '())
-        (tsdk-path (expand-file-name "~/AppData/Roaming/npm/node_modules/typescript/lib")))
-    ;; Check vue-language-server
-    (if (executable-find "vue-language-server")
-        (push "✓ vue-language-server installed" results)
-      (push "✗ vue-language-server not installed - run: npm install -g @vue/language-server" results))
-    
-    ;; Check typescript
-    (if (executable-find "tsc")
-        (push "✓ TypeScript installed" results)
-      (push "✗ TypeScript not installed - run: npm install -g typescript" results))
-    
-    ;; Check tsdk path
-    (if (file-directory-p tsdk-path)
-        (push (format "✓ TypeScript SDK path exists: %s" tsdk-path) results)
-      (push (format "✗ TypeScript SDK path not found: %s" tsdk-path) results))
-    
-    ;; Check current buffer
-    (when (eq major-mode 'web-mode)
-      (if (bound-and-true-p lsp-bridge-mode)
-          (push "✓ Current Vue file has lsp-bridge-mode enabled" results)
-        (push "✗ Current Vue file does not have lsp-bridge-mode enabled" results)))
-    
-    ;; Show results
-    (with-current-buffer (get-buffer-create "*Vue LSP Diagnostics*")
-      (erase-buffer)
-      (insert "=== Vue LSP Environment Check ===\n\n")
-      (dolist (result (reverse results))
-        (insert result "\n"))
-      (insert "\nRecommended global npm packages:\n")
-      (insert "  npm install -g typescript\n")
-      (insert "  npm install -g @vue/language-server\n")
-      (insert "  npm install -g typescript-language-server\n")
-      (goto-char (point-min))
-      (display-buffer (current-buffer)))))
+  (if (fboundp 'web-mode-element-select)
+      (call-interactively #'web-mode-element-select)
+    (message "web-mode not available")))
 
-#+END_SRC
+(defun mcg/web-fold-tag ()
+  "Fold/unfold current HTML element."
+  (interactive)
+  (if (fboundp 'web-mode-fold-or-unfold)
+      (call-interactively #'web-mode-fold-or-unfold)
+    (message "web-mode not available")))
+#+end_src
 
-** Keybindings
-#+BEGIN_SRC emacs-lisp
-;;; Keybindings Configuration
+** Web Keybindings
+
+Web 模式的快捷键配置。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Web Keybindings
+;;; ============================================================
+
+(defvar mcg-web-mode-map
+  (let ((map (make-sparse-keymap)))
+    ;; Tag operations
+    (define-key map (kbd "C-c C-r") #'mcg/web-rename-tag)
+    (define-key map (kbd "C-c C-/") #'mcg/web-close-tag)
+    (define-key map (kbd "C-c C-w") #'mcg/web-wrap-tag)
+    (define-key map (kbd "C-c C-k") #'mcg/web-kill-tag)
+    (define-key map (kbd "C-c C-s") #'mcg/web-select-tag)
+    (define-key map (kbd "C-c C-f") #'mcg/web-fold-tag)
+    ;; Emmet
+    (define-key map (kbd "C-j") #'emmet-expand-line)
+    map)
+  "Keymap for web-mode specific commands.")
 
 (defun mcg-web-setup-keybindings ()
-  "Setup Web mode keybindings."
-  ;; Tag operations
-  (local-set-key (kbd "M-R") #'mcg/web-rename-tag)
-  (local-set-key (kbd "C-c C-n") #'mcg/web-match-tag)
-  (local-set-key (kbd "M-s-SPC") #'mcg/web-select-element)
-  (local-set-key (kbd "C-s-l") #'mcg/web-clone-element)
-  
-  ;; Folding
-  (local-set-key (kbd "C-c C-f") #'web-mode-fold-or-unfold)
-  
-  ;; Comment
-  (local-set-key (kbd "C-:") #'web-mode-comment-or-uncomment)
-  
-  ;; Vue specific
-  (when (and buffer-file-name
-             (string-match-p "\\.vue\\'" buffer-file-name))
-    (local-set-key (kbd "C-c v") #'mcg/vue-insert-component)
-    (local-set-key (kbd "C-c C-o") #'mcg/vue-reorder-blocks)))
+  "Setup web-mode specific keybindings."
+  (use-local-map (make-composed-keymap mcg-web-mode-map (current-local-map))))
 
 (add-hook 'web-mode-hook #'mcg-web-setup-keybindings)
+#+end_src
 
-#+END_SRC
+** Help Command
 
-** Tool Status Check
-#+BEGIN_SRC emacs-lisp
-;;; Tool Status Check
+Web 帮助命令，显示快捷键和使用说明。
 
-(defun mcg/web-check-tools ()
-  "Check if Web development tools are installed."
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Help Command
+;;; ============================================================
+
+(defun mcg/web-help ()
+  "Show web-mode keybindings and command help."
   (interactive)
-  (let ((tools '(("vue-language-server" . "npm install -g @vue/language-server")
-                 ("typescript-language-server" . "npm install -g typescript-language-server")
-                 ("tsc" . "npm install -g typescript")
-                 ("biome" . "npm install -g @biomejs/biome")
-                 ("prettier" . "npm install -g prettier"))))
-    (with-help-window "*Web Tools Status*"
-      (princ "═══════════════════════════════════════════\n")
-      (princ "   Web Development Tools Status\n")
-      (princ "═══════════════════════════════════════════\n\n")
-      (dolist (tool tools)
-        (let ((name (car tool))
-              (install-cmd (cdr tool)))
-          (princ (format "%-28s %s\n"
-                         name
-                         (if (executable-find name)
-                             "✓ Installed"
-                           (format "✗ Not installed (%s)" install-cmd))))))
-      (princ "\n═══════════════════════════════════════════\n")
-      (princ "\nRecommended install commands:\n")
-      (princ "  npm install -g typescript typescript-language-server\n")
-      (princ "  npm install -g @vue/language-server\n")
-      (princ "  npm install -g @biomejs/biome\n"))))
+  (with-help-window "*MCG Web Help*"
+    (princ "
+╔═══════════════════════════════════════════╗
+║       MCG Web Mode Keybindings            ║
+╚═══════════════════════════════════════════╝
 
-#+END_SRC
+TAG OPERATIONS:
+  C-c C-r      - Rename tag (instant-rename-tag)
+  C-c C-/      - Close tag
+  C-c C-w      - Wrap selection with tag
+  C-c C-k      - Kill element
+  C-c C-s      - Select element
+  C-c C-f      - Fold/unfold element
 
-** Keybindings Summary
-#+BEGIN_SRC emacs-lisp
-;;; Keybindings Summary
+EMMET:
+  C-j          - Expand Emmet abbreviation
 
-;; Tag operations:
-;; M-R           - Rename tag
-;; C-c C-n       - Jump to matching tag
-;; M-s-SPC       - Select element content
-;; C-s-l         - Clone element
-;; C-c C-f       - Fold/unfold
-;; C-:           - Comment/uncomment
-;;
-;; Vue specific:
-;; C-c v         - Insert Vue component template
-;; C-c C-o       - Reorder Vue blocks
-;;
-;; LSP (provided by +lsp module):
-;; M-.           - Jump to definition
-;; M-,           - Return
-;; M-?           - Find references
-;; C-c r r       - Rename
-;; C-c r f       - Format
+LSP COMMANDS (via lsp-bridge with Volar):
+  M-.          - Go to definition
+  M-,          - Return from definition
+  M-?          - Find references
+  C-c r r      - Rename symbol
+  C-c r f      - Format buffer
 
-#+END_SRC
+═══════════════════════════════════════════
 
-** Provide
-#+BEGIN_SRC emacs-lisp
+SUPPORTED FILE TYPES:
+  .vue         - Vue.js single file components
+  .html        - HTML files
+  .erb         - Ruby ERB templates
+  .ejs         - EJS templates
+  .svelte      - Svelte components
+
+═══════════════════════════════════════════
+")))
+#+end_src
+
+** Provide Feature
+
+#+begin_src emacs-lisp
 (provide 'init-web)
 ;;; init-web.el ends here
-#+END_SRC
+#+end_src

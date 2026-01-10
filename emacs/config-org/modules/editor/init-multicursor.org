@@ -1,46 +1,51 @@
-* init-multicursor.el
-:PROPERTIES:
-:HEADER-ARGS: :tangle init-multicursor.el :lexical t
-:END:
+#+TITLE: Multi-cursor Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-multicursor.el :lexical t
 
-** Headers
-#+BEGIN_SRC emacs-lisp
+* Multi-cursor Module
+
+本模块负责 MCG Emacs 的多光标编辑配置，包括：
+- Markmacro 多光标编辑
+- 矩形操作
+- 符号和行标记
+
+** File Header
+
+#+begin_src emacs-lisp
 ;;; init-multicursor.el --- Multi-cursor editing for MCG Emacs -*- lexical-binding: t; -*-
 
-;; Filename: init-multicursor.el
-;; Description: Multi-cursor editing configuration module using markmacro
+;; Copyright (C) 2024-2026 MCG
 ;; Author: mcge <mcgeq@outlook.com>
-;; Copyright (C) 2024-2026, mcge, all rights reserved.
-;; Create   Date: 2026-01-09
-;; Version: 3.0
 ;; Keywords: multicursor, markmacro, editing
 ;; Compatibility: GNU Emacs 29.0+
 
 ;;; Commentary:
-;;
 ;; Multi-cursor editing module for MCG Emacs configuration, responsible for:
 ;; - Markmacro multi-cursor editing
 ;; - Rectangle operations
 ;; - Symbol and line marking
-;;
+#+end_src
 
-#+END_SRC
+** Require
 
-** Dependencies
-#+BEGIN_SRC emacs-lisp
-;;; Dependencies
+#+begin_src emacs-lisp
+;;; Code:
 
 (require 'core-lib)
-
-#+END_SRC
+#+end_src
 
 ** Markmacro Configuration
-#+BEGIN_SRC emacs-lisp
+
+Markmacro 多光标编辑配置。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Markmacro Configuration
+;;; ============================================================
 
 (defun mcg--setup-markmacro ()
   "Setup Markmacro multi-cursor editing."
-  (when (mcg-require-extension "editor/markmacro" 'markmacro)
+  (when (mcg-require-extension "markmacro" t)
     ;; C-c m prefix
     (global-set-key (kbd "C-c m s") 'markmacro-rect-set)
     (global-set-key (kbd "C-c m d") 'markmacro-rect-delete)
@@ -58,19 +63,23 @@
     (global-set-key (kbd "s-L") 'markmacro-mark-imenus)
     
     (mcg-log "Markmacro configured")))
-
-#+END_SRC
+#+end_src
 
 ** Initialize
-#+BEGIN_SRC emacs-lisp
+
+模块初始化。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Initialize
+;;; ============================================================
 
 (mcg--setup-markmacro)
+#+end_src
 
-#+END_SRC
+** Provide Feature
 
-** Provide
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (provide 'init-multicursor)
 ;;; init-multicursor.el ends here
-#+END_SRC
+#+end_src

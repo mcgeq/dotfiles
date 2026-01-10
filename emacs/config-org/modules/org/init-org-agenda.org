@@ -1,10 +1,18 @@
-* init-org-agenda.el
-:PROPERTIES:
-:HEADER-ARGS: :tangle init-org-agenda.el :lexical t
-:END:
+#+TITLE: Org Agenda Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-org-agenda.el :lexical t
 
-** Headers
-#+BEGIN_SRC emacs-lisp
+* Org Agenda Module
+
+本模块负责 MCG Emacs 的 Org Agenda 配置，包括：
+- Agenda 文件和视图配置
+- 时间网格和日程显示
+- 日期格式化（包括农历支持）
+- 日出/日落功能
+
+** File Header
+
+#+begin_src emacs-lisp
 ;;; init-org-agenda.el --- Org Agenda Configuration for MCG Emacs -*- lexical-binding: t; -*-
 
 ;; Filename: init-org-agenda.el
@@ -24,21 +32,25 @@
 ;; - Date formatting (including lunar calendar support)
 ;; - Sunrise/sunset functions
 ;;
+#+end_src
 
-#+END_SRC
+** Require
 
-** Dependencies
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
+;;; Code:
+
 ;;; Dependencies
 
 (require 'core-lib)
 (require 'org-agenda)
 (require 'cal-china-x nil t)
-
-#+END_SRC
+#+end_src
 
 ** Variables
-#+BEGIN_SRC emacs-lisp
+
+定义 Org Agenda 配置变量。
+
+#+begin_src emacs-lisp
 ;;; Variables
 
 (defvar mcg-org-agenda-files
@@ -54,11 +66,13 @@
 
 (defvar mcg-calendar-location-latitude 39.91
   "Current location latitude (for sunrise/sunset calculation).")
+#+end_src
 
-#+END_SRC
+** Agenda Files and Basic Configuration
 
-** Agenda Files Configuration
-#+BEGIN_SRC emacs-lisp
+Agenda 文件和基本配置。
+
+#+begin_src emacs-lisp
 ;;; Agenda files and basic configuration
 
 (defun mcg-org-agenda-setup-files ()
@@ -68,11 +82,13 @@
   (setq org-agenda-current-time-string "⏰------------now")
   
   (mcg-log "Configured org-agenda files"))
+#+end_src
 
-#+END_SRC
+** Date Formatting
 
-** Date Format with Lunar Calendar
-#+BEGIN_SRC emacs-lisp
+日期格式化（包含农历支持）。
+
+#+begin_src emacs-lisp
 ;;; Date formatting (with lunar calendar)
 
 (defun mcg-org-agenda-format-date-aligned (date)
@@ -120,11 +136,13 @@
   "Setup Agenda date format."
   (setq org-agenda-format-date 'mcg-org-agenda-format-date-aligned)
   (mcg-log "Configured org-agenda date format"))
-
-#+END_SRC
+#+end_src
 
 ** Time Grid Configuration
-#+BEGIN_SRC emacs-lisp
+
+时间网格配置。
+
+#+begin_src emacs-lisp
 ;;; Time grid configuration
 
 (defun mcg-org-agenda-setup-time-grid ()
@@ -139,11 +157,13 @@
           "-----------------------------------------------------"))
   
   (mcg-log "Configured org-agenda time grid"))
-
-#+END_SRC
+#+end_src
 
 ** Display and Format Settings
-#+BEGIN_SRC emacs-lisp
+
+显示和格式设置。
+
+#+begin_src emacs-lisp
 ;;; Display and format settings
 
 (defun mcg-org-agenda-setup-display ()
@@ -180,11 +200,13 @@
         org-deadline-warning-days 3)
   
   (mcg-log "Configured org-agenda display"))
-
-#+END_SRC
+#+end_src
 
 ** Location and Sunrise/Sunset
-#+BEGIN_SRC emacs-lisp
+
+地理位置和日出/日落配置。
+
+#+begin_src emacs-lisp
 ;;; Location and sunrise/sunset
 
 (defun mcg-org-agenda-setup-location ()
@@ -229,11 +251,47 @@
       (goto-char start)
       (capitalize-word 1)
       (buffer-substring start end))))
+#+end_src
 
-#+END_SRC
+** Custom Agenda Views
+
+自定义 Agenda 视图。
+
+#+begin_src emacs-lisp
+;;; Custom Agenda Views
+
+(defun mcg-org-agenda-setup-custom-views ()
+  "Setup custom agenda views."
+  (setq org-agenda-custom-commands
+        '(("d" "Daily agenda and all TODOs"
+           ((agenda "" ((org-agenda-span 'day)))
+            (alltodo "" ((org-agenda-overriding-header "All TODOs")))))
+          ("w" "Weekly review"
+           ((agenda "" ((org-agenda-span 'week)))
+            (todo "DONE" ((org-agenda-overriding-header "Completed this week")))
+            (todo "TODO" ((org-agenda-overriding-header "Still to do")))))
+          ("p" "Priority tasks"
+           ((tags-todo "+PRIORITY=\"A\""
+                       ((org-agenda-overriding-header "High Priority")))
+            (tags-todo "+PRIORITY=\"B\""
+                       ((org-agenda-overriding-header "Medium Priority")))
+            (tags-todo "+PRIORITY=\"C\""
+                       ((org-agenda-overriding-header "Low Priority")))))
+          ("W" "Work tasks"
+           ((tags-todo "+work"
+                       ((org-agenda-overriding-header "Work Tasks")))))
+          ("h" "Home tasks"
+           ((tags-todo "+home"
+                       ((org-agenda-overriding-header "Home Tasks")))))))
+  
+  (mcg-log "Configured org-agenda custom views"))
+#+end_src
 
 ** Initialize
-#+BEGIN_SRC emacs-lisp
+
+初始化配置。
+
+#+begin_src emacs-lisp
 ;;; Initialize
 
 (mcg-org-agenda-setup-files)
@@ -241,11 +299,12 @@
 (mcg-org-agenda-setup-time-grid)
 (mcg-org-agenda-setup-display)
 (mcg-org-agenda-setup-location)
+(mcg-org-agenda-setup-custom-views)
+#+end_src
 
-#+END_SRC
+** Provide Feature
 
-** Provide
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (provide 'init-org-agenda)
 ;;; init-org-agenda.el ends here
-#+END_SRC
+#+end_src

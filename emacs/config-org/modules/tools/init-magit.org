@@ -1,46 +1,57 @@
-* init-magit.el
-:PROPERTIES:
-:HEADER-ARGS: :tangle init-magit.el :lexical t
-:END:
+#+TITLE: Git Integration Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-magit.el :lexical t
 
-** Headers
-#+BEGIN_SRC emacs-lisp
-  ;;; init-magit.el --- Git Integration for MCG Emacs -*- lexical-binding: t; -*-
+* Git Integration Module
 
-  ;; Filename: init-magit.el
-  ;; Description: Git integration module (Magit)
-  ;; Author: mcge <mcgeq@outlook.com>
-  ;; Copyright (C) 2024-2026, mcge, all rights reserved.
-  ;; Create   Date: 2026-01-07
-  ;; Version: 3.0
-  ;; Keywords: git, magit, version-control
-  ;; Compatibility: GNU Emacs 29.0+
+本模块负责 MCG Emacs 的 Git 集成配置，包括：
+- Magit 配置
+- 自定义 transient 菜单
+- Git commit 模式增强
 
-  ;;; Commentary:
-  ;;
-  ;; Git integration module for MCG Emacs, responsible for:
-  ;; - Magit configuration
-  ;; - Custom transient menus
-  ;; - Git commit mode enhancements
-  ;;
-  ;; Module metadata:
-  ;; :depends ()
-  ;; :defer t
-  ;;
+** File Header
 
-#+END_SRC
+#+begin_src emacs-lisp
+;;; init-magit.el --- Git Integration for MCG Emacs -*- lexical-binding: t; -*-
 
-** Dependencies
-#+BEGIN_SRC emacs-lisp
-;;; Dependencies
+;; Filename: init-magit.el
+;; Description: Git integration module (Magit)
+;; Author: mcge <mcgeq@outlook.com>
+;; Copyright (C) 2024-2026, mcge, all rights reserved.
+;; Create   Date: 2026-01-10
+;; Version: 3.0
+;; Keywords: git, magit, version-control
+;; Compatibility: GNU Emacs 29.0+
+
+;;; Commentary:
+;;
+;; Git integration module for MCG Emacs, responsible for:
+;; - Magit configuration
+;; - Custom transient menus
+;; - Git commit mode enhancements
+;;
+;; Module metadata:
+;; :depends ()
+;; :defer t
+;;
+#+end_src
+
+** Require
+
+#+begin_src emacs-lisp
+;;; Code:
 
 (require 'core-lib)
-
-#+END_SRC
+#+end_src
 
 ** Variables
-#+BEGIN_SRC emacs-lisp
+
+Magit 相关的配置变量。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Variables
+;;; ============================================================
 
 (defvar mcg-tools-magit-diff-refine t
   "Whether to enable diff refined highlighting.")
@@ -50,16 +61,20 @@
 
 (defvar mcg-tools-magit-flyspell t
   "Whether to enable spell checking in commit messages.")
-
-#+END_SRC
+#+end_src
 
 ** Magit Configuration
-#+BEGIN_SRC emacs-lisp
+
+Magit 核心配置。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Magit Configuration
+;;; ============================================================
 
 (defun mcg--setup-magit ()
   "Setup Magit."
-  (when (mcg-require-extension "git/magit" 'magit)
+  (when (mcg-require-extension "magit" t)
     ;; Diff settings
     (setq magit-diff-refine-hunk mcg-tools-magit-diff-refine)
     (setq magit-ediff-dwim-show-on-hunks mcg-tools-magit-ediff-dwim)
@@ -69,12 +84,18 @@
       (add-hook 'git-commit-mode-hook #'flyspell-mode))
     
     (mcg-log "Magit configured")))
-
-#+END_SRC
+#+end_src
 
 ** Transient Menus
-#+BEGIN_SRC emacs-lisp
+
+自定义 Magit transient 菜单配置。
+
+*** Main Menu
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Transient Menus
+;;; ============================================================
 
 (defun mcg--setup-magit-transient-menus ()
   "Setup custom Magit transient menus."
@@ -91,7 +112,11 @@
        [("s" "Submodule" mcg/magit-submodule-menu)]
        [("r" "Remote" mcg/magit-remote-menu)]
        [("f" "Files" mcg/magit-file-menu)]])
-    
+#+end_src
+
+*** Branch Menu
+
+#+begin_src emacs-lisp
     ;; Branch menu
     (transient-define-prefix mcg/magit-branch-menu ()
       "Branch operations menu."
@@ -103,7 +128,11 @@
         ("d" "Delete       Branch" magit-branch-delete)
         ("r" "Rename       Branch" magit-branch-rename)
         ("R" "Reset        Branch" magit-branch-reset)]])
-    
+#+end_src
+
+*** Submodule Menu
+
+#+begin_src emacs-lisp
     ;; Submodule menu
     (transient-define-prefix mcg/magit-submodule-menu ()
       "Submodule operations menu."
@@ -111,14 +140,22 @@
         ("a" "Add    Submodule" magit-submodule-add)
         ("r" "Remove Submodule" magit-submodule-remove)
         ("u" "Update Submodule" magit-submodule-update)]])
-    
+#+end_src
+
+*** Remote Menu
+
+#+begin_src emacs-lisp
     ;; Remote menu
     (transient-define-prefix mcg/magit-remote-menu ()
       "Remote operations menu."
       [["Remote Operations"
         ("a" "Add    Remote" magit-remote-add)
         ("r" "Rename Remote" magit-remote-rename)]])
-    
+#+end_src
+
+*** Log Menu
+
+#+begin_src emacs-lisp
     ;; Log menu
     (transient-define-prefix mcg/magit-log-menu ()
       "Log viewing menu."
@@ -128,14 +165,22 @@
         ("h" "Log Heads" magit-log-head)
         ("b" "Log Branch" magit-log-branches)
         ("f" "Log Current File" magit-log-buffer-file)]])
-    
+#+end_src
+
+*** File Menu
+
+#+begin_src emacs-lisp
     ;; File menu
     (transient-define-prefix mcg/magit-file-menu ()
       "File operations menu."
       [["File"
         ("r" "File Rename" magit-file-rename)
         ("d" "File Delete" magit-file-delete)]])
-    
+#+end_src
+
+*** Diff Menu
+
+#+begin_src emacs-lisp
     ;; Diff menu
     (transient-define-prefix mcg/magit-diff-menu ()
       "Diff viewing menu."
@@ -143,12 +188,18 @@
         ("d" "Diff file" magit-diff-buffer-file)]])
     
     (mcg-log "Magit transient menus configured")))
-
-#+END_SRC
+#+end_src
 
 ** Commands
-#+BEGIN_SRC emacs-lisp
+
+Git 操作命令。
+
+*** Git Status
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Commands
+;;; ============================================================
 
 (defun mcg/git-status ()
   "Open Magit status buffer."
@@ -158,7 +209,11 @@
     (mcg--setup-magit)
     (when (featurep 'magit)
       (magit-status))))
+#+end_src
 
+*** Git Blame
+
+#+begin_src emacs-lisp
 (defun mcg/git-blame ()
   "Show git blame for current file."
   (interactive)
@@ -167,7 +222,11 @@
     (mcg--setup-magit)
     (when (featurep 'magit)
       (magit-blame-addition))))
+#+end_src
 
+*** Git Log File
+
+#+begin_src emacs-lisp
 (defun mcg/git-log-file ()
   "Show git log for current file."
   (interactive)
@@ -176,18 +235,67 @@
     (mcg--setup-magit)
     (when (featurep 'magit)
       (magit-log-buffer-file))))
+#+end_src
 
-#+END_SRC
+** Keybindings
+
+Magit 快捷键配置。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Keybindings
+;;; ============================================================
+
+(defun mcg--setup-magit-keybindings ()
+  "Setup Magit keybindings."
+  (when (featurep 'magit)
+    ;; Main commands
+    (global-set-key (kbd "C-x g") 'magit-status)
+    (global-set-key (kbd "C-x M-g") 'magit-dispatch)
+    (global-set-key (kbd "C-c g s") 'magit-status)
+    (global-set-key (kbd "C-c g l") 'magit-log)
+    (global-set-key (kbd "C-c g d") 'magit-dispatch)
+    (global-set-key (kbd "C-c g f") 'magit-file-dispatch)
+    ;; Push/Pull
+    (global-set-key (kbd "C-c g p") 'magit-push)
+    (global-set-key (kbd "C-c g P") 'magit-pull)
+    ;; Branch
+    (global-set-key (kbd "C-c g b b") 'magit-branch-create)
+    (global-set-key (kbd "C-c g b r") 'magit-branch-rename)
+    (global-set-key (kbd "C-c g b d") 'magit-branch-delete)
+    ;; Submodules
+    (global-set-key (kbd "C-c g m a") 'magit-submodule-add)
+    (global-set-key (kbd "C-c g m r") 'magit-submodule-remove)
+    (global-set-key (kbd "C-c g m u") 'magit-submodule-update)
+    ;; Custom menu
+    (global-set-key (kbd "C-c g ?") 'mcg/magit-menu)
+    (mcg-log "Magit keybindings configured")))
+#+end_src
 
 ** Help Popup
-#+BEGIN_SRC emacs-lisp
+
+Git 帮助弹窗。
+
+*** Git Help Command
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Help Popup
+;;; ============================================================
 
 (defun mcg/git-help ()
-  "Show Git/Magit commands reference in posframe popup."
+  "Show Git/Magit commands reference."
   (interactive)
-  (mcg-popup-show "*Git Help*" (mcg--git-help-content) 55 35))
+  (let ((buf (get-buffer-create "*Git Help*")))
+    (with-current-buffer buf
+      (erase-buffer)
+      (insert (mcg--git-help-content)))
+    (display-buffer buf)))
+#+end_src
 
+*** Git Help Content
+
+#+begin_src emacs-lisp
 (defun mcg--git-help-content ()
   "Generate Git help content."
   "
@@ -231,24 +339,29 @@
 ")
 
 (global-set-key (kbd "C-c g H") #'mcg/git-help)
-
-#+END_SRC
+#+end_src
 
 ** Initialize
-#+BEGIN_SRC emacs-lisp
+
+模块初始化。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Initialize
+;;; ============================================================
 
 ;; Setup Magit
 (mcg--setup-magit)
 
-;; Setup transient menus (after magit loads)
+;; Setup transient menus and keybindings (after magit loads)
 (with-eval-after-load 'magit
-  (mcg--setup-magit-transient-menus))
+  (mcg--setup-magit-transient-menus)
+  (mcg--setup-magit-keybindings))
+#+end_src
 
-#+END_SRC
+** Provide Feature
 
-** Provide
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (provide 'init-magit)
 ;;; init-magit.el ends here
-#+END_SRC
+#+end_src

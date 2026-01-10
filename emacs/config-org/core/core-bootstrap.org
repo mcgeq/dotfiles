@@ -1,573 +1,793 @@
-* core-bootstrap.el
-:PROPERTIES:
-:HEADER-ARGS: :tangle (concat temporary-file-directory "core-bootstrap.el") :lexical t
-:END:
+#+TITLE: Core Bootstrap Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle core-bootstrap.el :lexical t
 
-** Headers
-#+BEGIN_SRC emacs-lisp
-  ;;; core-bootstrap.el --- Core Bootstrap for MCG Emacs -*- lexical-binding: t; -*-
+* Core Bootstrap Module
 
-  ;; Filename: core-bootstrap.el
-  ;; Description: Core bootstrap module, defines path variables and performance optimization
-  ;; Author: mcge <mcgeq@outlook.com>
-  ;; Copyright (C) 2024-2026, mcge, all rights reserved.
-  ;; Create   Date: 2026-01-07
-  ;; Version: 3.0
-  ;; Keywords: bootstrap, paths, performance
-  ;; Compatibility: GNU Emacs 29.0+
+本模块初始化 MCG Emacs 配置系统的核心路径，提供系统检测、性能优化和日志功能。
 
-  ;;; Commentary:
-  ;;
-  ;; Core bootstrap module for MCG Emacs configuration, responsible for:
-  ;; - Defining all path variables
-  ;; - Setting up load-path
-  ;; - Performance optimization (GC, file-name-handler)
-  ;; - Startup time tracking
-  ;;
-  ;; This module must be loaded before all other modules.
-  ;;
+** File Header
 
-#+END_SRC
+#+begin_src emacs-lisp
+;;; core-bootstrap.el --- Core bootstrap for MCG Emacs -*- lexical-binding: t; -*-
+
+;; Copyright (C) 2024 MCG
+;; Author: MCG
+;; Keywords: configuration, bootstrap
+
+;;; Commentary:
+;; This module initializes the core paths and provides system detection,
+;; performance optimization, and logging facilities for the MCG Emacs
+;; configuration system.
+
+;;; Code:
+#+end_src
 
 ** System Detection
-#+BEGIN_SRC emacs-lisp
-;;; System Detection
 
-(defconst mcg-is-windows
-  (memq system-type '(cygwin windows-nt ms-dos))
-  "Running on a Windows system.")
+系统类型检测常量，用于跨平台兼容性处理。
 
-(defconst mcg-is-linux
-  (eq system-type 'gnu/linux)
-  "Running on a GNU/Linux system.")
+#+begin_src emacs-lisp
+(defconst mcg-is-windows (eq system-type 'windows-nt)
+  "Non-nil if running on Windows.")
 
-(defconst mcg-is-mac
-  (eq system-type 'darwin)
-  "Running on a macOS system.")
+(defconst mcg-is-linux (eq system-type 'gnu/linux)
+  "Non-nil if running on Linux.")
 
-(defconst mcg-is-gui
-  (memq window-system '(x w32 ns pc pgtk))
-  "Running in GUI mode.")
+(defconst mcg-is-mac (eq system-type 'darwin)
+  "Non-nil if running on macOS.")
 
-(defconst mcg-emacs-29+
-  (>= emacs-major-version 29)
-  "Emacs is version 29 or above.")
-#+END_SRC
+(defconst mcg-is-gui (display-graphic-p)
+  "Non-nil if running in GUI mode.")
+
+(defconst mcg-emacs-29+ (>= emacs-major-version 29)
+  "Non-nil if Emacs version is 29 or higher.")
+
+(defconst mcg-emacs-30+ (>= emacs-major-version 30)
+  "Non-nil if Emacs version is 30 or higher.")
+#+end_src
 
 ** Path Variables
-#+BEGIN_SRC emacs-lisp
-;;; Path Variable Definitions
 
+MCG Emacs 配置系统的路径变量定义。
+
+#+begin_src emacs-lisp
 (defvar mcg-emacs-dir nil
-  "Emacs configuration root directory (emacs/).")
-
-(defvar mcg-core-dir nil
-  "Core configuration directory (site-lisp/config/core/).")
-
-(defvar mcg-modules-dir nil
-  "Modules directory (site-lisp/config/modules/).")
-
-(defvar mcg-extensions-dir nil
-  "Extensions directory (site-lisp/extensions/).")
-
-(defvar mcg-private-dir nil
-  "Private configuration directory (site-lisp/config/private/).")
+  "Root directory of the Emacs configuration.
+This is the base directory containing site-lisp, config-org, etc.")
 
 (defvar mcg-config-dir nil
-  "Configuration root directory (site-lisp/config/).")
+  "Directory containing generated .el configuration files.
+Located at site-lisp/config/.")
 
-(defvar mcg-config-org-dir nil
-  "Org source files directory (config-org/).")
+(defvar mcg-core-dir nil
+  "Directory containing core modules.
+Located at site-lisp/config/core/.")
 
-(defvar mcg-site-lisp-dir nil
-  "site-lisp directory.")
+(defvar mcg-modules-dir nil
+  "Directory containing feature modules.
+Located at site-lisp/config/modules/.")
 
-(defvar mcg-langservers-dir nil
-  "LSP server configuration directory.")
+(defvar mcg-extensions-dir nil
+  "Directory containing Borg drones (Git submodules).
+Located at site-lisp/extensions/.")
 
-(defvar mcg-multiservers-dir nil
-  "LSP multi-server configuration directory.")
+(defvar mcg-private-dir nil
+  "Directory containing private user configuration.
+Located at site-lisp/config/private/.")
 
 (defvar mcg-cache-dir nil
-  "Cache directory for Emacs data files.")
-#+END_SRC
+  "Directory for cache files.
+Located at .cache/ under mcg-emacs-dir.")
 
-** Path Initialization
-#+BEGIN_SRC emacs-lisp
-;;; Path Initialization
+(defvar mcg-data-dir nil
+  "Directory for data files.
+Located at .data/ under mcg-emacs-dir.")
+#+end_src
 
-;; User-configurable base directory
-;; Set this variable in early-init.el or .emacs (before require 'core-bootstrap)
-;; Note: Using boundp check to ensure we don't override already set values
-(unless (boundp 'mcg-base-dir)
-  (defvar mcg-base-dir nil
-    "Base directory for MCG configuration.
+** GC Optimization Variables
 
-Users should set this variable before loading core-bootstrap, e.g.:
-  (setq mcg-base-dir \"D:/config\")
+垃圾回收优化相关变量，用于提升启动性能。
 
-Or set via environment variable MCG_EMACS_CONFIG_DIR.
-
-If not set, ~ will be used as the default value."))
-
-(defun mcg-init-paths (&optional base-dir)
-  "Initialize all path variables.
-
-Arguments:
-- BASE-DIR: User-defined root directory (e.g., D:/config or ~)
-            If nil, obtained in the following priority:
-            1. mcg-base-dir variable
-            2. Environment variable MCG_EMACS_CONFIG_DIR
-            3. Default value ~
-
-This function sets all mcg-* path variables and must be called before loading configuration.
-
-Usage:
-1. In .emacs: (setq mcg-base-dir \"D:/config\") then (require 'init)
-2. Or set mcg-base-dir in early-init.el
-3. Or set environment variable MCG_EMACS_CONFIG_DIR"
-  (let* ((dir (or base-dir
-                  (and (boundp 'mcg-base-dir) mcg-base-dir)
-                  (getenv "MCG_EMACS_CONFIG_DIR")
-                  "~"))
-         (custom-dir (file-truename dir)))
-    ;; Main directory
-    (setq mcg-emacs-dir (expand-file-name "dotfiles/emacs" custom-dir))
-    
-    ;; site-lisp directory
-    (setq mcg-site-lisp-dir (expand-file-name "site-lisp" mcg-emacs-dir))
-    (setq mcg-extensions-dir (expand-file-name "extensions" mcg-site-lisp-dir))
-    
-    ;; Generated configuration directory (site-lisp/config/)
-    (setq mcg-config-dir (expand-file-name "config" mcg-site-lisp-dir))
-    (setq mcg-core-dir (expand-file-name "core" mcg-config-dir))
-    (setq mcg-modules-dir (expand-file-name "modules" mcg-config-dir))
-    (setq mcg-private-dir (expand-file-name "private" mcg-config-dir))
-    
-    ;; Org source files directory (config-org/)
-    (setq mcg-config-org-dir (expand-file-name "config-org" mcg-emacs-dir))
-    
-    ;; LSP configuration directories
-    (setq mcg-langservers-dir (expand-file-name "langservers" mcg-emacs-dir))
-    (setq mcg-multiservers-dir (expand-file-name "multiservers" mcg-emacs-dir))
-    
-    ;; Cache directory (use user-emacs-directory for compatibility)
-    (setq mcg-cache-dir (expand-file-name "cache" user-emacs-directory))
-    (unless (file-directory-p mcg-cache-dir)
-      (make-directory mcg-cache-dir t))
-    
-    ;; Return the used directory for debugging
-    custom-dir))
-
-;; Auto-initialize paths (using configured values or defaults)
-(mcg-init-paths)
-#+END_SRC
-
-** Load Path Setup
-#+BEGIN_SRC emacs-lisp
-;;; Load Path Setup
-
-(defun mcg-setup-load-path ()
-  "Set up load-path, adding core configuration and extension directories.
-
-This function adds the following directories to load-path:
-1. site-lisp/config - Generated .el configuration files
-2. site-lisp/config/core - Core modules
-3. site-lisp/config/modules/* - Feature modules
-4. site-lisp/extensions/* - All extension subdirectories"
-  ;; Add configuration directory
-  (let ((config-dir (expand-file-name "config" mcg-site-lisp-dir)))
-    (when (file-directory-p config-dir)
-      (add-to-list 'load-path config-dir)
-      ;; Add core directory
-      (add-to-list 'load-path (expand-file-name "core" config-dir))
-      ;; Add modules subdirectories
-      (let ((modules-dir (expand-file-name "modules" config-dir)))
-        (when (file-directory-p modules-dir)
-          (dolist (cat-dir (directory-files modules-dir t "^[^.]"))
-            (when (file-directory-p cat-dir)
-              (add-to-list 'load-path cat-dir)))))))
-  
-  ;; Recursively add extension directories
-  (when (file-directory-p mcg-extensions-dir)
-    (dolist (category-dir (directory-files mcg-extensions-dir t "^[^.]"))
-      (when (file-directory-p category-dir)
-        ;; Add category directory
-        (add-to-list 'load-path category-dir)
-        ;; Add subdirectories under category
-        (dolist (ext-dir (directory-files category-dir t "^[^.]"))
-          (when (file-directory-p ext-dir)
-            (add-to-list 'load-path ext-dir)
-            ;; Handle second-level subdirectories (e.g., lsp/clojure/)
-            (dolist (sub-ext-dir (directory-files ext-dir t "^[^.]"))
-              (when (file-directory-p sub-ext-dir)
-                (add-to-list 'load-path sub-ext-dir)))))))))
-
-;; Initialize load-path
-(mcg-setup-load-path)
-#+END_SRC
-
-** Performance Optimization
-#+BEGIN_SRC emacs-lisp
-;;; Performance Optimization
-
-;; Default GC settings (used after startup)
+#+begin_src emacs-lisp
 (defvar mcg-gc-cons-threshold-default (* 16 1024 1024)
-  "Default GC threshold (16MB) for normal operation.")
+  "Default GC threshold after startup (16MB).
+This is restored after Emacs finishes starting up.")
 
 (defvar mcg-gc-cons-percentage-default 0.1
-  "Default GC percentage for normal operation.")
+  "Default GC percentage after startup.
+This is restored after Emacs finishes starting up.")
 
-;; Restore settings after startup
-;; Note: GC is disabled in early-init.el, restore here
-(defun mcg--restore-startup-optimizations ()
-  "Restore performance optimization settings after startup."
-  (setq gc-cons-threshold mcg-gc-cons-threshold-default
-        gc-cons-percentage mcg-gc-cons-percentage-default)
-  ;; Restore file-name-handler-alist (saved in early-init.el)
-  (when (boundp 'mcg--file-name-handler-alist-original)
-    (setq file-name-handler-alist mcg--file-name-handler-alist-original)))
-
-(add-hook 'emacs-startup-hook #'mcg--restore-startup-optimizations)
-
-;; Minibuffer GC optimization
-(defun mcg--minibuffer-gc-setup ()
-  "Increase GC threshold in minibuffer."
-  (setq gc-cons-threshold most-positive-fixnum))
-
-(defun mcg--minibuffer-gc-restore ()
-  "Restore GC threshold after minibuffer."
-  (setq gc-cons-threshold mcg-gc-cons-threshold-default))
-
-(add-hook 'minibuffer-setup-hook #'mcg--minibuffer-gc-setup)
-(add-hook 'minibuffer-exit-hook #'mcg--minibuffer-gc-restore)
-
-;; GC during idle time
-(run-with-idle-timer 5 t #'garbage-collect)
-#+END_SRC
+(defvar mcg-gc-cons-threshold-startup (* 256 1024 1024)
+  "High GC threshold during startup (256MB).
+This prevents GC during startup for faster loading.")
+#+end_src
 
 ** Startup Time Tracking
-#+BEGIN_SRC emacs-lisp
-;;; Startup Time Tracking
+
+启动时间追踪变量。
+
+#+begin_src emacs-lisp
+(defvar mcg--startup-start-time (current-time)
+  "Time when Emacs started loading.
+Used to calculate total startup time.")
 
 (defvar mcg-startup-time nil
-  "Emacs startup time in seconds.")
-
-(defvar mcg--startup-start-time (current-time)
-  "Record Emacs startup start time.")
-
-(defun mcg-display-startup-time ()
-  "Display Emacs startup time."
-  (let ((elapsed (float-time (time-subtract (current-time) mcg--startup-start-time))))
-    (setq mcg-startup-time elapsed)
-    (message "✨ Emacs loaded in %.2f seconds with %d garbage collections"
-             elapsed gcs-done)))
-
-(add-hook 'emacs-startup-hook #'mcg-display-startup-time)
-#+END_SRC
-
-** Native Compilation
-#+BEGIN_SRC emacs-lisp
-;;; Native Compilation Optimization
-
-(when (and (fboundp 'native-comp-available-p)
-           (native-comp-available-p))
-  ;; Deferred compilation (native-comp-async-report-warnings-errors set in early-init.el)
-  (setq native-comp-deferred-compilation t))
-
-;; Byte compilation warnings
-(setq byte-compile-warnings '(not free-vars unresolved noruntime lexical make-local))
-#+END_SRC
-
-** Logging
-#+BEGIN_SRC emacs-lisp
-;;; Logging System
-
-(defvar mcg-debug-mode nil
-  "Enable debug mode for verbose logging.")
-
-(defvar mcg-profile-mode nil
-  "Enable profiling mode to track load times.")
+  "Total startup time in seconds.
+Set after emacs-startup-hook runs.")
 
 (defvar mcg-load-times nil
-  "Record load times for modules/extensions.
-Format is an alist of ((NAME . TIME-MS) ...).")
+  "Alist of (module . load-time-ms) for profiling.
+Populated when `mcg-profile-mode' is enabled.")
+#+end_src
 
-(defvar mcg-log-buffer nil
-  "Buffer to store log messages.
-Format is a list of (TIMESTAMP LEVEL MESSAGE).")
+** Debug and Logging
 
-(defvar mcg-log-max-entries 500
-  "Maximum number of log entries to keep.")
+调试和日志相关变量。
 
-(defvar mcg-log-levels '(debug info warning error)
-  "Available log levels in order of severity.")
+#+begin_src emacs-lisp
+(defvar mcg-debug-mode nil
+  "Non-nil enables debug logging.
+When enabled, `mcg-log' messages are displayed.")
 
-(defun mcg--log-store (level message)
-  "Store log MESSAGE with LEVEL to the log buffer.
+(defvar mcg-profile-mode nil
+  "Non-nil enables performance profiling.
+When enabled, module load times are tracked.")
 
-Arguments:
-- LEVEL: Log level symbol (debug, info, warning, error)
-- MESSAGE: The log message string"
-  (let ((entry (list (current-time) level message)))
-    (push entry mcg-log-buffer)
-    ;; Trim buffer if too large
-    (when (> (length mcg-log-buffer) mcg-log-max-entries)
-      (setq mcg-log-buffer (seq-take mcg-log-buffer mcg-log-max-entries)))))
+(defvar mcg--log-buffer-name "*MCG Log*"
+  "Name of the log buffer.")
 
+(defvar mcg--log-messages nil
+  "List of recent log messages for diagnostics.")
+
+(defvar mcg--log-max-messages 100
+  "Maximum number of log messages to keep.")
+#+end_src
+
+** Logging System
+
+日志系统实现，提供不同级别的日志记录功能。
+
+*** Internal Logging Function
+
+#+begin_src emacs-lisp
+(defun mcg--log-internal (level format-string &rest args)
+  "Internal logging function.
+LEVEL is the log level (info, warning, error).
+FORMAT-STRING and ARGS are passed to `format'."
+  (let* ((timestamp (format-time-string "%H:%M:%S"))
+         (message (apply #'format format-string args))
+         (full-message (format "[%s] [%s] %s" timestamp level message)))
+    ;; Store in log messages list
+    (push full-message mcg--log-messages)
+    (when (> (length mcg--log-messages) mcg--log-max-messages)
+      (setq mcg--log-messages (seq-take mcg--log-messages mcg--log-max-messages)))
+    ;; Display based on level and debug mode
+    (cond
+     ((eq level 'error)
+      (message "MCG Error: %s" message))
+     ((eq level 'warning)
+      (message "MCG Warning: %s" message))
+     ((and mcg-debug-mode (eq level 'info))
+      (message "MCG: %s" message)))))
+#+end_src
+
+*** Logging Macros
+
+#+begin_src emacs-lisp
 (defmacro mcg-log (format-string &rest args)
-  "Log message with FORMAT-STRING and ARGS.
+  "Log an info message when debug mode is enabled.
+FORMAT-STRING and ARGS are passed to `format'."
+  `(when mcg-debug-mode
+     (mcg--log-internal 'info ,format-string ,@args)))
 
-Always stores the message to mcg-log-buffer.
-Only outputs to *Messages* when `mcg-debug-mode' is non-nil."
-  `(let ((msg (format ,format-string ,@args)))
-     (mcg--log-store 'info msg)
-     (when mcg-debug-mode
-       (message (concat "[MCG] " msg)))))
+(defmacro mcg-log-warning (format-string &rest args)
+  "Log a warning message.
+FORMAT-STRING and ARGS are passed to `format'."
+  `(mcg--log-internal 'warning ,format-string ,@args))
 
-(defun mcg-log-warning (format-string &rest args)
-  "Log warning message with FORMAT-STRING and ARGS.
+(defmacro mcg-log-error (format-string &rest args)
+  "Log an error message.
+FORMAT-STRING and ARGS are passed to `format'."
+  `(mcg--log-internal 'error ,format-string ,@args))
+#+end_src
 
-Always stores and displays warning messages."
-  (let ((msg (apply #'format format-string args)))
-    (mcg--log-store 'warning msg)
-    (message "[MCG Warning] %s" msg)))
+*** Show Logs
 
-(defun mcg-log-error (format-string &rest args)
-  "Log error message with FORMAT-STRING and ARGS.
+#+begin_src emacs-lisp
+(defun mcg-show-logs ()
+  "Display recent log messages in a buffer."
+  (interactive)
+  (let ((buf (get-buffer-create mcg--log-buffer-name)))
+    (with-current-buffer buf
+      (erase-buffer)
+      (insert "=== MCG Log Messages ===\n\n")
+      (if mcg--log-messages
+          (dolist (msg (reverse mcg--log-messages))
+            (insert msg "\n"))
+        (insert "No log messages recorded.\n")))
+    (display-buffer buf)))
+#+end_src
 
-Always stores and displays error messages."
-  (let ((msg (apply #'format format-string args)))
-    (mcg--log-store 'error msg)
-    (message "[MCG Error] %s" msg)))
+** Profiling System
 
-(defun mcg-log-debug (format-string &rest args)
-  "Log debug message with FORMAT-STRING and ARGS.
+性能分析系统，用于追踪模块加载时间。
 
-Only stores and displays when `mcg-debug-mode' is non-nil."
-  (when mcg-debug-mode
-    (let ((msg (apply #'format format-string args)))
-      (mcg--log-store 'debug msg)
-      (message "[MCG Debug] %s" msg))))
-
+#+begin_src emacs-lisp
 (defmacro mcg-profile (name &rest body)
-  "Execute BODY and record elapsed time to mcg-load-times.
-
-Arguments:
-- NAME: Identifier name
-- BODY: Code to execute"
+  "Execute BODY and record its execution time under NAME.
+Only records time when `mcg-profile-mode' is enabled."
   (declare (indent 1))
   `(if mcg-profile-mode
        (let ((start-time (current-time)))
-         (prog1 (progn ,@body)
-           (let ((elapsed (* 1000 (float-time (time-subtract (current-time) start-time)))))
-             (push (cons ,name elapsed) mcg-load-times)
-             (mcg-log "⏱ %s: %.2fms" ,name elapsed))))
+         (prog1
+             (progn ,@body)
+           (let ((elapsed (float-time (time-subtract (current-time) start-time))))
+             (push (cons ,name (* elapsed 1000)) mcg-load-times)
+             (mcg-log "Loaded %s in %.2fms" ,name (* elapsed 1000)))))
      (progn ,@body)))
 
-(defun mcg/show-load-times ()
-  "Display load times for all modules/extensions."
+(defun mcg-show-load-times ()
+  "Display module load times."
   (interactive)
   (if (null mcg-load-times)
-      (message "No load times recorded. Set mcg-profile-mode to t before startup.")
-    (with-current-buffer (get-buffer-create "*MCG Load Times*")
-      (erase-buffer)
-      (insert "MCG Load Time Statistics\n")
-      (insert "========================\n\n")
-      (let ((sorted (sort (copy-sequence mcg-load-times)
-                          (lambda (a b) (> (cdr a) (cdr b)))))
-            (total 0))
-        (insert (format "%-50s %10s\n" "Name" "Time(ms)"))
-        (insert (make-string 62 ?─))
-        (insert "\n")
-        (dolist (entry sorted)
-          (insert (format "%-50s %10.2f\n" (car entry) (cdr entry)))
-          (cl-incf total (cdr entry)))
-        (insert (make-string 62 ?─))
-        (insert "\n")
-        (insert (format "%-50s %10.2f\n" "Total" total)))
-      (goto-char (point-min))
-      (display-buffer (current-buffer)))))
-
-(defun mcg--format-log-entry (entry)
-  "Format a log ENTRY for display.
-
-ENTRY is (TIMESTAMP LEVEL MESSAGE)."
-  (let* ((timestamp (car entry))
-         (level (cadr entry))
-         (message (caddr entry))
-         (time-str (format-time-string "%H:%M:%S" timestamp))
-         (level-str (upcase (symbol-name level)))
-         (level-face (pcase level
-                       ('error 'error)
-                       ('warning 'warning)
-                       ('debug 'font-lock-comment-face)
-                       (_ 'default))))
-    (format "[%s] %-7s %s" time-str level-str message)))
-
-(defun mcg--filter-logs-by-level (logs min-level)
-  "Filter LOGS to only include entries at or above MIN-LEVEL.
-
-Arguments:
-- LOGS: List of log entries
-- MIN-LEVEL: Minimum log level symbol"
-  (let ((min-idx (seq-position mcg-log-levels min-level)))
-    (seq-filter
-     (lambda (entry)
-       (let ((entry-level (cadr entry)))
-         (>= (seq-position mcg-log-levels entry-level) min-idx)))
-     logs)))
-
-(defun mcg--generate-logs-content (&optional level)
-  "Generate log content string, optionally filtered by LEVEL."
-  (let* ((logs (if level
-                   (mcg--filter-logs-by-level mcg-log-buffer level)
-                 mcg-log-buffer))
-         (sorted-logs (reverse logs)))  ; Show oldest first
-    (with-temp-buffer
-      (insert "                    MCG Log Messages\n")
-      (insert "    ═══════════════════════════════════════════════════\n\n")
-      (if (null sorted-logs)
-          (insert "    No log messages recorded.\n")
-        (insert (format "    Showing %d entries" (length sorted-logs)))
-        (when level
-          (insert (format " (filtered: %s+)" (symbol-name level))))
-        (insert "\n\n")
-        (dolist (entry sorted-logs)
-          (insert "    " (mcg--format-log-entry entry) "\n")))
-      (insert "\n    ───────────────────────────────────────────────────\n")
-      (insert "    Filter: d=debug i=info w=warning e=error a=all\n")
-      (buffer-string))))
-
-(defvar mcg--logs-popup-buffer "*MCG Logs*"
-  "Buffer name for logs popup.")
-
-(defvar mcg--logs-current-filter nil
-  "Current log level filter.")
-
-(defun mcg--logs-popup-scroll-down ()
-  "Scroll logs popup content down."
-  (when-let* ((buf (get-buffer mcg--logs-popup-buffer))
-              (frame (buffer-local-value 'posframe--frame buf)))
-    (with-selected-frame frame
-      (ignore-errors (scroll-up 3)))))
-
-(defun mcg--logs-popup-scroll-up ()
-  "Scroll logs popup content up."
-  (when-let* ((buf (get-buffer mcg--logs-popup-buffer))
-              (frame (buffer-local-value 'posframe--frame buf)))
-    (with-selected-frame frame
-      (ignore-errors (scroll-down 3)))))
-
-(defun mcg--logs-refresh-popup ()
-  "Refresh the logs popup with current filter."
-  (when-let ((buf (get-buffer mcg--logs-popup-buffer)))
-    (with-current-buffer buf
-      (let ((inhibit-read-only t))
+      (message "No load times recorded. Enable mcg-profile-mode before startup.")
+    (let ((buf (get-buffer-create "*MCG Load Times*"))
+          (sorted (sort (copy-sequence mcg-load-times)
+                        (lambda (a b) (> (cdr a) (cdr b)))))
+          (total 0))
+      (with-current-buffer buf
         (erase-buffer)
-        (insert (mcg--generate-logs-content mcg--logs-current-filter))))))
+        (insert "=== MCG Module Load Times ===\n\n")
+        (insert (format "%-40s %10s\n" "Module" "Time (ms)"))
+        (insert (make-string 52 ?-) "\n")
+        (dolist (entry sorted)
+          (setq total (+ total (cdr entry)))
+          (insert (format "%-40s %10.2f\n" (car entry) (cdr entry))))
+        (insert (make-string 52 ?-) "\n")
+        (insert (format "%-40s %10.2f\n" "TOTAL" total)))
+      (display-buffer buf))))
+#+end_src
 
-(defun mcg/show-logs (&optional level)
-  "Display recent log messages in posframe popup.
+** Path Initialization
 
-Optional LEVEL argument filters logs by minimum level.
-Keys: j/k scroll, d/i/w/e filter by level, a=all, q/ESC exit"
-  (interactive)
-  (require 'posframe)
-  
-  (setq mcg--logs-current-filter level)
-  
-  (let* ((buf (get-buffer-create mcg--logs-popup-buffer))
-         (content (mcg--generate-logs-content level))
-         (hint "j/k scroll | d/i/w/e/a filter | q/ESC exit")
-         (padding (make-string (/ (- 60 (string-width hint)) 2) ?\s)))
+路径初始化函数，设置所有 MCG 路径变量。
+
+#+begin_src emacs-lisp
+(defun mcg-init-paths (&optional base-dir)
+  "Initialize all MCG path variables.
+BASE-DIR is the root directory of the Emacs configuration.
+If not provided, it defaults to the parent of site-lisp/config/core/."
+  (let ((base (or base-dir
+                  ;; Default: go up from core-bootstrap.el location
+                  (file-name-directory
+                   (directory-file-name
+                    (file-name-directory
+                     (directory-file-name
+                      (file-name-directory
+                       (or load-file-name buffer-file-name
+                           (expand-file-name "emacs" user-emacs-directory))))))))))
+    ;; Normalize path
+    (setq base (file-name-as-directory (expand-file-name base)))
     
-    (with-current-buffer buf
+    ;; Set all path variables
+    (setq mcg-emacs-dir base)
+    (setq mcg-config-dir (expand-file-name "site-lisp/config/" base))
+    (setq mcg-core-dir (expand-file-name "core/" mcg-config-dir))
+    (setq mcg-modules-dir (expand-file-name "modules/" mcg-config-dir))
+    (setq mcg-extensions-dir (expand-file-name "site-lisp/extensions/" base))
+    (setq mcg-private-dir (expand-file-name "private/" mcg-config-dir))
+    (setq mcg-cache-dir (expand-file-name ".cache/" base))
+    (setq mcg-data-dir (expand-file-name ".data/" base))
+    
+    ;; Create cache and data directories if they don't exist
+    (unless (file-directory-p mcg-cache-dir)
+      (make-directory mcg-cache-dir t))
+    (unless (file-directory-p mcg-data-dir)
+      (make-directory mcg-data-dir t))
+    
+    (mcg-log "Initialized paths with base: %s" base)
+    base))
+#+end_src
+
+** Load Path Setup
+
+设置 =load-path= 以包含所有配置目录。
+
+#+begin_src emacs-lisp
+(defun mcg-setup-load-path ()
+  "Set up `load-path' for MCG configuration.
+Adds core, modules, and extensions directories to load-path."
+  (unless mcg-config-dir
+    (mcg-init-paths))
+  
+  ;; Add core directory
+  (when (file-directory-p mcg-core-dir)
+    (add-to-list 'load-path mcg-core-dir))
+  
+  ;; Add modules directory and subdirectories
+  (when (file-directory-p mcg-modules-dir)
+    (add-to-list 'load-path mcg-modules-dir)
+    (dolist (subdir (directory-files mcg-modules-dir t "^[^.]"))
+      (when (file-directory-p subdir)
+        (add-to-list 'load-path subdir))))
+  
+  ;; Add extensions directories (Borg drones)
+  (when (file-directory-p mcg-extensions-dir)
+    (mcg--add-extensions-to-load-path mcg-extensions-dir))
+  
+  ;; Add private directory
+  (when (file-directory-p mcg-private-dir)
+    (add-to-list 'load-path mcg-private-dir))
+  
+  (mcg-log "Setup load-path with %d entries" (length load-path)))
+
+(defun mcg--add-extensions-to-load-path (dir)
+  "Recursively add extension directories under DIR to `load-path'.
+Only adds directories that contain .el files."
+  (when (file-directory-p dir)
+    (dolist (entry (directory-files dir t "^[^.]"))
+      (when (file-directory-p entry)
+        ;; Check if directory contains .el files
+        (if (directory-files entry nil "\\.el$" t)
+            (add-to-list 'load-path entry)
+          ;; Otherwise, recurse into subdirectories
+          (mcg--add-extensions-to-load-path entry))))))
+#+end_src
+
+** GC Optimization
+
+垃圾回收优化，启动时使用高阈值，启动后恢复默认值。
+
+#+begin_src emacs-lisp
+(defun mcg-setup-gc-optimization ()
+  "Set up GC optimization for startup.
+Sets high GC threshold during startup and restores it after."
+  ;; Set high threshold during startup
+  (setq gc-cons-threshold mcg-gc-cons-threshold-startup)
+  (setq gc-cons-percentage 0.6)
+  
+  ;; Restore normal values after startup
+  (add-hook 'emacs-startup-hook #'mcg-restore-gc-defaults))
+
+(defun mcg-restore-gc-defaults ()
+  "Restore GC settings to normal values after startup."
+  (setq gc-cons-threshold mcg-gc-cons-threshold-default)
+  (setq gc-cons-percentage mcg-gc-cons-percentage-default)
+  (mcg-log "Restored GC defaults: threshold=%s, percentage=%s"
+           mcg-gc-cons-threshold-default
+           mcg-gc-cons-percentage-default))
+#+end_src
+
+** Startup Time Display
+
+启动时间显示功能，使用 posframe 或消息显示启动信息。
+
+*** Variables
+
+#+begin_src emacs-lisp
+(defvar mcg--startup-message-displayed nil
+  "Non-nil if startup message has been displayed.")
+
+(defvar mcg-startup-posframe-timeout 3
+  "Seconds to display startup posframe before auto-hiding.")
+#+end_src
+
+*** Helper Functions
+
+#+begin_src emacs-lisp
+(defun mcg--all-idle-modules-loaded-p ()
+  "Check if all idle modules have been loaded."
+  (and (boundp 'mcg-idle-load-modules)
+       (null mcg-idle-load-modules)))
+
+(defun mcg-display-startup-time ()
+  "Display startup time, loaded modules count and GC statistics.
+Waits until all idle modules are loaded before displaying."
+  (if (mcg--all-idle-modules-loaded-p)
+      ;; All modules loaded, display now
+      (mcg--do-display-startup-time)
+    ;; Wait for idle modules to finish loading
+    (run-with-timer 0.5 nil #'mcg-display-startup-time)))
+#+end_src
+
+*** Display Implementation
+
+#+begin_src emacs-lisp
+(defun mcg--do-display-startup-time ()
+  "Actually display the startup time message using posframe."
+  (unless mcg--startup-message-displayed
+    (setq mcg--startup-message-displayed t)
+    (setq mcg-startup-time
+          (float-time (time-subtract (current-time) mcg--startup-start-time)))
+    (let ((loaded-count (if (boundp 'mcg-loaded-modules)
+                            (length mcg-loaded-modules)
+                          0))
+          (error-count (if (boundp 'mcg-module-load-errors)
+                           (length mcg-module-load-errors)
+                         0))
+          (gc-count gcs-done))
+      ;; Try posframe first, fallback to message
+      (if (and (display-graphic-p)
+               (require 'posframe nil t))
+          (mcg--show-startup-posframe mcg-startup-time loaded-count error-count gc-count)
+        ;; Fallback to message
+        (if (> error-count 0)
+            (message "MCG Emacs loaded in %.2fs | %d modules | %d errors | %d GCs"
+                     mcg-startup-time loaded-count error-count gc-count)
+          (message "MCG Emacs loaded in %.2fs | %d modules | %d GCs"
+                   mcg-startup-time loaded-count gc-count))))))
+#+end_src
+
+*** Posframe Display
+
+#+begin_src emacs-lisp
+(defun mcg--show-startup-posframe (time modules errors gcs)
+  "Show startup info in a posframe.
+TIME is startup time, MODULES is module count, ERRORS is error count, GCS is GC count."
+  (let* ((buf-name " *mcg-startup*")
+         (content (mcg--format-startup-content time modules errors gcs))
+         (border-color (mcg--startup-get-border-color))
+         (bg-color (mcg--startup-get-background-color))
+         (fg-color (mcg--startup-get-foreground-color)))
+    ;; Create buffer with content
+    (with-current-buffer (get-buffer-create buf-name)
       (let ((inhibit-read-only t))
         (erase-buffer)
         (insert content))
       (setq-local buffer-read-only t)
       (setq-local cursor-type nil)
-      (setq-local header-line-format
-                  (propertize (concat padding hint)
-                              'face '(:foreground "#61AFEF" :weight bold)))
       (goto-char (point-min)))
-    
-    ;; Use posframe to display centered popup
-    (posframe-show buf
+    ;; Show posframe
+    (posframe-show buf-name
                    :position (point)
-                   :poshandler #'posframe-poshandler-frame-center
+                   :poshandler #'posframe-poshandler-frame-bottom-right-corner
                    :internal-border-width 2
-                   :internal-border-color "#61AFEF"
-                   :background-color "#282C34"
-                   :foreground-color "#ABB2BF"
-                   :width 65
-                   :height 35
-                   :respect-header-line t
+                   :internal-border-color border-color
+                   :background-color bg-color
+                   :foreground-color fg-color
+                   :width 45
+                   :height 8
                    :accept-focus nil)
+    ;; Auto-hide after timeout
+    (run-with-timer mcg-startup-posframe-timeout nil
+                    (lambda ()
+                      (when (get-buffer buf-name)
+                        (posframe-hide buf-name))))))
+#+end_src
+
+*** Content Formatting
+
+#+begin_src emacs-lisp
+(defun mcg--format-startup-content (time modules errors gcs)
+  "Format startup content for posframe display.
+TIME is startup time, MODULES is module count, ERRORS is error count, GCS is GC count."
+  (let ((status-icon (if (> errors 0) "⚠" "✓")))
+    (concat
+     "\n"
+     "    ╭─────────────────────────────────╮\n"
+     "    │     MCG Emacs Ready             │\n"
+     "    ├─────────────────────────────────┤\n"
+     (format "    │  %s Time: %.2fs                  │\n" status-icon time)
+     (format "    │  📦 Modules: %-3d                │\n" modules)
+     (if (> errors 0)
+         (format "    │  ❌ Errors: %-3d            │\n" errors)
+       "")
+     (format "    │  🔄 GCs: %-3d                    │\n" gcs)
+     "    ╰─────────────────────────────────╯\n")))
+#+end_src
+
+*** Color Helpers
+
+#+begin_src emacs-lisp
+(defun mcg--color-valid-p (color)
+  "Check if COLOR is a valid, usable color."
+  (and color
+       (stringp color)
+       (not (string-prefix-p "unspecified" color))
+       (or (string-match-p "^#[0-9A-Fa-f]\\{6\\}$" color)
+           (color-defined-p color))))
+
+(defun mcg--startup-get-border-color ()
+  "Get border color from current theme."
+  (let ((keyword-fg (face-foreground 'font-lock-keyword-face nil t))
+        (link-fg (face-foreground 'link nil t)))
+    (cond
+     ((mcg--color-valid-p keyword-fg) keyword-fg)
+     ((mcg--color-valid-p link-fg) link-fg)
+     (t "#61AFEF"))))
+
+(defun mcg--startup-get-background-color ()
+  "Get background color from current theme."
+  (let ((tooltip-bg (face-background 'tooltip nil t))
+        (default-bg (face-background 'default nil t)))
+    (cond
+     ((mcg--color-valid-p tooltip-bg) tooltip-bg)
+     ((mcg--color-valid-p default-bg) default-bg)
+     (t "#282C34"))))
+
+(defun mcg--startup-get-foreground-color ()
+  "Get foreground color from current theme."
+  (let ((default-fg (face-foreground 'default nil t)))
+    (if (mcg--color-valid-p default-fg)
+        default-fg
+      "#ABB2BF")))
+#+end_src
+
+*** Setup Function
+
+#+begin_src emacs-lisp
+(defun mcg-setup-startup-time-display ()
+  "Set up startup time display after Emacs starts."
+  ;; Use window-setup-hook which runs after all windows are set up
+  (add-hook 'window-setup-hook #'mcg-display-startup-time))
+#+end_src
+
+** Bootstrap Entry Point
+
+MCG Emacs 配置系统的引导入口点。
+
+#+begin_src emacs-lisp
+(defun mcg-bootstrap ()
+  "Bootstrap the MCG Emacs configuration.
+This function should be called from init.el to initialize the system."
+  ;; Initialize paths
+  (mcg-init-paths)
+  
+  ;; Setup load-path
+  (mcg-setup-load-path)
+  
+  ;; Setup GC optimization
+  (mcg-setup-gc-optimization)
+  
+  ;; Setup startup time display
+  (mcg-setup-startup-time-display)
+  
+  (mcg-log "MCG bootstrap complete"))
+#+end_src
+
+** Utility Functions
+
+实用工具函数，用于开发和调试。
+
+#+begin_src emacs-lisp
+(defun mcg-reload-config ()
+  "Reload the MCG configuration.
+Useful for development and debugging."
+  (interactive)
+  (mcg-init-paths)
+  (mcg-setup-load-path)
+  (message "MCG configuration reloaded."))
+
+(defun mcg-open-config-dir ()
+  "Open the MCG configuration directory in dired."
+  (interactive)
+  (dired mcg-config-dir))
+
+(defun mcg-open-private-dir ()
+  "Open the MCG private configuration directory in dired."
+  (interactive)
+  (if (file-directory-p mcg-private-dir)
+      (dired mcg-private-dir)
+    (message "Private directory does not exist: %s" mcg-private-dir)))
+#+end_src
+
+** Doctor - Configuration Diagnostics
+
+配置诊断系统，用于检查配置健康状态。
+
+*** Doctor Variables
+
+#+begin_src emacs-lisp
+(defvar mcg-doctor-checks nil
+  "List of doctor check functions.
+Each function should return a plist with :status (:ok, :warning, :error)
+and :message describing the result.")
+#+end_src
+
+*** Check Functions
+
+#+begin_src emacs-lisp
+(defun mcg-doctor--check-paths ()
+  "Check if all required paths are properly configured."
+  (let ((issues nil))
+    ;; Check core directories
+    (unless (and mcg-emacs-dir (file-directory-p mcg-emacs-dir))
+      (push "mcg-emacs-dir is not set or doesn't exist" issues))
+    (unless (and mcg-config-dir (file-directory-p mcg-config-dir))
+      (push "mcg-config-dir is not set or doesn't exist" issues))
+    (unless (and mcg-core-dir (file-directory-p mcg-core-dir))
+      (push "mcg-core-dir is not set or doesn't exist" issues))
+    (unless (and mcg-modules-dir (file-directory-p mcg-modules-dir))
+      (push "mcg-modules-dir is not set or doesn't exist" issues))
+    (unless (and mcg-extensions-dir (file-directory-p mcg-extensions-dir))
+      (push "mcg-extensions-dir is not set or doesn't exist" issues))
     
-    ;; Use read-key loop to handle keys
-    (unwind-protect
-        (catch 'exit-popup
-          (while t
-            (let ((key (read-key)))
-              (cond
-               ;; Exit
-               ((memq key '(?q 27))  ; q or ESC
-                (throw 'exit-popup nil))
-               ;; Scroll down
-               ((memq key '(?j ?n 14))  ; j, n, C-n
-                (mcg--logs-popup-scroll-down))
-               ((equal key 'down)
-                (mcg--logs-popup-scroll-down))
-               ;; Scroll up
-               ((memq key '(?k ?p 16))  ; k, p, C-p
-                (mcg--logs-popup-scroll-up))
-               ((equal key 'up)
-                (mcg--logs-popup-scroll-up))
-               ;; Filter by level
-               ((eq key ?d)
-                (setq mcg--logs-current-filter 'debug)
-                (mcg--logs-refresh-popup))
-               ((eq key ?i)
-                (setq mcg--logs-current-filter 'info)
-                (mcg--logs-refresh-popup))
-               ((eq key ?w)
-                (setq mcg--logs-current-filter 'warning)
-                (mcg--logs-refresh-popup))
-               ((eq key ?e)
-                (setq mcg--logs-current-filter 'error)
-                (mcg--logs-refresh-popup))
-               ((eq key ?a)
-                (setq mcg--logs-current-filter nil)
-                (mcg--logs-refresh-popup))
-               ;; Ignore other keys
-               (t nil)))))
-      ;; Cleanup
-      (posframe-hide mcg--logs-popup-buffer))))
+    (if issues
+        (list :status :error
+              :message (format "Path issues:\n  - %s" (string-join issues "\n  - ")))
+      (list :status :ok
+            :message "All paths configured correctly"))))
 
-(defun mcg/clear-logs ()
-  "Clear all log messages."
+(defun mcg-doctor--check-core-modules ()
+  "Check if core modules are loaded."
+  (let ((required '(core-bootstrap core-lib core-modules))
+        (missing nil))
+    (dolist (mod required)
+      (unless (featurep mod)
+        (push (symbol-name mod) missing)))
+    (if missing
+        (list :status :error
+              :message (format "Missing core modules: %s" (string-join missing ", ")))
+      (list :status :ok
+            :message "All core modules loaded"))))
+#+end_src
+
+*** More Check Functions
+
+#+begin_src emacs-lisp
+(defun mcg-doctor--check-module-errors ()
+  "Check for module load errors."
+  (if (and (boundp 'mcg-module-load-errors) mcg-module-load-errors)
+      (let ((error-count (length mcg-module-load-errors)))
+        (list :status :warning
+              :message (format "%d module(s) failed to load. Run M-x mcg-list-modules for details."
+                               error-count)))
+    (list :status :ok
+          :message "No module load errors")))
+
+(defun mcg-doctor--check-extensions ()
+  "Check extensions directory status."
+  (if (and mcg-extensions-dir (file-directory-p mcg-extensions-dir))
+      (let ((ext-count (length (directory-files mcg-extensions-dir nil "^[^.]"))))
+        (if (> ext-count 0)
+            (list :status :ok
+                  :message (format "Extensions directory contains %d items" ext-count))
+          (list :status :warning
+                :message "Extensions directory is empty. Run 'make gsb' to initialize submodules.")))
+    (list :status :error
+          :message "Extensions directory not found")))
+
+(defun mcg-doctor--check-gc-settings ()
+  "Check GC settings."
+  (let ((threshold gc-cons-threshold)
+        (expected mcg-gc-cons-threshold-default))
+    (cond
+     ;; During startup, threshold should be high
+     ((not (boundp 'mcg-startup-time))
+      (list :status :ok
+            :message "GC threshold is high (startup in progress)"))
+     ;; After startup, should be restored
+     ((= threshold expected)
+      (list :status :ok
+            :message (format "GC threshold restored to %s bytes" expected)))
+     ((> threshold expected)
+      (list :status :warning
+            :message (format "GC threshold (%s) higher than expected (%s)" threshold expected)))
+     (t
+      (list :status :ok
+            :message (format "GC threshold: %s bytes" threshold))))))
+#+end_src
+
+*** System Check Functions
+
+#+begin_src emacs-lisp
+(defun mcg-doctor--check-native-comp ()
+  "Check native compilation status."
+  (if (and (fboundp 'native-comp-available-p) (native-comp-available-p))
+      (list :status :ok
+            :message "Native compilation is available")
+    (list :status :warning
+          :message "Native compilation not available (performance may be reduced)")))
+
+(defun mcg-doctor--check-emacs-version ()
+  "Check Emacs version compatibility."
+  (cond
+   ((>= emacs-major-version 30)
+    (list :status :ok
+          :message (format "Emacs %s (fully supported)" emacs-version)))
+   ((>= emacs-major-version 29)
+    (list :status :ok
+          :message (format "Emacs %s (supported)" emacs-version)))
+   (t
+    (list :status :warning
+          :message (format "Emacs %s (version 29+ recommended)" emacs-version)))))
+
+(defun mcg-doctor--check-startup-time ()
+  "Check startup time."
+  (if (and (boundp 'mcg-startup-time) mcg-startup-time)
+      (cond
+       ((< mcg-startup-time 1.0)
+        (list :status :ok
+              :message (format "Startup time: %.2fs (excellent)" mcg-startup-time)))
+       ((< mcg-startup-time 2.0)
+        (list :status :ok
+              :message (format "Startup time: %.2fs (good)" mcg-startup-time)))
+       ((< mcg-startup-time 5.0)
+        (list :status :warning
+              :message (format "Startup time: %.2fs (could be improved)" mcg-startup-time)))
+       (t
+        (list :status :warning
+              :message (format "Startup time: %.2fs (slow, consider profiling)" mcg-startup-time))))
+    (list :status :ok
+          :message "Startup time not yet recorded")))
+#+end_src
+
+*** Doctor Main Function
+
+#+begin_src emacs-lisp
+(defun mcg-doctor ()
+  "Run diagnostic checks on MCG Emacs configuration.
+Displays a report of configuration health and potential issues."
   (interactive)
-  (setq mcg-log-buffer nil)
-  (message "MCG logs cleared."))
+  (let ((buf (get-buffer-create "*MCG Doctor*"))
+        (checks (list
+                 (cons "Emacs Version" #'mcg-doctor--check-emacs-version)
+                 (cons "Path Configuration" #'mcg-doctor--check-paths)
+                 (cons "Core Modules" #'mcg-doctor--check-core-modules)
+                 (cons "Module Errors" #'mcg-doctor--check-module-errors)
+                 (cons "Extensions" #'mcg-doctor--check-extensions)
+                 (cons "GC Settings" #'mcg-doctor--check-gc-settings)
+                 (cons "Native Compilation" #'mcg-doctor--check-native-comp)
+                 (cons "Startup Time" #'mcg-doctor--check-startup-time)))
+        (ok-count 0)
+        (warning-count 0)
+        (error-count 0))
+    (with-current-buffer buf
+      (erase-buffer)
+      (insert "╔══════════════════════════════════════════════════════════════╗\n")
+      (insert "║                    MCG Emacs Doctor                          ║\n")
+      (insert "╚══════════════════════════════════════════════════════════════╝\n\n")
+      (insert (format "Checked at: %s\n\n" (format-time-string "%Y-%m-%d %H:%M:%S")))
+      
+      ;; Run all checks
+      (dolist (check checks)
+        (let* ((name (car check))
+               (fn (cdr check))
+               (result (funcall fn))
+               (status (plist-get result :status))
+               (message (plist-get result :message))
+               (icon (pcase status
+                       (:ok "✓")
+                       (:warning "⚠")
+                       (:error "✗"))))
+          ;; Count results
+          (pcase status
+            (:ok (cl-incf ok-count))
+            (:warning (cl-incf warning-count))
+            (:error (cl-incf error-count)))
+          ;; Display result
+          (insert (format "[%s] %s\n" icon name))
+          (insert (format "    %s\n\n" message))))
+      
+      ;; Summary
+      (insert (make-string 64 ?─) "\n")
+      (insert (format "Summary: %d OK, %d Warnings, %d Errors\n"
+                      ok-count warning-count error-count))
+      
+      ;; Overall status
+      (cond
+       ((> error-count 0)
+        (insert "\n⚠ Configuration has errors that need attention.\n"))
+       ((> warning-count 0)
+        (insert "\n✓ Configuration is working but has some warnings.\n"))
+       (t
+        (insert "\n✓ Configuration is healthy!\n")))
+      
+      ;; Help section
+      (insert "\n" (make-string 64 ?─) "\n")
+      (insert "Useful commands:\n")
+      (insert "  M-x mcg-list-modules     - Show all modules and their status\n")
+      (insert "  M-x mcg-show-load-times  - Show module load times\n")
+      (insert "  M-x mcg-show-logs        - Show recent log messages\n")
+      (insert "  M-x mcg-show-extensions  - Show discovered extensions\n")
+      (insert "  M-x mcg-show-keybindings - Show registered keybindings\n"))
+    (display-buffer buf)))
+#+end_src
 
-(defun mcg/toggle-debug-mode ()
-  "Toggle debug mode."
-  (interactive)
-  (setq mcg-debug-mode (not mcg-debug-mode))
-  (message "MCG debug mode %s" (if mcg-debug-mode "enabled" "disabled")))
+** Provide Feature
 
-(defun mcg/toggle-profile-mode ()
-  "Toggle profiling mode."
-  (interactive)
-  (setq mcg-profile-mode (not mcg-profile-mode))
-  (message "MCG profile mode %s" (if mcg-profile-mode "enabled" "disabled")))
-
-#+END_SRC
-
-** Provide
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (provide 'core-bootstrap)
 ;;; core-bootstrap.el ends here
-#+END_SRC
+#+end_src

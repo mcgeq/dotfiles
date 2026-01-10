@@ -1,206 +1,314 @@
-#+TITLE: MCG Emacs Configuration
+#+TITLE: Init Module
 #+AUTHOR: mcge
 #+PROPERTY: header-args:emacs-lisp :tangle init.el :lexical t
 
-* init.el
-:PROPERTIES:
-:HEADER-ARGS: :tangle init.el :lexical t
-:END:
+* Init Module
 
-** Headers
-#+BEGIN_SRC emacs-lisp
-  ;;; init.el --- MCG Emacs Configuration Entry -*- lexical-binding: t; -*-
+本模块是 MCG Emacs 配置的主入口点。它按顺序加载核心模块，设置模块系统，并协调所有启用模块的加载。
 
-  ;; Filename: init.el
-  ;; Description: Configuration architecture entry file
-  ;; Author: mcge <mcgeq@outlook.com>
-  ;; Copyright (C) 2024-2026, mcge, all rights reserved.
-  ;; Create   Date: 2026-01-07
-  ;; Version: 3.0
-  ;; Keywords: configuration, init
-  ;; Compatibility: GNU Emacs 29.0+
+** File Header
 
-  ;;; Commentary:
-  ;;
-  ;; MCG Emacs configuration architecture entry file.
-  ;;
-  ;; This file is responsible for:
-  ;; - Loading core modules (core-bootstrap, core-lib, core-modules)
-  ;; - Using mcg! macro to declare enabled modules
-  ;; - Setting up lazy loading
-  ;; - Loading private configuration
-  ;;
-  ;; Usage:
-  ;; 1. Set environment variable MCG_EMACS_CONFIG_DIR to config root directory
-  ;;    or use default path (Windows: D:/config, Linux/Mac: ~)
-  ;; 2. Load this file in ~/.emacs.d/init.el:
-  ;;    (load (expand-file-name "site-lisp/config/init.el" mcg-emacs-dir))
-  ;;
+#+begin_src emacs-lisp
+;;; init.el --- Main initialization for MCG Emacs -*- lexical-binding: t; -*-
 
-#+END_SRC
+;; Copyright (C) 2024 MCG
+;; Author: MCG
+;; Keywords: configuration, init
 
-** Load Core Modules
-#+BEGIN_SRC emacs-lisp
-;;; Load Core Modules
+;;; Commentary:
+;; This is the main entry point for MCG Emacs configuration.
+;; It loads core modules in order, sets up the module system,
+;; and orchestrates the loading of all enabled modules.
+;;
+;; Requirements: 1.2, 13.2
 
-;; Core bootstrap module - define paths and performance optimization
+;;; Code:
+#+end_src
+
+** Bootstrap: Load Core Modules
+
+加载核心模块，按顺序初始化配置系统。
+
+*** Determine Configuration Directory
+
+#+begin_src emacs-lisp
+;; Determine the configuration directory
+(defvar mcg-init-file-dir
+  (file-name-directory (or load-file-name buffer-file-name))
+  "Directory containing init.el.")
+
+;; Add core directory to load-path first
+(add-to-list 'load-path (expand-file-name "core" mcg-init-file-dir))
+#+end_src
+
+*** Load core-bootstrap
+
+#+begin_src emacs-lisp
+;; Load core modules in order
+;; 1. core-bootstrap: paths, GC optimization, logging
 (require 'core-bootstrap)
 
-;; Core library module - extension management and utility functions
+;; Initialize paths based on init.el location
+;; init.el is at: emacs/site-lisp/config/init.el
+;; We need to go up two levels to get emacs/ directory
+;; config/ -> site-lisp/ -> emacs/
+(let* ((config-dir (file-name-as-directory mcg-init-file-dir))
+       ;; Remove trailing slash, then get parent directory
+       (site-lisp-dir (file-name-directory (directory-file-name config-dir)))
+       (emacs-dir (file-name-directory (directory-file-name site-lisp-dir))))
+  (mcg-init-paths emacs-dir))
+
+;; Setup load-path for all modules and extensions
+(mcg-setup-load-path)
+
+;; Setup GC optimization
+(mcg-setup-gc-optimization)
+
+;; Setup startup time display
+(mcg-setup-startup-time-display)
+#+end_src
+
+*** Load core-lib
+
+#+begin_src emacs-lisp
+;; 2. core-lib: extension cache, keybinding registry
 (require 'core-lib)
+(mcg-lib-init)
+#+end_src
 
-;; Module system - mcg! macro and module loading
+*** Load core-modules
+
+#+begin_src emacs-lisp
+;; 3. core-modules: module system, mcg! macro
 (require 'core-modules)
+(mcg-modules-init)
+#+end_src
 
-;; Automation module - auto tangle and autoload
-(require 'core-autoload)
+*** Load core-autoload (Optional)
 
-;; Setup auto tangle on save (only in interactive mode)
-(when (not noninteractive)
-  (mcg-setup-auto-tangle))
+#+begin_src emacs-lisp
+;; 4. core-autoload: autoload generation (optional)
+(when (locate-library "core-autoload")
+  (require 'core-autoload nil t))
+#+end_src
 
-#+END_SRC
+** Module Declaration: Define Enabled Modules
 
-** Module Declaration
-#+BEGIN_SRC emacs-lisp
-;;; Module Declaration
-;;
-;; Use mcg! macro to declare enabled modules
-;; Syntax:
-;;   :category module  - Enable module
-;;   :category -module - Disable module
-;;
+使用 mcg! 宏声明启用的模块。以 `-' 为前缀的模块被禁用。
 
-(mcg! :ui
-      theme           ; Theme configuration (ef-themes)
-      modeline        ; Status bar (awesome-tray)
-      font            ; Font configuration
-      icons           ; Nerd icons configuration
+#+begin_src emacs-lisp
+;; Declare which modules to enable using mcg! macro
+;; Modules prefixed with `-' are disabled
+;; 
+;; Categories:
+;;   :ui         - Theme, modeline, fonts, icons
+;;   :editor     - Editor defaults, navigation, editing tools
+;;   :completion - Vertico, snippets
+;;   :tools      - Git, search, input method, tabs, shell
+;;   :enhance    - Auto-save, which-key, helpful, recentf
+;;   :org        - Org-mode configuration
+;;   :writing    - Markdown, grammar checking
+;;   :lang       - LSP and language-specific modules
 
-      :editor
-      defaults        ; Editor default configuration
-      treesit         ; Tree-sitter support
-      navigation      ; Navigation (avy, ace-window)
-      keybindings     ; Keybindings
-      paredit         ; Structural editing (fingertip)
-      format          ; Text formatting (wraplish)
-      undo            ; Visual undo (vundo)
-      multicursor     ; Multi-cursor editing (markmacro)
+(mcg!
+ ;; UI modules - loaded immediately
+ :ui
+ theme
+ modeline
+ font
+ icons
 
-      :completion
-      vertico         ; Vertical completion framework
-      yasnippet       ; Code snippets
+ ;; Editor modules - loaded immediately
+ :editor
+ defaults
+ treesit
+ navigation
+ keybindings
+ paredit
+ format
+ undo
+ multicursor
 
-      :tools
-      magit           ; Git client
-      search          ; Search tools (blink-search, color-rg)
-      rime            ; Chinese input method
-      tabs            ; Tab bar (sort-tab)
-      eshell          ; Eshell shell
+ ;; Completion modules - loaded on idle
+ :completion
+ vertico
+ yasnippet
 
-      :enhance
-      autosave        ; Idle auto-save
-      which-key       ; Keybinding hints
-      helpful         ; Enhanced help system
-      recentf         ; Recent files
-      symbol          ; Symbol overlay
+ ;; Tools modules - loaded immediately
+ :tools
+ magit
+ search
+ rime
+ tabs
+ eshell
+ lsp  ; LSP must be loaded before language modules
 
-      :org
-      org             ; Org-mode basic configuration
-      org-agenda      ; Agenda schedule management
-      org-babel       ; Babel code execution
-      org-capture     ; Capture templates and Hugo integration
-      org-extras      ; Org extensions (download, numbering, consult-todo)
+ ;; Enhancement modules - loaded on idle
+ :enhance
+ autosave
+ which-key
+ helpful
+ recentf
+ symbol
 
-      :writing
-      markdown        ; Markdown support
-      vale            ; Grammar checking
+ ;; Org modules - loaded immediately
+ :org
+ org
+ org-agenda
+ org-babel
+ org-capture
+ org-extras
 
-      :lang
-      lsp             ; LSP unified configuration (lsp-bridge)
-      rust            ; Rust development
-      python          ; Python development
-      typescript      ; TypeScript development
-      web             ; Web development (Vue, HTML, CSS)
-      cpp             ; C/C++ development
-      lua             ; Lua development
-      zig             ; Zig development
-      )
+ ;; Writing modules - deferred (loaded on file open)
+ :writing
+ markdown
+ -vale  ; disabled by default
 
-#+END_SRC
+ ;; Language modules - deferred (loaded on file open)
+ :lang
+ rust
+ python
+ typescript
+ web
+ cpp
+ lua
+ zig)
+#+end_src
 
-** Load Modules
-#+BEGIN_SRC emacs-lisp
-;;; Load Modules
+** Module Loading Strategy
 
-;; Load UI modules immediately (needed at startup)
-(mcg-load-modules-by-category :ui)
+定义各类别使用的加载策略。
 
-;; Load editor modules immediately
-(mcg-load-modules-by-category :editor)
+#+begin_src emacs-lisp
+;; Define which categories use which loading strategy
+(defvar mcg-immediate-categories '(:ui :editor :tools :org)
+  "Categories to load immediately at startup.")
 
-;; Setup idle loading for completion modules
-;; These are loaded after Emacs becomes idle
-(mcg-add-idle-load-category :completion)
+(defvar mcg-idle-categories '(:completion :enhance)
+  "Categories to load during idle time.")
 
-;; Load tools modules immediately
-(mcg-load-modules-by-category :tools)
+(defvar mcg-deferred-categories '(:writing :lang)
+  "Categories to defer loading until triggered.")
+#+end_src
 
-;; Setup idle loading for enhance modules
-;; These are loaded after Emacs becomes idle
-(mcg-add-idle-load-category :enhance)
+** Load Immediate Modules
 
-;; Load Org modules immediately
-(mcg-load-modules-by-category :org)
+加载立即类别中的所有模块。
 
-;; Load writing modules immediately
-(mcg-load-modules-by-category :writing)
+#+begin_src emacs-lisp
+(defun mcg-load-immediate-modules ()
+  "Load all modules in immediate categories."
+  (dolist (category mcg-immediate-categories)
+    (mcg-load-modules-by-category category)))
+#+end_src
 
-;; Setup lazy loading for language modules
-;; LSP module loads immediately (other language modules depend on it)
-(mcg-load-module :lang 'lsp)
+** Setup Idle Loading
 
-;; Setup deferred loading for language modules
-(mcg-setup-deferred-loading)
+设置完成和增强模块的空闲加载。
 
-;; Setup idle loading (starts loading after idle delay)
-(mcg-setup-idle-loading)
+#+begin_src emacs-lisp
+(defun mcg-setup-idle-modules ()
+  "Set up idle loading for completion and enhance modules."
+  (dolist (category mcg-idle-categories)
+    (mcg-add-idle-load-category category))
+  (mcg-setup-idle-loading))
+#+end_src
 
-#+END_SRC
+** Setup Deferred Loading
+
+设置写作和语言模块的延迟加载。
+
+#+begin_src emacs-lisp
+(defun mcg-setup-deferred-modules ()
+  "Set up deferred loading for writing and language modules."
+  ;; Setup deferred loading based on triggers defined in core-modules
+  (mcg-setup-deferred-loading))
+#+end_src
 
 ** Load Private Configuration
-#+BEGIN_SRC emacs-lisp
-;;; Load Private Configuration
 
-(let ((private-config (expand-file-name "config.el" mcg-private-dir)))
-  (when (file-exists-p private-config)
-    (mcg-log "Loading private configuration...")
-    (load private-config nil t)))
+加载私有配置（如果存在）。私有配置在所有其他模块之后加载，以允许覆盖。
 
-#+END_SRC
+#+begin_src emacs-lisp
+(defun mcg-load-private-config ()
+  "Load private configuration if it exists.
+Private config is loaded after all other modules to allow overrides."
+  (let ((private-config (expand-file-name "config.el" mcg-private-dir)))
+    (when (file-exists-p private-config)
+      (condition-case err
+          (progn
+            (mcg-profile "private/config"
+              (load private-config nil t))
+            (mcg-log "Loaded private configuration"))
+        (error
+         (mcg-log-error "Failed to load private config: %s"
+                        (error-message-string err)))))))
+#+end_src
 
-** Startup Complete
-#+BEGIN_SRC emacs-lisp
-;;; Startup Complete
+** Startup Statistics
 
-;; Show module loading statistics
+Emacs 准备就绪后显示启动统计信息。
+
+#+begin_src emacs-lisp
+(defun mcg-display-startup-stats ()
+  "Display startup statistics after Emacs is ready."
+  (let ((loaded-count (length mcg-loaded-modules))
+        (deferred-count (length mcg-deferred-modules))
+        (idle-count (length mcg-idle-load-modules))
+        (error-count (length mcg-module-load-errors)))
+    (mcg-log "Startup complete: %d loaded, %d deferred, %d idle, %d errors"
+             loaded-count deferred-count idle-count error-count)
+    ;; Show errors if any
+    (when (> error-count 0)
+      (mcg-log-warning "Module load errors occurred. Run M-x mcg-list-modules to see details."))))
+#+end_src
+
+** Main Initialization Sequence
+
+主初始化函数，用于设置完整的 MCG Emacs 配置。
+
+#+begin_src emacs-lisp
+(defun mcg-init ()
+  "Main initialization function.
+Called to set up the complete MCG Emacs configuration."
+  ;; Load immediate modules (UI, editor, tools, org)
+  (mcg-load-immediate-modules)
+  
+  ;; Setup idle loading for completion and enhance modules
+  (mcg-setup-idle-modules)
+  
+  ;; Setup deferred loading for writing and language modules
+  (mcg-setup-deferred-modules)
+  
+  ;; Load private configuration last
+  (mcg-load-private-config)
+  
+  ;; Display startup statistics
+  (add-hook 'emacs-startup-hook #'mcg-display-startup-stats 95))
+
+;; Run initialization
+(mcg-init)
+#+end_src
+
+** Post-Startup Hooks
+
+Emacs 完全启动后的额外设置。
+
+#+begin_src emacs-lisp
+;; Additional setup after Emacs is fully started
 (add-hook 'emacs-startup-hook
           (lambda ()
-            (let ((loaded (length mcg-loaded-modules))
-                  (deferred (length mcg-deferred-modules))
-                  (idle-pending (length mcg-idle-load-modules))
-                  (errors (length mcg-module-load-errors)))
-              (mcg-log "Modules: %d loaded, %d deferred, %d idle-pending, %d errors"
-                       loaded deferred idle-pending errors)
-              ;; Show warning if there are errors
-              (when (> errors 0)
-                (message "⚠️ %d module(s) failed to load. Run M-x mcg-list-modules for details."
-                         errors)))))
+            ;; Restore GC settings (handled by core-bootstrap)
+            ;; Display startup time (handled by core-bootstrap)
+            
+            ;; Any additional post-startup setup can go here
+            (mcg-log "MCG Emacs ready"))
+          100)
+#+end_src
 
-#+END_SRC
+** Provide Feature
 
-** Provide
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (provide 'init)
 ;;; init.el ends here
-#+END_SRC
+#+end_src

@@ -1,45 +1,49 @@
-* init-undo.el
-:PROPERTIES:
-:HEADER-ARGS: :tangle init-undo.el :lexical t
-:END:
+#+TITLE: Visual Undo Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-undo.el :lexical t
 
-** Headers
-#+BEGIN_SRC emacs-lisp
+* Visual Undo Module
+
+本模块负责 MCG Emacs 的可视化撤销配置，包括：
+- Vundo 可视化撤销树
+- Vundo Hydra 导航菜单
+
+** File Header
+
+#+begin_src emacs-lisp
 ;;; init-undo.el --- Visual undo configuration for MCG Emacs -*- lexical-binding: t; -*-
 
-;; Filename: init-undo.el
-;; Description: Visual undo configuration module using vundo
+;; Copyright (C) 2024-2026 MCG
 ;; Author: mcge <mcgeq@outlook.com>
-;; Copyright (C) 2024-2026, mcge, all rights reserved.
-;; Create   Date: 2026-01-09
-;; Version: 3.0
 ;; Keywords: undo, vundo, visual
 ;; Compatibility: GNU Emacs 29.0+
 
 ;;; Commentary:
-;;
 ;; Visual undo module for MCG Emacs configuration, responsible for:
 ;; - Vundo visual undo tree
 ;; - Vundo hydra menu for navigation
-;;
+#+end_src
 
-#+END_SRC
+** Require
 
-** Dependencies
-#+BEGIN_SRC emacs-lisp
-;;; Dependencies
+#+begin_src emacs-lisp
+;;; Code:
 
 (require 'core-lib)
-
-#+END_SRC
+#+end_src
 
 ** Vundo Configuration
-#+BEGIN_SRC emacs-lisp
+
+Vundo 可视化撤销树配置。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Vundo Configuration
+;;; ============================================================
 
 (defun mcg--setup-vundo ()
   "Setup Vundo visual undo."
-  (when (mcg-require-extension "editor/vundo" 'vundo)
+  (when (mcg-require-extension "vundo" t)
     ;; Use Unicode symbols
     (setq vundo-glyph-alist vundo-unicode-symbols)
     (setq vundo-roll-back-on-quit nil)
@@ -69,21 +73,25 @@
     ;; Keybindings
     (global-set-key (kbd "C-x u") 'vundo)
     (global-set-key (kbd "C-c u") 'vundo)
-    (global-set-key (kbd "C-/") 'vundo)      ; 使用 vundo 替代默认 undo
+    (global-set-key (kbd "C-/") 'vundo)      ; Use vundo instead of default undo
     (global-set-key (kbd "C-?") 'undo-redo)
     
     (mcg-log "Vundo configured")))
-
-#+END_SRC
+#+end_src
 
 ** Vundo Hydra
-#+BEGIN_SRC emacs-lisp
+
+Vundo Hydra 导航菜单配置。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Vundo Hydra
+;;; ============================================================
 
 (defun mcg--setup-vundo-hydra ()
   "Setup Vundo Hydra menu."
   (when (and (featurep 'vundo)
-             (mcg-require-extension "utils/hydra" 'hydra))
+             (mcg-require-extension "hydra" t))
     
     (defhydra hydra-vundo (:color pink :hint nil)
       "
@@ -96,28 +104,23 @@
       ;; Basic movement
       ("f" vundo-forward "forward")
       ("b" vundo-backward "backward")
-      
       ;; Branch navigation
       ("n" vundo-next "next branch")
       ("p" vundo-previous "prev branch")
       ("a" vundo-stem-root "to branch point")
       ("e" vundo-stem-end "to end")
-      
       ;; Saved state navigation
       ("l" vundo-goto-last-saved "last saved")
       ("r" vundo-goto-next-saved "next saved")
-      
       ;; Diff operations
       ("m" vundo-diff-mark "mark for diff")
       ("u" vundo-diff-unmark "unmark")
       ("d" vundo-diff "show diff")
-      
       ;; Actions
       ("RET" vundo-confirm "confirm" :color blue)
       ("q" vundo-quit "quit" :color blue)
       ("Q" (progn (setq vundo-roll-back-on-quit t) (vundo-quit)) "abort" :color blue)
       ("C-g" vundo-quit "quit" :color blue)
-      
       ;; Debug (hidden)
       ("i" vundo--inspect)
       ("D" vundo--debug))
@@ -134,19 +137,23 @@
 ;; Delayed load hydra
 (with-eval-after-load 'vundo
   (mcg--setup-vundo-hydra))
-
-#+END_SRC
+#+end_src
 
 ** Initialize
-#+BEGIN_SRC emacs-lisp
+
+模块初始化。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Initialize
+;;; ============================================================
 
 (mcg--setup-vundo)
+#+end_src
 
-#+END_SRC
+** Provide Feature
 
-** Provide
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (provide 'init-undo)
 ;;; init-undo.el ends here
-#+END_SRC
+#+end_src

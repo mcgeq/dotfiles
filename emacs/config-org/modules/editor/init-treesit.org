@@ -1,48 +1,79 @@
-* init-treesit.el
-:PROPERTIES:
-:HEADER-ARGS: :tangle init-treesit.el :lexical t
-:END:
+#+TITLE: Tree-sitter Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-treesit.el :lexical t
 
-** Headers
-#+BEGIN_SRC emacs-lisp
-  ;;; init-treesit.el --- Tree-sitter Configuration for MCG Emacs -*- lexical-binding: t; -*-
+* Tree-sitter Module
 
-  ;; Filename: init-treesit.el
-  ;; Description: Tree-sitter syntax highlighting configuration module
-  ;; Author: mcge <mcgeq@outlook.com>
-  ;; Copyright (C) 2024-2026, mcge, all rights reserved.
-  ;; Create   Date: 2026-01-07
-  ;; Version: 3.0
-  ;; Keywords: tree-sitter, syntax, highlighting
-  ;; Compatibility: GNU Emacs 29.0+
+本模块负责 MCG Emacs 的 Tree-sitter 配置，包括：
+- treesit 语言源配置
+- major-mode 重映射
+- treesit-auto 自动安装
+- 文件类型关联
+- 语法高亮级别设置
 
-  ;;; Commentary:
-  ;;
-  ;; Tree-sitter configuration module for MCG Emacs, responsible for:
-  ;; - treesit language source configuration
-  ;; - major-mode remapping
-  ;; - treesit-auto automatic installation
-  ;; - file type associations
-  ;;
-  ;; Module metadata:
-  ;; :depends ()
-  ;; :defer nil
-  ;;
+** File Header
 
-#+END_SRC
+#+begin_src emacs-lisp
+;;; init-treesit.el --- Tree-sitter Configuration for MCG Emacs -*- lexical-binding: t; -*-
 
-** Dependencies
-#+BEGIN_SRC emacs-lisp
-;;; Dependencies
+;; Copyright (C) 2024-2026 MCG
+;; Author: mcge <mcgeq@outlook.com>
+;; Keywords: tree-sitter, syntax, highlighting
+;; Compatibility: GNU Emacs 29.0+
+
+;;; Commentary:
+;; Tree-sitter configuration module for MCG Emacs, responsible for:
+;; - treesit language source configuration
+;; - major-mode remapping
+;; - treesit-auto automatic installation
+;; - file type associations
+#+end_src
+
+** Require
+
+#+begin_src emacs-lisp
+;;; Code:
 
 (require 'core-lib)
 (require 'treesit)
+#+end_src
 
-#+END_SRC
+** Prevent typescript-mode Package Loading
+
+外部 typescript-mode 包与内置 typescript-ts-mode 的模式层次结构不同，会导致 "Inconsistent hierarchy" 错误。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Prevent typescript-mode Package Loading
+;;; ============================================================
+
+;; The external typescript-mode package has a different mode hierarchy than
+;; the built-in typescript-ts-mode, causing "Inconsistent hierarchy" errors.
+;; We prevent it from being loaded by adding it to load-path exclusions.
+(with-eval-after-load 'typescript-mode
+  ;; If typescript-mode gets loaded anyway, warn the user
+  (message "Warning: typescript-mode package loaded. This may cause hierarchy conflicts with typescript-ts-mode."))
+
+;; Remove typescript-mode from auto-mode-alist if it gets added
+(defun mcg--remove-typescript-mode-from-auto-mode-alist ()
+  "Remove typescript-mode entries from auto-mode-alist."
+  (setq auto-mode-alist
+        (seq-remove (lambda (pair)
+                      (eq (cdr pair) 'typescript-mode))
+                    auto-mode-alist)))
+
+;; Run after init to ensure our settings take precedence
+(add-hook 'after-init-hook #'mcg--remove-typescript-mode-from-auto-mode-alist)
+#+end_src
 
 ** Variables
-#+BEGIN_SRC emacs-lisp
+
+Tree-sitter 相关的配置变量。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Variables
+;;; ============================================================
 
 (defvar mcg-treesit-auto-install nil
   "Whether to automatically install missing tree-sitter grammars.
@@ -56,12 +87,16 @@ When set to t, grammars will be downloaded automatically on first file open.")
 ;; Set tree-sitter grammar install directory
 (setq treesit-extra-load-path
       (list (expand-file-name "tree-sitter" user-emacs-directory)))
-
-#+END_SRC
+#+end_src
 
 ** Language Sources
-#+BEGIN_SRC emacs-lisp
+
+Tree-sitter 语言语法源列表。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Language Sources
+;;; ============================================================
 
 (defvar mcg-treesit-language-sources
   '((bash . ("https://github.com/tree-sitter/tree-sitter-bash"))
@@ -104,12 +139,16 @@ When set to t, grammars will be downloaded automatically on first file open.")
     (clojure . ("https://github.com/sogaiu/tree-sitter-clojure"))
     (mojo . ("https://github.com/HerringtonDarkholme/tree-sitter-mojo")))
   "Tree-sitter language grammar source list.")
-
-#+END_SRC
+#+end_src
 
 ** Major Mode Remap
-#+BEGIN_SRC emacs-lisp
+
+传统模式到 Tree-sitter 模式的映射。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Major Mode Remap
+;;; ============================================================
 
 (defvar mcg-treesit-major-mode-remap
   '((c-mode . c-ts-mode)
@@ -121,18 +160,23 @@ When set to t, grammars will be downloaded automatically on first file open.")
     (js-json-mode . json-ts-mode)
     (python-mode . python-ts-mode)
     (sh-mode . bash-ts-mode)
-    (typescript-mode . typescript-ts-mode)
+    ;; Note: typescript-mode is not remapped because it's an external package
+    ;; with different mode hierarchy. Use typescript-ts-mode directly via auto-mode-alist.
     (rust-mode . rust-ts-mode)
     (java-mode . java-ts-mode)
     (clojure-mode . clojure-ts-mode)
     (markdown-mode . markdown-ts-mode))
   "Mapping from traditional modes to tree-sitter modes.")
-
-#+END_SRC
+#+end_src
 
 ** Auto Mode Alist
-#+BEGIN_SRC emacs-lisp
+
+文件扩展名到模式的映射。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Auto Mode Alist
+;;; ============================================================
 
 (defvar mcg-treesit-auto-mode-alist
   '(("\\.markdown\\'" . markdown-mode)
@@ -153,11 +197,12 @@ When set to t, grammars will be downloaded automatically on first file open.")
     ("cron\\(tab\\)?\\." . crontab-mode)
     ("\\.a90\\'" . intel-hex-mode)
     ("\\.hex\\'" . intel-hex-mode)
-    ("\\.py\\'" . python-mode)
+    ("\\.py\\'" . python-ts-mode)
+    ("\\.pyi\\'" . python-ts-mode)
     ("/\\.php_cs\\(?:\\.dist\\)?\\'" . php-mode)
     ("\\.\\(?:php\\.inc\\|stub\\)\\'" . php-mode)
     ("\\.\\(?:php[s345]?\\|phtml\\)\\'" . php-mode-maybe)
-    ("SConstruct\\'" . python-mode)
+    ("SConstruct\\'" . python-ts-mode)
     ("\\.ml\\'" . tuareg-mode)
     ("\\.mli\\'" . tuareg-mode)
     ("\\.mly\\'" . tuareg-mode)
@@ -217,12 +262,16 @@ When set to t, grammars will be downloaded automatically on first file open.")
     ("\\.mojo\\'" . mojo-mode)
     ("\\.fs\\'" . fsharp-mode))
   "Mapping from file extensions to modes.")
-
-#+END_SRC
+#+end_src
 
 ** Treesit Parser Hooks
-#+BEGIN_SRC emacs-lisp
+
+模式钩子到 Tree-sitter 语言的映射。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Treesit Parser Hooks
+;;; ============================================================
 
 (defvar mcg-treesit-parser-hooks
   '((markdown-ts-mode-hook . markdown)
@@ -253,12 +302,16 @@ When set to t, grammars will be downloaded automatically on first file open.")
                 (lambda ()
                   (when (treesit-available-p)
                     (treesit-parser-create lang)))))))
-
-#+END_SRC
+#+end_src
 
 ** Web Mode Parser
-#+BEGIN_SRC emacs-lisp
+
+Web 模式的 Tree-sitter 解析器创建。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Web Mode Parser
+;;; ============================================================
 
 (defun mcg-treesit--web-mode-parser ()
   "Create appropriate treesit parser for web-mode."
@@ -269,12 +322,16 @@ When set to t, grammars will be downloaded automatically on first file open.")
          ("vue" 'vue)
          ("html" 'html)
          ("php" 'php))))))
-
-#+END_SRC
+#+end_src
 
 ** Autoloads
-#+BEGIN_SRC emacs-lisp
+
+模式自动加载配置。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Autoloads
+;;; ============================================================
 
 (defvar mcg-treesit-autoloads
   '((cmake-mode . "cmake-mode")
@@ -300,62 +357,133 @@ When set to t, grammars will be downloaded automatically on first file open.")
     (kotlin-mode . "kotlin-mode")
     (mojo-mode . "mojo")
     (fsharp-mode . "fsharp-mode")
-    (lua-mode . "lang-lua"))
+    (lua-mode . "lang-lua")
+    (web-mode . "web-mode"))
   "Autoload mapping from modes to files.")
 
 (defun mcg-treesit--setup-autoloads ()
   "Setup mode autoloads."
   (dolist (pair mcg-treesit-autoloads)
     (autoload (car pair) (cdr pair) nil t)))
-
-#+END_SRC
+#+end_src
 
 ** Setup Functions
-#+BEGIN_SRC emacs-lisp
+
+设置函数。
+
+*** Setup Sources
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Setup Functions
+;;; ============================================================
 
 (defun mcg-treesit-setup-sources ()
   "Setup tree-sitter language sources."
   (setq treesit-language-source-alist mcg-treesit-language-sources)
   (mcg-log "Configured treesit language sources"))
+#+end_src
 
+*** Setup Remap
+
+#+begin_src emacs-lisp
 (defun mcg-treesit-setup-remap ()
   "Setup major-mode remapping."
   (setq major-mode-remap-alist mcg-treesit-major-mode-remap)
   (mcg-log "Configured major-mode remap for tree-sitter"))
+#+end_src
 
+*** Setup Auto Mode
+
+#+begin_src emacs-lisp
 (defun mcg-treesit-setup-auto-mode ()
   "Setup auto-mode-alist."
+  ;; Add entries in reverse order so higher priority ones end up first
   (dolist (pair mcg-treesit-auto-mode-alist)
     (add-to-list 'auto-mode-alist pair))
   (add-to-list 'interpreter-mode-alist '("coffee" . coffee-mode))
+  
+  ;; Ensure TypeScript/TSX use tree-sitter modes (highest priority)
+  ;; These must be at the front of auto-mode-alist to override any other settings
+  (setq auto-mode-alist
+        (append '(("\\.ts\\'" . typescript-ts-mode)
+                  ("\\.tsx\\'" . tsx-ts-mode)
+                  ("\\.mts\\'" . typescript-ts-mode)
+                  ("\\.cts\\'" . typescript-ts-mode))
+                (seq-remove (lambda (pair)
+                              (and (stringp (car pair))
+                                   (string-match-p "\\.\\(ts\\|tsx\\|mts\\|cts\\)\\\\'" (car pair))))
+                            auto-mode-alist)))
   (mcg-log "Configured auto-mode-alist"))
+#+end_src
 
+*** Setup Hooks
+
+#+begin_src emacs-lisp
 (defun mcg-treesit-setup-hooks ()
   "Setup treesit parser hooks."
   (mcg-treesit--add-parser-hooks)
   (add-hook 'web-mode-hook #'mcg-treesit--web-mode-parser)
   (mcg-log "Configured treesit parser hooks"))
+#+end_src
 
+*** Setup Font Lock
+
+#+begin_src emacs-lisp
 (defun mcg-treesit-setup-font-lock ()
   "Setup tree-sitter syntax highlighting level."
   (setq treesit-font-lock-level mcg-treesit-font-lock-level)
   (mcg-log "Set treesit font-lock level to %d" mcg-treesit-font-lock-level))
+#+end_src
 
+*** Setup Auto
+
+#+begin_src emacs-lisp
 (defun mcg-treesit-setup-auto ()
-  "Setup treesit-auto (if available)."
-  (when (mcg-load-extension "lsp/treesit-auto")
+  "Setup treesit-auto (if available).
+Note: treesit-auto is disabled for TypeScript/TSX to avoid mode hierarchy conflicts.
+TypeScript files use typescript-ts-mode directly via auto-mode-alist."
+  (when (mcg-require-extension "treesit-auto" t)
+    ;; Configure treesit-auto BEFORE loading it
+    (setq treesit-auto-install mcg-treesit-auto-install)
+    
+    ;; Exclude TypeScript modes from treesit-auto to prevent hierarchy conflicts
+    ;; typescript-mode (external package) has different inheritance than typescript-ts-mode
+    (setq treesit-auto-langs
+          (seq-difference '(bash c cpp css dockerfile go html java javascript
+                            json lua make markdown python ruby rust toml yaml)
+                          '(typescript tsx)))
+    
     (require 'treesit-auto nil t)
     (when (featurep 'treesit-auto)
-      (setq treesit-auto-install mcg-treesit-auto-install)
+      ;; Remove TypeScript from fallback alist
+      (when (boundp 'treesit-auto-fallback-alist)
+        (setq treesit-auto-fallback-alist
+              (seq-remove (lambda (entry)
+                            (memq (car entry) '(typescript-ts-mode tsx-ts-mode js-ts-mode)))
+                          treesit-auto-fallback-alist)))
+      ;; Remove TypeScript from recipe list
+      (when (boundp 'treesit-auto-recipe-list)
+        (setq treesit-auto-recipe-list
+              (seq-remove (lambda (recipe)
+                            (and (treesit-auto-recipe-p recipe)
+                                 (memq (treesit-auto-recipe-ts-mode recipe)
+                                       '(typescript-ts-mode tsx-ts-mode))))
+                          treesit-auto-recipe-list)))
       (global-treesit-auto-mode 1)
-      (mcg-log "Enabled treesit-auto-mode"))))
-
-#+END_SRC
+      (mcg-log "Enabled treesit-auto-mode (TypeScript excluded)"))))
+#+end_src
 
 ** Commands
-#+BEGIN_SRC emacs-lisp
+
+交互式命令。
+
+*** Install All Grammars
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Commands
+;;; ============================================================
 
 (defun mcg/treesit-install-all-grammars ()
   "Install all configured tree-sitter grammars."
@@ -366,7 +494,11 @@ When set to t, grammars will be downloaded automatically on first file open.")
         (message "Installing grammar for %s..." lang)
         (treesit-install-language-grammar lang))))
   (message "All grammars installed!"))
+#+end_src
 
+*** Install Grammar
+
+#+begin_src emacs-lisp
 (defun mcg/treesit-install-grammar (lang)
   "Install tree-sitter grammar for specified language LANG."
   (interactive
@@ -377,7 +509,11 @@ When set to t, grammars will be downloaded automatically on first file open.")
       (message "Grammar for %s is already installed" lang)
     (treesit-install-language-grammar lang)
     (message "Installed grammar for %s" lang)))
+#+end_src
 
+*** List Available
+
+#+begin_src emacs-lisp
 (defun mcg/treesit-list-available ()
   "List all available tree-sitter grammars."
   (interactive)
@@ -400,19 +536,27 @@ When set to t, grammars will be downloaded automatically on first file open.")
         (insert (format "  ✗ %s\n" lang)))
       (goto-char (point-min))
       (display-buffer (current-buffer)))))
+#+end_src
 
+*** Explore
+
+#+begin_src emacs-lisp
 (defun mcg/treesit-explore ()
   "Open tree-sitter syntax tree explorer for current buffer."
   (interactive)
   (if (treesit-parser-list)
       (treesit-explore-mode)
     (message "No tree-sitter parser active in this buffer")))
-
-#+END_SRC
+#+end_src
 
 ** Initialize
-#+BEGIN_SRC emacs-lisp
+
+模块初始化。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Initialize
+;;; ============================================================
 
 ;; Setup language sources
 (mcg-treesit-setup-sources)
@@ -432,14 +576,17 @@ When set to t, grammars will be downloaded automatically on first file open.")
 ;; Setup autoloads
 (mcg-treesit--setup-autoloads)
 
-;; Setup treesit-auto (optional)
-(when (mcg-extension-exists-p "lsp/treesit-auto")
-  (mcg-treesit-setup-auto))
+;; NOTE: treesit-auto is DISABLED to avoid TypeScript mode hierarchy conflicts
+;; The typescript-mode package defines a mode with different inheritance than
+;; typescript-ts-mode, causing "Inconsistent hierarchy" errors.
+;; TypeScript files use typescript-ts-mode directly via auto-mode-alist.
+;; (when (mcg-extension-exists-p "treesit-auto")
+;;   (mcg-treesit-setup-auto))
+#+end_src
 
-#+END_SRC
+** Provide Feature
 
-** Provide
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (provide 'init-treesit)
 ;;; init-treesit.el ends here
-#+END_SRC
+#+end_src

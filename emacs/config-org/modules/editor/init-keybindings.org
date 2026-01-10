@@ -1,55 +1,70 @@
-* init-keybindings.el
-:PROPERTIES:
-:HEADER-ARGS: :tangle init-keybindings.el :lexical t
-:END:
+#+TITLE: Keybindings Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-keybindings.el :lexical t
 
-** Headers
-#+BEGIN_SRC emacs-lisp
+* Keybindings Module
+
+本模块负责 MCG Emacs 的快捷键配置，包括：
+- 全局快捷键设置
+- 快捷键参考文档
+- 各功能模块的快捷键绑定
+
+注意：Vundo 和 Markmacro 已移至独立模块：
+- init-undo.el 用于可视化撤销 (vundo)
+- init-multicursor.el 用于多光标编辑 (markmacro)
+
+** File Header
+
+#+begin_src emacs-lisp
 ;;; init-keybindings.el --- Keybindings for MCG Emacs -*- lexical-binding: t; -*-
 
-;; Filename: init-keybindings.el
-;; Description: Global keybindings configuration module
+;; Copyright (C) 2024-2026 MCG
 ;; Author: mcge <mcgeq@outlook.com>
-;; Copyright (C) 2024-2026, mcge, all rights reserved.
-;; Create   Date: 2026-01-07
-;; Version: 3.0
 ;; Keywords: keybindings, keyboard
 ;; Compatibility: GNU Emacs 29.0+
 
 ;;; Commentary:
-;;
 ;; Keybindings module for MCG Emacs configuration, responsible for:
 ;; - Global keybindings setup
 ;; - Keybindings reference
 ;;
 ;; Note: Vundo and Markmacro have been moved to separate modules:
-;; - init-undo.org for visual undo (vundo)
-;; - init-multicursor.org for multi-cursor editing (markmacro)
-;;
+;; - init-undo.el for visual undo (vundo)
+;; - init-multicursor.el for multi-cursor editing (markmacro)
+#+end_src
 
-#+END_SRC
+** Require
 
-** Dependencies
-#+BEGIN_SRC emacs-lisp
-;;; Dependencies
+#+begin_src emacs-lisp
+;;; Code:
 
 (require 'core-lib)
-
-#+END_SRC
+#+end_src
 
 ** Unset Conflicting Keys
-#+BEGIN_SRC emacs-lisp
+
+取消设置不常用或冲突的快捷键。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Unset Conflicting Keys
+;;; ============================================================
 
 ;; Unset rarely used or conflicting keybindings
 (global-unset-key (kbd "C-z"))   ; suspend-frame (rarely used)
 (global-unset-key (kbd "s-q"))   ; save-buffers-kill-emacs (dangerous)
-
-#+END_SRC
+#+end_src
 
 ** Basic Editing Keys
-#+BEGIN_SRC emacs-lisp
+
+基础编辑快捷键。
+
+*** Smart Beginning of Line
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Basic Editing Keys
+;;; ============================================================
 
 (defun mcg/smart-beginning-of-line ()
   "Smart beginning of line: toggle between line start and first non-whitespace character."
@@ -58,26 +73,39 @@
     (back-to-indentation)
     (when (= orig-point (point))
       (beginning-of-line))))
+#+end_src
 
+*** Open Init File
+
+#+begin_src emacs-lisp
 (defun mcg/open-init-file ()
   "Open configuration entry file."
   (interactive)
   (find-file (expand-file-name "init.el" mcg-config-dir)))
+#+end_src
 
+*** Basic Editing Keybindings
+
+#+begin_src emacs-lisp
 ;; Basic editing - using mcg-bind-key for registry tracking
-(mcg-bind-key "C-a" mcg/smart-beginning-of-line "init-keybindings")
-(mcg-bind-key "C-c E" mcg/open-init-file "init-keybindings")
-(mcg-bind-key "C-c R" replace-string "init-keybindings")
-(mcg-bind-key "C-c M-r" replace-regexp "init-keybindings")
-(mcg-bind-key "C-c D" make-directory "init-keybindings")
-
-#+END_SRC
+(mcg-bind-key "C-a" 'mcg/smart-beginning-of-line "init-keybindings")
+(mcg-bind-key "C-c E" 'mcg/open-init-file "init-keybindings")
+(mcg-bind-key "C-c R" 'replace-string "init-keybindings")
+(mcg-bind-key "C-c M-r" 'replace-regexp "init-keybindings")
+(mcg-bind-key "C-c D" 'make-directory "init-keybindings")
+#+end_src
 
 ** Line Manipulation
-#+BEGIN_SRC emacs-lisp
-;;; Line Manipulation
 
-;; Define named functions for line manipulation
+行操作快捷键。
+
+*** Insert Line Functions
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Line Manipulation
+;;; ============================================================
+
 (defun mcg/insert-line-below ()
   "Insert new line below current line."
   (interactive)
@@ -91,7 +119,11 @@
   (newline)
   (forward-line -1)
   (indent-according-to-mode))
+#+end_src
 
+*** Move Line Functions
+
+#+begin_src emacs-lisp
 (defun mcg/move-line-up ()
   "Move current line up."
   (interactive)
@@ -106,18 +138,26 @@
   (transpose-lines 1)
   (forward-line -1)
   (indent-according-to-mode))
+#+end_src
 
+*** Line Manipulation Keybindings
+
+#+begin_src emacs-lisp
 ;; Line manipulation keybindings
-(mcg-bind-key "C-c <down>" mcg/insert-line-below "init-keybindings")
-(mcg-bind-key "C-c <up>" mcg/insert-line-above "init-keybindings")
-(mcg-bind-key "M-<up>" mcg/move-line-up "init-keybindings")
-(mcg-bind-key "M-<down>" mcg/move-line-down "init-keybindings")
-
-#+END_SRC
+(mcg-bind-key "C-c <down>" 'mcg/insert-line-below "init-keybindings")
+(mcg-bind-key "C-c <up>" 'mcg/insert-line-above "init-keybindings")
+(mcg-bind-key "M-<up>" 'mcg/move-line-up "init-keybindings")
+(mcg-bind-key "M-<down>" 'mcg/move-line-down "init-keybindings")
+#+end_src
 
 ** Scrolling
-#+BEGIN_SRC emacs-lisp
+
+滚动快捷键。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Scrolling
+;;; ============================================================
 
 (defun mcg/scroll-down-third ()
   "Scroll down 1/3 window height."
@@ -129,36 +169,35 @@
   (interactive)
   (scroll-down (/ (window-body-height) 3)))
 
-(mcg-bind-key "M-n" mcg/scroll-down-third "init-keybindings")
-(mcg-bind-key "M-p" mcg/scroll-up-third "init-keybindings")
-
-#+END_SRC
-
-** Vundo and Multicursor Modules
-#+BEGIN_SRC emacs-lisp
-;;; Vundo and Multicursor Modules
-;; These features have been moved to separate modules for better modularity.
-;; - init-undo: Visual undo with vundo
-;; - init-multicursor: Multi-cursor editing with markmacro
-;; Load them via mcg! macro: :editor undo multicursor
-
-#+END_SRC
+(mcg-bind-key "M-n" 'mcg/scroll-down-third "init-keybindings")
+(mcg-bind-key "M-p" 'mcg/scroll-up-third "init-keybindings")
+#+end_src
 
 ** Yasnippet Keys
-#+BEGIN_SRC emacs-lisp
+
+Yasnippet 快捷键。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Yasnippet Keys
+;;; ============================================================
 
-(mcg-bind-key "C-c y n" yas-new-snippet "init-keybindings")
-(mcg-bind-key "C-c y v" yas-visit-snippet-file "init-keybindings")
-(mcg-bind-key "C-c y r" yas-reload-all "init-keybindings")
-
-#+END_SRC
+(mcg-bind-key "C-c y n" 'yas-new-snippet "init-keybindings")
+(mcg-bind-key "C-c y v" 'yas-visit-snippet-file "init-keybindings")
+(mcg-bind-key "C-c y r" 'yas-reload-all "init-keybindings")
+#+end_src
 
 ** Sort-tab Keys
-#+BEGIN_SRC emacs-lisp
-;;; Sort-tab Keys (C-c t prefix)
 
-;; Tab number selection helper functions
+标签页快捷键 (C-c t 前缀)。
+
+*** Tab Selection Functions
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Sort-tab Keys (C-c t prefix)
+;;; ============================================================
+
 (defun mcg-select-tab-1 ()
   "Select tab 1."
   (interactive)
@@ -176,33 +215,38 @@
   (interactive)
   (when (fboundp 'sort-tab-select-by-index)
     (sort-tab-select-by-index 2)))
+#+end_src
 
+*** Setup Sort-tab Keys
+
+#+begin_src emacs-lisp
 (defun mcg--setup-sort-tab-keys ()
   "Setup sort-tab keybindings."
   (with-eval-after-load 'sort-tab
     ;; Navigation
-    (mcg-bind-key "C-c t n" sort-tab-select-next-tab "init-keybindings")
-    (mcg-bind-key "C-c t p" sort-tab-select-prev-tab "init-keybindings")
-    (mcg-bind-key "C-c t f" sort-tab-select-first-tab "init-keybindings")
-    (mcg-bind-key "C-c t l" sort-tab-select-last-tab "init-keybindings")
-    
+    (mcg-bind-key "C-c t n" 'sort-tab-select-next-tab "init-keybindings")
+    (mcg-bind-key "C-c t p" 'sort-tab-select-prev-tab "init-keybindings")
+    (mcg-bind-key "C-c t f" 'sort-tab-select-first-tab "init-keybindings")
+    (mcg-bind-key "C-c t l" 'sort-tab-select-last-tab "init-keybindings")
     ;; Management
-    (mcg-bind-key "C-c t k" sort-tab-close-current-tab "init-keybindings")
-    (mcg-bind-key "C-c t o" sort-tab-close-other-tabs "init-keybindings")
-    (mcg-bind-key "C-c t K" sort-tab-close-all-tabs "init-keybindings")
-    
+    (mcg-bind-key "C-c t k" 'sort-tab-close-current-tab "init-keybindings")
+    (mcg-bind-key "C-c t o" 'sort-tab-close-other-tabs "init-keybindings")
+    (mcg-bind-key "C-c t K" 'sort-tab-close-all-tabs "init-keybindings")
     ;; Number quick selection
-    (mcg-bind-key "C-c t 1" mcg-select-tab-1 "init-keybindings")
-    (mcg-bind-key "C-c t 2" mcg-select-tab-2 "init-keybindings")
-    (mcg-bind-key "C-c t 3" mcg-select-tab-3 "init-keybindings")
-    
+    (mcg-bind-key "C-c t 1" 'mcg-select-tab-1 "init-keybindings")
+    (mcg-bind-key "C-c t 2" 'mcg-select-tab-2 "init-keybindings")
+    (mcg-bind-key "C-c t 3" 'mcg-select-tab-3 "init-keybindings")
     (mcg-log "Sort-tab keybindings configured")))
-
-#+END_SRC
+#+end_src
 
 ** Search Keys
-#+BEGIN_SRC emacs-lisp
+
+搜索快捷键 (C-c s 前缀)。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Search Keys (C-c s prefix)
+;;; ============================================================
 
 (defun mcg--setup-search-keys ()
   "Setup search-related keybindings."
@@ -214,150 +258,163 @@
   (autoload 'consult-recent-file "consult" nil t)
   (autoload 'consult-project-buffer "consult" nil t)
   
-  (mcg-bind-key "C-c s l" consult-line "init-keybindings")
-  (mcg-bind-key "C-c s i" consult-imenu "init-keybindings")
-  (mcg-bind-key "C-c s m" consult-mark "init-keybindings")
-  (mcg-bind-key "C-c s b" consult-buffer "init-keybindings")
-  (mcg-bind-key "C-c s r" consult-recent-file "init-keybindings")
+  (mcg-bind-key "C-c s l" 'consult-line "init-keybindings")
+  (mcg-bind-key "C-c s i" 'consult-imenu "init-keybindings")
+  (mcg-bind-key "C-c s m" 'consult-mark "init-keybindings")
+  (mcg-bind-key "C-c s b" 'consult-buffer "init-keybindings")
+  (mcg-bind-key "C-c s r" 'consult-recent-file "init-keybindings")
   
   ;; Buffer management with project filtering
-  (mcg-bind-key "C-c b b" consult-buffer "init-keybindings")
-  (mcg-bind-key "C-c b p" consult-project-buffer "init-keybindings")
-  (mcg-bind-key "C-c b r" consult-recent-file "init-keybindings")
+  (mcg-bind-key "C-c b b" 'consult-buffer "init-keybindings")
+  (mcg-bind-key "C-c b p" 'consult-project-buffer "init-keybindings")
+  (mcg-bind-key "C-c b r" 'consult-recent-file "init-keybindings")
   
   ;; Embark
   (autoload 'embark-act "embark" nil t)
   (autoload 'embark-dwim "embark" nil t)
-  (mcg-bind-key "C-." embark-act "init-keybindings")
-  (mcg-bind-key "C-," embark-dwim "init-keybindings")
+  (mcg-bind-key "C-." 'embark-act "init-keybindings")
+  (mcg-bind-key "C-," 'embark-dwim "init-keybindings")
   
   ;; Color-rg search
   (with-eval-after-load 'color-rg
-    (mcg-bind-key "C-c s g" color-rg-search-input "init-keybindings")
-    (mcg-bind-key "C-c s G" color-rg-search-input-in-project "init-keybindings")
-    (mcg-bind-key "C-c s s" color-rg-search-symbol "init-keybindings")
-    (mcg-bind-key "C-c s S" color-rg-search-symbol-in-project "init-keybindings")
-    (mcg-bind-key "C-c s ." color-rg-search-symbol-in-current-file "init-keybindings")
-    (mcg-bind-key "C-c s ," color-rg-search-input-in-current-file "init-keybindings"))
+    (mcg-bind-key "C-c s g" 'color-rg-search-input "init-keybindings")
+    (mcg-bind-key "C-c s G" 'color-rg-search-input-in-project "init-keybindings")
+    (mcg-bind-key "C-c s s" 'color-rg-search-symbol "init-keybindings")
+    (mcg-bind-key "C-c s S" 'color-rg-search-symbol-in-project "init-keybindings")
+    (mcg-bind-key "C-c s ." 'color-rg-search-symbol-in-current-file "init-keybindings")
+    (mcg-bind-key "C-c s ," 'color-rg-search-input-in-current-file "init-keybindings"))
   
   ;; Blink-search
   (with-eval-after-load 'blink-search
-    (mcg-bind-key "C-c s B" blink-search "init-keybindings"))
+    (mcg-bind-key "C-c s B" 'blink-search "init-keybindings"))
   
   (mcg-log "Search keybindings configured"))
-
-#+END_SRC
+#+end_src
 
 ** File Keys
-#+BEGIN_SRC emacs-lisp
+
+文件快捷键 (C-c f 前缀)。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; File Keys (C-c f prefix)
+;;; ============================================================
 
 (defun mcg--setup-file-keys ()
   "Setup file-related keybindings."
-  ;; Recent files (consult-recent-file already autoloaded in search keys)
-  (mcg-bind-key "C-c f r" consult-recent-file "init-keybindings")
-  
+  (mcg-bind-key "C-c f r" 'consult-recent-file "init-keybindings")
   (mcg-log "File keybindings configured"))
-
-#+END_SRC
+#+end_src
 
 ** Git Keys
-#+BEGIN_SRC emacs-lisp
+
+Git 快捷键 (C-c g 前缀)。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Git Keys (C-c g prefix)
+;;; ============================================================
 
 (defun mcg--setup-git-keys ()
   "Setup Git-related keybindings."
   (with-eval-after-load 'magit
     ;; Main commands
-    (mcg-bind-key "C-x g" magit-status "init-keybindings")
-    (mcg-bind-key "C-x M-g" magit-dispatch "init-keybindings")
-    (mcg-bind-key "C-c g s" magit-status "init-keybindings")
-    (mcg-bind-key "C-c g l" magit-log "init-keybindings")
-    (mcg-bind-key "C-c g d" magit-dispatch "init-keybindings")
-    (mcg-bind-key "C-c g f" magit-file-dispatch "init-keybindings")
-    
+    (mcg-bind-key "C-x g" 'magit-status "init-keybindings")
+    (mcg-bind-key "C-x M-g" 'magit-dispatch "init-keybindings")
+    (mcg-bind-key "C-c g s" 'magit-status "init-keybindings")
+    (mcg-bind-key "C-c g l" 'magit-log "init-keybindings")
+    (mcg-bind-key "C-c g d" 'magit-dispatch "init-keybindings")
+    (mcg-bind-key "C-c g f" 'magit-file-dispatch "init-keybindings")
     ;; Push/Pull
-    (mcg-bind-key "C-c g p" magit-push "init-keybindings")
-    (mcg-bind-key "C-c g P" magit-pull "init-keybindings")
-    
+    (mcg-bind-key "C-c g p" 'magit-push "init-keybindings")
+    (mcg-bind-key "C-c g P" 'magit-pull "init-keybindings")
     ;; Branch
-    (mcg-bind-key "C-c g b b" magit-branch-create "init-keybindings")
-    (mcg-bind-key "C-c g b r" magit-branch-rename "init-keybindings")
-    (mcg-bind-key "C-c g b d" magit-branch-delete "init-keybindings")
-    
+    (mcg-bind-key "C-c g b b" 'magit-branch-create "init-keybindings")
+    (mcg-bind-key "C-c g b r" 'magit-branch-rename "init-keybindings")
+    (mcg-bind-key "C-c g b d" 'magit-branch-delete "init-keybindings")
     ;; Submodules
-    (mcg-bind-key "C-c g m a" magit-submodule-add "init-keybindings")
-    (mcg-bind-key "C-c g m r" magit-submodule-remove "init-keybindings")
-    (mcg-bind-key "C-c g m u" magit-submodule-update "init-keybindings")
-    
+    (mcg-bind-key "C-c g m a" 'magit-submodule-add "init-keybindings")
+    (mcg-bind-key "C-c g m r" 'magit-submodule-remove "init-keybindings")
+    (mcg-bind-key "C-c g m u" 'magit-submodule-update "init-keybindings")
     (mcg-log "Git keybindings configured")))
-
-#+END_SRC
+#+end_src
 
 ** LSP Keys
-#+BEGIN_SRC emacs-lisp
+
+LSP 快捷键 (标准绑定)。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; LSP Keys (Standard bindings)
+;;; ============================================================
 
 (defun mcg--setup-lsp-keys ()
   "Setup LSP-related keybindings (standard bindings)."
   (with-eval-after-load 'lsp-bridge
     ;; Navigation (standard LSP bindings)
-    (mcg-bind-key "M-." lsp-bridge-find-def "init-keybindings")
-    (mcg-bind-key "M-," lsp-bridge-find-def-return "init-keybindings")
-    (mcg-bind-key "M-?" lsp-bridge-find-references "init-keybindings")
-    (mcg-bind-key "C-M-." lsp-bridge-find-def-other-window "init-keybindings")
-    
+    (mcg-bind-key "M-." 'lsp-bridge-find-def "init-keybindings")
+    (mcg-bind-key "M-," 'lsp-bridge-find-def-return "init-keybindings")
+    (mcg-bind-key "M-?" 'lsp-bridge-find-references "init-keybindings")
+    (mcg-bind-key "C-M-." 'lsp-bridge-find-def-other-window "init-keybindings")
     ;; Documentation (C-h prefix for help)
-    (mcg-bind-key "C-h ." lsp-bridge-popup-documentation "init-keybindings")
-    (mcg-bind-key "C-h ," lsp-bridge-show-signature "init-keybindings")
-    (mcg-bind-key "C-h <up>" lsp-bridge-popup-documentation-scroll-up "init-keybindings")
-    (mcg-bind-key "C-h <down>" lsp-bridge-popup-documentation-scroll-down "init-keybindings")
-    
+    (mcg-bind-key "C-h ." 'lsp-bridge-popup-documentation "init-keybindings")
+    (mcg-bind-key "C-h ," 'lsp-bridge-show-signature "init-keybindings")
+    (mcg-bind-key "C-h <up>" 'lsp-bridge-popup-documentation-scroll-up "init-keybindings")
+    (mcg-bind-key "C-h <down>" 'lsp-bridge-popup-documentation-scroll-down "init-keybindings")
     ;; Code actions (C-c r prefix for refactoring)
-    (mcg-bind-key "C-c r r" lsp-bridge-rename "init-keybindings")
-    (mcg-bind-key "C-c r a" lsp-bridge-code-action "init-keybindings")
-    (mcg-bind-key "C-c r f" lsp-bridge-code-format "init-keybindings")
-    (mcg-bind-key "C-c r l" lsp-bridge-find-impl "init-keybindings")
-    (mcg-bind-key "C-c r s" lsp-bridge-workspace-list-symbols "init-keybindings")
-    
+    (mcg-bind-key "C-c r r" 'lsp-bridge-rename "init-keybindings")
+    (mcg-bind-key "C-c r a" 'lsp-bridge-code-action "init-keybindings")
+    (mcg-bind-key "C-c r f" 'lsp-bridge-code-format "init-keybindings")
+    (mcg-bind-key "C-c r l" 'lsp-bridge-find-impl "init-keybindings")
+    (mcg-bind-key "C-c r s" 'lsp-bridge-workspace-list-symbols "init-keybindings")
     ;; Diagnostics (M-g prefix - standard Emacs "goto" prefix)
-    (mcg-bind-key "M-g n" lsp-bridge-diagnostic-jump-next "init-keybindings")
-    (mcg-bind-key "M-g p" lsp-bridge-diagnostic-jump-prev "init-keybindings")
-    (mcg-bind-key "M-g l" lsp-bridge-diagnostic-list "init-keybindings"))
-  
+    (mcg-bind-key "M-g n" 'lsp-bridge-diagnostic-jump-next "init-keybindings")
+    (mcg-bind-key "M-g p" 'lsp-bridge-diagnostic-jump-prev "init-keybindings")
+    (mcg-bind-key "M-g l" 'lsp-bridge-diagnostic-list "init-keybindings"))
   (mcg-log "LSP keybindings configured"))
-
-#+END_SRC
+#+end_src
 
 ** Org Keys
-#+BEGIN_SRC emacs-lisp
+
+Org 快捷键 (C-c n 前缀)。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Org Keys (C-c n prefix)
+;;; ============================================================
 
 (defun mcg--setup-org-keys ()
   "Setup Org-related keybindings."
   (with-eval-after-load 'org
-    (mcg-bind-key "C-c n c" org-capture "init-keybindings")
-    (mcg-bind-key "C-c n a" org-agenda "init-keybindings")
-    (mcg-bind-key "C-c n l" org-store-link "init-keybindings")
-    (mcg-bind-key "C-c n t" org-todo-list "init-keybindings"))
-  
+    (mcg-bind-key "C-c n c" 'org-capture "init-keybindings")
+    (mcg-bind-key "C-c n a" 'org-agenda "init-keybindings")
+    (mcg-bind-key "C-c n l" 'org-store-link "init-keybindings")
+    (mcg-bind-key "C-c n t" 'org-todo-list "init-keybindings"))
   (mcg-log "Org keybindings configured"))
-
-#+END_SRC
+#+end_src
 
 ** Elisp Development Keys
-#+BEGIN_SRC emacs-lisp
+
+Elisp 开发快捷键。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Elisp Development Keys
+;;; ============================================================
 
 (with-eval-after-load 'elisp-mode
   (define-key emacs-lisp-mode-map (kbd "C-c C-b") 'eval-buffer)
   (define-key emacs-lisp-mode-map (kbd "C-c C-r") 'eval-region))
-
-#+END_SRC
+#+end_src
 
 ** Transient Menus
-#+BEGIN_SRC emacs-lisp
+
+Transient 菜单配置。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Transient Menus
+;;; ============================================================
 
 (defun mcg--setup-transient-menus ()
   "Setup Transient menus."
@@ -377,27 +434,7 @@
         ("." "Symbol here" color-rg-search-symbol-in-current-file)
         ("," "Input here" color-rg-search-input-in-current-file)]])
     
-    (mcg-bind-key "C-c s ?" mcg-search-menu "init-keybindings")
-    
-    ;; Buffer menu - enhanced with project filtering
-    (transient-define-prefix mcg-buffer-menu ()
-      "Buffer management menu with project filtering"
-      [["Switch"
-        ("b" "All buffers" consult-buffer)
-        ("p" "Project buffers" consult-project-buffer)
-        ("r" "Recent files" consult-recent-file)
-        ("m" "By mode" mcg/consult-buffer-by-mode)]
-       ["Actions"
-        ("k" "Kill buffer" kill-buffer)
-        ("K" "Kill project buffers" mcg/kill-project-buffers)
-        ("s" "Save buffer" save-buffer)
-        ("S" "Save all" save-some-buffers)]
-       ["Navigate"
-        ("n" "Next buffer" next-buffer)
-        ("P" "Previous buffer" previous-buffer)
-        ("o" "Other window" switch-to-buffer-other-window)]])
-    
-    (mcg-bind-key "C-c b ?" mcg-buffer-menu "init-keybindings")
+    (mcg-bind-key "C-c s ?" 'mcg-search-menu "init-keybindings")
     
     ;; Git menu
     (transient-define-prefix mcg-git-menu ()
@@ -414,66 +451,42 @@
         ("P" "Pull" magit-pull)
         ("f" "Fetch" magit-fetch)]])
     
-    (mcg-bind-key "C-c g ?" mcg-git-menu "init-keybindings")
-    
-    ;; Window menu
-    (transient-define-prefix mcg-window-menu ()
-      "Window operations menu"
-      [["Switch"
-        ("w" "Ace window" ace-window)
-        ("o" "Other window" other-window)]
-       ["Split"
-        ("v" "Vertical" split-window-right)
-        ("h" "Horizontal" split-window-below)]
-       ["Delete"
-        ("d" "Delete" ace-delete-window)
-        ("D" "Delete others" delete-other-windows)]
-       ["Swap"
-        ("s" "Swap" ace-swap-window)
-        ("u" "Undo layout" winner-undo)
-        ("r" "Redo layout" winner-redo)]])
-    
-    (mcg-bind-key "C-c w ?" mcg-window-menu "init-keybindings")
+    (mcg-bind-key "C-c g ?" 'mcg-git-menu "init-keybindings")
     
     ;; Help menu - unified help system
     (transient-define-prefix mcg-help-menu ()
       "MCG Help Menu - unified help system"
       [["Documentation"
-        ("k" "Keybindings" mcg/show-keybindings)
+        ("k" "Keybindings" mcg-show-keybindings)
         ("m" "Modules" mcg-list-modules)
-        ("e" "Extensions" mcg/list-extensions)]
+        ("e" "Extensions" mcg-show-extensions)]
        ["Diagnostics"
         ("d" "Doctor" mcg-doctor)
-        ("t" "Load times" mcg/show-load-times)
-        ("l" "Logs" mcg/show-logs)]
+        ("t" "Load times" mcg-show-load-times)
+        ("l" "Logs" mcg-show-logs)]
        ["Configuration"
         ("c" "Open config" mcg/open-init-file)
         ("r" "Reload module" mcg/reload-module)
-        ("R" "Rebuild cache" mcg/rebuild-extension-cache)]])
+        ("R" "Rebuild cache" mcg-cache-clear)]])
     
-    (mcg-bind-key "C-h M" mcg-help-menu "init-keybindings")
-    
+    (mcg-bind-key "C-h M" 'mcg-help-menu "init-keybindings")
     (mcg-log "Transient menus configured")))
 
 ;; Delayed load transient menus
 (with-eval-after-load 'transient
   (mcg--setup-transient-menus))
-
-#+END_SRC
+#+end_src
 
 ** Keybindings Reference
-#+BEGIN_SRC emacs-lisp
+
+快捷键参考文档功能。
+
+*** Keybindings by Category
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Keybindings Reference
-
-(defun mcg/show-keybindings ()
-  "Show keybindings reference in posframe popup."
-  (interactive)
-  (mcg-popup-show "*MCG Keybindings*" (mcg--keybindings-content) 70 45))
-
-(defun mcg--format-keybinding-entry (key command source)
-  "Format a single keybinding entry for display.
-KEY is the key sequence, COMMAND is the command symbol, SOURCE is the module."
-  (format "  %-16s %-30s %s" key command source))
+;;; ============================================================
 
 (defun mcg--keybindings-by-category ()
   "Group registered keybindings by category prefix.
@@ -515,11 +528,16 @@ Returns an alist of (CATEGORY . BINDINGS)."
     (when other
       (push (cons "其他 Other" (nreverse other)) result))
     (nreverse result)))
+#+end_src
 
+*** Keybindings Content
+
+#+begin_src emacs-lisp
 (defun mcg--keybindings-content ()
   "Generate keybindings reference content from registry."
   (let ((grouped (mcg--keybindings-by-category))
-        (conflicts (mcg-list-keybinding-conflicts)))
+        (conflicts (when (fboundp 'mcg-list-keybinding-conflicts)
+                     (mcg-list-keybinding-conflicts))))
     (with-temp-buffer
       (insert "                MCG Emacs 快捷键速查 (Registry)\n")
       (insert "    ═══════════════════════════════════════════════════\n\n")
@@ -548,10 +566,17 @@ Returns an alist of (CATEGORY . BINDINGS)."
         (insert (mcg--keybindings-static-content)))
       
       (insert "    ───────────────────────────────────────────────────\n")
-      (insert (format "    共 %d 个快捷键已注册\n" (length mcg-keybinding-registry)))
+      (insert (format "    共 %d 个快捷键已注册\n"
+                      (if (boundp 'mcg-keybinding-registry)
+                          (hash-table-count mcg-keybinding-registry)
+                        0)))
       
       (buffer-string))))
+#+end_src
 
+*** Static Keybindings Content
+
+#+begin_src emacs-lisp
 (defun mcg--keybindings-static-content ()
   "Static keybindings content as fallback."
   "
@@ -586,14 +611,34 @@ Returns an alist of (CATEGORY . BINDINGS)."
     M-n/M-p         滚动 1/3 窗口                         
     M-UP/DOWN       移动行                                
 ")
+#+end_src
 
-(mcg-bind-key "C-h K" mcg/show-keybindings "init-keybindings")
+*** Show Keybindings Command
 
-#+END_SRC
+#+begin_src emacs-lisp
+(defun mcg/show-keybindings ()
+  "Show keybindings reference in posframe popup."
+  (interactive)
+  (if (and (display-graphic-p)
+           (require 'posframe nil t)
+           (fboundp 'mcg-popup-show))
+      ;; Use posframe popup
+      (mcg-popup-show "*MCG Keybindings*" (mcg--keybindings-content) 70 45)
+    ;; Fallback to buffer display
+    (with-help-window "*MCG Keybindings*"
+      (princ (mcg--keybindings-content)))))
+
+(mcg-bind-key "C-h K" 'mcg/show-keybindings "init-keybindings")
+#+end_src
 
 ** Initialize
-#+BEGIN_SRC emacs-lisp
+
+模块初始化。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Initialize
+;;; ============================================================
 
 (mcg--setup-sort-tab-keys)
 (mcg--setup-search-keys)
@@ -601,11 +646,11 @@ Returns an alist of (CATEGORY . BINDINGS)."
 (mcg--setup-git-keys)
 (mcg--setup-lsp-keys)
 (mcg--setup-org-keys)
+#+end_src
 
-#+END_SRC
+** Provide Feature
 
-** Provide
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (provide 'init-keybindings)
 ;;; init-keybindings.el ends here
-#+END_SRC
+#+end_src

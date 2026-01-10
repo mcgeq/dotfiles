@@ -1,17 +1,24 @@
-* init-symbol.el
-:PROPERTIES:
-:HEADER-ARGS: :tangle init-symbol.el :lexical t
-:END:
+#+TITLE: Symbol-Overlay Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-symbol.el :lexical t
 
-** Headers
-#+BEGIN_SRC emacs-lisp
+* Symbol-Overlay Module
+
+本模块负责 MCG Emacs 的符号高亮功能，包括：
+- 高亮光标处的符号
+- 在符号出现位置之间导航
+- 符号重命名和查询替换
+
+** File Header
+
+#+begin_src emacs-lisp
 ;;; init-symbol.el --- Symbol-Overlay Configuration for MCG Emacs -*- lexical-binding: t; -*-
 
 ;; Filename: init-symbol.el
 ;; Description: Symbol-overlay symbol highlighting module
 ;; Author: mcge <mcgeq@outlook.com>
 ;; Copyright (C) 2024-2026, mcge, all rights reserved.
-;; Create   Date: 2026-01-09
+;; Create   Date: 2026-01-10
 ;; Version: 3.0
 ;; Keywords: symbol-overlay, highlighting
 ;; Compatibility: GNU Emacs 29.0+
@@ -23,29 +30,38 @@
 ;; - Providing navigation between symbol occurrences
 ;; - Symbol renaming and query-replace
 ;;
+;; Module metadata:
+;; :depends ()
+;; :defer nil
+;;
+#+end_src
 
-#+END_SRC
+** Require
 
-** Dependencies
-#+BEGIN_SRC emacs-lisp
-;;; Dependencies
+#+begin_src emacs-lisp
+;;; Code:
 
 (require 'core-lib)
-
-#+END_SRC
+#+end_src
 
 ** Symbol-Overlay Configuration
-#+BEGIN_SRC emacs-lisp
+
+Symbol-overlay 配置函数，提供符号高亮和导航功能。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Symbol-Overlay Configuration
+;;; ============================================================
 
 (defun mcg--setup-symbol-overlay ()
   "Setup Symbol-overlay symbol highlighting."
-  (when (mcg-require-extension "editor/symbol-overlay" 'symbol-overlay)
-    ;; Enable in prog-mode
+  (when (mcg-require-extension "symbol-overlay" t)
+    ;; Enable in prog-mode for all programming modes
     (add-hook 'prog-mode-hook #'symbol-overlay-mode)
     
-    ;; Keybindings (in symbol-overlay-map)
+    ;; Configure keybindings after symbol-overlay loads
     (with-eval-after-load 'symbol-overlay
+      ;; Keybindings in symbol-overlay-map
       (define-key symbol-overlay-map (kbd "s") #'symbol-overlay-put)
       (define-key symbol-overlay-map (kbd "n") #'symbol-overlay-jump-next)
       (define-key symbol-overlay-map (kbd "p") #'symbol-overlay-jump-prev)
@@ -54,22 +70,48 @@
       (define-key symbol-overlay-map (kbd "d") #'symbol-overlay-jump-to-definition)
       (define-key symbol-overlay-map (kbd "r") #'symbol-overlay-rename)
       (define-key symbol-overlay-map (kbd "R") #'symbol-overlay-query-replace)
-      (define-key symbol-overlay-map (kbd "q") #'symbol-overlay-remove-all))
+      (define-key symbol-overlay-map (kbd "q") #'symbol-overlay-remove-all)
+      
+      ;; Global keybindings for quick access
+      (global-set-key (kbd "M-i") #'symbol-overlay-put)
+      (global-set-key (kbd "M-n") #'symbol-overlay-jump-next)
+      (global-set-key (kbd "M-p") #'symbol-overlay-jump-prev))
     
     (mcg-log "Symbol-overlay configured")))
+#+end_src
 
-#+END_SRC
+** Commands
+
+自定义命令，用于切换符号高亮。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Commands
+;;; ============================================================
+
+(defun mcg/symbol-overlay-toggle ()
+  "Toggle symbol overlay at point."
+  (interactive)
+  (if (symbol-overlay-get-symbol)
+      (symbol-overlay-remove-all)
+    (symbol-overlay-put)))
+#+end_src
 
 ** Initialize
-#+BEGIN_SRC emacs-lisp
+
+初始化 Symbol-overlay 功能。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Initialize
+;;; ============================================================
 
 (mcg--setup-symbol-overlay)
+#+end_src
 
-#+END_SRC
+** Provide Feature
 
-** Provide
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (provide 'init-symbol)
 ;;; init-symbol.el ends here
-#+END_SRC
+#+end_src

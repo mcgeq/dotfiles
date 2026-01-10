@@ -1,0 +1,917 @@
+#+TITLE: LSP Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-lsp.el :lexical t
+
+* LSP Module
+
+本模块负责 MCG Emacs 的统一 LSP 配置，包括：
+- LSP Bridge 配置
+- ACM 补全配置
+- 统一快捷键
+- LSP 服务器映射
+- 多服务器支持
+- 保存时自动格式化
+- LSP 状态查询
+
+** File Header
+
+#+begin_src emacs-lisp
+;;; init-lsp.el --- Unified LSP Configuration for MCG Emacs -*- lexical-binding: t; -*-
+
+;; Copyright (C) 2024-2026 MCG
+;; Author: mcge <mcgeq@outlook.com>
+;; Keywords: lsp, language-server, development
+;; Compatibility: GNU Emacs 29.0+
+
+;;; Commentary:
+;; Unified LSP module for MCG Emacs, responsible for:
+;; - LSP Bridge configuration
+;; - ACM completion configuration
+;; - Unified keybindings
+;; - LSP server mapping
+;; - Multi-server support
+;; - Auto-format on save
+;; - LSP status queries
+;;
+#+end_src
+
+** Require
+
+#+begin_src emacs-lisp
+;;; Code:
+
+(require 'cl-lib)
+(require 'core-lib)
+#+end_src
+
+** Variables
+
+LSP 相关的配置变量。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Variables
+;;; ============================================================
+
+(defvar mcg-lsp-user-langserver-dir nil
+  "User custom LSP server configuration directory.")
+
+(defvar mcg-lsp-user-multiserver-dir nil
+  "User custom multi-server configuration directory.")
+#+end_src
+
+*** LSP Server Mapping
+
+语言模式到 LSP 服务器的映射配置。
+
+#+begin_src emacs-lisp
+(defvar mcg-lsp-servers
+  '((rust-mode . "rust-analyzer")
+    (rust-ts-mode . "rust-analyzer")
+    (python-mode . "ty_ruff")
+    (python-ts-mode . "ty_ruff")
+    ;; Note: typescript-mode is NOT included because it's an external package
+    ;; with different mode hierarchy. Use typescript-ts-mode directly.
+    (typescript-ts-mode . "typescript-biome")
+    (tsx-ts-mode . "typescript-biome")
+    (js-mode . "typescript-biome")
+    (js-ts-mode . "typescript-biome")
+    (web-mode . "vue-full-volar")
+    (zig-mode . "zls")
+    (zig-ts-mode . "zls")
+    (c-mode . "clangd")
+    (c-ts-mode . "clangd")
+    (c++-mode . "clangd")
+    (c++-ts-mode . "clangd")
+    (lua-mode . "sumneko")
+    (lua-ts-mode . "sumneko")
+    (clojure-mode . "clojure-lsp")
+    (clojure-ts-mode . "clojure-lsp"))
+  "Language mode to LSP server mapping.
+Each entry format is (MODE . SERVER-NAME).
+SERVER-NAME corresponds to lsp-bridge server configuration.")
+#+end_src
+
+** Unified Keybindings
+
+统一的 LSP 快捷键配置。
+
+*** Keymap Definition
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Unified Keybindings
+;;; ============================================================
+
+(defvar mcg-lsp-keymap
+  '(;; Navigation
+    ("M-." . lsp-bridge-find-def)
+    ("M-," . lsp-bridge-find-def-return)
+    ("M-?" . lsp-bridge-find-references)
+    
+    ;; Documentation
+    ("C-h ." . lsp-bridge-lookup-documentation)
+    ("C-h ," . lsp-bridge-show-signature)
+    
+    ;; Refactoring
+    ("C-c r r" . lsp-bridge-rename)
+    ("C-c r a" . lsp-bridge-code-action)
+    ("C-c r f" . lsp-bridge-code-format)
+    ("C-c r i" . mcg-lsp-organize-imports)
+    
+    ;; Diagnostics (M-g prefix - standard Emacs "goto" prefix)
+    ("M-g n" . lsp-bridge-diagnostic-jump-next)
+    ("M-g p" . lsp-bridge-diagnostic-jump-prev)
+    ("M-g l" . lsp-bridge-diagnostic-list)
+    
+    ;; Workspace
+    ("C-c r s" . lsp-bridge-workspace-list-symbols)
+    
+    ;; Help
+    ("C-c f H" . mcg/lsp-help))
+  "Unified LSP keybindings mapping.
+All LSP-enabled language modes use the same keybindings:
+- M-. Jump to definition
+- M-, Return
+- M-? Find references
+- C-c r r Rename
+- C-c r f Format
+- C-c f H LSP Help")
+#+end_src
+
+*** Keybindings Setup Function
+
+#+begin_src emacs-lisp
+(defun mcg-lsp-setup-keybindings ()
+  "Setup unified LSP keybindings.
+This function is called in lsp-bridge-mode-hook,
+setting up keybindings defined in mcg-lsp-keymap for current buffer."
+  (dolist (binding mcg-lsp-keymap)
+    (local-set-key (kbd (car binding)) (cdr binding))))
+
+;; Global keybinding for LSP help (available even without lsp-bridge-mode)
+(global-set-key (kbd "C-c f H") #'mcg/lsp-help)
+#+end_src
+
+** LSP Bridge Configuration
+
+LSP Bridge 核心配置，包含完整的 =mcg-lsp-setup= 函数。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; LSP Bridge Configuration
+;;; ============================================================
+
+(cl-defun mcg-lsp-setup ()
+  "Setup LSP Bridge general configuration.
+This function configures lsp-bridge core options, including:
+- Performance optimization
+- Completion settings
+- Diagnostics settings
+- Signature help
+- Multi-server support"
+  ;; Load lsp-bridge extension
+  (let ((lsp-bridge-path (or (mcg-extension-path "lsp-bridge")
+                             ;; Fallback: try direct path
+                             (let ((direct-path (expand-file-name "site-lisp/extensions/lsp/lsp-bridge" mcg-emacs-dir)))
+                               (when (file-directory-p direct-path) direct-path)))))
+    (unless lsp-bridge-path
+      (mcg-log-warning "lsp-bridge extension not found")
+      (cl-return-from mcg-lsp-setup nil))
+    
+    ;; Add lsp-bridge to load-path
+    (add-to-list 'load-path lsp-bridge-path)
+    (mcg-log "Added lsp-bridge to load-path: %s" lsp-bridge-path)
+    
+    ;; Also add acm subdirectory
+    (let ((acm-path (expand-file-name "acm" lsp-bridge-path)))
+      (when (file-directory-p acm-path)
+        (add-to-list 'load-path acm-path)
+        (mcg-log "Added acm to load-path: %s" acm-path))))
+  
+  ;; Require lsp-bridge
+  (require 'lsp-bridge nil t)
+  
+  (unless (featurep 'lsp-bridge)
+    (mcg-log-warning "Failed to load lsp-bridge")
+    (cl-return-from mcg-lsp-setup nil))
+  
+  ;; Set custom server directories
+  (when mcg-lsp-user-langserver-dir
+    (setq lsp-bridge-user-langserver-dir mcg-lsp-user-langserver-dir))
+  (when mcg-lsp-user-multiserver-dir
+    (setq lsp-bridge-user-multiserver-dir mcg-lsp-user-multiserver-dir))
+
+  ;; ===== Core Features =====
+  (setq lsp-bridge-enable-completion-in-minibuffer t)
+  (setq lsp-bridge-enable-signature-help t)
+  (setq lsp-bridge-signature-show-function 'lsp-bridge-signature-show-with-frame)
+  (setq lsp-bridge-signature-show-with-frame-position "bottom-right")
+  (setq lsp-bridge-enable-with-tramp t)
+  (setq lsp-bridge-enable-org-babel t)
+
+  ;; ===== Performance Optimization =====
+  (setq lsp-bridge-enable-inlay-hint nil)  ; Disable for performance
+  (setq lsp-bridge-diagnostic-fetch-idle 0.5)
+  (setq lsp-bridge-signature-help-fetch-idle 0.8)
+
+  ;; ===== Diagnostics Settings =====
+  (setq lsp-bridge-enable-diagnostics t)
+  (setq lsp-bridge-enable-hover-diagnostic t)
+  (setq lsp-bridge-code-action-enable-popup-tip t)
+
+  ;; ===== Completion Settings =====
+  (setq lsp-bridge-enable-search-words t)
+  (setq lsp-bridge-enable-auto-import t)
+  (setq lsp-bridge-enable-auto-format-code nil)  ; We handle format manually
+  (setq lsp-bridge-find-def-select-in-open-windows t)
+  
+  ;; Enable snippet expansion for function completions (adds parentheses)
+  (setq acm-enable-yas t)
+  (setq lsp-bridge-completion-hide-characters '())
+  (setq lsp-bridge-completion-obey-trigger-characters-p nil)
+  
+  ;; Auto-insert parentheses after function completion
+  (setq lsp-bridge-completion-popup-predicates nil)
+  (setq acm-backend-lsp-enable-auto-import t)
+
+  ;; ===== ACM Configuration =====
+  (with-eval-after-load 'acm
+    ;; Ensure yasnippet is loaded for snippet expansion (function parentheses)
+    (let ((yas-path (mcg-extension-path "yasnippet")))
+      (when yas-path
+        (add-to-list 'load-path yas-path)
+        (require 'yasnippet nil t)
+        (when (featurep 'yasnippet)
+          (yas-global-mode 1)
+          (mcg-log "Enabled yasnippet for LSP snippet expansion"))))
+    
+    (setq acm-enable-capf t)
+    (setq acm-enable-quick-access t)
+    (setq acm-backend-yas-match-by-trigger-keyword t)
+    (setq acm-enable-tabnine nil)
+    (setq acm-enable-codeium nil)
+    (setq acm-candidate-match-function 'regexp-quote)
+    (setq acm-enable-lsp-workspace-symbol nil)
+    (setq acm-enable-doc t)  ; Enable documentation popup
+    (setq acm-doc-frame-pos 'bottom-right)
+    (setq acm-enable-icon t)
+    (setq acm-enable-doc-markdown-render 'async)
+    (setq acm-candidate-match-max-length 50)
+    (setq acm-enable-preview nil)
+    (setq acm-menu-length 10)  ; Show more candidates
+    (setq acm-enable-path t)
+    (setq acm-enable-search-file-words nil)
+    (setq acm-frame-max-width 100)
+    
+    ;; Completion trigger configuration
+    (setq acm-backend-lsp-candidate-min-length 2)  ; Require at least 2 chars
+    (setq acm-backend-elisp-candidate-min-length 2)
+    (setq acm-backend-yas-candidate-min-length 2)
+    (setq acm-backend-search-file-words-candidate-min-length 2)
+    
+    ;; ACM keybindings
+    (define-key acm-mode-map (kbd "RET") #'acm-complete)
+    (define-key acm-mode-map (kbd "<return>") #'acm-complete)
+    (define-key acm-mode-map (kbd "C-m") #'acm-complete)
+    (define-key acm-mode-map (kbd "TAB") #'acm-complete)
+    (define-key acm-mode-map (kbd "<tab>") #'acm-complete)
+    (define-key acm-mode-map (kbd "C-n") #'acm-select-next)
+    (define-key acm-mode-map (kbd "C-p") #'acm-select-prev)
+
+    ;; Auto-insert parentheses after function/method completion
+    (defun mcg--acm-complete-with-paren (orig-fun &rest args)
+      "Advice to auto-insert parentheses after completing a function."
+      (let* ((candidate (acm-menu-current-candidate))
+             ;; LSP CompletionItemKind: 2=Method, 3=Function, 4=Constructor
+             ;; ACM stores kind in different ways, check both :icon and :kind
+             (kind (when candidate
+                     (or (plist-get candidate :icon)
+                         (plist-get candidate :kind)
+                         (plist-get candidate :annotation))))
+             (is-callable (when kind
+                            (or (and (stringp kind)
+                                     (string-match-p "\\(Function\\|Method\\|Constructor\\)" kind))
+                                (and (numberp kind)
+                                     (memq kind '(2 3 4))))))
+             (pos-before (point)))
+        (apply orig-fun args)
+        ;; Insert () for Function, Method, Constructor kinds
+        ;; But only if completion didn't already insert parentheses
+        (when is-callable
+          ;; Check if cursor is now inside () or if ( is right after cursor
+          (let ((char-after (char-after))
+                (char-before (char-before)))
+            ;; Don't insert if:
+            ;; - cursor is inside () (char-before is '(' or char-after is ')')
+            ;; - '(' is right after cursor
+            (unless (or (eq char-after ?\()
+                        (eq char-after ?\))
+                        (eq char-before ?\()
+                        (looking-at "("))
+              (insert "()")
+              (backward-char 1))))))
+    
+    (advice-add 'acm-complete :around #'mcg--acm-complete-with-paren))
+
+  ;; ===== Multi-server Configuration =====
+  ;; Override default lsp-bridge multi-server config
+  (setq lsp-bridge-multi-lang-server-extension-list
+        '(;; TypeScript/JavaScript with Biome
+          (("ts") . "typescript-biome")
+          (("tsx") . "typescript-biome")
+          (("js") . "typescript-biome")
+          (("jsx") . "typescript-biome")
+          ;; Vue with volar + emmet-ls + biome
+          (("vue") . "vue-full-volar")
+          ;; Python with ty + ruff
+          (("py") . "ty_ruff")
+          (("pyi") . "ty_ruff")
+          ;; Keep some useful defaults
+          (("component.html") . "angular_template_html")
+          (("component.ts") . "angular_template_typescript")))
+  
+  ;; ===== Remove typescript-mode-hook from lsp-bridge =====
+  ;; The external typescript-mode package causes hierarchy conflicts with typescript-ts-mode.
+  ;; We remove typescript-mode-hook from lsp-bridge's default hooks to prevent issues.
+  (with-eval-after-load 'lsp-bridge
+    (when (boundp 'lsp-bridge-default-mode-hooks)
+      (setq lsp-bridge-default-mode-hooks
+            (seq-remove (lambda (hook)
+                          (memq hook '(typescript-mode-hook typescript-tsx-mode-hook)))
+                        lsp-bridge-default-mode-hooks))))
+  
+  ;; Setup keybindings hook
+  (add-hook 'lsp-bridge-mode-hook #'mcg-lsp-setup-keybindings)
+  
+  ;; Setup format-on-save hooks
+  ;; before-save: LSP-based formatters (Rust, Zig, C/C++)
+  ;; after-save: CLI-based formatters (biome for TypeScript/Vue)
+  (add-hook 'before-save-hook #'mcg-lsp-format-on-save-before)
+  (add-hook 'after-save-hook #'mcg-lsp-format-on-save-after)
+  
+  ;; Enable global lsp-bridge-mode
+  (when (fboundp 'global-lsp-bridge-mode)
+    (global-lsp-bridge-mode))
+  
+  (mcg-log "LSP setup complete"))
+#+end_src
+
+** Biome Formatting
+
+TypeScript/JavaScript/Vue 的 Biome 格式化支持。
+
+*** Format with Biome
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Biome Formatting (for TypeScript/JavaScript/Vue)
+;;; ============================================================
+
+(defun mcg-ts-format-with-biome ()
+  "Format and fix code using Biome.
+Uses stdin/stdout to format buffer content directly without file I/O,
+avoiding lsp-bridge reconnection entirely."
+  (interactive)
+  (if (executable-find "biome")
+      (let ((file (buffer-file-name)))
+        (when file
+          ;; Format using stdin/stdout - no file write needed
+          (let ((original-content (buffer-string))
+                (original-point (point))
+                (output-buffer (generate-new-buffer " *biome-output*")))
+            (unwind-protect
+                (let ((exit-code (call-process-region
+                                  (point-min) (point-max)
+                                  "biome" nil output-buffer nil
+                                  "format" "--stdin-file-path" file)))
+                  (cond
+                   ((zerop exit-code)
+                    (let ((formatted-content (with-current-buffer output-buffer
+                                               (buffer-string))))
+                      (unless (string= original-content formatted-content)
+                        ;; Only update if content changed
+                        (erase-buffer)
+                        (insert formatted-content)
+                        (goto-char (min original-point (point-max)))))
+                    (message "Formatted with Biome"))
+                   (t
+                    (message "Biome failed (exit %d)" exit-code))))
+              (when (buffer-live-p output-buffer)
+                (kill-buffer output-buffer))))))
+    (message "Biome not found. Install with: npm install -g @biomejs/biome")))
+#+end_src
+
+*** Biome Check and Fix
+
+#+begin_src emacs-lisp
+(defun mcg/biome-check ()
+  "Check code using Biome (lint + format)."
+  (interactive)
+  (if (executable-find "biome")
+      (let ((compilation-scroll-output t))
+        (compile (format "biome check %s" (shell-quote-argument (buffer-file-name)))))
+    (message "Biome not found. Install with: npm install -g @biomejs/biome")))
+
+(defun mcg/biome-fix ()
+  "Auto-fix code using Biome."
+  (interactive)
+  (mcg-ts-format-with-biome))
+#+end_src
+
+*** Format with Prettier
+
+#+begin_src emacs-lisp
+(defun mcg-ts-format-with-prettier ()
+  "Format code using Prettier (fallback)."
+  (interactive)
+  (if (executable-find "prettier")
+      (let* ((temp-file (make-temp-file "prettier" nil
+                                        (concat "." (file-name-extension (buffer-file-name)))))
+             (output-buffer (get-buffer-create "*prettier*")))
+        (write-region (point-min) (point-max) temp-file)
+        (if (zerop (call-process "prettier" nil output-buffer nil
+                                 "--write" temp-file))
+            (progn
+              (erase-buffer)
+              (insert-file-contents temp-file)
+              (delete-file temp-file)
+              (message "Formatted with Prettier"))
+          (message "Prettier formatting failed")))
+    (message "Prettier not found. Install with: npm install -g prettier")))
+#+end_src
+
+*** Format Buffer
+
+#+begin_src emacs-lisp
+(defun mcg-ts-format-buffer ()
+  "Format TypeScript/JavaScript/Vue code (prefer Biome)."
+  (interactive)
+  (cond
+   ((executable-find "biome") (mcg-ts-format-with-biome))
+   ((executable-find "prettier") (mcg-ts-format-with-prettier))
+   (t (message "No formatter found. Install biome or prettier"))))
+#+end_src
+
+** Format on Save
+
+保存时自动格式化配置。
+
+*** Format Mode Lists
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Format on Save
+;;; ============================================================
+
+(defvar mcg-lsp-format-on-save-modes
+  '(;; Python (ty + ruff LSP)
+    python-mode
+    python-ts-mode
+    ;; Rust
+    rust-mode
+    rust-ts-mode
+    ;; Zig
+    zig-mode
+    zig-ts-mode
+    ;; C/C++
+    c-mode
+    c-ts-mode
+    c++-mode
+    c++-ts-mode)
+  "List of modes with LSP format-on-save enabled.
+Note: TypeScript/Vue use biome CLI.")
+
+(defvar mcg-biome-format-on-save-modes
+  '(;; TypeScript/JavaScript (tree-sitter modes only)
+    ;; Note: typescript-mode is NOT included to avoid hierarchy conflicts
+    typescript-ts-mode
+    tsx-ts-mode
+    js-mode
+    js-ts-mode
+    ;; Vue (web-mode or vue-mode)
+    web-mode
+    vue-mode
+    vue-ts-mode)
+  "List of modes with Biome CLI format-on-save enabled.")
+
+(defvar mcg-lsp-format-on-save-enabled t
+  "Whether format-on-save is enabled.")
+
+(defvar mcg--formatting-in-progress nil
+  "Flag to prevent recursive formatting.")
+#+end_src
+
+*** Format on Save Hooks
+
+#+begin_src emacs-lisp
+(defun mcg-lsp-format-on-save-before ()
+  "Format buffer before save (for LSP-based formatters only).
+Biome formatting is handled in after-save-hook."
+  (when (and mcg-lsp-format-on-save-enabled
+             (not mcg--formatting-in-progress)
+             (buffer-file-name))
+    (let ((mcg--formatting-in-progress t))
+      ;; LSP format for Rust/Zig/C++ modes (before save)
+      (when (memq major-mode mcg-lsp-format-on-save-modes)
+        (when (and (fboundp 'lsp-bridge-mode)
+                   (bound-and-true-p lsp-bridge-mode)
+                   (fboundp 'lsp-bridge-code-format))
+          (lsp-bridge-code-format))))))
+
+(defun mcg-lsp-format-on-save-after ()
+  "Format buffer after save (for CLI-based formatters like biome).
+Handles TypeScript/JavaScript/Vue files using biome CLI."
+  (when (and mcg-lsp-format-on-save-enabled
+             (not mcg--formatting-in-progress)
+             (buffer-file-name)
+             (memq major-mode mcg-biome-format-on-save-modes))
+    (let ((mcg--formatting-in-progress t))
+      (mcg--biome-format-file-and-refresh))))
+#+end_src
+
+*** Biome Format and Refresh
+
+#+begin_src emacs-lisp
+(defun mcg--biome-format-file-and-refresh ()
+  "Format current file with biome and refresh buffer without triggering lsp-bridge."
+  (when-let* ((file (buffer-file-name)))
+    (if (executable-find "biome")
+        (let ((exit-code (call-process "biome" nil nil nil
+                                       "check" "--write" "--unsafe" file)))
+          (cond
+           ((or (zerop exit-code) (= exit-code 1))
+            ;; Refresh buffer content from file
+            (let ((inhibit-modification-hooks t)
+                  (original-point (point)))
+              (erase-buffer)
+              (insert-file-contents file)
+              (goto-char (min original-point (point-max)))
+              (set-buffer-modified-p nil))
+            (message "Formatted with Biome"))
+           (t
+            (message "Biome format failed (exit %d)" exit-code))))
+      (message "Biome not found"))))
+#+end_src
+
+*** Toggle Format on Save
+
+#+begin_src emacs-lisp
+(defun mcg/toggle-format-on-save ()
+  "Toggle format-on-save."
+  (interactive)
+  (setq mcg-lsp-format-on-save-enabled (not mcg-lsp-format-on-save-enabled))
+  (message "Format on save: %s"
+           (if mcg-lsp-format-on-save-enabled "enabled" "disabled")))
+#+end_src
+
+** Utility Functions
+
+LSP 工具函数。
+
+*** Format Buffer
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Utility Functions
+;;; ============================================================
+
+(defun mcg-lsp-format-buffer ()
+  "Format current buffer based on major-mode.
+TypeScript/JavaScript/Vue: Use biome CLI (mcg-ts-format-buffer)
+Other languages: Use lsp-bridge-code-format"
+  (interactive)
+  (cond
+   ;; TypeScript/JavaScript/Vue: Use biome CLI
+   ((member major-mode mcg-biome-format-on-save-modes)
+    (mcg-ts-format-buffer))
+   ;; Other languages: Use lsp-bridge
+   ((and (fboundp 'lsp-bridge-mode)
+         (bound-and-true-p lsp-bridge-mode)
+         (fboundp 'lsp-bridge-code-format))
+    (lsp-bridge-code-format))
+   (t
+    (message "No formatter available for this buffer"))))
+#+end_src
+
+*** Organize Imports
+
+#+begin_src emacs-lisp
+(defun mcg-lsp-organize-imports ()
+  "Organize imports in current buffer.
+Select appropriate tool based on current major-mode:
+- Python: Use ruff
+- Rust: Use rustfmt
+- Others: Try LSP code action"
+  (interactive)
+  (cond
+   ;; Python: Use ruff
+   ((member major-mode '(python-mode python-ts-mode))
+    (if (executable-find "ruff")
+        (let ((file (buffer-file-name)))
+          (when file
+            (save-buffer)
+            (if (zerop (call-process "ruff" nil nil nil "check" "--select" "I" "--fix" file))
+                (progn
+                  ;; Silently refresh buffer content without triggering hooks
+                  (let ((inhibit-modification-hooks t)
+                        (point-pos (point)))
+                    (erase-buffer)
+                    (insert-file-contents file)
+                    (goto-char (min point-pos (point-max))))
+                  (set-buffer-modified-p nil)
+                  (message "Sorted imports with ruff"))
+              (message "ruff: no import changes needed"))))
+      (message "ruff not found")))
+   
+   ;; Rust: Use rustfmt
+   ((member major-mode '(rust-mode rust-ts-mode))
+    (when (fboundp 'lsp-bridge-code-format)
+      (lsp-bridge-code-format))
+    (message "Rust imports organized via rustfmt"))
+   
+   ;; Other languages: Try LSP code action
+   ((and (bound-and-true-p lsp-bridge-mode)
+         (fboundp 'lsp-bridge-code-action))
+    (lsp-bridge-code-action))
+   
+   (t
+    (message "No import organizer available for this mode"))))
+#+end_src
+
+*** Restart LSP
+
+#+begin_src emacs-lisp
+(defun mcg-lsp-restart ()
+  "Restart LSP server."
+  (interactive)
+  (when (and (bound-and-true-p lsp-bridge-mode)
+             (fboundp 'lsp-bridge-restart-process))
+    (lsp-bridge-restart-process)
+    (message "LSP server restarted")))
+#+end_src
+
+** LSP Status Command
+
+LSP 状态查询命令。
+
+*** Check Server Available
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; LSP Status Command
+;;; ============================================================
+
+(defun mcg-lsp-check-server-available (server-name)
+  "Check if LSP server SERVER-NAME is available.
+Returns t if server is available in PATH."
+  (executable-find server-name))
+#+end_src
+
+*** Status Content
+
+#+begin_src emacs-lisp
+(defun mcg--lsp-status-content ()
+  "Generate LSP status content string."
+  (let ((servers '(("Python (ty)" . "ty")
+                   ("Python (ruff)" . "ruff")
+                   ("TypeScript" . "typescript-language-server")
+                   ("Biome" . "biome")
+                   ("Rust" . "rust-analyzer")
+                   ("Zig" . "zls")
+                   ("C/C++ (clangd)" . "clangd")
+                   ("Lua" . "lua-language-server")
+                   ("Clojure" . "clojure-lsp"))))
+    (with-temp-buffer
+      (insert "\n")
+      (insert "    ═══════════════════════════════════════════\n")
+      (insert "           LSP 服务器状态\n")
+      (insert "    ═══════════════════════════════════════════\n\n")
+      (dolist (server servers)
+        (let ((name (car server))
+              (executable (cdr server)))
+          (insert (format "    %-25s %s\n"
+                          name
+                          (if (mcg-lsp-check-server-available executable)
+                              "✓ 可用"
+                            "✗ 未找到")))))
+      (insert "\n    ═══════════════════════════════════════════\n")
+      (insert "\n    【安装说明】\n")
+      (insert "      Python (ty):     pip install ty\n")
+      (insert "      Python (ruff):   pip install ruff\n")
+      (insert "      TypeScript:      npm i -g typescript-language-server\n")
+      (insert "      Biome:           npm i -g @biomejs/biome\n")
+      (insert "      Rust:            rustup component add rust-analyzer\n")
+      (insert "      Zig:             github.com/zigtools/zls\n")
+      (insert "      C/C++:           Install clangd from LLVM\n")
+      (insert "      Lua:             Install lua-language-server\n")
+      (insert "      Clojure:         Install clojure-lsp\n")
+      (buffer-string))))
+#+end_src
+
+*** Status Command
+
+#+begin_src emacs-lisp
+(defun mcg-lsp-status ()
+  "Show status of all LSP servers in posframe popup."
+  (interactive)
+  (if (and (display-graphic-p)
+           (require 'posframe nil t)
+           (fboundp 'mcg-popup-show))
+      ;; Use posframe popup
+      (mcg-popup-show "*MCG LSP Status*" (mcg--lsp-status-content) 55 30)
+    ;; Fallback to help window
+    (with-help-window "*MCG LSP Status*"
+      (princ (mcg--lsp-status-content)))))
+#+end_src
+
+** Project Detection
+
+项目类型检测。
+
+*** Detect Project Type
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Project Detection
+;;; ============================================================
+
+(defun mcg-lsp-detect-project-type ()
+  "Detect current project type.
+Detect project type based on files in project root.
+Returns project type symbol, such as 'python, 'rust, 'javascript, etc."
+  (when-let* ((project-root (when (project-current)
+                              (project-root (project-current)))))
+    (cond
+     ;; Python
+     ((or (file-exists-p (expand-file-name "setup.py" project-root))
+          (file-exists-p (expand-file-name "pyproject.toml" project-root))
+          (file-exists-p (expand-file-name "requirements.txt" project-root)))
+      'python)
+     
+     ;; JavaScript/TypeScript
+     ((or (file-exists-p (expand-file-name "package.json" project-root))
+          (file-exists-p (expand-file-name "tsconfig.json" project-root)))
+      'javascript)
+     
+     ;; Rust
+     ((file-exists-p (expand-file-name "Cargo.toml" project-root))
+      'rust)
+     
+     ;; Zig
+     ((file-exists-p (expand-file-name "build.zig" project-root))
+      'zig)
+     
+     ;; C/C++
+     ((or (file-exists-p (expand-file-name "CMakeLists.txt" project-root))
+          (file-exists-p (expand-file-name "Makefile" project-root))
+          (file-exists-p (expand-file-name "compile_commands.json" project-root)))
+      'c-cpp)
+     
+     ;; Clojure
+     ((or (file-exists-p (expand-file-name "deps.edn" project-root))
+          (file-exists-p (expand-file-name "project.clj" project-root)))
+      'clojure)
+     
+     (t 'unknown))))
+#+end_src
+
+*** Project Info Command
+
+#+begin_src emacs-lisp
+(defun mcg/lsp-project-info ()
+  "Show current project information."
+  (interactive)
+  (let ((project-type (mcg-lsp-detect-project-type))
+        (project-root (when (project-current)
+                        (project-root (project-current)))))
+    (message "Project: %s | Type: %s"
+             (or project-root "None")
+             (or project-type "unknown"))))
+#+end_src
+
+** Help Command
+
+LSP 帮助命令。
+
+*** Help Content
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Help Command
+;;; ============================================================
+
+(defun mcg--lsp-help-content ()
+  "Generate LSP help content string."
+  (concat
+   "
+    ╔═══════════════════════════════════════════╗
+    ║         MCG LSP 快捷键速查                ║
+    ╚═══════════════════════════════════════════╝
+
+    【导航】
+      M-.        跳转到定义
+      M-,        返回
+      M-?        查找引用
+
+    【文档】
+      C-h .      显示文档
+      C-h ,      显示签名
+
+    【重构】
+      C-c r r    重命名符号
+      C-c r a    代码操作
+      C-c r f    格式化缓冲区
+      C-c r i    整理导入
+
+    【诊断】
+      M-g n      下一个诊断
+      M-g p      上一个诊断
+      M-g l      诊断列表
+
+    【工作区】
+      C-c r s    列出工作区符号
+
+    ───────────────────────────────────────────
+
+    【快捷命令】
+      M-x lsp-format    格式化缓冲区
+      M-x lsp-imports   整理导入
+      M-x lsp-restart   重启 LSP 服务器
+      M-x lsp-status    检查服务器状态
+      M-x lsp-project   显示项目信息
+
+    ───────────────────────────────────────────
+
+    【设置】
+      M-x mcg/toggle-format-on-save
+        切换保存时自动格式化
+
+    当前状态:
+      保存时格式化: "
+   (if mcg-lsp-format-on-save-enabled "✓ 已启用" "✗ 已禁用")
+   "
+"))
+#+end_src
+
+*** Help Command
+
+#+begin_src emacs-lisp
+(defun mcg/lsp-help ()
+  "Show LSP keybindings and command help in posframe popup."
+  (interactive)
+  (if (and (display-graphic-p)
+           (require 'posframe nil t)
+           (fboundp 'mcg-popup-show))
+      ;; Use posframe popup
+      (mcg-popup-show "*MCG LSP Help*" (mcg--lsp-help-content) 50 40)
+    ;; Fallback to help window
+    (with-help-window "*MCG LSP Help*"
+      (princ (mcg--lsp-help-content)))))
+#+end_src
+
+** Quick Aliases
+
+快捷命令别名。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Quick Aliases
+;;; ============================================================
+
+(defalias 'lsp-format #'mcg-lsp-format-buffer)
+(defalias 'lsp-imports #'mcg-lsp-organize-imports)
+(defalias 'lsp-restart #'mcg-lsp-restart)
+(defalias 'lsp-status #'mcg-lsp-status)
+(defalias 'lsp-project #'mcg/lsp-project-info)
+(defalias 'lsp-help #'mcg/lsp-help)
+#+end_src
+
+** Initialize
+
+模块初始化。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Initialize
+;;; ============================================================
+
+;; Set default custom server directories
+(setq mcg-lsp-user-langserver-dir (expand-file-name "langservers" mcg-emacs-dir))
+(setq mcg-lsp-user-multiserver-dir (expand-file-name "multiservers" mcg-emacs-dir))
+
+;; Setup LSP (only execute once)
+(defvar mcg-lsp-setup-done nil
+  "Flag to prevent duplicate LSP setup.")
+
+(unless mcg-lsp-setup-done
+  (mcg-lsp-setup)
+  (setq mcg-lsp-setup-done t))
+#+end_src
+
+** Provide Feature
+
+#+begin_src emacs-lisp
+(provide 'init-lsp)
+;;; init-lsp.el ends here
+#+end_src

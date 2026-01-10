@@ -1,10 +1,18 @@
-* init-font.el
-:PROPERTIES:
-:HEADER-ARGS: :tangle init-font.el :lexical t
-:END:
+#+TITLE: Font Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-font.el :lexical t
 
-** Headers
-#+BEGIN_SRC emacs-lisp
+* Font Module
+
+本模块负责 MCG Emacs 的字体配置，包括：
+- 默认字体设置
+- Unicode 字体
+- Emoji 字体
+- CJK（中日韩）字体
+
+** File Header
+
+#+begin_src emacs-lisp
 ;;; init-font.el --- Font Configuration for MCG Emacs -*- lexical-binding: t; -*-
 
 ;; Filename: init-font.el
@@ -28,20 +36,24 @@
 ;; :depends ()
 ;; :defer nil
 ;;
+#+end_src
 
-#+END_SRC
+** Require
 
-** Dependencies
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
+;;; Code:
+
 ;;; Dependencies
 
 (require 'cl-lib)
 (require 'core-bootstrap)
-
-#+END_SRC
+#+end_src
 
 ** Font Variables
-#+BEGIN_SRC emacs-lisp
+
+字体相关的配置变量。
+
+#+begin_src emacs-lisp
 ;;; Font Variables
 
 (defvar mcg-fonts-default
@@ -74,11 +86,15 @@
 
 (defvar mcg-icon-font-family "FiraCode Nerd Font"
   "Icon font.")
-
-#+END_SRC
+#+end_src
 
 ** Font Setup Functions
-#+BEGIN_SRC emacs-lisp
+
+字体设置的核心函数。
+
+*** Font Availability Check
+
+#+begin_src emacs-lisp
 ;;; Font Setup Functions
 
 (defun mcg--font-available-p (font)
@@ -90,7 +106,11 @@
   (cl-loop for font in font-list
            when (mcg--font-available-p font)
            return font))
+#+end_src
 
+*** Common Font Setup
+
+#+begin_src emacs-lisp
 (defun mcg--setup-font-common (character font-list &optional scale-factor)
   "Set font for CHARACTER.
 
@@ -112,11 +132,13 @@ Arguments:
                       (assoc-delete-all font face-font-rescale-alist))))
         (set-fontset-font t character (font-spec :family font) nil 'prepend))
       font)))
-
-#+END_SRC
+#+end_src
 
 ** Main Font Setup
-#+BEGIN_SRC emacs-lisp
+
+主字体设置函数。
+
+#+begin_src emacs-lisp
 ;;; Main Font Setup
 
 (defun mcg/font-setup (&optional default-fonts unicode-fonts emoji-fonts cjk-fonts)
@@ -145,11 +167,16 @@ Optional arguments:
                               mcg-font-cjk-scale))
     
     (mcg-log "Fonts configured")))
+#+end_src
 
-#+END_SRC
 
 ** Interactive Commands
-#+BEGIN_SRC emacs-lisp
+
+交互式字体命令。
+
+*** Increase Font Size
+
+#+begin_src emacs-lisp
 ;;; Interactive Commands
 
 (defun mcg/increase-font-size ()
@@ -158,7 +185,11 @@ Optional arguments:
   (let ((current-height (face-attribute 'default :height)))
     (set-face-attribute 'default nil :height (+ current-height 10))
     (message "Font height: %d" (+ current-height 10))))
+#+end_src
 
+*** Decrease Font Size
+
+#+begin_src emacs-lisp
 (defun mcg/decrease-font-size ()
   "Decrease font size."
   (interactive)
@@ -166,13 +197,21 @@ Optional arguments:
     (when (> current-height 80)
       (set-face-attribute 'default nil :height (- current-height 10))
       (message "Font height: %d" (- current-height 10)))))
+#+end_src
 
+*** Reset Font Size
+
+#+begin_src emacs-lisp
 (defun mcg/reset-font-size ()
   "Reset font size to default."
   (interactive)
   (set-face-attribute 'default nil :height mcg-font-height-default)
   (message "Font height reset to: %d" mcg-font-height-default))
+#+end_src
 
+*** List Available Fonts
+
+#+begin_src emacs-lisp
 (defun mcg/list-available-fonts ()
   "List all available fonts."
   (interactive)
@@ -202,22 +241,27 @@ Optional arguments:
     
     (goto-char (point-min))
     (display-buffer (current-buffer))))
+#+end_src
 
-#+END_SRC
 
 ** Keybindings
-#+BEGIN_SRC emacs-lisp
+
+字体大小调整快捷键。
+
+#+begin_src emacs-lisp
 ;;; Keybindings
 
 ;; Font size adjustment keybindings
 (global-set-key (kbd "C-=") #'mcg/increase-font-size)
 (global-set-key (kbd "C--") #'mcg/decrease-font-size)
 (global-set-key (kbd "C-0") #'mcg/reset-font-size)
-
-#+END_SRC
+#+end_src
 
 ** Initialize
-#+BEGIN_SRC emacs-lisp
+
+模块初始化，设置字体。
+
+#+begin_src emacs-lisp
 ;;; Initialize
 
 ;; Initialize font settings
@@ -238,11 +282,11 @@ Optional arguments:
                                     (/ (- dw fw) 2)
                                     (max 0 (- (/ (- dh fh) 2) top-offset)))))))
 (add-hook 'server-after-make-frame-hook #'mcg/font-setup)
+#+end_src
 
-#+END_SRC
+** Provide Feature
 
-** Provide
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (provide 'init-font)
 ;;; init-font.el ends here
-#+END_SRC
+#+end_src

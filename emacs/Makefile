@@ -9,6 +9,10 @@ EE ?= $(EM) -Q --batch --eval "(progn (require 'ob-tangle) (setq org-confirm-bab
 # 源目录和目标目录
 SRC_DIR = config-org
 DST_DIR = site-lisp/config
+EXT_DIR = site-lisp/extensions
+
+# Git 仓库根目录（相对于 emacs/）
+ROOT_DIR = ..
 
 # 需要处理的目录
 DIRS = core modules/ui modules/editor modules/completion modules/tools modules/enhance modules/org modules/writing modules/lang private
@@ -46,34 +50,70 @@ $(foreach dir,$(DIRS),$(eval $(call tangle_template,$(dir))))
 
 # 主构建目标
 all: $(DST_DIR)/early-init.el $(DST_DIR)/init.el $(foreach dir,$(DIRS),build-$(subst /,-,$(dir)))
-	@echo [OK] Configuration generated!
+	@echo [OK] Configuration generated from Org files!
+
+# Tangle 单个目录
+# 用法: make tangle-dir DIR=core 或 make tangle-dir DIR=modules/ui
+tangle-dir:
+ifndef DIR
+	$(error DIR is required. Usage: make tangle-dir DIR=core)
+endif
+	@echo Tangling directory: $(SRC_DIR)/$(DIR)
+	@powershell -Command "if (-not (Test-Path '$(DST_DIR)/$(DIR)')) { New-Item -ItemType Directory -Path '$(DST_DIR)/$(DIR)' -Force | Out-Null }"
+	@powershell -Command "Get-ChildItem -Path '$(SRC_DIR)/$(DIR)' -Filter '*.org' | ForEach-Object { Write-Host ('Tangling: ' + $$_.Name); & $(EM) -Q --batch --eval \"(progn (require 'ob-tangle) (setq org-confirm-babel-evaluate nil))\" --eval \"(org-babel-tangle-file `\"$$($_.FullName)`\" nil 'emacs-lisp)\" }"
+	@echo [OK] Tangled $(DIR)
+
+# Tangle 单个文件 (手动指定)
+# 用法: make tangle-file FILE=config-org/modules/editor/init-defaults.org
+tangle-file:
+ifndef FILE
+	$(error FILE is required. Usage: make tangle-file FILE=config-org/modules/editor/init-defaults.org)
+endif
+	@echo Tangling: $(FILE)
+	$(EE) --eval '(org-babel-tangle-file "$(FILE)")'
+	@echo [OK] Tangled $(FILE)
 
 # 清理生成的文件
 clean:
-	@echo Cleaning generated files...
+	@echo Cleaning generated files in $(DST_DIR)/...
+	-powershell -Command "Get-ChildItem -Path '$(DST_DIR)' -Filter '*.el' -Recurse | Remove-Item -Force"
+	@echo [OK] Generated .el files cleaned!
+
+# 清理所有生成的文件（包括目录）
+clean-all:
+	@echo Cleaning all generated files...
 	-powershell -Command "if (Test-Path '$(DST_DIR)') { Remove-Item -Recurse -Force '$(DST_DIR)' }"
-	@echo [OK] Files cleaned!
+	@echo [OK] All files cleaned!
 
 # 显示文件列表
 list:
 	@echo Source .org files:
-	@powershell -Command "Get-ChildItem -Path '$(SRC_DIR)' -Filter '*.org' -Recurse | Where-Object { $$_.Name -ne 'README.org' } | ForEach-Object { Write-Host ('  ' + $$_.FullName.Substring((Get-Location).Path.Length + 1)) }"
+	@powershell -Command "Get-ChildItem -Path '$(SRC_DIR)' -Filter '*.org' -Recurse | Where-Object { $$_.Name -ne 'README.org' -and $$_.Name -ne 'README.md' } | ForEach-Object { Write-Host ('  ' + $$_.FullName.Substring((Get-Location).Path.Length + 1)) }"
 	@echo ""
 	@echo Target .el files:
 	@powershell -Command "if (Test-Path '$(DST_DIR)') { Get-ChildItem -Path '$(DST_DIR)' -Filter '*.el' -Recurse | ForEach-Object { Write-Host ('  ' + $$_.FullName.Substring((Get-Location).Path.Length + 1)) } }"
 
-.PHONY: all clean list
+.PHONY: all tangle-file clean clean-all list
 
 # =============================================================================
-# Byte Compile (可选)
+# Byte Compile
 # =============================================================================
 
 elc:
-	$(EM) --batch -l ./init.el -L "$(DST_DIR)" --eval '(byte-recompile-directory "$(DST_DIR)" 0 t)'
+	@echo Byte-compiling configuration files...
+	$(EM) --batch -L "$(DST_DIR)" -L "$(DST_DIR)/core" \
+		--eval '(byte-recompile-directory "$(DST_DIR)" 0 t)'
+	@echo [OK] Byte compilation complete!
+
+clean-elc:
+	@echo Cleaning .elc files...
+	-powershell -Command "Get-ChildItem -Path '$(DST_DIR)' -Filter '*.elc' -Recurse | Remove-Item -Force"
+	@echo [OK] .elc files cleaned!
 
 compile: all elc
+	@echo [OK] Full compile complete!
 
-.PHONY: elc compile
+.PHONY: elc clean-elc compile
 
 # =============================================================================
 # Testing
@@ -82,25 +122,17 @@ compile: all elc
 test:
 	@echo Running tests...
 	$(EM) -Q --batch \
-		-l test/test-v3-core-bootstrap.el \
-		-l test/test-v3-core-lib.el \
-		-l test/test-v3-core-modules.el \
-		-l test/test-v3-ui-modules.el \
-		-l test/test-v3-lang-modules.el \
-		-l test/test-v3-lsp-module.el \
-		-l test/test-v3-makefile.el \
+		-L "$(DST_DIR)" \
+		-L "$(DST_DIR)/core" \
+		-l test/run-tests.el \
 		-f ert-run-tests-batch-and-exit
 
 test-verbose:
 	@echo Running tests (verbose)...
 	$(EM) -Q --batch \
-		-l test/test-v3-core-bootstrap.el \
-		-l test/test-v3-core-lib.el \
-		-l test/test-v3-core-modules.el \
-		-l test/test-v3-ui-modules.el \
-		-l test/test-v3-lang-modules.el \
-		-l test/test-v3-lsp-module.el \
-		-l test/test-v3-makefile.el \
+		-L "$(DST_DIR)" \
+		-L "$(DST_DIR)/core" \
+		-l test/run-tests.el \
 		--eval "(ert-run-tests-batch-and-exit t)"
 
 .PHONY: test test-verbose
@@ -109,35 +141,110 @@ test-verbose:
 # Git Submodule 管理
 # =============================================================================
 
-init-packages:
-	@echo Initializing Git Submodules...
-	git submodule update --init --recursive
-	@echo [OK] Initialization complete!
+# 初始化所有 Git Submodules (gsb = git submodule bootstrap)
+gsb:
+	@echo Step 1: Initializing all submodules...
+	git -C $(ROOT_DIR) submodule update --init --recursive
+	@echo [OK] Submodules initialized!
 
-init: init-packages
+# 切换所有子模块到主分支 (gsbr = git submodule branch)
+gsbr:
+	@echo Step 2: Switching all submodules to main branch...
+	git -C $(ROOT_DIR) submodule foreach ' \
+		git show-ref --verify --quiet refs/remotes/origin/main && git checkout main || \
+		git show-ref --verify --quiet refs/remotes/origin/master && git checkout master || \
+		echo "No main/master branch found for $$name" \
+	'
+	@echo [OK] Submodules branch switched!
 
-update-packages:
-	@echo Updating all Git Submodules...
-	@powershell -File scripts/Update-PackagesSafely.ps1
+# 更新所有子模块到最新 (gsu = git submodule update)
+gsu:
+	@echo Step 3: Pulling latest updates for all submodules...
+	git -C $(ROOT_DIR) submodule foreach 'git pull --rebase 2>/dev/null || echo "Failed to pull $$name"'
+	@echo [OK] All submodules updated!
 
-up: update-packages
+# 一键同步所有子模块：初始化 + 切换分支 + 更新 (gss = git submodule sync all)
+gss: gsb gsbr gsu
+	@echo [OK] All submodules synced!
 
-status-packages:
+# 重置所有子模块到远程 HEAD (gsr = git submodule reset)
+gsr:
+	@echo Resetting all submodules to remote HEAD...
+	git -C $(ROOT_DIR) submodule foreach 'git reset --hard origin/$$(git rev-parse --abbrev-ref HEAD)'
+	@echo [OK] Submodules reset completed!
+
+# 添加新子模块 (gsa = git submodule add)
+# 用法: make gsa URL=https://github.com/user/repo CAT=git NAME=magit
+gsa:
+ifndef URL
+	$(error URL is required. Usage: make gsa URL=https://github.com/user/repo CAT=category NAME=package)
+endif
+ifndef CAT
+	$(error CAT is required. Usage: make gsa URL=https://github.com/user/repo CAT=category NAME=package)
+endif
+ifndef NAME
+	$(error NAME is required. Usage: make gsa URL=https://github.com/user/repo CAT=category NAME=package)
+endif
+	@echo Adding submodule: $(NAME) to $(CAT)...
+	git -C $(ROOT_DIR) submodule add $(URL) emacs/$(EXT_DIR)/$(CAT)/$(NAME)
+	@echo [OK] Submodule $(NAME) added!
+
+# 移除子模块 (gsrm = git submodule remove)
+# 用法: make gsrm CAT=git NAME=magit
+gsrm:
+ifndef CAT
+	$(error CAT is required. Usage: make gsrm CAT=category NAME=package)
+endif
+ifndef NAME
+	$(error NAME is required. Usage: make gsrm CAT=category NAME=package)
+endif
+	@echo Removing submodule: $(CAT)/$(NAME)...
+	git -C $(ROOT_DIR) submodule deinit -f emacs/$(EXT_DIR)/$(CAT)/$(NAME)
+	git -C $(ROOT_DIR) rm -f emacs/$(EXT_DIR)/$(CAT)/$(NAME)
+	-powershell -Command "Remove-Item -Recurse -Force '$(ROOT_DIR)/.git/modules/emacs/$(EXT_DIR)/$(CAT)/$(NAME)' -ErrorAction SilentlyContinue"
+	@echo [OK] Submodule $(NAME) removed!
+
+# 同步 .gitmodules URL
+gsync:
+	@echo Syncing submodule URLs...
+	git -C $(ROOT_DIR) submodule sync --recursive
+	@echo [OK] Submodule URLs synced!
+
+# 检查子模块状态
+gsst:
 	@echo Checking Git Submodules status...
-	@powershell -File scripts/Get-PackageStatus.ps1
+	git -C $(ROOT_DIR) submodule status
 
-st: status-packages
+# 编译扩展
+compile-ext:
+	@echo Compiling extension .el files...
+	$(EM) -Q --batch \
+		-L "$(EXT_DIR)" \
+		--eval '(byte-recompile-directory "$(EXT_DIR)" 0 t)'
+	@echo [OK] Extensions compiled!
 
-lock-packages:
-	@echo Locking package versions...
-	@powershell -File scripts/Save-PackageVersions.ps1
-	@echo [OK] Versions locked to site-lisp/packages-lock.el
+clean-ext:
+	@echo Cleaning extension .elc files...
+	-powershell -Command "Get-ChildItem -Path '$(EXT_DIR)' -Filter '*.elc' -Recurse | Remove-Item -Force"
+	@echo [OK] Extension .elc files cleaned!
 
-restore-packages:
-	@echo Restoring to locked versions...
-	@powershell -File scripts/Restore-PackageVersions.ps1
+# 快捷别名
+init: gsb
+update: gsu
+status: gsst
+up: gsu
+st: gsst
 
-.PHONY: init-packages init update-packages up status-packages st lock-packages restore-packages
+.PHONY: gsb gsbr gsu gss gsr gsa gsrm gsync gsst compile-ext clean-ext init update status up st
+
+# =============================================================================
+# 完整构建
+# =============================================================================
+
+build: gsb all compile-ext elc
+	@echo [OK] Full build complete!
+
+.PHONY: build
 
 # =============================================================================
 # Help
@@ -146,22 +253,36 @@ restore-packages:
 help:
 	@echo MCG Emacs Configuration Makefile
 	@echo ================================
-	@echo ""
+	@echo.
 	@echo Build:
-	@echo "  make all      - Generate config from Org files (default)"
-	@echo "  make compile  - Generate and byte-compile config"
-	@echo "  make clean    - Clean generated config files"
-	@echo "  make list     - List source and target files"
-	@echo ""
+	@echo   make all        - Generate config from Org files (default)
+	@echo   make compile    - Generate and byte-compile config
+	@echo   make build      - Full build: init submodules + generate + compile
+	@echo   make clean      - Clean generated .el files
+	@echo   make clean-all  - Clean all generated files
+	@echo   make list       - List source and target files
+	@echo.
+	@echo Byte Compile:
+	@echo   make elc        - Byte-compile config files
+	@echo   make compile-ext - Byte-compile extensions
+	@echo   make clean-elc  - Clean config .elc files
+	@echo   make clean-ext  - Clean extension .elc files
+	@echo.
+	@echo Git Submodule Management:
+	@echo   make gsb        - Initialize all submodules (init)
+	@echo   make gsbr       - Switch submodules to main/master branch
+	@echo   make gsu        - Update all submodules to latest (up)
+	@echo   make gss        - Sync all: init + branch + update
+	@echo   make gsr        - Reset submodules to remote HEAD
+	@echo   make gsst       - Check submodule status (st)
+	@echo   make gsync      - Sync .gitmodules URLs
+	@echo   make gsa        - Add submodule (URL=... CAT=... NAME=...)
+	@echo   make gsrm       - Remove submodule (CAT=... NAME=...)
+	@echo.
 	@echo Testing:
-	@echo "  make test     - Run all tests"
-	@echo ""
-	@echo Package Management:
-	@echo "  make init     - Initialize Git Submodules"
-	@echo "  make st       - Check package status"
-	@echo "  make up       - Update all packages"
-	@echo ""
-	@echo Quick shortcuts: init, st, up, h
+	@echo   make test       - Run all tests
+	@echo.
+	@echo Quick shortcuts: init=gsb, up=gsu, st=gsst, h=help
 
 h: help
 

@@ -1,10 +1,18 @@
-* init-org-babel.el
-:PROPERTIES:
-:HEADER-ARGS: :tangle init-org-babel.el :lexical t
-:END:
+#+TITLE: Org Babel Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-org-babel.el :lexical t
 
-** Headers
-#+BEGIN_SRC emacs-lisp
+* Org Babel Module
+
+本模块负责 MCG Emacs 的 Org Babel 配置，包括：
+- 多语言代码块执行支持
+- 自定义语言扩展（如 Zig）
+- 代码块结果处理和导出
+- 安全和性能优化
+
+** File Header
+
+#+begin_src emacs-lisp
 ;;; init-org-babel.el --- Org Babel Configuration for MCG Emacs -*- lexical-binding: t; -*-
 
 ;; Filename: init-org-babel.el
@@ -24,22 +32,26 @@
 ;; - Code block result handling and export
 ;; - Security and performance optimization
 ;;
+#+end_src
 
-#+END_SRC
+** Require
 
-** Dependencies
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
+;;; Code:
+
 ;;; Dependencies
 
 (require 'core-lib)
 (require 'org)
 (require 'ob-core)
 (require 'ob-tangle)
+#+end_src
 
-#+END_SRC
+** Org Babel Basic Configuration
 
-** Basic Configuration
-#+BEGIN_SRC emacs-lisp
+基本配置，包括代码块执行确认、字体高亮、缩进等设置。
+
+#+begin_src emacs-lisp
 ;;; Org Babel Basic Configuration
 
 (defun mcg-org-babel-setup-basic ()
@@ -59,11 +71,13 @@
         org-export-babel-evaluate t)
   
   (mcg-log "Configured org-babel basic settings"))
+#+end_src
 
-#+END_SRC
+** Language Support Configuration
 
-** Language Support
-#+BEGIN_SRC emacs-lisp
+配置 Org Babel 支持的编程语言。
+
+#+begin_src emacs-lisp
 ;;; Language Support Configuration
 
 (defun mcg-org-babel-setup-languages ()
@@ -82,11 +96,13 @@
      (sql . t)))
   
   (mcg-log "Configured org-babel languages"))
+#+end_src
 
-#+END_SRC
+** Default Code Block Arguments
 
-** Default Header Arguments
-#+BEGIN_SRC emacs-lisp
+代码块默认参数配置。
+
+#+begin_src emacs-lisp
 ;;; Default Code Block Arguments
 
 (defun mcg-org-babel-setup-defaults ()
@@ -110,16 +126,24 @@
         '((:results . "output")))
   
   (mcg-log "Configured org-babel default arguments"))
-
-#+END_SRC
+#+end_src
 
 ** Zig Language Support
-#+BEGIN_SRC emacs-lisp
+
+Zig 语言支持，包括代码块执行函数和默认参数。
+
+*** Zig Default Header Args
+
+#+begin_src emacs-lisp
 ;;; Zig Language Support
 
 (defvar org-babel-default-header-args:zig '()
   "Default arguments for Zig code blocks.")
+#+end_src
 
+*** Zig Execute Function
+
+#+begin_src emacs-lisp
 (defun org-babel-execute:zig (body params)
   "Execute Zig code block.
 BODY is the code content, PARAMS are the parameters."
@@ -152,7 +176,11 @@ BODY is the code content, PARAMS are the parameters."
         (if (string-match-p "error" compile-result)
             (concat "Compilation failed:\n" compile-result)
           (org-babel-eval run-command ""))))))
+#+end_src
 
+*** Zig Setup Function
+
+#+begin_src emacs-lisp
 (defun mcg-org-babel-setup-zig ()
   "Setup Zig language support."
   ;; Register Zig language
@@ -164,11 +192,13 @@ BODY is the code content, PARAMS are the parameters."
           (:exports . "both")))
   
   (mcg-log "Configured org-babel Zig support"))
-
-#+END_SRC
+#+end_src
 
 ** Helper Functions
-#+BEGIN_SRC emacs-lisp
+
+辅助函数，用于执行、tangle 和管理代码块。
+
+#+begin_src emacs-lisp
 ;;; Helper Functions
 
 (defun mcg/org-babel-execute-buffer ()
@@ -198,11 +228,13 @@ BODY is the code content, PARAMS are the parameters."
                           nil nil)))
   (insert (format "#+begin_src %s\n\n#+end_src" lang))
   (forward-line -1))
-
-#+END_SRC
+#+end_src
 
 ** Keybindings
-#+BEGIN_SRC emacs-lisp
+
+Org Babel 快捷键配置。
+
+#+begin_src emacs-lisp
 ;;; Keybindings
 
 (defun mcg-org-babel-setup-keybindings ()
@@ -213,11 +245,13 @@ BODY is the code content, PARAMS are the parameters."
     (define-key org-mode-map (kbd "C-c C-v i") #'mcg/org-insert-src-block))
   
   (mcg-log "Configured org-babel keybindings"))
-
-#+END_SRC
+#+end_src
 
 ** Initialize
-#+BEGIN_SRC emacs-lisp
+
+初始化配置。
+
+#+begin_src emacs-lisp
 ;;; Initialize
 
 (mcg-org-babel-setup-basic)
@@ -225,11 +259,11 @@ BODY is the code content, PARAMS are the parameters."
 (mcg-org-babel-setup-defaults)
 (mcg-org-babel-setup-zig)
 (mcg-org-babel-setup-keybindings)
+#+end_src
 
-#+END_SRC
+** Provide Feature
 
-** Provide
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (provide 'init-org-babel)
 ;;; init-org-babel.el ends here
-#+END_SRC
+#+end_src

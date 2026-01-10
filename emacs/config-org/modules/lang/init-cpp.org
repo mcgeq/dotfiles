@@ -1,113 +1,318 @@
-* init-cpp.el
-:PROPERTIES:
-:HEADER-ARGS: :tangle init-cpp.el :lexical t
-:END:
+#+TITLE: C/C++ Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-cpp.el :lexical t
 
-** Headers
-#+BEGIN_SRC emacs-lisp
-;;; init-cpp.el --- C/C++ Development for MCG Emacs -*- lexical-binding: t; -*-
+* C/C++ Module
 
-;; Filename: init-cpp.el
-;; Description: C/C++ development module
+本模块负责 MCG Emacs 的 C/C++ 语言支持，包括：
+- c-mode / c++-mode / c-ts-mode / c++-ts-mode 配置
+- clangd LSP 集成（通过 lsp-bridge）
+- modern-cpp-font-lock 增强高亮
+- CMake 集成
+- 使用 clang-format 保存时格式化
+
+** File Header
+
+#+begin_src emacs-lisp
+;;; init-cpp.el --- C/C++ language support for MCG Emacs -*- lexical-binding: t; -*-
+
+;; Copyright (C) 2024-2026 MCG
 ;; Author: mcge <mcgeq@outlook.com>
-;; Copyright (C) 2024-2026, mcge, all rights reserved.
-;; Create   Date: 2026-01-07
-;; Version: 3.0
-;; Keywords: c, c++, cpp
+;; Keywords: languages, c, c++
 ;; Compatibility: GNU Emacs 29.0+
 
 ;;; Commentary:
+;; C/C++ language support module for MCG Emacs:
+;; - c-mode / c++-mode / c-ts-mode / c++-ts-mode configuration
+;; - clangd LSP integration (via lsp-bridge)
+;; - modern-cpp-font-lock for enhanced highlighting
+;; - CMake integration
+;; - Format on save with clang-format
 ;;
-;; C/C++ development module for MCG Emacs, responsible for:
-;; - C/C++ mode configuration
-;; - Modern C++ font lock
-;; - Qt keyword support
-;; - LSP integration (clangd)
-;;
-;; Module metadata:
-;; :depends (+lsp)
-;; :defer t
-;; :mode ("\\.c\\'" "\\.h\\'" "\\.cpp\\'" "\\.hpp\\'" "\\.cc\\'" "\\.cxx\\'")
-;;
+;; Requirements: 10.2
+#+end_src
 
-#+END_SRC
+** Require
 
-** Dependencies
-#+BEGIN_SRC emacs-lisp
-;;; Dependencies
+#+begin_src emacs-lisp
+;;; Code:
 
 (require 'core-lib)
-(require 'cc-mode)
+#+end_src
 
-#+END_SRC
+** Variables
 
-** Modern C++ Font Lock
-#+BEGIN_SRC emacs-lisp
-;;; Modern C++ Font Lock
+C/C++ 模块的配置变量。
 
-(defun mcg--setup-modern-cpp-font-lock ()
-  "Setup Modern C++ font lock."
-  (when (mcg-require-extension "lang/modern-cpp-font-lock" 'modern-cpp-font-lock)
-    (modern-c++-font-lock-global-mode 1)
-    (mcg-log "Modern C++ font lock enabled")))
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Variables
+;;; ============================================================
 
-#+END_SRC
+(defvar mcg-cpp-format-on-save t
+  "Whether to format C/C++ files on save using clang-format.")
 
-** C/C++ Mode Configuration
-#+BEGIN_SRC emacs-lisp
-;;; C/C++ Mode Configuration
+(defvar mcg-cpp-style "llvm"
+  "C/C++ coding style (llvm, google, chromium, mozilla, webkit).")
+#+end_src
 
-(defun mcg--c-mode-style-setup ()
-  "Setup C/C++ code style."
-  ;; Use stroustrup style
-  (c-set-style "stroustrup")
+** c-mode / c++-mode Configuration
+
+c-mode 和 c++-mode 的配置，包括缩进、代码风格、子词模式和电气功能。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; c-mode / c++-mode Configuration
+;;; ============================================================
+
+(defun mcg-c-mode-common-setup ()
+  "Common setup for C and C++ modes."
+  ;; Indentation
+  (setq-local indent-tabs-mode nil)
+  (setq-local tab-width 4)
+  (setq-local c-basic-offset 4)
   
-  ;; Indentation settings
-  (setq c-basic-offset 4)
-  (setq tab-width 4)
-  (setq indent-tabs-mode nil)
+  ;; Style
+  (c-set-style mcg-cpp-style)
   
-  ;; Qt keyword support
-  (setq c-protection-key
-        (concat "\\<\\(public\\|public slot\\|protected"
-                "\\|protected slot\\|private\\|private slot"
-                "\\)\\>"))
-  (setq c-C++-access-key
-        (concat "\\<\\(signals\\|public\\|protected\\|private"
-                "\\|public slots\\|protected slots\\|private slots"
-                "\\)\\>[ \t]*:"))
+  ;; Enable subword mode for CamelCase navigation
+  (subword-mode 1)
   
-  ;; Qt keyword fonts
-  (font-lock-add-keywords
-   'c++-mode
-   '(("\\<\\(slots\\|signals\\)\\>" . font-lock-type-face)
-     ("\\<Q_OBJECT\\>" . font-lock-keyword-face)
-     ("\\<\\(SIGNAL\\|SLOT\\)\\>" . font-lock-keyword-face)
-     ("\\<Q[A-Z][A-Za-z]*\\>" . font-lock-type-face))))
+  ;; Electric features
+  (c-toggle-electric-state 1)
+  (c-toggle-auto-newline 1)
+  
+  ;; Hungry delete
+  (c-toggle-hungry-state 1)
+  
+  (mcg-log "C/C++ mode setup complete"))
 
-(defun mcg--c-mode-hook ()
-  "C/C++ mode hook."
-  (mcg--c-mode-style-setup)
-  ;; LSP is handled by global-lsp-bridge-mode, no need to enable manually
-  )
+;; Setup C/C++ mode hooks (auto-mode-alist is managed in init-treesit.el)
+;; C
+(mcg-setup-lang-mode
+ '(:ts-mode c-ts-mode
+   :fallback-mode c-mode
+   :setup-fn mcg-c-mode-common-setup))
 
-#+END_SRC
+;; C++
+(mcg-setup-lang-mode
+ '(:ts-mode c++-ts-mode
+   :fallback-mode c++-mode
+   :setup-fn mcg-c-mode-common-setup))
+#+end_src
 
-** Initialize
-#+BEGIN_SRC emacs-lisp
-;;; Initialize
+** modern-cpp-font-lock
 
-(mcg--setup-modern-cpp-font-lock)
+modern-cpp-font-lock 增强 C++ 语法高亮。
 
-;; Add hooks
-(add-hook 'c-mode-hook #'mcg--c-mode-hook)
-(add-hook 'c++-mode-hook #'mcg--c-mode-hook)
-(add-hook 'c-mode-common-hook #'mcg--c-mode-hook)
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; modern-cpp-font-lock
+;;; ============================================================
 
-#+END_SRC
+(defun mcg-cpp-setup-modern-font-lock ()
+  "Setup modern-cpp-font-lock for enhanced C++ highlighting."
+  (let ((path (mcg-extension-path "modern-cpp-font-lock")))
+    (when path
+      (add-to-list 'load-path path)
+      (require 'modern-cpp-font-lock nil t)
+      (when (fboundp 'modern-c++-font-lock-mode)
+        (modern-c++-font-lock-mode 1)))))
 
-** Provide
-#+BEGIN_SRC emacs-lisp
+(with-eval-after-load 'modern-cpp-font-lock
+  (mcg-log "modern-cpp-font-lock loaded"))
+
+;; Enable for C++ modes
+(add-hook 'c++-mode-hook #'mcg-cpp-setup-modern-font-lock)
+(add-hook 'c++-ts-mode-hook #'mcg-cpp-setup-modern-font-lock)
+#+end_src
+
+** clang-format Integration
+
+clang-format 集成，提供代码格式化功能。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; clang-format Integration
+;;; ============================================================
+
+(defun mcg/clang-format-buffer ()
+  "Format current buffer with clang-format."
+  (interactive)
+  (if (executable-find "clang-format")
+      (let ((file (buffer-file-name)))
+        (when file
+          (save-buffer)
+          (if (zerop (call-process "clang-format" nil nil nil "-i" file))
+              (progn
+                (revert-buffer t t t)
+                (message "Formatted with clang-format"))
+            (message "clang-format failed"))))
+    (message "clang-format not found. Install LLVM/Clang.")))
+
+(defun mcg/clang-format-region ()
+  "Format selected region with clang-format."
+  (interactive)
+  (if (executable-find "clang-format")
+      (if (use-region-p)
+          (let ((start (region-beginning))
+                (end (region-end)))
+            (shell-command-on-region start end "clang-format" nil t)
+            (message "Region formatted with clang-format"))
+        (message "No region selected"))
+    (message "clang-format not found. Install LLVM/Clang.")))
+#+end_src
+
+** CMake Integration
+
+CMake 命令集成，提供配置、构建和清理功能。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; CMake Integration
+;;; ============================================================
+
+(defun mcg/cmake-configure ()
+  "Run CMake configure."
+  (interactive)
+  (let ((build-dir (expand-file-name "build" (project-root (project-current)))))
+    (unless (file-directory-p build-dir)
+      (make-directory build-dir t))
+    (compile (format "cmake -B %s -S %s"
+                     (shell-quote-argument build-dir)
+                     (shell-quote-argument (project-root (project-current)))))))
+
+(defun mcg/cmake-build ()
+  "Run CMake build."
+  (interactive)
+  (let ((build-dir (expand-file-name "build" (project-root (project-current)))))
+    (if (file-directory-p build-dir)
+        (compile (format "cmake --build %s" (shell-quote-argument build-dir)))
+      (message "Build directory not found. Run cmake-configure first."))))
+
+(defun mcg/cmake-clean ()
+  "Clean CMake build."
+  (interactive)
+  (let ((build-dir (expand-file-name "build" (project-root (project-current)))))
+    (if (file-directory-p build-dir)
+        (compile (format "cmake --build %s --target clean" (shell-quote-argument build-dir)))
+      (message "Build directory not found."))))
+#+end_src
+
+** Make Integration
+
+Make 命令集成，提供构建和清理功能。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Make Integration
+;;; ============================================================
+
+(defun mcg/make ()
+  "Run make."
+  (interactive)
+  (compile "make"))
+
+(defun mcg/make-clean ()
+  "Run make clean."
+  (interactive)
+  (compile "make clean"))
+
+(defun mcg/make-target (target)
+  "Run make TARGET."
+  (interactive "sMake target: ")
+  (compile (format "make %s" target)))
+#+end_src
+
+** C/C++ Keybindings
+
+C/C++ 模式的快捷键配置。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; C/C++ Keybindings
+;;; ============================================================
+
+(defvar mcg-cpp-mode-map
+  (let ((map (make-sparse-keymap)))
+    ;; Format
+    (define-key map (kbd "C-c C-f") #'mcg/clang-format-buffer)
+    (define-key map (kbd "C-c C-r") #'mcg/clang-format-region)
+    ;; CMake
+    (define-key map (kbd "C-c C-c c") #'mcg/cmake-configure)
+    (define-key map (kbd "C-c C-c b") #'mcg/cmake-build)
+    (define-key map (kbd "C-c C-c k") #'mcg/cmake-clean)
+    ;; Make
+    (define-key map (kbd "C-c C-m m") #'mcg/make)
+    (define-key map (kbd "C-c C-m c") #'mcg/make-clean)
+    (define-key map (kbd "C-c C-m t") #'mcg/make-target)
+    map)
+  "Keymap for C/C++ specific commands.")
+
+(defun mcg-cpp-setup-keybindings ()
+  "Setup C/C++ specific keybindings."
+  (use-local-map (make-composed-keymap mcg-cpp-mode-map (current-local-map))))
+
+;; Keybindings setup via hooks
+(add-hook 'c-mode-hook #'mcg-cpp-setup-keybindings)
+(add-hook 'c++-mode-hook #'mcg-cpp-setup-keybindings)
+(when (mcg-treesit-available-p)
+  (add-hook 'c-ts-mode-hook #'mcg-cpp-setup-keybindings)
+  (add-hook 'c++-ts-mode-hook #'mcg-cpp-setup-keybindings))
+#+end_src
+
+** Help Command
+
+C/C++ 帮助命令，显示快捷键和使用说明。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Help Command
+;;; ============================================================
+
+(defun mcg/cpp-help ()
+  "Show C/C++ keybindings and command help."
+  (interactive)
+  (with-help-window "*MCG C/C++ Help*"
+    (princ "
+╔═══════════════════════════════════════════╗
+║       MCG C/C++ Keybindings               ║
+╚═══════════════════════════════════════════╝
+
+FORMAT:
+  C-c C-f      - clang-format buffer
+  C-c C-r      - clang-format region
+
+CMAKE:
+  C-c C-c c    - cmake configure
+  C-c C-c b    - cmake build
+  C-c C-c k    - cmake clean
+
+MAKE:
+  C-c C-m m    - make
+  C-c C-m c    - make clean
+  C-c C-m t    - make <target>
+
+LSP COMMANDS (via lsp-bridge with clangd):
+  M-.          - Go to definition
+  M-,          - Return from definition
+  M-?          - Find references
+  C-c r r      - Rename symbol
+  C-c r f      - Format buffer
+
+═══════════════════════════════════════════
+
+INSTALLATION:
+  - Install LLVM/Clang for clangd and clang-format
+  - Install CMake for CMake projects
+
+═══════════════════════════════════════════
+")))
+#+end_src
+
+** Provide Feature
+
+#+begin_src emacs-lisp
 (provide 'init-cpp)
 ;;; init-cpp.el ends here
-#+END_SRC
+#+end_src

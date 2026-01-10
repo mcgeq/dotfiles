@@ -1,17 +1,23 @@
-* init-search.el
-:PROPERTIES:
-:HEADER-ARGS: :tangle init-search.el :lexical t
-:END:
+#+TITLE: Search Tools Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-search.el :lexical t
 
-** Headers
-#+BEGIN_SRC emacs-lisp
+* Search Tools Module
+
+本模块负责 MCG Emacs 的搜索工具配置，包括：
+- Blink-search 快速搜索框架
+- Color-rg 项目内容搜索
+
+** File Header
+
+#+begin_src emacs-lisp
 ;;; init-search.el --- Search Tools for MCG Emacs -*- lexical-binding: t; -*-
 
 ;; Filename: init-search.el
 ;; Description: Search tools module (Blink-search + Color-rg)
 ;; Author: mcge <mcgeq@outlook.com>
 ;; Copyright (C) 2024-2026, mcge, all rights reserved.
-;; Create   Date: 2026-01-07
+;; Create   Date: 2026-01-10
 ;; Version: 3.0
 ;; Keywords: search, blink-search, color-rg, ripgrep
 ;; Compatibility: GNU Emacs 29.0+
@@ -22,24 +28,28 @@
 ;; - Blink-search fast search framework
 ;; - Color-rg project content search
 ;;
+#+end_src
 
-#+END_SRC
+** Require
 
-** Dependencies
-#+BEGIN_SRC emacs-lisp
-;;; Dependencies
+#+begin_src emacs-lisp
+;;; Code:
 
 (require 'core-lib)
-
-#+END_SRC
+#+end_src
 
 ** Blink-Search Configuration
-#+BEGIN_SRC emacs-lisp
+
+Blink-search 快速搜索框架配置。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Blink-Search Configuration
+;;; ============================================================
 
 (defun mcg--setup-blink-search ()
   "Setup Blink-search fast search framework."
-  (when (mcg-require-extension "search/blink-search" 'blink-search)
+  (when (mcg-require-extension "blink-search" t)
     ;; Common directories
     (setq blink-search-common-directory
           `(("HOME" "~/")
@@ -82,12 +92,18 @@
     (setq blink-search-enable-log nil)
     
     (mcg-log "Blink-search configured")))
-
-#+END_SRC
+#+end_src
 
 ** Blink-Search Helper Functions
-#+BEGIN_SRC emacs-lisp
+
+Blink-search 辅助函数。
+
+*** Search in Current Directory
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Blink-Search Helper Functions
+;;; ============================================================
 
 (defun mcg/blink-search-grep-current-dir ()
   "Search files in current directory using blink-search."
@@ -96,7 +112,11 @@
                                  (file-name-directory buffer-file-name))
                                default-directory)))
     (blink-search)))
+#+end_src
 
+*** Search in Project Root
+
+#+begin_src emacs-lisp
 (defun mcg/blink-search-project-root ()
   "Search files in project root using blink-search."
   (interactive)
@@ -108,16 +128,20 @@
                            default-directory))
          (default-directory project-root))
     (blink-search)))
-
-#+END_SRC
+#+end_src
 
 ** Color-rg Configuration
-#+BEGIN_SRC emacs-lisp
+
+Color-rg 项目内容搜索配置。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Color-rg Configuration
+;;; ============================================================
 
 (defun mcg--setup-color-rg ()
   "Setup Color-rg project content search."
-  (when (mcg-require-extension "search/color-rg" 'color-rg)
+  (when (mcg-require-extension "color-rg" t)
     ;; Don't limit file types
     (setq color-rg-search-file-regexp nil)
     
@@ -158,12 +182,18 @@
       (setq color-rg-search-command "rg"))
     
     (mcg-log "Color-rg configured")))
-
-#+END_SRC
+#+end_src
 
 ** Color-rg Helper Functions
-#+BEGIN_SRC emacs-lisp
+
+Color-rg 辅助函数。
+
+*** Search by File Type
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Color-rg Helper Functions
+;;; ============================================================
 
 (defun mcg/color-rg-search-project-with-type ()
   "Search in project by file type."
@@ -174,7 +204,11 @@
                                       "*.md" "*.txt" "*.json" "*.yaml" "*.toml"))))
     (let ((color-rg-search-file-regexp file-type))
       (call-interactively 'color-rg-search-input-in-project))))
+#+end_src
 
+*** Search in Org Directory
+
+#+begin_src emacs-lisp
 (defun mcg/color-rg-search-in-org-directory ()
   "Search in org directory."
   (interactive)
@@ -184,18 +218,26 @@
     (when (file-directory-p org-dir)
       (let ((default-directory org-dir))
         (call-interactively 'color-rg-search-input)))))
+#+end_src
 
+*** Search in Config Directory
+
+#+begin_src emacs-lisp
 (defun mcg/color-rg-search-in-config ()
   "Search in Emacs configuration directory."
   (interactive)
   (let ((default-directory mcg-config-dir))
     (call-interactively 'color-rg-search-input)))
-
-#+END_SRC
+#+end_src
 
 ** Keybindings
-#+BEGIN_SRC emacs-lisp
+
+搜索相关快捷键配置 (C-c s 前缀)。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Keybindings (C-c s prefix)
+;;; ============================================================
 
 (defun mcg--setup-search-keybindings ()
   "Setup search related keybindings."
@@ -225,21 +267,25 @@
     (global-set-key (kbd "C-c s C") 'mcg/color-rg-search-in-config))
   
   (mcg-log "Search keybindings configured"))
-
-#+END_SRC
+#+end_src
 
 ** Initialize
-#+BEGIN_SRC emacs-lisp
+
+模块初始化。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Initialize
+;;; ============================================================
 
 (mcg--setup-blink-search)
 (mcg--setup-color-rg)
 (mcg--setup-search-keybindings)
+#+end_src
 
-#+END_SRC
+** Provide Feature
 
-** Provide
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (provide 'init-search)
 ;;; init-search.el ends here
-#+END_SRC
+#+end_src

@@ -1,14 +1,19 @@
-#+TITLE: MCG Emacs Early Init
+#+TITLE: Early Init Module
 #+AUTHOR: mcge
 #+PROPERTY: header-args:emacs-lisp :tangle early-init.el :lexical t
 
-* early-init.el
-:PROPERTIES:
-:HEADER-ARGS: :tangle early-init.el :lexical t
-:END:
+* Early Init Module
 
-** Headers
-#+BEGIN_SRC emacs-lisp
+本模块在 init.el 和包系统、GUI 初始化之前加载。用于：
+- 在帧创建前禁用 UI 元素（加快启动速度）
+- 启动期间设置高 GC 阈值
+- 配置原生编译设置
+
+生成后需要复制到 ~/.emacs.d/early-init.el
+
+** File Header
+
+#+begin_src emacs-lisp
 ;;; early-init.el --- Early Init for MCG Emacs -*- lexical-binding: t; -*-
 
 ;; Filename: early-init.el
@@ -33,20 +38,24 @@
 ;;
 ;; Copy generated early-init.el to ~/.emacs.d/early-init.el
 ;;
-
-#+END_SRC
+#+end_src
 
 ** Package Initialization
-#+BEGIN_SRC emacs-lisp
+
+禁用 package.el，因为我们使用 Borg 进行包管理。
+
+#+begin_src emacs-lisp
 ;;; Package Initialization
 
 ;; Prevent package.el from loading packages before init.el
 (setq package-enable-at-startup nil)
-
-#+END_SRC
+#+end_src
 
 ** Performance Optimization
-#+BEGIN_SRC emacs-lisp
+
+启动期间设置高 GC 阈值以防止 GC 暂停，这将在 core-bootstrap 中恢复为正常值。
+
+#+begin_src emacs-lisp
 ;;; Performance Optimization
 
 ;; Save original values for restoration after startup
@@ -67,11 +76,13 @@
             (setq inhibit-redisplay nil
                   inhibit-message nil)
             (redisplay)))
-
-#+END_SRC
+#+end_src
 
 ** Native Compilation
-#+BEGIN_SRC emacs-lisp
+
+配置原生编译（Emacs 28+）。
+
+#+begin_src emacs-lisp
 ;;; Native Compilation
 
 (when (featurep 'native-compile)
@@ -82,11 +93,13 @@
 
 ;; Prefer loading newer files
 (setq load-prefer-newer t)
-
-#+END_SRC
+#+end_src
 
 ** Frame Configuration
-#+BEGIN_SRC emacs-lisp
+
+初始帧参数设置。
+
+#+begin_src emacs-lisp
 ;;; Frame Configuration
 
 (defvar mcg-frame-width 140
@@ -114,21 +127,23 @@
 ;; Frame resize behavior
 (setq frame-resize-pixelwise t)
 (setq frame-inhibit-implied-resize t)
-
-#+END_SRC
+#+end_src
 
 ** Startup Screen
-#+BEGIN_SRC emacs-lisp
+
+禁用启动屏幕和消息。
+
+#+begin_src emacs-lisp
 ;;; Startup Screen
 
 ;; Disable startup screen and messages
 (setq inhibit-startup-screen t)
 (setq inhibit-startup-message t)
 (setq inhibit-startup-echo-area-message user-login-name)
+#+end_src
 
-#+END_SRC
+** Provide Feature
 
-** Provide
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 ;;; early-init.el ends here
-#+END_SRC
+#+end_src

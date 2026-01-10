@@ -1,665 +1,380 @@
-* core-autoload.el
-:PROPERTIES:
-:HEADER-ARGS: :tangle core-autoload.el :lexical t
-:END:
+#+TITLE: Core Autoload Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle core-autoload.el :lexical t
 
-** Headers
-#+BEGIN_SRC emacs-lisp
-  ;;; core-autoload.el --- Auto-load and Auto-tangle for MCG Emacs -*- lexical-binding: t; -*-
+* Core Autoload Module
 
-  ;; Filename: core-autoload.el
-  ;; Description: Auto-load and auto-tangle support
-  ;; Author: mcge <mcgeq@outlook.com>
-  ;; Copyright (C) 2024-2026, mcge, all rights reserved.
-  ;; Create   Date: 2026-01-07
-  ;; Version: 3.0
-  ;; Keywords: autoload, tangle, automation
-  ;; Compatibility: GNU Emacs 29.0+
+本模块为 MCG Emacs 配置系统提供自动加载生成功能。它扫描扩展目录中的 =;;;###autoload= 标记，并生成可在启动时加载的自动加载文件。
 
-  ;;; Commentary:
-  ;;
-  ;; Automation module for MCG Emacs configuration, providing:
-  ;; - Auto-tangle .org files to .el on save
-  ;; - Auto-scan extension directories to generate autoloads
-  ;; - Simplified extension registration (auto-infer from directory structure)
-  ;;
+自动加载系统支持：
+- 扫描扩展中的自动加载定义
+- 生成合并的自动加载文件
+- 缓存自动加载以加快启动速度
+- 与 Borg 包管理集成
 
-#+END_SRC
+** File Header
 
-** Dependencies
-#+BEGIN_SRC emacs-lisp
-;;; Dependencies
+#+begin_src emacs-lisp
+;;; core-autoload.el --- Autoload generation for MCG Emacs -*- lexical-binding: t; -*-
 
+;; Copyright (C) 2024 MCG
+;; Author: MCG
+;; Keywords: configuration, autoload
+
+;;; Commentary:
+;; This module provides autoload generation for extensions in the MCG Emacs
+;; configuration system. It scans extension directories for ;;;###autoload
+;; cookies and generates autoload files that can be loaded at startup.
+;;
+;; The autoload system supports:
+;; - Scanning extensions for autoload definitions
+;; - Generating consolidated autoload files
+;; - Caching autoloads for faster startup
+;; - Integration with Borg package management
+
+;;; Code:
+#+end_src
+
+** Require
+
+#+begin_src emacs-lisp
 (require 'core-bootstrap)
-
-#+END_SRC
-
-** Auto Tangle on Save
-#+BEGIN_SRC emacs-lisp
-;;; Auto Tangle on Save
-
-(defvar mcg-auto-tangle-enabled t
-  "Whether to enable auto-tangle on save.")
-
-(defvar mcg-tangle-source-dir nil
-  "Org source files directory.")
-
-(defvar mcg-tangle-target-dir nil
-  "Tangle target directory.")
-
-(defun mcg--init-tangle-dirs ()
-  "Initialize tangle directory variables."
-  (setq mcg-tangle-source-dir mcg-config-org-dir)
-  (setq mcg-tangle-target-dir mcg-config-dir))
-
-(defun mcg--org-file-in-config-p (file)
-  "Check if FILE is in the configuration directory."
-  (and file
-       mcg-tangle-source-dir
-       (string-prefix-p (expand-file-name mcg-tangle-source-dir)
-                        (expand-file-name file))))
-
-(defun mcg--get-tangle-target (org-file)
-  "Get the tangle target directory for ORG-FILE."
-  (when (and org-file mcg-tangle-source-dir mcg-tangle-target-dir)
-    (let* ((relative (file-relative-name org-file mcg-tangle-source-dir))
-           (dir (file-name-directory relative)))
-      (if dir
-          (expand-file-name dir mcg-tangle-target-dir)
-        mcg-tangle-target-dir))))
-
-(defun mcg-auto-tangle ()
-  "Auto-tangle current org file.
-
-Only executes when file is in config-org directory."
-  (when (and mcg-auto-tangle-enabled
-             (eq major-mode 'org-mode)
-             (mcg--org-file-in-config-p buffer-file-name))
-    (let* ((org-file buffer-file-name)
-           (target-dir (mcg--get-tangle-target org-file)))
-      ;; Ensure target directory exists
-      (unless (file-directory-p target-dir)
-        (make-directory target-dir t))
-      ;; Execute tangle
-      (message "Auto-tangling: %s" (file-name-nondirectory org-file))
-      (let ((org-confirm-babel-evaluate nil))
-        (org-babel-tangle-file org-file nil "emacs-lisp"))
-      ;; Move generated file to target directory
-      (let* ((el-name (concat (file-name-base org-file) ".el"))
-             (src-el (expand-file-name el-name (file-name-directory org-file)))
-             (dst-el (expand-file-name el-name target-dir)))
-        (when (and (file-exists-p src-el)
-                   (not (string= src-el dst-el)))
-          (rename-file src-el dst-el t)
-          (message "Generated: %s" dst-el))))))
-
-(defun mcg-setup-auto-tangle ()
-  "Set up auto-tangle on save."
-  (mcg--init-tangle-dirs)
-  (add-hook 'after-save-hook #'mcg-auto-tangle))
-
-(defun mcg/toggle-auto-tangle ()
-  "Toggle auto-tangle feature."
-  (interactive)
-  (setq mcg-auto-tangle-enabled (not mcg-auto-tangle-enabled))
-  (message "Auto-tangle %s" (if mcg-auto-tangle-enabled "enabled" "disabled")))
-
-(defun mcg/tangle-current-file ()
-  "Manually tangle current file."
-  (interactive)
-  (if (eq major-mode 'org-mode)
-      (let ((mcg-auto-tangle-enabled t))
-        (mcg-auto-tangle))
-    (message "Not an org file")))
-
-(defun mcg/tangle-all-config ()
-  "Tangle all configuration files."
-  (interactive)
-  (mcg--init-tangle-dirs)
-  (let ((org-files (directory-files-recursively
-                    mcg-tangle-source-dir
-                    "\\.org$")))
-    (dolist (file org-files)
-      (unless (string-match-p "README" file)
-        (message "Tangling: %s" file)
-        (let ((org-confirm-babel-evaluate nil))
-          (org-babel-tangle-file file nil "emacs-lisp"))))
-    (message "Tangled %d files" (length org-files))))
-
-#+END_SRC
-
-** Auto Extension Discovery
-#+BEGIN_SRC emacs-lisp
-;;; Auto Extension Discovery
-
-(defvar mcg-extension-autoloads nil
-  "Auto-generated extension autoload list.
-
-Format is alist of ((MODE . PATH) ...).")
-
-(defvar mcg-extension-cache nil
-  "Extension path cache.
-
-Format is alist of ((MODE-FILE . FULL-PATH) ...).
-Used to avoid repeated directory scanning.")
-
-(defvar mcg-extension-cache-file nil
-  "Extension cache file path.")
-
-(defvar mcg-extension-cache-mtime nil
-  "Modification time of the extension cache file.")
-
-(defun mcg--init-cache-file ()
-  "Initialize cache file path."
-  (setq mcg-extension-cache-file
-        (expand-file-name "extension-cache.el" mcg-config-dir)))
-
-(defun mcg--get-extensions-dir-mtime ()
-  "Get the latest modification time of extensions directory.
-
-Returns the most recent mtime of any subdirectory in mcg-extensions-dir."
-  (when (and mcg-extensions-dir (file-directory-p mcg-extensions-dir))
-    (let ((latest-mtime 0))
-      (dolist (category-dir (directory-files mcg-extensions-dir t "^[^.]"))
-        (when (file-directory-p category-dir)
-          (let ((mtime (float-time (file-attribute-modification-time
-                                    (file-attributes category-dir)))))
-            (when (> mtime latest-mtime)
-              (setq latest-mtime mtime)))
-          ;; Also check subdirectories
-          (dolist (ext-dir (directory-files category-dir t "^[^.]"))
-            (when (file-directory-p ext-dir)
-              (let ((mtime (float-time (file-attribute-modification-time
-                                        (file-attributes ext-dir)))))
-                (when (> mtime latest-mtime)
-                  (setq latest-mtime mtime)))))))
-      latest-mtime)))
-
-(defun mcg--cache-stale-p ()
-  "Check if the extension cache is stale.
-
-Returns t if cache needs to be rebuilt, nil otherwise."
-  (mcg--init-cache-file)
-  (cond
-   ;; No cache file exists
-   ((not (file-exists-p mcg-extension-cache-file))
-    (mcg-log "Cache file does not exist, needs rebuild")
-    t)
-   ;; Cache is empty
-   ((null mcg-extension-cache)
-    (mcg-log "Cache is empty, needs rebuild")
-    t)
-   ;; Compare mtimes
-   (t
-    (let* ((cache-mtime (float-time (file-attribute-modification-time
-                                     (file-attributes mcg-extension-cache-file))))
-           (dir-mtime (mcg--get-extensions-dir-mtime)))
-      (when (> dir-mtime cache-mtime)
-        (mcg-log "Extensions directory modified after cache (dir: %.0f, cache: %.0f)"
-                 dir-mtime cache-mtime)
-        t)))))
-
-(defun mcg-save-extension-cache ()
-  "Save extension cache to file."
-  (mcg--init-cache-file)
-  (when (and mcg-extension-cache mcg-extension-cache-file)
-    (with-temp-file mcg-extension-cache-file
-      (insert ";; MCG Extension Cache - Auto-generated\n")
-      (insert ";; Do not edit manually\n")
-      (insert (format ";; Generated: %s\n\n" (current-time-string)))
-      (insert "(setq mcg-extension-cache\n  '")
-      (prin1 mcg-extension-cache (current-buffer))
-      (insert ")\n"))
-    (setq mcg-extension-cache-mtime
-          (float-time (file-attribute-modification-time
-                       (file-attributes mcg-extension-cache-file))))
-    (mcg-log "Saved extension cache: %d entries" (length mcg-extension-cache))))
-
-(defun mcg-load-extension-cache ()
-  "Load extension cache from file."
-  (mcg--init-cache-file)
-  (when (and mcg-extension-cache-file
-             (file-exists-p mcg-extension-cache-file))
-    (condition-case err
-        (progn
-          (load mcg-extension-cache-file nil t)
-          (setq mcg-extension-cache-mtime
-                (float-time (file-attribute-modification-time
-                             (file-attributes mcg-extension-cache-file))))
-          (mcg-log "Loaded extension cache: %d entries" (length mcg-extension-cache))
-          t)
-      (error
-       (mcg-log "Failed to load cache: %s" (error-message-string err))
-       nil))))
-
-(defun mcg-ensure-cache-fresh ()
-  "Ensure extension cache is fresh, rebuild if stale.
-
-Returns t if cache is fresh (either already fresh or successfully rebuilt)."
-  (if (mcg--cache-stale-p)
-      (progn
-        (mcg-log "Cache is stale, rebuilding...")
-        (mcg/rebuild-extension-cache)
-        t)
-    (mcg-log "Cache is fresh")
-    t))
-
-(defun mcg-cache-lookup (mode-file)
-  "Look up extension path for MODE-FILE from cache."
-  (cdr (assoc mode-file mcg-extension-cache)))
-
-(defun mcg-cache-store (mode-file full-path)
-  "Store MODE-FILE -> FULL-PATH mapping in cache."
-  (unless (assoc mode-file mcg-extension-cache)
-    (push (cons mode-file full-path) mcg-extension-cache)))
-
-(defun mcg/rebuild-extension-cache ()
-  "Rebuild extension cache."
-  (interactive)
-  (setq mcg-extension-cache nil)
-  (mcg--scan-extension-dir mcg-extensions-dir)
-  (mcg-save-extension-cache)
-  (message "Extension cache rebuilt: %d entries" (length mcg-extension-cache)))
-
-(defun mcg--scan-extension-dir (dir &optional prefix)
-  "Scan extension directory DIR, return list of (path . features).
-
-PREFIX is used to build relative paths.
-Also updates mcg-extension-cache."
-  (let ((result nil)
-        (prefix (or prefix "")))
-    (when (file-directory-p dir)
-      (dolist (entry (directory-files dir t "^[^.]"))
-        (when (file-directory-p entry)
-          (let* ((name (file-name-nondirectory entry))
-                 (path (if (string-empty-p prefix)
-                           name
-                         (concat prefix "/" name)))
-                 (el-files (directory-files entry nil "\\.el$")))
-            ;; If directory contains .el files, record it
-            (if el-files
-                (let ((features (mapcar (lambda (f)
-                                          (let ((feat (intern (file-name-sans-extension f))))
-                                            ;; Update cache
-                                            (mcg-cache-store f entry)
-                                            feat))
-                                        el-files)))
-                  (push (cons path features) result))
-              ;; Otherwise recursively scan subdirectories
-              (setq result (append result
-                                   (mcg--scan-extension-dir entry path))))))))
-    result))
-
-(defun mcg-discover-extensions ()
-  "Auto-discover all extensions and generate registry.
-
-Scans mcg-extensions-dir directory, auto-infers extension paths and features.
-Prioritizes cache, scans and saves if cache doesn't exist or is stale."
-  (when (and mcg-extensions-dir (file-directory-p mcg-extensions-dir))
-    ;; Try to load cache
-    (unless mcg-extension-cache
-      (mcg-load-extension-cache))
-    ;; Check if cache is stale and rebuild if needed
-    (when (mcg--cache-stale-p)
-      (mcg-log "Cache stale, rescanning extensions...")
-      (setq mcg-extension-cache nil)
-      (let ((discovered (mcg--scan-extension-dir mcg-extensions-dir)))
-        (mcg-save-extension-cache)
-        ;; Update mcg-extensions
-        (dolist (ext discovered)
-          (let ((path (car ext))
-                (features (cdr ext)))
-            (unless (assoc path mcg-extensions)
-              (push (list path :provides features) mcg-extensions))))
-        discovered))))
-
-(defun mcg--infer-mode-from-path (path)
-  "Infer mode name from extension path.
-
-Example: \"lsp/web-mode\" -> web-mode"
-  (let ((name (file-name-nondirectory path)))
-    (intern (concat name (unless (string-suffix-p "-mode" name) "-mode")))))
-
-(defun mcg-generate-autoloads ()
-  "Auto-generate autoloads for all extensions.
-
-Scans extension directory, sets up autoload for each extension containing -mode.el."
-  (setq mcg-extension-autoloads nil)
-  (when (and mcg-extensions-dir (file-directory-p mcg-extensions-dir))
-    (dolist (entry (mcg--scan-extension-dir mcg-extensions-dir))
-      (let* ((path (car entry))
-             (features (cdr entry))
-             (full-path (expand-file-name path mcg-extensions-dir)))
-        ;; Find mode files
-        (dolist (feat features)
-          (let ((feat-name (symbol-name feat)))
-            (when (string-suffix-p "-mode" feat-name)
-              ;; Add to load-path
-              (add-to-list 'load-path full-path)
-              ;; Set up autoload
-              (unless (fboundp feat)
-                (autoload feat feat-name nil t))
-              ;; Record
-              (push (cons feat path) mcg-extension-autoloads))))))
-    mcg-extension-autoloads))
-
-(defun mcg-setup-extension-autoloads ()
-  "Set up autoloads for all extensions.
-
-This is an improved deferred loading scheme that doesn't require manually maintaining mcg-mode-extension-paths."
-  (mcg-generate-autoloads)
-  (message "Generated %d autoloads" (length mcg-extension-autoloads)))
-
-#+END_SRC
-
-** Simplified Extension Loading
-#+BEGIN_SRC emacs-lisp
-;;; Simplified Extension Loading
-
-(defun mcg-load-ext (path &optional feature)
-  "Simplified extension loading function.
-
-Arguments:
-- PATH: Extension relative path, e.g., \"lsp/web-mode\"
-- FEATURE: Feature to require (optional, auto-inferred)
-
-Auto-handles:
-1. Adding path to load-path
-2. Loading dependencies (if defined in registry)
-3. Requiring feature"
-  (let ((full-path (expand-file-name path mcg-extensions-dir)))
-    (when (file-directory-p full-path)
-      ;; Add to load-path
-      (add-to-list 'load-path full-path)
-      ;; Infer feature
-      (let ((feat (or feature
-                      (intern (file-name-nondirectory path)))))
-        ;; Try to require
-        (condition-case err
-            (progn
-              (require feat)
-              t)
-          (error
-           (mcg-log "Failed to load %s: %s" path (error-message-string err))
-           nil))))))
-
-(defmacro mcg-use-ext (path &rest args)
-  "Declarative extension usage macro (use-package style syntax).
-
-Usage:
-  (mcg-use-ext \"lsp/web-mode\"
-    :feature web-mode
-    :mode (\"\\\\.vue\\\\'\" . web-mode)
-    :hook (web-mode-hook . my-web-setup)
-    :defer t
-    :init (setq web-mode-enable-auto-quoting nil)
-    :config (setq web-mode-markup-indent-offset 2))
-
-Arguments:
-- PATH: Extension path
-- :feature - Feature to load (optional)
-- :mode - auto-mode-alist entry (optional)
-- :hook - Hook setup (optional, supports multiple)
-- :defer - Whether to defer loading (optional, default nil)
-- :init - Code to execute before loading
-- :config - Code to execute after loading
-- :if / :when - Conditional loading
-- :after - Load after specified feature"
-  (declare (indent 1))
-  (let* ((feature (plist-get args :feature))
-         (mode (plist-get args :mode))
-         (hook (plist-get args :hook))
-         (defer (plist-get args :defer))
-         (init (plist-get args :init))
-         (config (plist-get args :config))
-         (if-cond (or (plist-get args :if) (plist-get args :when)))
-         (after (plist-get args :after))
-         (feat-sym (or feature (intern (file-name-nondirectory path))))
-         (body
-          `(progn
-             ;; Add to load-path
-             (let ((full-path (expand-file-name ,path mcg-extensions-dir)))
-               (when (file-directory-p full-path)
-                 (add-to-list 'load-path full-path)))
-             
-             ;; :init - Execute before loading
-             ,@(when init (if (listp (car init)) init (list init)))
-             
-             ;; Set up auto-mode-alist
-             ,@(when mode
-                 (if (and (consp mode) (stringp (car mode)))
-                     `((add-to-list 'auto-mode-alist ',mode))
-                   (mapcar (lambda (m) `(add-to-list 'auto-mode-alist ',m))
-                           (if (consp (car mode)) mode (list mode)))))
-             
-             ;; Set up hook
-             ,@(when hook
-                 (if (and (consp hook) (symbolp (car hook)))
-                     `((add-hook ',(car hook) #',(cdr hook)))
-                   (mapcar (lambda (h) `(add-hook ',(car h) #',(cdr h)))
-                           (if (consp (car hook)) hook (list hook)))))
-             
-             ;; Load or set up autoload
-             ,(cond
-               ;; :after - Load after specified feature
-               (after
-                `(with-eval-after-load ',after
-                   (require ',feat-sym)
-                   ,@(when config (if (listp (car config)) config (list config)))))
-               ;; :defer - Deferred loading
-               (defer
-                `(progn
-                   (autoload ',feat-sym ,(symbol-name feat-sym) nil t)
-                   ,@(when config
-                       `((with-eval-after-load ',feat-sym
-                           ,@(if (listp (car config)) config (list config)))))))
-               ;; Immediate loading
-               (t
-                `(progn
-                   (require ',feat-sym)
-                   ,@(when config (if (listp (car config)) config (list config)))))))))
-    ;; Conditional wrapper
-    (if if-cond
-        `(when ,if-cond ,body)
-      body)))
-
-;; use-package style alias
-(defalias 'use-ext 'mcg-use-ext)
-
-#+END_SRC
-
-** Extension Auto-Registration
-#+BEGIN_SRC emacs-lisp
-;;; Extension Auto-Registration
-
-(defun mcg--parse-pkg-file (pkg-file)
-  "Parse -pkg.el file for extension metadata.
-
-Arguments:
-- PKG-FILE: Path to the -pkg.el file
-
-Returns a plist with :provides and :depends keys."
-  (condition-case err
-      (with-temp-buffer
-        (insert-file-contents pkg-file)
-        (goto-char (point-min))
-        (let* ((form (read (current-buffer)))
-               (name (nth 1 form))
-               (deps-raw (nth 4 form))
-               (deps (when (and deps-raw (listp deps-raw))
-                       (mapcar (lambda (dep)
-                                 (if (listp dep) (car dep) dep))
-                               (if (eq (car deps-raw) 'quote)
-                                   (cadr deps-raw)
-                                 deps-raw)))))
-          (list :provides (list (if (stringp name) (intern name) name))
-                :depends deps)))
-    (error
-     (mcg-log "Failed to parse pkg file %s: %s" pkg-file (error-message-string err))
-     nil)))
-
-(defun mcg--parse-el-headers (el-file)
-  "Parse .el file headers for Package-Requires.
-
-Arguments:
-- EL-FILE: Path to the .el file
-
-Returns a plist with :provides and :depends keys."
-  (condition-case err
-      (with-temp-buffer
-        (insert-file-contents el-file nil 0 2000)  ; Only read first 2KB
-        (goto-char (point-min))
-        (let ((provides nil)
-              (depends nil))
-          ;; Look for (provide 'feature)
-          (when (re-search-forward "(provide '\\([^)]+\\))" nil t)
-            (setq provides (list (intern (match-string 1)))))
-          ;; Look for Package-Requires header
-          (goto-char (point-min))
-          (when (re-search-forward ";; Package-Requires: \\((.+)\\)" nil t)
-            (let ((deps-str (match-string 1)))
-              (condition-case nil
-                  (let ((deps-form (read deps-str)))
-                    (setq depends
-                          (mapcar (lambda (dep)
-                                    (if (listp dep) (car dep) dep))
-                                  deps-form)))
-                (error nil))))
-          ;; Fallback: infer provides from filename
-          (unless provides
-            (setq provides (list (intern (file-name-sans-extension
-                                          (file-name-nondirectory el-file))))))
-          (list :provides provides :depends depends)))
-    (error
-     (mcg-log "Failed to parse el headers %s: %s" el-file (error-message-string err))
-     nil)))
-
-(defun mcg--infer-extension-from-dir (dir-path)
-  "Infer extension metadata from directory name.
-
-Arguments:
-- DIR-PATH: Path to the extension directory
-
-Returns a plist with :provides and :depends keys."
-  (let ((name (file-name-nondirectory dir-path)))
-    (list :provides (list (intern name))
-          :depends nil)))
-
-(defun mcg-auto-register-extension (path)
-  "Auto-register extension at PATH.
-
-Infers provides and depends from package metadata.
-Tries in order:
-1. Parse -pkg.el file if exists
-2. Parse main .el file headers
-3. Fallback to directory name inference
-
-Arguments:
-- PATH: Full path to the extension directory
-
-Returns a plist with :provides and :depends keys, or nil on failure."
-  (when (and path (file-directory-p path))
-    (let* ((name (file-name-nondirectory path))
-           (pkg-file (expand-file-name (concat name "-pkg.el") path))
-           (main-file (expand-file-name (concat name ".el") path)))
-      (cond
-       ;; Has -pkg.el file
-       ((file-exists-p pkg-file)
-        (mcg-log "Auto-registering %s from pkg file" name)
-        (mcg--parse-pkg-file pkg-file))
-       ;; Has main .el file with headers
-       ((file-exists-p main-file)
-        (mcg-log "Auto-registering %s from el headers" name)
-        (mcg--parse-el-headers main-file))
-       ;; Fallback: infer from directory name
-       (t
-        (mcg-log "Auto-registering %s from directory name" name)
-        (mcg--infer-extension-from-dir path))))))
-
-(defun mcg--resolve-extension-dep-path (dep-symbol)
-  "Resolve a dependency symbol to an extension path.
-
-Arguments:
-- DEP-SYMBOL: A symbol like 'dash or 'f
-
-Returns the extension path string or nil if not found."
-  (catch 'found
-    (dolist (entry mcg-extensions)
-      (let ((provides (plist-get (cdr entry) :provides)))
-        (when (memq dep-symbol provides)
-          (throw 'found (car entry)))))
+(require 'core-lib)
+
+;; Use loaddefs-gen for Emacs 29+, fall back to autoload for older versions
+(if (and (fboundp 'loaddefs-generate)
+         (>= emacs-major-version 29))
+    (require 'loaddefs-gen)
+  (require 'autoload))
+#+end_src
+
+** Autoload Variables
+
+自动加载系统的配置变量。
+
+#+begin_src emacs-lisp
+(defvar mcg-autoload-file nil
+  "Path to the generated autoload file.
+Set during initialization based on mcg-cache-dir.")
+
+(defvar mcg-autoload-timestamp-file nil
+  "Path to the autoload timestamp file.
+Used to track when autoloads were last generated.")
+
+(defvar mcg-autoload-excluded-dirs
+  '(".git" ".github" "test" "tests" "doc" "docs" "examples")
+  "List of directory names to exclude when scanning for autoloads.")
+
+(defvar mcg-autoload-excluded-files
+  '("-test.el" "-tests.el" "-pkg.el")
+  "List of file suffixes to exclude when scanning for autoloads.")
+
+(defvar mcg-autoloads-loaded nil
+  "Non-nil if autoloads have been loaded.")
+#+end_src
+
+** Autoload File Paths
+
+初始化自动加载文件路径。
+
+#+begin_src emacs-lisp
+(defun mcg-autoload-init ()
+  "Initialize autoload file paths.
+Sets up paths for the autoload file and timestamp file."
+  (unless mcg-cache-dir
+    (mcg-init-paths))
+  (setq mcg-autoload-file
+        (expand-file-name "mcg-autoloads.el" mcg-cache-dir))
+  (setq mcg-autoload-timestamp-file
+        (expand-file-name "mcg-autoloads.timestamp" mcg-cache-dir)))
+#+end_src
+
+** Extension Scanning
+
+扩展目录扫描功能，用于查找需要生成自动加载的文件。
+
+*** Exclusion Checks
+
+#+begin_src emacs-lisp
+(defun mcg--autoload-excluded-dir-p (dir)
+  "Check if DIR should be excluded from autoload scanning."
+  (let ((name (file-name-nondirectory (directory-file-name dir))))
+    (member name mcg-autoload-excluded-dirs)))
+
+(defun mcg--autoload-excluded-file-p (file)
+  "Check if FILE should be excluded from autoload scanning."
+  (let ((name (file-name-nondirectory file)))
+    (or (string-prefix-p "." name)
+        (cl-some (lambda (suffix)
+                   (string-suffix-p suffix name))
+                 mcg-autoload-excluded-files))))
+#+end_src
+
+*** File Discovery
+
+#+begin_src emacs-lisp
+(defun mcg--find-el-files-for-autoload (dir)
+  "Find all .el files in DIR suitable for autoload generation.
+Excludes test files, package files, and hidden files."
+  (let ((files nil))
+    (when (and (file-directory-p dir)
+               (not (mcg--autoload-excluded-dir-p dir)))
+      ;; Get .el files in this directory
+      (dolist (file (directory-files dir t "\\.el$"))
+        (unless (mcg--autoload-excluded-file-p file)
+          (push file files)))
+      ;; Recurse into subdirectories
+      (dolist (subdir (directory-files dir t "^[^.]"))
+        (when (and (file-directory-p subdir)
+                   (not (mcg--autoload-excluded-dir-p subdir)))
+          (setq files (append files (mcg--find-el-files-for-autoload subdir))))))
+    files))
+
+(defun mcg-list-extension-files ()
+  "List all .el files in extensions directory suitable for autoload generation.
+Returns a list of absolute file paths."
+  (unless mcg-extensions-dir
+    (mcg-init-paths))
+  (if (file-directory-p mcg-extensions-dir)
+      (mcg--find-el-files-for-autoload mcg-extensions-dir)
+    (mcg-log-warning "Extensions directory not found: %s" mcg-extensions-dir)
     nil))
+#+end_src
 
-(defun mcg-auto-discover-and-register ()
-  "Auto-discover extensions and register them.
+** Autoload Generation
 
-Scans mcg-extensions-dir, auto-registers new extensions
-that are not already in mcg-extensions."
+自动加载文件生成功能。
+
+*** Check for Autoload Cookies
+
+#+begin_src emacs-lisp
+(defun mcg--file-has-autoloads-p (file)
+  "Check if FILE contains any ;;;###autoload cookies."
+  (with-temp-buffer
+    (insert-file-contents file)
+    (goto-char (point-min))
+    (re-search-forward "^;;;###autoload" nil t)))
+#+end_src
+
+*** Generate Autoloads
+
+#+begin_src emacs-lisp
+(defun mcg-generate-autoloads (&optional force)
+  "Generate autoloads for all extensions.
+If FORCE is non-nil, regenerate even if autoloads are up to date.
+Returns t if autoloads were generated, nil otherwise."
+  (interactive "P")
+  (mcg-autoload-init)
+  
+  (let ((files (mcg-list-extension-files))
+        (generated-count 0)
+        (start-time (current-time)))
+    
+    (if (null files)
+        (progn
+          (mcg-log-warning "No extension files found for autoload generation")
+          nil)
+      
+      ;; Check if regeneration is needed
+      (if (and (not force)
+               (mcg--autoloads-up-to-date-p files))
+          (progn
+            (mcg-log "Autoloads are up to date")
+            nil)
+        
+        ;; Generate autoloads
+        (mcg-log "Generating autoloads for %d files..." (length files))
+        
+        ;; Create or clear the autoload file
+        (with-temp-file mcg-autoload-file
+          (insert ";; -*- lexical-binding: t; -*-\n")
+          (insert ";; MCG Autoloads - Auto-generated, do not edit\n")
+          (insert (format ";; Generated: %s\n" (current-time-string)))
+          (insert (format ";; Files scanned: %d\n\n" (length files)))
+          (insert "(provide 'mcg-autoloads)\n\n"))
+        
+        ;; Process each file
+        (dolist (file files)
+          (when (mcg--file-has-autoloads-p file)
+            (condition-case err
+                (progn
+                  (mcg--generate-autoloads-for-file file)
+                  (setq generated-count (1+ generated-count)))
+              (error
+               (mcg-log-warning "Failed to generate autoloads for %s: %s"
+                                file (error-message-string err))))))
+        
+        ;; Update timestamp
+        (mcg--update-autoload-timestamp)
+        
+        (let ((elapsed (float-time (time-subtract (current-time) start-time))))
+          (mcg-log "Generated autoloads for %d files in %.2fs"
+                   generated-count elapsed)
+          (message "MCG: Generated autoloads for %d files in %.2fs"
+                   generated-count elapsed))
+        
+        t))))
+#+end_src
+
+*** Generate Autoloads for Single File
+
+#+begin_src emacs-lisp
+(defun mcg--generate-autoloads-for-file (file)
+  "Generate autoloads for FILE and append to mcg-autoload-file."
+  (let ((backup-inhibited t))
+    (if (and (fboundp 'loaddefs-generate)
+             (>= emacs-major-version 29))
+        ;; Use modern loaddefs-generate for Emacs 29+
+        (loaddefs-generate (file-name-directory file)
+                           mcg-autoload-file
+                           nil nil nil t)
+      ;; Fall back to update-file-autoloads for older Emacs
+      (let ((generated-autoload-file mcg-autoload-file)
+            (autoload-timestamps nil))
+        (update-file-autoloads file t mcg-autoload-file)))))
+#+end_src
+
+** Autoload Timestamp Management
+
+时间戳管理，用于判断自动加载文件是否需要更新。
+
+#+begin_src emacs-lisp
+(defun mcg--get-newest-file-time (files)
+  "Get the modification time of the newest file in FILES."
+  (let ((newest nil))
+    (dolist (file files)
+      (let ((mtime (file-attribute-modification-time (file-attributes file))))
+        (when (or (null newest)
+                  (time-less-p newest mtime))
+          (setq newest mtime))))
+    newest))
+
+(defun mcg--autoloads-up-to-date-p (files)
+  "Check if autoloads are up to date for FILES.
+Returns t if the autoload file exists and is newer than all source files."
+  (and mcg-autoload-file
+       (file-exists-p mcg-autoload-file)
+       mcg-autoload-timestamp-file
+       (file-exists-p mcg-autoload-timestamp-file)
+       (let ((autoload-time (file-attribute-modification-time
+                             (file-attributes mcg-autoload-file)))
+             (newest-source (mcg--get-newest-file-time files)))
+         (and autoload-time newest-source
+              (time-less-p newest-source autoload-time)))))
+
+(defun mcg--update-autoload-timestamp ()
+  "Update the autoload timestamp file."
+  (when mcg-autoload-timestamp-file
+    (with-temp-file mcg-autoload-timestamp-file
+      (insert (format-time-string "%Y-%m-%d %H:%M:%S")))))
+#+end_src
+
+** Autoload Loading
+
+加载生成的自动加载文件。
+
+#+begin_src emacs-lisp
+(defun mcg-load-autoloads (&optional regenerate)
+  "Load the generated autoloads file.
+If REGENERATE is non-nil, regenerate autoloads first if needed.
+Returns t if autoloads were loaded successfully."
+  (interactive "P")
+  (mcg-autoload-init)
+  
+  ;; Regenerate if requested or if file doesn't exist
+  (when (or regenerate
+            (not (file-exists-p mcg-autoload-file)))
+    (mcg-generate-autoloads))
+  
+  ;; Load the autoloads
+  (if (file-exists-p mcg-autoload-file)
+      (condition-case err
+          (progn
+            (load mcg-autoload-file nil t)
+            (setq mcg-autoloads-loaded t)
+            (mcg-log "Loaded autoloads from %s" mcg-autoload-file)
+            t)
+        (error
+         (mcg-log-error "Failed to load autoloads: %s" (error-message-string err))
+         nil))
+    (mcg-log-warning "Autoload file not found: %s" mcg-autoload-file)
+    nil))
+#+end_src
+
+** Autoload Commands
+
+用户交互命令。
+
+#+begin_src emacs-lisp
+(defun mcg-regenerate-autoloads ()
+  "Force regeneration of autoloads."
   (interactive)
-  (let ((registered-count 0)
-        (updated-count 0))
-    (when (and mcg-extensions-dir (file-directory-p mcg-extensions-dir))
-      (dolist (category-dir (directory-files mcg-extensions-dir t "^[^.]"))
-        (when (file-directory-p category-dir)
-          (let ((category (file-name-nondirectory category-dir)))
-            (dolist (ext-dir (directory-files category-dir t "^[^.]"))
-              (when (file-directory-p ext-dir)
-                (let* ((ext-name (file-name-nondirectory ext-dir))
-                       (ext-path (concat category "/" ext-name))
-                       (existing (assoc ext-path mcg-extensions)))
-                  ;; Only register if not already registered
-                  (unless existing
-                    (let ((metadata (mcg-auto-register-extension ext-dir)))
-                      (when metadata
-                        (let ((provides (plist-get metadata :provides))
-                              (depends (plist-get metadata :depends)))
-                          ;; Convert dependency symbols to paths
-                          (let ((dep-paths
-                                 (when depends
-                                   (delq nil
-                                         (mapcar #'mcg--resolve-extension-dep-path
-                                                 depends)))))
-                            (push (append (list ext-path :provides provides)
-                                          (when dep-paths (list :depends dep-paths)))
-                                  mcg-extensions)
-                            (cl-incf registered-count)))))))))))))
-    (message "Auto-registered %d new extensions" registered-count)
-    registered-count))
+  (mcg-generate-autoloads t)
+  (mcg-load-autoloads))
 
-#+END_SRC
-
-** Extension Registry Auto-Update
-#+BEGIN_SRC emacs-lisp
-;;; Extension Registry Auto-Update
-
-(defun mcg-refresh-extensions ()
-  "Refresh extension registry.
-
-Re-scans extension directory, updates mcg-extensions."
+(defun mcg-show-autoload-info ()
+  "Display information about the autoload system."
   (interactive)
-  (let ((discovered (mcg-discover-extensions)))
-    (message "Discovered %d extensions" (length discovered))
-    discovered))
-
-(defun mcg/show-discovered-extensions ()
-  "Display auto-discovered extensions."
-  (interactive)
-  (let ((discovered (mcg-discover-extensions)))
-    (with-current-buffer (get-buffer-create "*MCG Discovered Extensions*")
+  (mcg-autoload-init)
+  (let ((buf (get-buffer-create "*MCG Autoloads*")))
+    (with-current-buffer buf
       (erase-buffer)
-      (insert "Auto-discovered Extensions\n")
-      (insert "==========================\n\n")
-      (dolist (ext discovered)
-        (insert (format "%-40s -> %s\n"
-                        (car ext)
-                        (mapconcat #'symbol-name (cdr ext) ", "))))
-      (goto-char (point-min))
-      (display-buffer (current-buffer)))))
+      (insert "=== MCG Autoload System ===\n\n")
+      (insert (format "Autoload file: %s\n" mcg-autoload-file))
+      (insert (format "  Exists: %s\n" (if (and mcg-autoload-file
+                                                (file-exists-p mcg-autoload-file))
+                                           "yes" "no")))
+      (insert (format "Timestamp file: %s\n" mcg-autoload-timestamp-file))
+      (insert (format "  Exists: %s\n" (if (and mcg-autoload-timestamp-file
+                                                (file-exists-p mcg-autoload-timestamp-file))
+                                           "yes" "no")))
+      (insert (format "Autoloads loaded: %s\n\n" (if mcg-autoloads-loaded "yes" "no")))
+      
+      ;; Show extension files count
+      (let ((files (mcg-list-extension-files)))
+        (insert (format "Extension files found: %d\n" (length files)))
+        (let ((with-autoloads 0))
+          (dolist (file files)
+            (when (mcg--file-has-autoloads-p file)
+              (setq with-autoloads (1+ with-autoloads))))
+          (insert (format "Files with autoloads: %d\n\n" with-autoloads))))
+      
+      ;; Show excluded patterns
+      (insert "Excluded directories:\n")
+      (dolist (dir mcg-autoload-excluded-dirs)
+        (insert (format "  %s\n" dir)))
+      (insert "\nExcluded file suffixes:\n")
+      (dolist (suffix mcg-autoload-excluded-files)
+        (insert (format "  %s\n" suffix))))
+    (display-buffer buf)))
+#+end_src
 
-#+END_SRC
+** Integration with Borg
 
-** Provide
-#+BEGIN_SRC emacs-lisp
+与 Borg 包管理器的集成。
+
+#+begin_src emacs-lisp
+(defun mcg-autoload-after-borg-build ()
+  "Regenerate autoloads after Borg builds packages.
+This function can be added to borg-build-hook."
+  (mcg-generate-autoloads t))
+#+end_src
+
+** Initialization
+
+自动加载系统初始化。
+
+#+begin_src emacs-lisp
+(defun mcg-autoload-setup ()
+  "Set up the autoload system.
+Initializes paths and optionally loads existing autoloads."
+  (mcg-autoload-init)
+  (mcg-log "Autoload system initialized"))
+#+end_src
+
+** Provide Feature
+
+#+begin_src emacs-lisp
 (provide 'core-autoload)
 ;;; core-autoload.el ends here
-#+END_SRC
+#+end_src

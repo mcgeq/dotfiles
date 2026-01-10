@@ -1,321 +1,182 @@
-* core-modules.el
-:PROPERTIES:
-:HEADER-ARGS: :tangle core-modules.el :lexical t
-:END:
+#+TITLE: Core Modules Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle core-modules.el :lexical t
 
-** Headers
-#+BEGIN_SRC emacs-lisp
-  ;;; core-modules.el --- Module System for MCG Emacs -*- lexical-binding: t; -*-
+* Core Modules Module
 
-  ;; Filename: core-modules.el
-  ;; Description: Module system core, providing declarative module configuration
-  ;; Author: mcge <mcgeq@outlook.com>
-  ;; Copyright (C) 2024-2026, mcge, all rights reserved.
-  ;; Create   Date: 2026-01-07
-  ;; Version: 3.0
-  ;; Keywords: modules, configuration, declarative
-  ;; Compatibility: GNU Emacs 29.0+
+本模块提供 MCG Emacs 配置系统的模块管理功能，包括模块注册、声明式配置宏、模块加载、延迟加载和空闲加载支持。
 
-  ;;; Commentary:
-  ;;
-  ;; Module system for MCG Emacs configuration, responsible for:
-  ;; - mcg! macro: Declarative module configuration
-  ;; - Module registration and loading
-  ;; - Deferred loading support
-  ;; - Module dependency management
-  ;;
-  ;; This module depends on core-bootstrap and core-lib.
-  ;;
+** File Header
 
-#+END_SRC
+#+begin_src emacs-lisp
+;;; core-modules.el --- Module system for MCG Emacs -*- lexical-binding: t; -*-
 
-** Dependencies
-#+BEGIN_SRC emacs-lisp
-;;; Dependencies
+;; Copyright (C) 2024 MCG
+;; Author: MCG
+;; Keywords: configuration, modules
 
+;;; Commentary:
+;; This module provides the module system for MCG Emacs configuration:
+;; - Module registry for tracking enabled/disabled modules
+;; - mcg! macro for declarative module configuration
+;; - Module loading with error handling
+;; - Deferred and idle loading support
+
+;;; Code:
+#+end_src
+
+** Require
+
+#+begin_src emacs-lisp
+(require 'cl-lib)
 (require 'core-bootstrap)
 (require 'core-lib)
+#+end_src
 
-#+END_SRC
+** Module Registry Variables
 
-** Module Registry
-#+BEGIN_SRC emacs-lisp
-;;; Module Registry
+模块注册表变量，用于跟踪已启用和已禁用的模块。
 
+#+begin_src emacs-lisp
 (defvar mcg-modules-alist nil
-  "List of registered modules.
-
-Format is alist: ((CATEGORY . (MODULE1 MODULE2 ...)) ...)
-
-Example:
-  ((:ui . (theme modeline))
-   (:editor . (defaults treesit))
-   (:lang . (lsp rust python)))")
+  "Alist of registered modules grouped by category.
+Structure: ((CATEGORY . (MODULE1 MODULE2 ...)) ...)
+Example: ((:ui . (theme modeline)) (:lang . (rust python)))")
 
 (defvar mcg-disabled-modules nil
-  "List of disabled modules.
-
-Format is alist: ((CATEGORY . (MODULE1 MODULE2 ...)) ...)
-
-Modules disabled using -module syntax are recorded here.")
-
-(defvar mcg-module-load-order nil
-  "Module load order record.
-
-List of (CATEGORY . MODULE) recorded in actual load order.")
+  "Alist of disabled modules grouped by category.
+Structure: ((CATEGORY . (MODULE1 MODULE2 ...)) ...)
+Modules prefixed with `-' in mcg! are added here.")
 
 (defvar mcg-loaded-modules nil
-  "List of loaded modules.
-
-List of (CATEGORY . MODULE) cons cells.")
+  "List of loaded module keys.
+Each entry is (CATEGORY . MODULE) for modules that have been loaded.")
 
 (defvar mcg-module-load-errors nil
-  "List of module load errors.
+  "Alist of module load errors.
+Structure: (((CATEGORY . MODULE) . ERROR-MESSAGE) ...)")
 
-Each entry format: ((CATEGORY . MODULE) . ERROR-MESSAGE)")
+(defvar mcg-module-load-order nil
+  "List of module keys in the order they should be loaded.
+Populated by mcg! macro based on declaration order.")
+#+end_src
 
-(defvar mcg-module-dependencies nil
-  "Module dependency table.
+** Deferred Loading Variables
 
-Format is alist of (((CATEGORY . MODULE) . ((DEP-CAT . DEP-MOD) ...)) ...).
-Declared in module files via mcg-module-depends.")
+延迟加载相关变量，用于按需加载模块。
 
-#+END_SRC
+#+begin_src emacs-lisp
+(defvar mcg-deferred-modules nil
+  "Alist of deferred modules with their triggers.
+Structure: (((CATEGORY . MODULE) . (PATTERN . MODE)) ...)
+PATTERN is a file pattern, MODE is the major mode.")
 
-** Deprecated Module Support
-#+BEGIN_SRC emacs-lisp
-;;; Deprecated Module Support
+(defvar mcg-idle-load-modules nil
+  "List of modules to load during idle time.
+Each entry is (CATEGORY . MODULE).")
 
-(defvar mcg-deprecated-modules
-  '((:input . :editor)
-    (:docs . :writing))
-  "Deprecated category mappings for migration.
+(defvar mcg-idle-load-delay 2.0
+  "Delay in seconds before loading idle modules.")
 
-Format is alist: ((OLD-CATEGORY . NEW-CATEGORY) ...)
+(defvar mcg-idle-load-timer nil
+  "Timer for idle loading.")
 
-When a user references a deprecated category, the system will
-warn and suggest the new category name.")
+(defvar mcg-idle-loaded-modules nil
+  "List of modules that have been loaded via idle loading.")
 
-(defvar mcg-renamed-modules
-  '(((:input . fingertip) . (:editor . paredit))
-    ((:input . wraplish) . (:editor . format))
-    ((:docs . markdown) . (:writing . markdown))
-    ((:tools . sort-tab) . (:tools . tabs))
-    ((:tools . utils) . nil))  ; utils is split into multiple modules
-  "Renamed module mappings for migration.
+(defvar mcg-module-load-hook nil
+  "Hook run after a module is loaded.
+Functions receive (CATEGORY MODULE) as arguments.")
+#+end_src
 
-Format is alist: (((OLD-CAT . OLD-MOD) . (NEW-CAT . NEW-MOD)) ...)
+** Module Triggers
 
-When a user references a renamed module, the system will warn
-and suggest the new module name. A nil value indicates the module
-has been split into multiple modules.")
+模块触发器配置，定义文件模式与模块的映射关系。
 
-(defun mcg--warn-deprecated-category (category)
-  "Warn about deprecated CATEGORY usage and return new category.
-
-Arguments:
-- CATEGORY: The category keyword being used
-
-Returns the new category if deprecated, or the original category."
-  (let ((mapping (assq category mcg-deprecated-modules)))
-    (if mapping
-        (let ((new-category (cdr mapping)))
-          (display-warning 'mcg
-                           (format "Category '%s' is deprecated. Use '%s' instead."
-                                   category new-category)
-                           :warning)
-          new-category)
-      category)))
-
-(defun mcg--warn-deprecated-module (category module)
-  "Warn about deprecated MODULE in CATEGORY and return new module info.
-
-Arguments:
-- CATEGORY: The category keyword
-- MODULE: The module symbol
-
-Returns (NEW-CATEGORY . NEW-MODULE) if renamed, or (CATEGORY . MODULE)."
-  (let* ((mod-key (cons category module))
-         (mapping (assoc mod-key mcg-renamed-modules)))
-    (if mapping
-        (let ((new-mod (cdr mapping)))
-          (if new-mod
-              (progn
-                (display-warning 'mcg
-                                 (format "Module '%s/%s' has been renamed to '%s/%s'."
-                                         category module
-                                         (car new-mod) (cdr new-mod))
-                                 :warning)
-                new-mod)
-            ;; Module was split
-            (display-warning 'mcg
-                             (format "Module '%s/%s' has been split into multiple modules. See documentation for migration guide."
-                                     category module)
-                             :warning)
-            nil))
-      (cons category module))))
-
-(defun mcg--check-deprecated (category module)
-  "Check for deprecated category/module and return resolved values.
-
-Arguments:
-- CATEGORY: The category keyword
-- MODULE: The module symbol
-
-Returns (RESOLVED-CATEGORY . RESOLVED-MODULE) after checking deprecations.
-Returns nil if the module was split and cannot be automatically resolved."
-  ;; First check category deprecation
-  (let ((resolved-category (mcg--warn-deprecated-category category)))
-    ;; Then check module deprecation with resolved category
-    (mcg--warn-deprecated-module resolved-category module)))
-
-#+END_SRC
+#+begin_src emacs-lisp
+(defvar mcg-module-triggers
+  '(;; Language modules
+    ((:lang . rust) . ("\\.rs\\'" . rust-ts-mode))
+    ((:lang . python) . ("\\.py\\'" . python-ts-mode))
+    ((:lang . typescript) . ("\\.tsx?\\'" . typescript-ts-mode))
+    ((:lang . web) . ("\\.vue\\'" . web-mode))
+    ((:lang . cpp) . ("\\.\\(cpp\\|cc\\|cxx\\|h\\|hpp\\)\\'" . c++-ts-mode))
+    ((:lang . lua) . ("\\.lua\\'" . lua-mode))
+    ((:lang . zig) . ("\\.zig\\'" . zig-mode))
+    ;; Writing modules
+    ((:writing . markdown) . ("\\.md\\'" . markdown-mode))
+    ((:writing . vale) . ("\\.\\(md\\|org\\|txt\\)\\'" . text-mode)))
+  "Alist mapping module keys to their file triggers.
+Structure: (((CATEGORY . MODULE) . (PATTERN . MODE)) ...)")
+#+end_src
 
 ** Module Path Functions
-#+BEGIN_SRC emacs-lisp
-;;; Module Path Functions
+
+模块路径函数，用于获取模块文件路径。
+
+#+begin_src emacs-lisp
+(defun mcg-category-dir (category)
+  "Get the directory path for CATEGORY.
+CATEGORY is a keyword like :ui, :editor, :lang."
+  (let ((cat-name (substring (symbol-name category) 1))) ; Remove leading ':'
+    (expand-file-name cat-name mcg-modules-dir)))
 
 (defun mcg-module-path (category module)
-  "Get module file path.
-
-Arguments:
-- CATEGORY: Module category, e.g., :ui, :editor, :lang
-- MODULE: Module name, e.g., theme, defaults, rust
-
-Returns the full file path of the module (.el file)."
-  (when (and category module mcg-modules-dir)
-    (let ((cat-name (if (keywordp category)
-                        (substring (symbol-name category) 1)
-                      (symbol-name category)))
-          (mod-name (if (symbolp module)
-                        (symbol-name module)
-                      module)))
-      (expand-file-name (format "%s/init-%s.el" cat-name mod-name)
-                        mcg-modules-dir))))
-
-(defun mcg-module-org-path (category module)
-  "Get module org file path.
-
-Arguments:
-- CATEGORY: Module category
-- MODULE: Module name
-
-Returns the .org source file path of the module."
-  (when (and category module mcg-modules-dir)
-    (let ((cat-name (if (keywordp category)
-                        (substring (symbol-name category) 1)
-                      (symbol-name category)))
-          (mod-name (if (symbolp module)
-                        (symbol-name module)
-                      module)))
-      (expand-file-name (format "%s/init-%s.org" cat-name mod-name)
-                        mcg-modules-dir))))
+  "Get the file path for MODULE in CATEGORY.
+Returns the path to init-MODULE.el file."
+  (let ((cat-dir (mcg-category-dir category))
+        (mod-name (if (symbolp module) (symbol-name module) module)))
+    (expand-file-name (format "init-%s.el" mod-name) cat-dir)))
 
 (defun mcg-module-exists-p (category module)
-  "Check if module file exists.
+  "Check if MODULE in CATEGORY exists as a file."
+  (file-exists-p (mcg-module-path category module)))
+#+end_src
 
-Arguments:
-- CATEGORY: Module category
-- MODULE: Module name
+** Module Status Functions
 
-Returns t if the module .el file exists."
-  (let ((path (mcg-module-path category module)))
-    (and path (file-exists-p path))))
+模块状态函数，用于检查模块的启用、禁用和加载状态。
 
-#+END_SRC
-
-** Module Registration
-#+BEGIN_SRC emacs-lisp
-;;; Module Registration
-
-(defun mcg--register-module (category module)
-  "Register module to mcg-modules-alist.
-
-Arguments:
-- CATEGORY: Module category (keyword)
-- MODULE: Module name (symbol)
-
-Internal function, called by mcg! macro.
-Checks for deprecated categories/modules and warns if necessary."
-  ;; Check for deprecated category/module and get resolved values
-  (let* ((resolved (mcg--check-deprecated category module))
-         (resolved-category (if resolved (car resolved) category))
-         (resolved-module (if resolved (cdr resolved) module)))
-    (when resolved  ; Only register if not a split module (which returns nil)
-      (let ((entry (assq resolved-category mcg-modules-alist)))
-        (if entry
-            ;; Category exists, add module (if not already present)
-            (unless (memq resolved-module (cdr entry))
-              (setcdr entry (append (cdr entry) (list resolved-module))))
-          ;; Category doesn't exist, create new entry
-          (push (cons resolved-category (list resolved-module)) mcg-modules-alist))))))
-
-(defun mcg--disable-module (category module)
-  "Disable module, record to mcg-disabled-modules.
-
-Arguments:
-- CATEGORY: Module category (keyword)
-- MODULE: Module name (symbol)
-
-Internal function, called by mcg! macro.
-Checks for deprecated categories/modules and warns if necessary."
-  ;; Check for deprecated category/module and get resolved values
-  (let* ((resolved (mcg--check-deprecated category module))
-         (resolved-category (if resolved (car resolved) category))
-         (resolved-module (if resolved (cdr resolved) module)))
-    (when resolved  ; Only disable if not a split module (which returns nil)
-      (let ((entry (assq resolved-category mcg-disabled-modules)))
-        (if entry
-            (unless (memq resolved-module (cdr entry))
-              (setcdr entry (append (cdr entry) (list resolved-module))))
-          (push (cons resolved-category (list resolved-module)) mcg-disabled-modules))))))
-
+#+begin_src emacs-lisp
 (defun mcg-module-enabled-p (category module)
-  "Check if module is enabled.
-
-Arguments:
-- CATEGORY: Module category
-- MODULE: Module name
-
-Returns t if module is in mcg-modules-alist and not in mcg-disabled-modules."
-  (let ((cat-key (if (keywordp category) category
-                   (intern (concat ":" (symbol-name category)))))
-        (mod-sym (if (symbolp module) module (intern module))))
-    (and (let ((entry (assq cat-key mcg-modules-alist)))
-           (and entry (memq mod-sym (cdr entry))))
-         (not (let ((disabled (assq cat-key mcg-disabled-modules)))
-                (and disabled (memq mod-sym (cdr disabled))))))))
+  "Check if MODULE in CATEGORY is enabled.
+Returns non-nil if the module is in mcg-modules-alist."
+  (let ((cat-modules (cdr (assq category mcg-modules-alist))))
+    (memq (if (symbolp module) module (intern module)) cat-modules)))
 
 (defun mcg-module-disabled-p (category module)
-  "Check if module is disabled.
+  "Check if MODULE in CATEGORY is disabled.
+Returns non-nil if the module is in mcg-disabled-modules."
+  (let ((cat-disabled (cdr (assq category mcg-disabled-modules))))
+    (memq (if (symbolp module) module (intern module)) cat-disabled)))
 
-Arguments:
-- CATEGORY: Module category
-- MODULE: Module name
+(defun mcg-module-loaded-p (category module)
+  "Check if MODULE in CATEGORY has been loaded."
+  (member (cons category (if (symbolp module) module (intern module)))
+          mcg-loaded-modules))
 
-Returns t if module is in mcg-disabled-modules."
-  (let ((cat-key (if (keywordp category) category
-                   (intern (concat ":" (symbol-name category)))))
-        (mod-sym (if (symbolp module) module (intern module))))
-    (let ((disabled (assq cat-key mcg-disabled-modules)))
-      (and disabled (memq mod-sym (cdr disabled))))))
+(defun mcg-list-enabled-modules ()
+  "Return a list of all enabled modules as (CATEGORY . MODULE) pairs."
+  (let ((result nil))
+    (dolist (cat-entry mcg-modules-alist)
+      (let ((category (car cat-entry))
+            (modules (cdr cat-entry)))
+        (dolist (module modules)
+          (push (cons category module) result))))
+    (nreverse result)))
+#+end_src
 
-#+END_SRC
+** mcg! Macro - Declarative Module Configuration
 
-** mcg! Macro
-#+BEGIN_SRC emacs-lisp
-;;; mcg! Macro
+声明式模块配置宏，用于定义启用的模块。
 
+*** Parse Modules Function
+
+#+begin_src emacs-lisp
 (defun mcg--parse-modules (args)
-  "Parse mcg! macro arguments.
-
-Arguments:
-- ARGS: mcg! macro argument list
-
-Returns parsed module list, format:
-  ((CATEGORY . ((MODULE . ENABLED) ...)) ...)
-
-Where ENABLED is t for enabled, nil for disabled (-module syntax)."
+  "Parse ARGS from mcg! macro into module alist.
+Returns alist of ((CATEGORY . ((MODULE . ENABLED) ...)) ...).
+Modules prefixed with `-' are marked as disabled."
   (let ((result nil)
         (current-category nil))
     (dolist (arg args)
@@ -325,1002 +186,516 @@ Where ENABLED is t for enabled, nil for disabled (-module syntax)."
         (setq current-category arg)
         (unless (assq current-category result)
           (push (cons current-category nil) result)))
-       
-       ;; Disabled module (-module syntax)
-       ((and (symbolp arg)
-             (string-prefix-p "-" (symbol-name arg)))
-        (when current-category
-          (let* ((mod-name (substring (symbol-name arg) 1))
-                 (mod-sym (intern mod-name))
-                 (entry (assq current-category result)))
-            (when entry
-              (setcdr entry (append (cdr entry)
-                                    (list (cons mod-sym nil))))))))
-       
-       ;; Enabled module
-       ((symbolp arg)
-        (when current-category
-          (let ((entry (assq current-category result)))
-            (when entry
-              (setcdr entry (append (cdr entry)
-                                    (list (cons arg t))))))))))
+       ;; Module (possibly disabled with - prefix)
+       ((and current-category (symbolp arg))
+        (let* ((name (symbol-name arg))
+               (disabled (string-prefix-p "-" name))
+               (module (if disabled
+                           (intern (substring name 1))
+                         arg))
+               (cat-entry (assq current-category result)))
+          (when cat-entry
+            (setcdr cat-entry
+                    (append (cdr cat-entry)
+                            (list (cons module (not disabled))))))))))
     (nreverse result)))
+#+end_src
 
+*** Apply Parsed Modules Function
+
+#+begin_src emacs-lisp
+(defun mcg--apply-parsed-modules (parsed)
+  "Apply PARSED module configuration to registry variables.
+PARSED is the output of `mcg--parse-modules'."
+  ;; Clear previous state
+  (setq mcg-modules-alist nil)
+  (setq mcg-disabled-modules nil)
+  (setq mcg-module-load-order nil)
+  
+  ;; Process parsed modules
+  (dolist (cat-entry parsed)
+    (let ((category (car cat-entry))
+          (modules (cdr cat-entry))
+          (enabled-list nil)
+          (disabled-list nil))
+      ;; Separate enabled and disabled modules
+      (dolist (mod-entry modules)
+        (let ((module (car mod-entry))
+              (enabled (cdr mod-entry)))
+          (if enabled
+              (progn
+                (push module enabled-list)
+                (push (cons category module) mcg-module-load-order))
+            (push module disabled-list))))
+      ;; Store in registry
+      (when enabled-list
+        (push (cons category (nreverse enabled-list)) mcg-modules-alist))
+      (when disabled-list
+        (push (cons category (nreverse disabled-list)) mcg-disabled-modules))))
+  
+  ;; Reverse to maintain declaration order
+  (setq mcg-modules-alist (nreverse mcg-modules-alist))
+  (setq mcg-disabled-modules (nreverse mcg-disabled-modules))
+  (setq mcg-module-load-order (nreverse mcg-module-load-order)))
+#+end_src
+
+*** mcg! Macro
+
+#+begin_src emacs-lisp
 (defmacro mcg! (&rest modules)
-  "Declare enabled modules.
+  "Declare enabled modules for MCG Emacs.
+MODULES is a list of :category module ... declarations.
+Modules prefixed with `-' are disabled.
 
-Usage:
+Example:
   (mcg! :ui theme modeline
         :editor defaults treesit
-        :lang lsp rust -lua)
-
-Syntax:
-- :category - Module category (e.g., :ui, :editor, :lang)
-- module - Enable module
-- -module - Disable module (with - prefix)
-
-This macro parses declarations and registers modules to mcg-modules-alist.
-Disabled modules are recorded to mcg-disabled-modules."
-  (let ((parsed (mcg--parse-modules modules)))
-    `(progn
-       ;; Clear previous registration (allow re-declaration)
-       (setq mcg-modules-alist nil)
-       (setq mcg-disabled-modules nil)
-       
-       ;; Register modules
-       ,@(mapcan
-          (lambda (cat-entry)
-            (let ((category (car cat-entry))
-                  (mods (cdr cat-entry)))
-              (mapcar
-               (lambda (mod-entry)
-                 (let ((module (car mod-entry))
-                       (enabled (cdr mod-entry)))
-                   (if enabled
-                       `(mcg--register-module ',category ',module)
-                     `(mcg--disable-module ',category ',module))))
-               mods)))
-          parsed)
-       
-       ;; Return registered module list
-       mcg-modules-alist)))
-
-#+END_SRC
+        :lang lsp rust -lua)"
+  `(mcg--apply-parsed-modules (mcg--parse-modules ',modules)))
+#+end_src
 
 ** Module Loading
-#+BEGIN_SRC emacs-lisp
-;;; Module Loading
 
-(defun mcg-module-depends (category module &rest deps)
-  "Declare module dependencies.
+模块加载功能，包括错误处理和详细追踪。
 
-Arguments:
-- CATEGORY: Current module category
-- MODULE: Current module name
-- DEPS: Dependency list, each element is (CATEGORY . MODULE)
+*** Error Traces Variable
 
-Usage (at the beginning of module file):
-  (mcg-module-depends :lang 'rust
-    '(:lang . lsp)
-    '(:editor . treesit))"
-  (let* ((cat-key (if (keywordp category) category
-                    (intern (concat ":" (symbol-name category)))))
-         (mod-sym (if (symbolp module) module (intern module)))
-         (mod-key (cons cat-key mod-sym)))
-    (setf (alist-get mod-key mcg-module-dependencies nil nil #'equal) deps)
-    (mcg-log "Registered dependencies for %s/%s: %s" cat-key mod-sym deps)))
+#+begin_src emacs-lisp
+(defvar mcg-module-error-traces nil
+  "Alist of detailed error traces for module load failures.
+Structure: (((CATEGORY . MODULE) . ERROR-PLIST) ...)
+ERROR-PLIST contains :message, :path, :timestamp, :backtrace.")
+#+end_src
 
-(defun mcg-get-module-deps (category module)
-  "Get module's dependency list."
-  (let* ((cat-key (if (keywordp category) category
-                    (intern (concat ":" (symbol-name category)))))
-         (mod-sym (if (symbolp module) module (intern module)))
-         (mod-key (cons cat-key mod-sym)))
-    (alist-get mod-key mcg-module-dependencies nil nil #'equal)))
+*** Load Module Function
 
-(defun mcg-load-module-deps (category module)
-  "Load all dependencies of a module.
-
-Returns t if all dependencies loaded successfully."
-  (let ((deps (mcg-get-module-deps category module))
-        (all-loaded t))
-    (dolist (dep deps)
-      (let ((dep-cat (car dep))
-            (dep-mod (cdr dep)))
-        (unless (mcg-module-loaded-p dep-cat dep-mod)
-          (mcg-log "Loading dependency: %s/%s for %s/%s"
-                   dep-cat dep-mod category module)
-          (unless (mcg-load-module dep-cat dep-mod)
-            (setq all-loaded nil)))))
-    all-loaded))
-
+#+begin_src emacs-lisp
 (defun mcg-load-module (category module)
-  "Load specified module.
-
-Arguments:
-- CATEGORY: Module category
-- MODULE: Module name
-
-Returns t if loaded successfully, nil if failed.
-Load failures are recorded but don't block continued execution."
-  (let* ((cat-key (if (keywordp category) category
-                    (intern (concat ":" (symbol-name category)))))
-         (mod-sym (if (symbolp module) module (intern module)))
-         (mod-key (cons cat-key mod-sym))
-         (path (mcg-module-path cat-key mod-sym))
-         (feature-name (intern (format "init-%s" mod-sym))))
-    
-    ;; Check if already loaded
+  "Load MODULE from CATEGORY.
+Returns t if successful, nil if failed.
+Errors are recorded in `mcg-module-load-errors'."
+  (let ((mod-key (cons category (if (symbolp module) module (intern module))))
+        (path (mcg-module-path category module)))
+    ;; Skip if already loaded
     (if (member mod-key mcg-loaded-modules)
         (progn
-          (mcg-log "Module already loaded: %s/%s" cat-key mod-sym)
+          (mcg-log "Module %s/%s already loaded" category module)
           t)
-      
-      ;; Check if disabled
-      (if (mcg-module-disabled-p cat-key mod-sym)
-          (progn
-            (mcg-log "Module disabled, skipping: %s/%s" cat-key mod-sym)
+      ;; Check if file exists
+      (if (not (file-exists-p path))
+          (let ((err-msg (format "Module file not found: %s" path)))
+            (push (cons mod-key err-msg) mcg-module-load-errors)
+            (mcg-log-warning "%s" err-msg)
             nil)
-        
-        ;; Try to load
-        (if (and path (file-exists-p path))
-            (condition-case err
-                (mcg-profile (format "module:%s/%s" cat-key mod-sym)
-                  (load path nil t)
-                  (push mod-key mcg-loaded-modules)
-                  (push mod-key mcg-module-load-order)
-                  ;; Load dependencies (if declared)
-                  (mcg-load-module-deps cat-key mod-sym)
-                  (mcg-log "Loaded module: %s/%s" cat-key mod-sym)
-                  ;; Run hook
-                  (run-hooks 'mcg-module-load-hook)
-                  t)
-              (error
-               (let ((error-msg (format "Error loading %s/%s: %s"
-                                        cat-key mod-sym
-                                        (error-message-string err))))
-                 (push (cons mod-key error-msg) mcg-module-load-errors)
-                 (mcg-log "Error: %s" error-msg))
-               nil))
-          
-          ;; File doesn't exist
-          (let ((error-msg (format "Module file not found: %s/%s (path: %s)"
-                                   cat-key mod-sym path)))
-            (push (cons mod-key error-msg) mcg-module-load-errors)
-            (mcg-log "Warning: %s" error-msg))
-          nil)))))
+        ;; Load the module with error handling
+        (condition-case err
+            (mcg-profile (format "%s/%s" category module)
+              (load path nil t)
+              (push mod-key mcg-loaded-modules)
+              (run-hook-with-args 'mcg-module-load-hook category module)
+              (mcg-log "Loaded module %s/%s" category module)
+              t)
+          (error
+           (let ((err-msg (error-message-string err)))
+             (push (cons mod-key err-msg) mcg-module-load-errors)
+             (mcg-log-error "Failed to load %s/%s: %s" category module err-msg)
+             nil)))))))
+#+end_src
 
-(defun mcg-load-module-safe (category module)
-  "Safely load module, catching all errors.
+*** Load Module With Trace Function
 
-Arguments:
-- CATEGORY: Module category
-- MODULE: Module name
-
-Same as mcg-load-module, but ensures no errors are thrown."
-  (condition-case err
-      (mcg-load-module category module)
-    (error
-     (mcg-log "Critical error loading %s/%s: %s"
-              category module (error-message-string err))
-     nil)))
-
+#+begin_src emacs-lisp
 (defun mcg-load-module-with-trace (category module)
-  "Load MODULE with full error trace.
-
-Arguments:
-- CATEGORY: Module category
-- MODULE: Module name
-
-This function captures full backtrace on error and stores structured
-error information. Unlike `mcg-load-module', this function stores
-detailed trace information for debugging purposes.
-
-Returns t if loaded successfully, nil if failed.
-Errors are recorded with full backtrace but don't block continued execution."
-  (let* ((cat-key (if (keywordp category) category
-                    (intern (concat ":" (symbol-name category)))))
-         (mod-sym (if (symbolp module) module (intern module)))
-         (mod-key (cons cat-key mod-sym))
-         (path (mcg-module-path cat-key mod-sym)))
-    
-    ;; Check if already loaded
+  "Load MODULE from CATEGORY with detailed error tracing.
+Returns t if successful, nil if failed.
+Errors are recorded with full trace in `mcg-module-error-traces' and `mcg-module-load-errors'."
+  (let ((mod-key (cons category (if (symbolp module) module (intern module))))
+        (path (mcg-module-path category module))
+        (mod-sym (if (symbolp module) module (intern module))))
+    ;; Skip if already loaded
     (if (member mod-key mcg-loaded-modules)
         (progn
-          (mcg-log "Module already loaded: %s/%s" cat-key mod-sym)
+          (mcg-log "Module %s/%s already loaded" category module)
           t)
-      
-      ;; Check if disabled
-      (if (mcg-module-disabled-p cat-key mod-sym)
-          (progn
-            (mcg-log "Module disabled, skipping: %s/%s" cat-key mod-sym)
-            nil)
-        
-        ;; Try to load with trace capture
-        (if (and path (file-exists-p path))
-            (condition-case-unless-debug err
-                (mcg-profile (format "module:%s/%s" cat-key mod-sym)
-                  (load path nil t)
-                  (push mod-key mcg-loaded-modules)
-                  (push mod-key mcg-module-load-order)
-                  ;; Load dependencies (if declared)
-                  (mcg-load-module-deps cat-key mod-sym)
-                  (mcg-log "Loaded module: %s/%s" cat-key mod-sym)
-                  ;; Run hook
-                  (run-hooks 'mcg-module-load-hook)
-                  t)
-              (error
-               ;; Capture full backtrace
-               (let* ((trace (with-output-to-string (backtrace)))
-                      (error-info (list :category cat-key
-                                        :module mod-sym
-                                        :error (error-message-string err)
-                                        :error-data err
-                                        :trace trace
-                                        :path path
-                                        :timestamp (current-time))))
-                 ;; Store structured error information
-                 (push (cons mod-key error-info) mcg-module-load-errors)
-                 (mcg-log "Error loading %s/%s: %s" cat-key mod-sym
-                          (error-message-string err))
-                 (mcg-log "Trace:\n%s" trace))
-               nil))
-          
-          ;; File doesn't exist
-          (let ((error-info (list :category cat-key
-                                  :module mod-sym
-                                  :error (format "Module file not found: %s" path)
-                                  :error-data nil
-                                  :trace nil
-                                  :path path
-                                  :timestamp (current-time))))
+      ;; Check if file exists
+      (if (not (file-exists-p path))
+          (let* ((err-msg (format "Module file not found: %s" path))
+                 (error-info (list :category category
+                                   :module mod-sym
+                                   :error err-msg
+                                   :message err-msg
+                                   :path path
+                                   :timestamp (current-time-string)
+                                   :backtrace nil)))
+            ;; Store detailed error info in both places
             (push (cons mod-key error-info) mcg-module-load-errors)
-            (mcg-log "Warning: Module file not found: %s/%s (path: %s)"
-                     cat-key mod-sym path))
-          nil)))))
+            (push (cons mod-key error-info) mcg-module-error-traces)
+            (mcg-log-warning "%s" err-msg)
+            nil)
+        ;; Load the module with error handling
+        (condition-case err
+            (mcg-profile (format "%s/%s" category module)
+              (load path nil t)
+              (push mod-key mcg-loaded-modules)
+              (run-hook-with-args 'mcg-module-load-hook category module)
+              (mcg-log "Loaded module %s/%s" category module)
+              t)
+          (error
+           (let* ((err-msg (error-message-string err))
+                  (error-info (list :category category
+                                    :module mod-sym
+                                    :error err-msg
+                                    :message err-msg
+                                    :path path
+                                    :timestamp (current-time-string)
+                                    :backtrace (with-output-to-string (backtrace)))))
+             ;; Store detailed error info in both places
+             (push (cons mod-key error-info) mcg-module-load-errors)
+             (push (cons mod-key error-info) mcg-module-error-traces)
+             (mcg-log-error "Failed to load %s/%s: %s" category module err-msg)
+             nil)))))))
+#+end_src
 
+*** Error Trace Functions
+
+#+begin_src emacs-lisp
 (defun mcg-get-module-error-trace (category module)
-  "Get the error trace for a failed module load.
+  "Get the error trace for MODULE in CATEGORY.
+Returns the error plist or nil if no error recorded."
+  (let ((mod-key (cons category (if (symbolp module) module (intern module)))))
+    (cdr (assoc mod-key mcg-module-error-traces))))
 
-Arguments:
-- CATEGORY: Module category
-- MODULE: Module name
+(defun mcg-format-module-error (category-or-info &optional module)
+  "Format the error for MODULE in CATEGORY as a human-readable string.
+CATEGORY-OR-INFO can be either:
+- A category keyword (with MODULE as second argument)
+- An error-info plist directly"
+  (let ((error-info (if module
+                        (mcg-get-module-error-trace category-or-info module)
+                      category-or-info)))
+    (if error-info
+        (format "Module: %s/%s\nError: %s\nPath: %s\nTime: %s"
+                (plist-get error-info :category)
+                (plist-get error-info :module)
+                (plist-get error-info :error)
+                (plist-get error-info :path)
+                (plist-get error-info :timestamp))
+      (if module
+          (format "No error recorded for %s/%s" category-or-info module)
+        "No error info provided"))))
+#+end_src
 
-Returns the error info plist if the module failed to load, nil otherwise."
-  (let* ((cat-key (if (keywordp category) category
-                    (intern (concat ":" (symbol-name category)))))
-         (mod-sym (if (symbolp module) module (intern module)))
-         (mod-key (cons cat-key mod-sym))
-         (error-entry (assoc mod-key mcg-module-load-errors)))
-    (when error-entry
-      (cdr error-entry))))
+*** Batch Loading Functions
 
-(defun mcg-format-module-error (error-info)
-  "Format ERROR-INFO plist into a human-readable string.
-
-Arguments:
-- ERROR-INFO: Error info plist from mcg-module-load-errors
-
-Returns a formatted string with error details."
-  (if (listp error-info)
-      (if (plist-get error-info :category)
-          ;; New structured format
-          (let ((category (plist-get error-info :category))
-                (module (plist-get error-info :module))
-                (error-msg (plist-get error-info :error))
-                (trace (plist-get error-info :trace))
-                (path (plist-get error-info :path)))
-            (concat
-             (format "Module: %s/%s\n" category module)
-             (format "Path: %s\n" (or path "N/A"))
-             (format "Error: %s\n" error-msg)
-             (when trace
-               (format "\nBacktrace:\n%s" trace))))
-        ;; Old string format (for backward compatibility)
-        (format "%s" error-info))
-    (format "%s" error-info)))
-
+#+begin_src emacs-lisp
 (defun mcg-load-modules-by-category (category)
-  "Load all enabled modules in a category.
-
-Arguments:
-- CATEGORY: Module category
-
-Returns the number of successfully loaded modules."
-  (let ((cat-key (if (keywordp category) category
-                   (intern (concat ":" (symbol-name category)))))
-        (loaded-count 0))
-    (let ((entry (assq cat-key mcg-modules-alist)))
-      (when entry
-        (dolist (module (cdr entry))
-          (when (mcg-load-module cat-key module)
-            (cl-incf loaded-count)))))
-    loaded-count))
-
-(defun mcg-load-all-modules ()
-  "Load all registered modules.
-
-Loads in the order of mcg-modules-alist.
-Returns the total number of successfully loaded modules."
-  (let ((total-loaded 0))
-    (dolist (entry mcg-modules-alist)
-      (let ((category (car entry)))
-        (cl-incf total-loaded (mcg-load-modules-by-category category))))
-    total-loaded))
-
-#+END_SRC
-
-
-** Deferred Loading
-#+BEGIN_SRC emacs-lisp
-;;; Deferred Loading
-
-(defvar mcg-deferred-modules nil
-  "List of deferred modules.
-
-Format is alist of ((CATEGORY . MODULE) . TRIGGER).
-TRIGGER can be:
-- hook name (symbol)
-- auto-mode-alist entry
-- file extension string
-- list of hooks (for multiple mode support)")
-
-(defvar mcg-module-triggers
-  '(;; Language module triggers (using tree-sitter mode hooks)
-    ((:lang . rust) . (rust-mode-hook rust-ts-mode-hook))
-    ((:lang . python) . (python-mode-hook python-ts-mode-hook))
-    ((:lang . typescript) . (typescript-mode-hook typescript-ts-mode-hook tsx-ts-mode-hook js-mode-hook js-ts-mode-hook))
-    ((:lang . web) . ("\\.vue\\'" . web-mode))
-    ((:lang . lua) . (lua-mode-hook lua-ts-mode-hook))
-    ((:lang . zig) . (zig-mode-hook zig-ts-mode-hook))
-    ((:lang . cpp) . (c-mode-hook c++-mode-hook c-ts-mode-hook c++-ts-mode-hook))
-    ((:lang . clojure) . (clojure-mode-hook clojurescript-mode-hook clojurec-mode-hook))
-    ;; Writing module triggers
-    ((:writing . markdown) . (markdown-mode-hook gfm-mode-hook))
-    ((:writing . vale) . (markdown-mode-hook)))
-  "Module trigger mapping.
-
-Format is alist of ((CATEGORY . MODULE) . TRIGGER).
-TRIGGER can be:
-- (PATTERN . MODE) - auto-mode-alist entry
-- HOOK-SYMBOL - single hook
-- (HOOK1 HOOK2 ...) - list of hooks for multiple mode support")
-
-(defun mcg--find-mode-extension-path (mode)
-  "Automatically find extension path for MODE.
-
-Prioritizes cache, scans directory on cache miss."
-  (let ((mode-file (concat (symbol-name mode) ".el")))
-    ;; Check cache first
-    (or (and (boundp 'mcg-extension-cache)
-             (mcg-cache-lookup mode-file))
-        ;; Cache miss, scan directory
-        (catch 'found
-          (dolist (category-dir (directory-files mcg-extensions-dir t "^[^.]"))
-            (when (file-directory-p category-dir)
-              (dolist (ext-dir (directory-files category-dir t "^[^.]"))
-                (when (and (file-directory-p ext-dir)
-                           (file-exists-p (expand-file-name mode-file ext-dir)))
-                  ;; Store in cache
-                  (when (fboundp 'mcg-cache-store)
-                    (mcg-cache-store mode-file ext-dir))
-                  (throw 'found ext-dir)))
-              ;; Check second-level subdirectories
-              (dolist (sub-dir (directory-files category-dir t "^[^.]"))
-                (when (file-directory-p sub-dir)
-                  (dolist (ext-dir (directory-files sub-dir t "^[^.]"))
-                    (when (and (file-directory-p ext-dir)
-                               (file-exists-p (expand-file-name mode-file ext-dir)))
-                      (when (fboundp 'mcg-cache-store)
-                        (mcg-cache-store mode-file ext-dir))
-                      (throw 'found ext-dir)))))))
-          nil))))
-
-(defun mcg--setup-mode-autoload (mode)
-  "Set up autoload for MODE.
-
-Arguments:
-- MODE: mode function symbol
-
-Automatically scans extension directory to find extension path for MODE."
-  (unless (fboundp mode)
-    (let ((full-path (mcg--find-mode-extension-path mode)))
-      (when (and full-path (file-directory-p full-path))
-        ;; Add to load-path
-        (add-to-list 'load-path full-path)
-        ;; Set up autoload
-        (autoload mode (symbol-name mode) nil t)))))
-
-(defun mcg-defer-module (category module &optional trigger)
-  "Defer loading of module.
-
-Arguments:
-- CATEGORY: Module category
-- MODULE: Module name
-- TRIGGER: Trigger condition (optional)
-
-If TRIGGER is not specified, uses default trigger from mcg-module-triggers.
-TRIGGER can be:
-- (PATTERN . MODE) - auto-mode-alist entry
-- HOOK-SYMBOL - single hook
-- (HOOK1 HOOK2 ...) - list of hooks"
-  (let* ((cat-key (if (keywordp category) category
-                    (intern (concat ":" (symbol-name category)))))
-         (mod-sym (if (symbolp module) module (intern module)))
-         (mod-key (cons cat-key mod-sym))
-         (trig (or trigger
-                   (cdr (assoc mod-key mcg-module-triggers)))))
-    
-    ;; Record deferred loading
-    (push (cons mod-key trig) mcg-deferred-modules)
-    
-    ;; Set up trigger
-    (when trig
-      (cond
-       ;; List of hooks (for multiple mode support)
-       ((and (listp trig) (symbolp (car trig)) (string-suffix-p "-hook" (symbol-name (car trig))))
-        (let ((category cat-key)
-              (module mod-sym))
-          (dolist (hook trig)
-            ;; Use depth -90 to run before lsp-bridge (which uses default depth 0)
-            (add-hook hook
-                      (lambda ()
-                        (mcg--trigger-deferred-load category module))
-                      -90))))
-       
-       ;; auto-mode-alist trigger (PATTERN . MODE)
-       ((and (consp trig) (stringp (car trig)))
-        (let ((pattern (car trig))
-              (mode (cdr trig))
-              (category cat-key)
-              (module mod-sym))
-          ;; Set up autoload first to ensure mode function exists
-          (mcg--setup-mode-autoload mode)
-          ;; Add auto-mode-alist entry
-          (add-to-list 'auto-mode-alist (cons pattern mode))
-          ;; Set up mode hook to load module configuration
-          (let ((hook-name (intern (format "%s-hook" mode))))
-            ;; Use depth -90 to run before lsp-bridge (which uses default depth 0)
-            (add-hook hook-name
-                      (lambda ()
-                        (mcg--trigger-deferred-load category module))
-                      -90))))
-       
-       ;; Single hook trigger
-       ((symbolp trig)
-        (let ((category cat-key)
-              (module mod-sym))
-          ;; Use depth -90 to run before lsp-bridge (which uses default depth 0)
-          (add-hook trig
-                    (lambda ()
-                      (mcg--trigger-deferred-load category module))
-                    -90)))))
-    
-    (mcg-log "Deferred module: %s/%s (trigger: %s)" cat-key mod-sym trig)))
-
-(defun mcg--trigger-deferred-load (category module)
-  "Trigger deferred loading.
-
-Arguments:
-- CATEGORY: Module category
-- MODULE: Module name
-
-Internal function, called by triggers."
-  (let ((mod-key (cons category module)))
-    ;; Only load once
-    (unless (member mod-key mcg-loaded-modules)
-      (mcg-log "Triggering deferred load: %s/%s" category module)
+  "Load all enabled modules in CATEGORY."
+  (let ((modules (cdr (assq category mcg-modules-alist))))
+    (dolist (module modules)
       (mcg-load-module category module))))
 
+(defun mcg-load-all-modules ()
+  "Load all enabled modules in load order."
+  (dolist (mod-key mcg-module-load-order)
+    (let ((category (car mod-key))
+          (module (cdr mod-key)))
+      (mcg-load-module category module))))
+#+end_src
+
+** Deferred Loading
+
+延迟加载功能，根据文件模式触发模块加载。
+
+#+begin_src emacs-lisp
+(defun mcg-defer-module (category module &optional trigger)
+  "Set up deferred loading for MODULE in CATEGORY.
+TRIGGER is (PATTERN . MODE) or looked up from `mcg-module-triggers'."
+  (let* ((mod-key (cons category (if (symbolp module) module (intern module))))
+         (trigger (or trigger
+                      (cdr (assoc mod-key mcg-module-triggers)))))
+    (when trigger
+      ;; Add to deferred modules list
+      (push (cons mod-key trigger) mcg-deferred-modules)
+      
+      ;; Set up auto-mode-alist entry
+      (let ((pattern (car trigger))
+            (mode (cdr trigger)))
+        (add-to-list 'auto-mode-alist
+                     (cons pattern
+                           (lambda ()
+                             (mcg--trigger-deferred-load mod-key)
+                             (funcall mode)))))
+      
+      (mcg-log "Deferred module %s/%s with trigger %s" category module trigger))))
+
+(defun mcg--trigger-deferred-load (mod-key)
+  "Trigger loading of deferred module MOD-KEY.
+MOD-KEY is (CATEGORY . MODULE)."
+  (let ((category (car mod-key))
+        (module (cdr mod-key)))
+    ;; Remove from deferred list
+    (setq mcg-deferred-modules
+          (assoc-delete-all mod-key mcg-deferred-modules))
+    ;; Load the module
+    (mcg-load-module category module)))
+
 (defun mcg-setup-deferred-loading ()
-  "Set up deferred loading for all language modules.
+  "Set up deferred loading for all language modules with triggers."
+  (dolist (mod-key mcg-module-load-order)
+    (let* ((category (car mod-key))
+           (module (cdr mod-key))
+           (trigger (cdr (assoc mod-key mcg-module-triggers))))
+      ;; Only defer modules that have triggers defined
+      (when trigger
+        (mcg-defer-module category module trigger)))))
 
-Iterates through mcg-module-triggers, setting up deferred loading for all registered language modules."
-  (dolist (trigger-entry mcg-module-triggers)
-    (let* ((mod-key (car trigger-entry))
-           (category (car mod-key))
-           (module (cdr mod-key)))
-      ;; Only set up deferred loading for registered modules
-      (when (mcg-module-enabled-p category module)
-        (mcg-defer-module category module)))))
-
-#+END_SRC
+(defun mcg-list-deferred-modules ()
+  "Return list of currently deferred modules."
+  (mapcar #'car mcg-deferred-modules))
+#+end_src
 
 ** Idle Loading
-#+BEGIN_SRC emacs-lisp
-;;; Idle Loading
 
-(defvar mcg-idle-load-modules nil
-  "Modules to load during idle time.
+空闲加载功能，在 Emacs 空闲时加载模块。
 
-Format: ((CATEGORY . MODULE) ...)
-
-These modules are loaded after Emacs becomes idle for
-`mcg-idle-load-delay' seconds. This is useful for modules
-that are not immediately needed at startup but should be
-available soon after.")
-
-(defvar mcg-idle-load-delay 2
-  "Seconds to wait before idle loading.
-
-After Emacs startup completes and becomes idle for this many
-seconds, modules in `mcg-idle-load-modules' will be loaded.")
-
-(defvar mcg-idle-load-timer nil
-  "Timer for idle loading.
-
-Internal variable to track the idle timer.")
-
-(defvar mcg-idle-loaded-modules nil
-  "List of modules loaded via idle loading.
-
-Format: ((CATEGORY . MODULE) ...)
-
-Tracks which modules have been loaded through the idle loading
-mechanism to avoid duplicate loading.")
-
-(defun mcg--idle-load-next-module ()
-  "Load the next module from idle load queue.
-
-Internal function called by the idle timer.
-Loads one module at a time to avoid blocking."
-  (when mcg-idle-load-modules
-    (let* ((mod-key (car mcg-idle-load-modules))
-           (category (car mod-key))
-           (module (cdr mod-key)))
-      ;; Remove from queue
-      (setq mcg-idle-load-modules (cdr mcg-idle-load-modules))
-      ;; Load if not already loaded
-      (unless (member mod-key mcg-loaded-modules)
-        (mcg-log "Idle loading: %s/%s" category module)
-        (when (mcg-load-module category module)
-          (push mod-key mcg-idle-loaded-modules)))
-      ;; Schedule next module if queue not empty
-      (when mcg-idle-load-modules
-        (run-with-idle-timer 0.1 nil #'mcg--idle-load-next-module)))))
-
-(defun mcg-setup-idle-loading ()
-  "Setup idle loading for specified modules.
-
-Schedules modules in `mcg-idle-load-modules' to be loaded
-after Emacs becomes idle for `mcg-idle-load-delay' seconds.
-
-This function should be called after module declaration (mcg!)
-and after immediate module loading is complete.
-
-Usage example:
-  ;; In init.org, after mcg! declaration:
-  (mcg-add-idle-load-category :completion)
-  (mcg-add-idle-load-category :enhance)
-  (mcg-setup-idle-loading)"
-  (when mcg-idle-load-modules
-    ;; Cancel any existing timer
-    (when (timerp mcg-idle-load-timer)
-      (cancel-timer mcg-idle-load-timer))
-    ;; Setup new idle timer
-    (setq mcg-idle-load-timer
-          (run-with-idle-timer mcg-idle-load-delay nil
-                               #'mcg--idle-load-next-module))
-    (mcg-log "Idle loading scheduled: %d modules after %d seconds"
-             (length mcg-idle-load-modules) mcg-idle-load-delay)))
-
+#+begin_src emacs-lisp
 (defun mcg-add-idle-load-module (category module)
-  "Add a module to the idle load queue.
-
-Arguments:
-- CATEGORY: Module category (keyword)
-- MODULE: Module name (symbol)
-
-The module will be loaded when Emacs becomes idle.
-
-Usage examples:
-  ;; Add a single module to idle loading
-  (mcg-add-idle-load-module :completion 'vertico)
-  
-  ;; Add multiple modules
-  (mcg-add-idle-load-module :enhance 'which-key)
-  (mcg-add-idle-load-module :enhance 'helpful)"
-  (let* ((cat-key (if (keywordp category) category
-                    (intern (concat ":" (symbol-name category)))))
-         (mod-sym (if (symbolp module) module (intern module)))
-         (mod-key (cons cat-key mod-sym)))
-    ;; Only add if enabled and not already loaded
-    (when (and (mcg-module-enabled-p cat-key mod-sym)
-               (not (member mod-key mcg-loaded-modules))
-               (not (member mod-key mcg-idle-load-modules)))
-      (push mod-key mcg-idle-load-modules)
-      (mcg-log "Added to idle load queue: %s/%s" cat-key mod-sym))))
+  "Add MODULE in CATEGORY to idle load list.
+Skips if module is already loaded or already in the queue."
+  (let ((mod-key (cons category (if (symbolp module) module (intern module)))))
+    ;; Skip if already loaded
+    (unless (or (member mod-key mcg-loaded-modules)
+                (member mod-key mcg-idle-loaded-modules)
+                (member mod-key mcg-idle-load-modules))
+      (push mod-key mcg-idle-load-modules))))
 
 (defun mcg-add-idle-load-category (category)
-  "Add all modules in a category to the idle load queue.
+  "Add all enabled modules in CATEGORY to idle load list."
+  (let ((modules (cdr (assq category mcg-modules-alist))))
+    (dolist (module modules)
+      (mcg-add-idle-load-module category module))))
 
-Arguments:
-- CATEGORY: Module category (keyword)
+(defun mcg--idle-load-next ()
+  "Load the next module from idle load list."
+  (when mcg-idle-load-modules
+    (let* ((mod-key (pop mcg-idle-load-modules))
+           (category (car mod-key))
+           (module (cdr mod-key)))
+      (mcg-load-module category module)
+      (push mod-key mcg-idle-loaded-modules)
+      ;; Schedule next idle load if more modules remain
+      (when mcg-idle-load-modules
+        (setq mcg-idle-load-timer
+              (run-with-idle-timer mcg-idle-load-delay nil #'mcg--idle-load-next))))))
 
-All enabled modules in the category will be added to the idle load queue.
+;; Alias for backward compatibility
+(defalias 'mcg--idle-load-next-module 'mcg--idle-load-next)
 
-Usage examples:
-  ;; Add all completion modules to idle loading
-  (mcg-add-idle-load-category :completion)
-  
-  ;; Add all enhance modules to idle loading
-  (mcg-add-idle-load-category :enhance)"
-  (let ((cat-key (if (keywordp category) category
-                   (intern (concat ":" (symbol-name category))))))
-    (let ((entry (assq cat-key mcg-modules-alist)))
-      (when entry
-        (dolist (module (cdr entry))
-          (mcg-add-idle-load-module cat-key module))))))
+(defun mcg-setup-idle-loading ()
+  "Set up idle loading for modules in `mcg-idle-load-modules'."
+  (when mcg-idle-load-modules
+    (setq mcg-idle-load-timer
+          (run-with-idle-timer mcg-idle-load-delay nil #'mcg--idle-load-next))
+    (mcg-log "Scheduled %d modules for idle loading" (length mcg-idle-load-modules))))
 
 (defun mcg-list-idle-load-modules ()
-  "List modules scheduled for idle loading.
-
-Returns a list of (CATEGORY . MODULE)."
+  "Return list of modules pending idle loading."
   mcg-idle-load-modules)
 
 (defun mcg-list-idle-loaded-modules ()
-  "List modules that have been loaded via idle loading.
-
-Returns a list of (CATEGORY . MODULE)."
+  "Return list of modules that have been loaded via idle loading."
   mcg-idle-loaded-modules)
-
-#+END_SRC
+#+end_src
 
 ** mcg-after! Macro
-#+BEGIN_SRC emacs-lisp
-;;; mcg-after! Macro
 
+在特性加载后执行代码的宏。
+
+#+begin_src emacs-lisp
 (defmacro mcg-after! (feature &rest body)
   "Execute BODY after FEATURE is loaded.
-
-Arguments:
-- FEATURE: feature symbol or module identifier (CATEGORY . MODULE)
-- BODY: Code to execute
-
-Usage:
-  (mcg-after! magit
-    (setq magit-display-buffer-function ...))
-
-  (mcg-after! (:lang . rust)
-    (setq rust-format-on-save t))"
+FEATURE can be a symbol (feature name) or a module key (CATEGORY . MODULE)."
   (declare (indent 1))
-  (if (and (consp feature) (keywordp (car feature)))
-      ;; Module identifier
-      (let ((category (car feature))
-            (module (cdr feature)))
-        `(if (member (cons ',category ',module) mcg-loaded-modules)
-             (progn ,@body)
-           (add-hook 'mcg-module-load-hook
-                     (lambda ()
-                       (when (member (cons ',category ',module) mcg-loaded-modules)
-                         ,@body)))))
-    ;; feature symbol
-    `(with-eval-after-load ',feature
-       ,@body)))
+  `(with-eval-after-load ',feature
+     ,@body))
+#+end_src
 
-(defvar mcg-module-load-hook nil
-  "Hook run after module loading.
+** Module Query and Management Commands
 
-This hook runs after each module is loaded.")
+模块查询和管理命令。
 
-#+END_SRC
+*** List Modules Content Function
 
-** Module Query Functions
-#+BEGIN_SRC emacs-lisp
-;;; Module Query Functions
-
-(defun mcg-list-enabled-modules ()
-  "List all enabled modules.
-
-Returns a list of (CATEGORY . MODULE)."
-  (let ((result nil))
-    (dolist (entry mcg-modules-alist)
-      (let ((category (car entry)))
-        (dolist (module (cdr entry))
-          (unless (mcg-module-disabled-p category module)
-            (push (cons category module) result)))))
-    (nreverse result)))
-
-(defun mcg-list-loaded-modules ()
-  "List all loaded modules.
-
-Returns a list of (CATEGORY . MODULE)."
-  mcg-loaded-modules)
-
-(defun mcg-list-deferred-modules ()
-  "List all deferred modules.
-
-Returns an alist of ((CATEGORY . MODULE) . TRIGGER)."
-  mcg-deferred-modules)
-
-(defun mcg-module-loaded-p (category module)
-  "Check if module is loaded.
-
-Arguments:
-- CATEGORY: Module category
-- MODULE: Module name
-
-Returns t if module is loaded."
-  (let ((cat-key (if (keywordp category) category
-                   (intern (concat ":" (symbol-name category)))))
-        (mod-sym (if (symbolp module) module (intern module))))
-    (member (cons cat-key mod-sym) mcg-loaded-modules)))
-
-(defun mcg-get-module-errors ()
-  "Get all module load errors.
-
-Returns an alist of ((CATEGORY . MODULE) . ERROR-MESSAGE)."
-  mcg-module-load-errors)
-
-#+END_SRC
-
-** Interactive Commands
-#+BEGIN_SRC emacs-lisp
-;;; Interactive Commands
-
-(defvar mcg-modules-popup-buffer "*MCG Modules*"
-  "Buffer name for modules popup.")
-
-(defun mcg--modules-popup-scroll-down ()
-  "Scroll popup content down."
-  (when-let* ((buf (get-buffer mcg-modules-popup-buffer))
-              (frame (buffer-local-value 'posframe--frame buf)))
-    (with-selected-frame frame
-      (ignore-errors (scroll-up 3)))))
-
-(defun mcg--modules-popup-scroll-up ()
-  "Scroll popup content up."
-  (when-let* ((buf (get-buffer mcg-modules-popup-buffer))
-              (frame (buffer-local-value 'posframe--frame buf)))
-    (with-selected-frame frame
-      (ignore-errors (scroll-down 3)))))
-
-(defun mcg-list-modules ()
-  "Display all enabled modules and their status.
-
-Uses posframe to display module list popup centered on screen.
-Keys: j/k scroll, q/ESC exit"
-  (interactive)
-  (require 'posframe)
-  
-  (let* ((buf (get-buffer-create mcg-modules-popup-buffer))
-         (content (mcg--generate-modules-content))
-         (hint "j/k scroll | q/ESC exit")
-         (padding (make-string (/ (- 60 (string-width hint)) 2) ?\s)))
-    
-    (with-current-buffer buf
-      (let ((inhibit-read-only t))
-        (erase-buffer)
-        (insert content))
-      (setq-local buffer-read-only t)
-      (setq-local cursor-type nil)
-      (setq-local header-line-format
-                  (propertize (concat padding hint)
-                              'face '(:foreground "#61AFEF" :weight bold)))
-      (goto-char (point-min)))
-    
-    ;; Use posframe to display centered popup
-    (posframe-show buf
-                   :position (point)
-                   :poshandler #'posframe-poshandler-frame-center
-                   :internal-border-width 2
-                   :internal-border-color "#61AFEF"
-                   :background-color "#282C34"
-                   :foreground-color "#ABB2BF"
-                   :width 62
-                   :height 30
-                   :respect-header-line t
-                   :accept-focus nil)
-    
-    ;; Use read-key loop to handle keys
-    (unwind-protect
-        (catch 'exit-popup
-          (while t
-            (let ((key (read-key)))
-              (cond
-               ;; Exit
-               ((memq key '(?q 27))  ; q or ESC
-                (throw 'exit-popup nil))
-               ;; Scroll down
-               ((memq key '(?j ?n 14))  ; j, n, C-n
-                (mcg--modules-popup-scroll-down))
-               ((equal key 'down)
-                (mcg--modules-popup-scroll-down))
-               ;; Scroll up
-               ((memq key '(?k ?p 16))  ; k, p, C-p
-                (mcg--modules-popup-scroll-up))
-               ((equal key 'up)
-                (mcg--modules-popup-scroll-up))
-               ;; Ignore other keys
-               (t nil)))))
-      ;; Cleanup
-      (posframe-hide mcg-modules-popup-buffer))))
-
-(defun mcg--generate-modules-content ()
-  "Generate module list content string."
+#+begin_src emacs-lisp
+(defun mcg--list-modules-content ()
+  "Generate modules list content string."
   (with-temp-buffer
-    (insert "╔══════════════════════════════════════════════════════════╗\n")
-    (insert "║                    MCG Module List                       ║\n")
-    (insert "╚══════════════════════════════════════════════════════════╝\n\n")
-    
-    ;; Statistics
-    (let ((enabled (length (mcg-list-enabled-modules)))
-          (loaded (length mcg-loaded-modules))
-          (deferred (length mcg-deferred-modules))
-          (idle-pending (length mcg-idle-load-modules))
-          (idle-loaded (length mcg-idle-loaded-modules))
-          (errors (length mcg-module-load-errors)))
-      (insert (format "  Enabled: %d | Loaded: %d | Deferred: %d | Idle: %d/%d | Errors: %d\n\n"
-                      enabled loaded deferred idle-loaded idle-pending errors)))
-    
-    ;; Display modules by category
-    (insert (format "  %-12s %-20s %-10s %-6s\n"
-                    "Category" "Module" "Status" "File"))
-    (insert "  ")
-    (insert (make-string 52 ?─))
     (insert "\n")
+    (insert "    ╔═══════════════════════════════════════════╗\n")
+    (insert "    ║           MCG 模块列表                    ║\n")
+    (insert "    ╚═══════════════════════════════════════════╝\n\n")
     
-    (dolist (entry mcg-modules-alist)
-      (let ((category (car entry)))
-        (dolist (module (cdr entry))
-          (let* ((mod-key (cons category module))
-                 (loaded (member mod-key mcg-loaded-modules))
-                 (deferred (assoc mod-key mcg-deferred-modules))
-                 (idle-pending (member mod-key mcg-idle-load-modules))
-                 (idle-loaded (member mod-key mcg-idle-loaded-modules))
-                 (disabled (mcg-module-disabled-p category module))
-                 (exists (mcg-module-exists-p category module))
-                 (status (cond
-                          (disabled "Disabled")
-                          (loaded (if idle-loaded "Idle-Loaded" "Loaded"))
-                          (idle-pending "Idle-Pend")
-                          (deferred "Deferred")
-                          (t "Pending"))))
-            (insert (format "  %-12s %-20s %-10s %-6s\n"
-                            (substring (symbol-name category) 1)
-                            module
-                            status
-                            (if exists "✓" "✗")))))))
+    ;; Summary
+    (let ((total-enabled (length (mcg-list-enabled-modules)))
+          (total-loaded (length mcg-loaded-modules))
+          (total-deferred (length mcg-deferred-modules))
+          (total-errors (length mcg-module-load-errors)))
+      (insert (format "    已启用: %d | 已加载: %d | 延迟: %d | 错误: %d\n\n"
+                      total-enabled total-loaded total-deferred total-errors)))
     
-    ;; Display errors
+    ;; Enabled modules by category
+    (insert "    ─────────── 已启用模块 ───────────\n\n")
+    (if mcg-modules-alist
+        (dolist (cat-entry mcg-modules-alist)
+          (let ((category (car cat-entry))
+                (modules (cdr cat-entry)))
+            (insert (format "    【%s】\n" (substring (symbol-name category) 1)))
+            (dolist (module modules)
+              (let* ((mod-key (cons category module))
+                     (loaded (member mod-key mcg-loaded-modules))
+                     (deferred (assoc mod-key mcg-deferred-modules))
+                     (status (cond (loaded "✓")
+                                   (deferred "⏳")
+                                   (t "○"))))
+                (insert (format "      %s %-18s\n" status module))))
+            (insert "\n")))
+      (insert "    (无已启用模块)\n\n"))
+    
+    ;; Disabled modules
+    (when mcg-disabled-modules
+      (insert "    ─────────── 已禁用模块 ───────────\n\n")
+      (dolist (cat-entry mcg-disabled-modules)
+        (let ((category (car cat-entry))
+              (modules (cdr cat-entry)))
+          (insert (format "    【%s】 %s\n"
+                          (substring (symbol-name category) 1)
+                          (mapconcat #'symbol-name modules ", ")))))
+      (insert "\n"))
+    
+    ;; Load errors
     (when mcg-module-load-errors
-      (insert "\n  Load Errors:\n  ")
-      (insert (make-string 40 ?─))
-      (insert "\n")
-      (dolist (err mcg-module-load-errors)
-        (insert (format "  • %s/%s: %s\n"
-                        (caar err) (cdar err) (cdr err)))))
+      (insert "    ─────────── 加载错误 ───────────\n\n")
+      (dolist (err-entry mcg-module-load-errors)
+        (let ((mod-key (car err-entry))
+              (err-msg (cdr err-entry)))
+          (insert (format "    ✗ %s/%s\n      %s\n"
+                          (car mod-key) (cdr mod-key)
+                          (if (listp err-msg)
+                              (plist-get err-msg :error)
+                            err-msg)))))
+      (insert "\n"))
+    
+    (insert "    ───────────────────────────────────\n")
+    (insert "    图例: ✓ 已加载  ⏳ 延迟  ○ 待加载\n")
     
     (buffer-string)))
+#+end_src
 
-(defun mcg--unload-module-keybindings (source)
-  "Remove keybindings registered by SOURCE from the registry.
+*** List Modules Command
 
-Arguments:
-- SOURCE: The source module name (string)
+#+begin_src emacs-lisp
+(defun mcg-list-modules ()
+  "Display all registered modules in posframe popup."
+  (interactive)
+  (if (and (display-graphic-p)
+           (require 'posframe nil t)
+           (fboundp 'mcg-popup-show))
+      ;; Use posframe popup
+      (mcg-popup-show "*MCG Modules*" (mcg--list-modules-content) 55 40)
+    ;; Fallback to buffer display
+    (with-help-window "*MCG Modules*"
+      (princ (mcg--list-modules-content)))))
+#+end_src
 
-Returns the number of keybindings removed."
-  (when (boundp 'mcg-keybinding-registry)
-    (let ((count 0)
-          (to-remove nil))
-      ;; Find all keybindings from this source
-      (dolist (entry mcg-keybinding-registry)
-        (when (equal (cddr entry) source)
-          (push (car entry) to-remove)
-          (cl-incf count)))
-      ;; Remove them from registry
-      (dolist (key to-remove)
-        (setq mcg-keybinding-registry
-              (assoc-delete-all key mcg-keybinding-registry)))
-      count)))
+*** Reload Module Command
 
-(defun mcg--module-feature-name (category module)
-  "Get the feature name for a module.
-
-Arguments:
-- CATEGORY: Module category (keyword)
-- MODULE: Module name (symbol)
-
-Returns the feature symbol (e.g., init-theme)."
-  (let ((mod-name (if (symbolp module)
-                      (symbol-name module)
-                    module)))
-    (intern (format "init-%s" mod-name))))
-
+#+begin_src emacs-lisp
 (defun mcg/reload-module (category module)
-  "Reload specified module.
-
-This function:
-1. Unloads the module's feature if loaded
-2. Removes keybindings registered by this module from the registry
-3. Removes the module from the loaded modules list
-4. Reloads the module fresh
-
-When called interactively, prompts for module selection."
+  "Reload MODULE in CATEGORY.
+Interactively prompts for category and module."
   (interactive
-   (let* ((modules (mcg-list-enabled-modules))
-          (choices (mapcar (lambda (m)
-                             (format "%s/%s"
-                                     (substring (symbol-name (car m)) 1)
-                                     (cdr m)))
-                           modules))
-          (choice (completing-read "Reload module: " choices nil t))
-          (parts (split-string choice "/")))
-     (list (intern (concat ":" (car parts)))
-           (intern (cadr parts)))))
-  
-  (let* ((cat-key (if (keywordp category) category
-                    (intern (concat ":" (symbol-name category)))))
-         (mod-sym (if (symbolp module) module (intern module)))
-         (mod-key (cons cat-key mod-sym))
-         (feature-name (mcg--module-feature-name cat-key mod-sym))
-         (source-name (format "init-%s" mod-sym))
-         (keybindings-removed 0))
-    
-    ;; 1. Unload the feature if it's loaded
-    (when (featurep feature-name)
-      (condition-case err
-          (unload-feature feature-name t)
-        (error
-         (mcg-log "Warning: Could not unload feature %s: %s"
-                  feature-name (error-message-string err)))))
-    
-    ;; 2. Remove keybindings registered by this module
-    (setq keybindings-removed (mcg--unload-module-keybindings source-name))
-    (when (> keybindings-removed 0)
-      (mcg-log "Removed %d keybindings from %s" keybindings-removed source-name))
-    
-    ;; 3. Remove from loaded list
+   (let* ((categories (mapcar #'car mcg-modules-alist))
+          (category (intern (completing-read "Category: "
+                                             (mapcar #'symbol-name categories)
+                                             nil t)))
+          (modules (cdr (assq category mcg-modules-alist)))
+          (module (intern (completing-read "Module: "
+                                           (mapcar #'symbol-name modules)
+                                           nil t))))
+     (list category module)))
+  (let ((mod-key (cons category module)))
+    ;; Remove from loaded list to allow reload
     (setq mcg-loaded-modules (delete mod-key mcg-loaded-modules))
-    
-    ;; 4. Reload the module
-    (if (mcg-load-module cat-key mod-sym)
-        (progn
-          (mcg-log "Successfully reloaded module: %s/%s" cat-key mod-sym)
-          (message "✓ Reloaded module: %s/%s (removed %d old keybindings)"
-                   cat-key mod-sym keybindings-removed))
-      (message "✗ Failed to reload module: %s/%s" cat-key mod-sym))))
+    ;; Clear any previous error
+    (setq mcg-module-load-errors
+          (assoc-delete-all mod-key mcg-module-load-errors))
+    ;; Reload
+    (if (mcg-load-module category module)
+        (message "Reloaded module %s/%s" category module)
+      (message "Failed to reload module %s/%s" category module))))
+#+end_src
 
+*** Describe Module Command
+
+#+begin_src emacs-lisp
 (defun mcg/describe-module (category module)
-  "Display detailed info for a module.
-
-When called interactively, prompts for module selection."
+  "Describe MODULE in CATEGORY.
+Shows module status, file path, and any errors."
   (interactive
-   (let* ((modules (mcg-list-enabled-modules))
+   (let* ((all-modules (append (mcg-list-enabled-modules)
+                               (let ((result nil))
+                                 (dolist (cat-entry mcg-disabled-modules)
+                                   (dolist (mod (cdr cat-entry))
+                                     (push (cons (car cat-entry) mod) result)))
+                                 result)))
           (choices (mapcar (lambda (m)
-                             (format "%s/%s"
-                                     (substring (symbol-name (car m)) 1)
-                                     (cdr m)))
-                           modules))
-          (choice (completing-read "Describe module: " choices nil t))
+                             (format "%s/%s" (car m) (cdr m)))
+                           all-modules))
+          (choice (completing-read "Module: " choices nil t))
           (parts (split-string choice "/")))
      (list (intern (concat ":" (car parts)))
            (intern (cadr parts)))))
-  (let* ((cat-key (if (keywordp category) category
-                    (intern (concat ":" (symbol-name category)))))
-         (mod-sym (if (symbolp module) module (intern module)))
-         (mod-key (cons cat-key mod-sym))
-         (path (mcg-module-path cat-key mod-sym))
-         (org-path (mcg-module-org-path cat-key mod-sym))
-         (loaded (member mod-key mcg-loaded-modules))
+  (let* ((mod-key (cons category module))
+         (enabled (mcg-module-enabled-p category module))
+         (disabled (mcg-module-disabled-p category module))
+         (loaded (mcg-module-loaded-p category module))
          (deferred (assoc mod-key mcg-deferred-modules))
-         (disabled (mcg-module-disabled-p cat-key mod-sym))
-         (exists (mcg-module-exists-p cat-key mod-sym)))
-    (message "Module: %s/%s\n  Path: %s\n  Org: %s\n  Exists: %s\n  Status: %s"
-             cat-key mod-sym
-             (or path "N/A")
-             (or org-path "N/A")
-             (if exists "yes" "NO")
-             (cond
-              (disabled "disabled")
-              (loaded "loaded")
-              (deferred "deferred")
-              (t "pending")))))
+         (error-entry (assoc mod-key mcg-module-load-errors))
+         (path (mcg-module-path category module))
+         (exists (file-exists-p path)))
+    (with-help-window "*MCG Module Info*"
+      (princ (format "Module: %s/%s\n\n" category module))
+      (princ (format "Status:\n"))
+      (princ (format "  Enabled:  %s\n" (if enabled "yes" "no")))
+      (princ (format "  Disabled: %s\n" (if disabled "yes" "no")))
+      (princ (format "  Loaded:   %s\n" (if loaded "yes" "no")))
+      (princ (format "  Deferred: %s\n" (if deferred "yes" "no")))
+      (princ (format "\nFile:\n"))
+      (princ (format "  Path:   %s\n" path))
+      (princ (format "  Exists: %s\n" (if exists "yes" "no")))
+      (when deferred
+        (princ (format "\nTrigger:\n"))
+        (princ (format "  Pattern: %s\n" (car (cdr deferred))))
+        (princ (format "  Mode:    %s\n" (cdr (cdr deferred)))))
+      (when error-entry
+        (princ (format "\nError:\n"))
+        (princ (format "  %s\n" (cdr error-entry)))))))
+#+end_src
 
-#+END_SRC
+** Module System Initialization
 
-** Provide
-#+BEGIN_SRC emacs-lisp
+模块系统初始化函数。
+
+#+begin_src emacs-lisp
+(defun mcg-modules-init ()
+  "Initialize the module system.
+Called during bootstrap to set up module loading."
+  (mcg-log "Module system initialized"))
+#+end_src
+
+** Provide Feature
+
+#+begin_src emacs-lisp
 (provide 'core-modules)
 ;;; core-modules.el ends here
-#+END_SRC
+#+end_src

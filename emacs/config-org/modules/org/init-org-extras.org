@@ -1,10 +1,18 @@
-* init-org-extras.el
-:PROPERTIES:
-:HEADER-ARGS: :tangle init-org-extras.el :lexical t
-:END:
+#+TITLE: Org Extras Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-org-extras.el :lexical t
 
-** Headers
-#+BEGIN_SRC emacs-lisp
+* Org Extras Module
+
+本模块负责 MCG Emacs 的 Org 扩展功能配置，包括：
+- Org-download 图片下载
+- Consult-todo 集成
+- 中国农历 (cal-china-x) 集成
+- 剪贴板图片插入功能
+
+** File Header
+
+#+begin_src emacs-lisp
 ;;; init-org-extras.el --- Org Extras for MCG Emacs -*- lexical-binding: t; -*-
 
 ;; Filename: init-org-extras.el
@@ -13,34 +21,38 @@
 ;; Copyright (C) 2024-2026, mcge, all rights reserved.
 ;; Create   Date: 2026-01-07
 ;; Version: 3.0
-;; Keywords: org, download, numbering, consult-todo
+;; Keywords: org, download, numbering, consult-todo, cal-china-x
 ;; Compatibility: GNU Emacs 29.0+
 
 ;;; Commentary:
 ;;
 ;; Org extensions module for MCG Emacs, responsible for:
 ;; - Org-download image downloading
-;; - Org-numbering heading numbering
 ;; - Consult-todo integration
+;; - Chinese calendar (cal-china-x) integration
 ;;
+#+end_src
 
-#+END_SRC
+** Require
 
-** Dependencies
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
+;;; Code:
+
 ;;; Dependencies
 
 (require 'core-lib)
-
-#+END_SRC
+#+end_src
 
 ** Org-Download Configuration
-#+BEGIN_SRC emacs-lisp
+
+Org-download 图片下载配置。
+
+#+begin_src emacs-lisp
 ;;; Org-Download Configuration
 
 (defun mcg--setup-org-download ()
   "Setup Org-download image downloading."
-  (when (mcg-require-extension "org/org-download" 'org-download)
+  (when (mcg-require-extension "org-download" 'org-download)
     ;; Drag-and-drop support
     (add-hook 'dired-mode-hook 'org-download-enable)
     (add-hook 'org-mode-hook 'org-download-enable)
@@ -49,11 +61,13 @@
     (setq org-download-display-inline-images 'posframe)
     
     (mcg-log "Org-download configured")))
-
-#+END_SRC
+#+end_src
 
 ** Clipboard Image Function
-#+BEGIN_SRC emacs-lisp
+
+剪贴板图片插入功能。
+
+#+begin_src emacs-lisp
 ;;; Clipboard Image Function
 
 (defun mcg/org-insert-clipboard-image (width)
@@ -102,52 +116,77 @@ Images are saved in a .assets directory named after the Org file."
     (when (fboundp 'org-download-screenshot)
       (org-download-screenshot))))
 
-;; 绑定快捷键
+;; Bind keybinding
 (with-eval-after-load 'org
   (define-key org-mode-map (kbd "C-c n v") 'mcg/org-insert-clipboard-image))
+#+end_src
 
-#+END_SRC
+** Cal-China-X Configuration
 
-** Org-Numbering Configuration
-#+BEGIN_SRC emacs-lisp
-;;; Org-Numbering Configuration
+中国农历 (cal-china-x) 配置。
 
-(defun mcg--setup-org-numbering ()
-  "Setup Org-numbering heading numbering."
-  (when (mcg-require-extension "org/org-numbering" 'org-numbering)
-    ;; Numbering scheme
-    (setq org-numbering-level-scheme
-          '((1 . ((scheme . decimal)      ; 1, 2, 3...
-                  (combine . nil)))
-            (2 . ((scheme . decimal)      ; 1.1, 1.2...
-                  (combine . t)))
-            (3 . ((scheme . decimal)      ; 1.1.1, 1.1.2...
-                  (combine . t)))
-            (4 . ((scheme . alpha)        ; a), b), c)...
-                  (combine . nil)))
-            (5 . ((scheme . paren-num)    ; (1), (2), (3)...
-                  (combine . nil)))))
-    
-    (mcg-log "Org-numbering configured")))
+#+begin_src emacs-lisp
+;;; Cal-China-X Configuration (Chinese Calendar)
 
-#+END_SRC
+(defun mcg--setup-cal-china-x ()
+  "Setup Chinese calendar (cal-china-x)."
+  (when (mcg-require-extension "cal-china-x" 'cal-china-x)
+    (with-eval-after-load 'calendar
+      ;; Mark today
+      (add-hook 'calendar-today-visible-hook 'calendar-mark-today)
+
+      ;; Calendar basic settings
+      (setq calendar-chinese-all-holidays-flag nil
+            calendar-mark-holidays-flag t
+            calendar-mark-diary-entries-flag nil
+            calendar-time-zone-style 'numeric
+            calendar-date-style 'iso)
+
+      ;; Set Chinese celestial stems and terrestrial branches
+      (setq calendar-chinese-celestial-stem
+            ["甲" "乙" "丙" "丁" "戊" "己" "庚" "辛" "壬" "癸"])
+      (setq calendar-chinese-terrestrial-branch
+            ["子" "丑" "寅" "卯" "辰" "巳" "午" "未" "申" "酉" "戌" "亥"])
+
+      ;; Set Chinese month names
+      (setq calendar-month-name-array
+            ["一月" "二月" "三月" "四月" "五月" "六月"
+             "七月" "八月" "九月" "十月" "十一月" "十二月"])
+
+      ;; Set weekday header display
+      (setq calendar-day-name-array
+            ["日" "一" "二" "三" "四" "五" "六"])
+
+      ;; Set Monday as first day of week
+      (setq calendar-week-start-day 1))
+
+    ;; Auto-initialize cal-china-x
+    (add-hook 'after-init-hook 'cal-china-x-setup)
+
+    (mcg-log "Chinese calendar (cal-china-x) configured")))
+#+end_src
 
 ** Consult-Todo Configuration
-#+BEGIN_SRC emacs-lisp
+
+Consult-todo 集成配置。
+
+#+begin_src emacs-lisp
 ;;; Consult-Todo Configuration
 
 (defun mcg--setup-consult-todo ()
   "Setup Consult-todo integration."
-  (when (mcg-require-extension "org/consult-todo" 'consult-todo)
+  (when (mcg-require-extension "consult-todo" 'consult-todo)
     ;; Bind keybindings
     (global-set-key (kbd "C-c n T") 'consult-todo)
     
     (mcg-log "Consult-todo configured")))
-
-#+END_SRC
+#+end_src
 
 ** Org Mode Keybindings
-#+BEGIN_SRC emacs-lisp
+
+Org 扩展快捷键配置。
+
+#+begin_src emacs-lisp
 ;;; Org Mode Keybindings
 
 (defun mcg--setup-org-extras-keybindings ()
@@ -158,22 +197,24 @@ Images are saved in a .assets directory named after the Org file."
     (define-key org-mode-map (kbd "C-c n s") 'org-insert-subheading))
   
   (mcg-log "Org extras keybindings configured"))
-
-#+END_SRC
+#+end_src
 
 ** Initialize
-#+BEGIN_SRC emacs-lisp
+
+初始化配置。
+
+#+begin_src emacs-lisp
 ;;; Initialize
 
 (mcg--setup-org-download)
-(mcg--setup-org-numbering)
+(mcg--setup-cal-china-x)
 (mcg--setup-consult-todo)
 (mcg--setup-org-extras-keybindings)
+#+end_src
 
-#+END_SRC
+** Provide Feature
 
-** Provide
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (provide 'init-org-extras)
 ;;; init-org-extras.el ends here
-#+END_SRC
+#+end_src

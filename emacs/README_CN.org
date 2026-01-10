@@ -166,6 +166,119 @@ emacs/
 | make lock-packages| 锁定当前包版本       |
 | make h            | 显示帮助             |
 
+* 📦 Git 子模块包管理
+
+本配置使用 Git 子模块管理第三方 Emacs 包。所有包存储在 =site-lisp/extensions/= 目录下，按类别组织。
+
+** 扩展目录组织
+
+扩展按类别子目录组织：
+
+#+begin_src text
+site-lisp/extensions/
+├── core/           # 核心库 (dash, s.el, f.el, compat, lazy-load)
+├── completion/     # 补全系统 (vertico, consult, marginalia, orderless, embark)
+├── editor/         # 编辑器功能 (avy, ace-window, vundo, markmacro, fingertip)
+├── git/            # Git 集成 (magit, with-editor, jujutsu)
+├── input/          # 输入法 (emacs-rime, posframe)
+├── lsp/            # LSP 和语言支持 (lsp-bridge, rust-mode, lua-mode 等)
+├── org/            # Org-mode 扩展 (org-modern, ox-hugo, org-download)
+├── search/         # 搜索工具 (blink-search, color-rg, consult-todo)
+├── snippets/       # 代码片段库 (yasnippet, yasnippet-snippets)
+├── ui/             # UI 组件 (awesome-tray, themes/, nerd-icons)
+├── utils/          # 工具包 (helpful, json-mode, hydra)
+└── docs/           # 文档工具 (markdown-ts-mode, flymake-vale)
+#+end_src
+
+** 子模块命令
+
+| 命令       | 别名 | 描述                                   |
+|------------+------+----------------------------------------|
+| make gsb   | init | 初始化所有子模块（引导）               |
+| make gsbr  |      | 切换子模块到 main/master 分支          |
+| make gsu   | up   | 更新所有子模块到最新                   |
+| make gss   |      | 完整同步：初始化 + 切换分支 + 更新     |
+| make gsr   |      | 重置子模块到远程 HEAD                  |
+| make gsst  | st   | 检查子模块状态                         |
+| make gsync |      | 手动编辑后同步 .gitmodules URL         |
+| make gsa   |      | 添加新子模块（需要 URL, CAT, NAME）    |
+| make gsrm  |      | 移除子模块（需要 CAT, NAME）           |
+
+** 添加新包
+
+将新包添加为 Git 子模块：
+
+#+begin_src bash
+# 语法: make gsa URL=<仓库地址> CAT=<类别> NAME=<包名>
+
+# 示例：添加新主题包
+make gsa URL=https://github.com/hlissner/emacs-doom-themes CAT=ui/themes NAME=doom-themes
+
+# 示例：添加新编辑器包
+make gsa URL=https://github.com/abo-abo/swiper CAT=editor NAME=swiper
+
+# 示例：添加新 LSP 语言支持
+make gsa URL=https://github.com/emacs-lsp/lsp-mode CAT=lsp NAME=lsp-mode
+#+end_src
+
+添加包后：
+1. 子模块被添加到 =.gitmodules=
+2. 包被克隆到 =site-lisp/extensions/<CAT>/<NAME>=
+3. 提交更改：=git add .gitmodules site-lisp/extensions/<CAT>/<NAME> && git commit=
+
+** 更新包
+
+更新所有包到最新版本：
+
+#+begin_src bash
+# 更新所有子模块
+make gsu
+
+# 或使用别名
+make up
+#+end_src
+
+完整同步（推荐在克隆后或子模块不同步时使用）：
+
+#+begin_src bash
+# 完整同步：初始化 + 切换到主分支 + 拉取最新
+make gss
+#+end_src
+
+** 移除包
+
+移除一个包：
+
+#+begin_src bash
+# 语法: make gsrm CAT=<类别> NAME=<包名>
+
+# 示例：移除一个包
+make gsrm CAT=ui/themes NAME=doom-themes
+#+end_src
+
+这将：
+1. 取消初始化子模块
+2. 从 Git 索引中移除
+3. 清理 =.git/modules= 目录
+
+** 检查包状态
+
+#+begin_src bash
+# 查看所有子模块状态
+make gsst
+
+# 或使用别名
+make st
+#+end_src
+
+** 最佳实践
+
+1. *选择正确的类别*：将包放在适当的类别目录中
+2. *使用描述性名称*：包名应与仓库名匹配
+3. *更改后提交*：始终一起提交 =.gitmodules= 和子模块目录
+4. *定期更新*：定期运行 =make gsu= 保持包更新
+5. *更新后测试*：更新后运行 =make test= 捕获任何破坏性更改
+
 ** 模块声明
 
 在 =init.org= 中使用 =mcg!= 宏声明启用的模块：

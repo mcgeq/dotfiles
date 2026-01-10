@@ -1,436 +1,529 @@
-* core-lib.el
-:PROPERTIES:
-:HEADER-ARGS: :tangle core-lib.el :lexical t
-:END:
+#+TITLE: Core Library Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle core-lib.el :lexical t
 
-** Headers
-#+BEGIN_SRC emacs-lisp
-  ;;; core-lib.el --- Core Library Functions for MCG Emacs -*- lexical-binding: t; -*-
+* Core Library Module
 
-  ;; Filename: core-lib.el
-  ;; Description: Core library functions, providing extension management and utility functions
-  ;; Author: mcge <mcgeq@outlook.com>
-  ;; Copyright (C) 2024-2026, mcge, all rights reserved.
-  ;; Create   Date: 2026-01-07
-  ;; Version: 3.0
-  ;; Keywords: extensions, library, utilities
-  ;; Compatibility: GNU Emacs 29.0+
+本模块为 MCG Emacs 配置提供核心工具函数：
+- 扩展缓存系统，用于快速路径查找
+- 扩展发现功能，用于查找 extensions 目录中的包
+- 键绑定注册表，支持冲突检测
+- Tree-sitter 模式设置工具
+- Posframe 弹窗工具
 
-  ;;; Commentary:
-  ;;
-  ;; Core library module for MCG Emacs configuration, responsible for:
-  ;; - Extension registry management
-  ;; - Extension loading functions
-  ;; - Configuration validation system
-  ;; - General utility functions
-  ;;
-  ;; This module depends on core-bootstrap and must be loaded after it.
-  ;;
+** File Header
 
-#+END_SRC
+#+begin_src emacs-lisp
+;;; core-lib.el --- Core library for MCG Emacs -*- lexical-binding: t; -*-
 
-** Dependencies
-#+BEGIN_SRC emacs-lisp
-;;; Dependencies
+;; Copyright (C) 2024 MCG
+;; Author: MCG
+;; Keywords: configuration, library
 
-(require 'cl-lib)
+;;; Commentary:
+;; This module provides utility functions for the MCG Emacs configuration:
+;; - Extension cache system for fast path lookups
+;; - Extension discovery for finding packages in the extensions directory
+;; - Keybinding registry with conflict detection
+
+;;; Code:
+
 (require 'core-bootstrap)
+#+end_src
 
-#+END_SRC
+** Extension Cache System
 
-** Extension Registry
-#+BEGIN_SRC emacs-lisp
-;;; Extension Registry
+扩展缓存系统，用于缓存扩展路径以提高查找性能。
 
-(defvar mcg-extensions nil
-  "Extension registry (simplified version).
+*** Cache Variables
 
-Each entry format:
-  (PATH :provides (FEATURES...) [:depends (DEPS...)])
+#+begin_src emacs-lisp
+(defvar mcg-extension-cache nil
+  "Hash table cache for extension paths.
+Maps extension names (strings) to their full directory paths.")
 
-Examples:
-  (\"core/dash\" :provides (dash))
-  (\"core/f.el\" :provides (f) :depends (\"core/dash\" \"core/s.el\"))")
+(defvar mcg-extension-cache-file nil
+  "File path for persisting the extension cache.
+Set during initialization based on mcg-cache-dir.")
 
-;; Initialize extension registry
-(setq mcg-extensions
-      '(;; Core libraries
-        ("core/dash" :provides (dash))
-        ("core/s.el" :provides (s))
-        ("core/f.el" :provides (f) :depends ("core/dash" "core/s.el"))
-        ("core/compat" :provides (compat))
-        ("core/lazy-load" :provides (lazy-load))
-        ("core/popup-el" :provides (popup))
-        
-        ;; Completion
-        ("completion/vertico" :provides (vertico))
-        ("completion/marginalia" :provides (marginalia))
-        ("completion/embark" :provides (embark embark-consult))
-        ("completion/consult" :provides (consult))
-        ("completion/orderless" :provides (orderless))
-        ("completion/pinyinlib" :provides (pinyinlib))
-        
-        ;; Editor
-        ("editor/avy" :provides (avy))
-        ("editor/avy-window" :provides (ace-window) :depends ("editor/avy"))
-        ("editor/beacon" :provides (beacon))
-        ("editor/fingertip" :provides (fingertip))
-        ("editor/symbol-overlay" :provides (symbol-overlay))
-        ("editor/vundo" :provides (vundo))
-        ("editor/wraplish" :provides (wraplish))
-        ("editor/ws-butler" :provides (ws-butler))
-        
-        ;; Git
-        ("git/magit" :provides (magit magit-section) :depends ("core/dash" "git/with-editor"))
-        ("git/with-editor" :provides (with-editor))
-        ("git/llama" :provides (llama))
-        ("git/jujutsu" :provides (jujutsu))
-        
-        ;; Input method
-        ("input/emacs-rime" :provides (rime) :depends ("input/posframe"))
-        ("input/posframe" :provides (posframe))
-        
-        ;; LSP
-        ("lsp/lsp-bridge" :provides (lsp-bridge acm) :depends ("lsp/markdown-mode"))
-        ("lsp/rust-mode" :provides (rust-mode rust-ts-mode))
-        ("lsp/lua-mode" :provides (lua-mode lua-ts-mode))
-        ("lsp/web-mode" :provides (web-mode))
-        ("lsp/markdown-mode" :provides (markdown-mode))
-        ("lsp/treesit-auto" :provides (treesit-auto))
-        ("lsp/modern-cpp-font-lock" :provides (modern-cpp-font-lock))
-        ("lsp/multiple-cursors" :provides (multiple-cursors))
-        ("lsp/zig" :provides (zig-mode zig-ts-mode))
-        ("lsp/clojure/cider" :provides (cider))
-        ("lsp/clojure/clojure-mode" :provides (clojure-mode clojure-ts-mode))
-        
-        ;; Org
-        ("org/org-modern" :provides (org-modern))
-        ("org/org-download" :provides (org-download))
-        ("org/org-appear" :provides (org-appear))
-        ("org/org-numbering" :provides (org-numbering))
-        ("org/org-superstar-mode" :provides (org-superstar))
-        ("org/visual-fill-column" :provides (visual-fill-column))
-        ("org/mixed-pitch" :provides (mixed-pitch))
-        ("org/ox-hugo" :provides (ox-hugo) :depends ("org/tomelr"))
-        ("org/tomelr" :provides (tomelr))
-        ("org/easy-hugo" :provides (easy-hugo))
-        ("org/emacs-async" :provides (async))
-        ("org/emacs-request" :provides (request))
-        ("org/ht" :provides (ht))
-        ("org/cal-china-x" :provides (cal-china-x))
-        
-        ;; Search
-        ("search/blink-search" :provides (blink-search))
-        ("search/color-rg" :provides (color-rg))
-        ("search/consult-todo" :provides (consult-todo) :depends ("search/hl-todo"))
-        ("search/hl-todo" :provides (hl-todo))
-        
-        ;; Snippets
-        ("snippets/yasnippet" :provides (yasnippet))
-        ("snippets/yasnippet-snippet" :provides (yasnippet-snippets))
-        
-        ;; UI
-        ("ui/awesome-tray" :provides (awesome-tray))
-        ("ui/shrink-path" :provides (shrink-path) :depends ("core/dash" "core/f.el" "core/s.el"))
-        ("ui/themes" :provides (ef-themes))
-        
-        ;; Documentation
-        ("docs/grip-mode" :provides (grip-mode))
-        ("docs/markdown-ts-mode" :provides (markdown-ts-mode))
-        ("docs/emacs-htmlize" :provides (htmlize))
-        ("docs/flymake-vale" :provides (flymake-vale))
-        
-        ;; Utilities
-        ("utils/helpful" :provides (helpful) :depends ("utils/elisp-refs"))
-        ("utils/elisp-refs" :provides (elisp-refs))
-        ("utils/sort-tab" :provides (sort-tab))
-        ("utils/hydra" :provides (hydra))
-        ("utils/json-mode" :provides (json-mode) :depends ("utils/json-snatcher"))
-        ("utils/json-snatcher" :provides (json-snatcher))
-        ("utils/js2-mode" :provides (js2-mode))
-        ("utils/highlight-matching-tag" :provides (highlight-matching-tag))
-        ("utils/instant-rename-tag" :provides (instant-rename-tag))))
+(defvar mcg-extension-cache-version 1
+  "Version number for the cache format.
+Increment when cache format changes to invalidate old caches.")
+#+end_src
 
-(defvar mcg-loaded-extensions nil
-  "List of loaded extensions.")
+*** Cache Initialization
 
-(defvar mcg-extension-load-errors nil
-  "List of extension load errors.
-Each entry format: (PATH . ERROR-MESSAGE)")
+#+begin_src emacs-lisp
+(defun mcg-cache-init ()
+  "Initialize the extension cache system.
+Creates the cache hash table and sets up the cache file path."
+  (unless mcg-extension-cache
+    (setq mcg-extension-cache (make-hash-table :test 'equal)))
+  (when mcg-cache-dir
+    (setq mcg-extension-cache-file
+          (expand-file-name "extension-cache.el" mcg-cache-dir))))
+#+end_src
 
-#+END_SRC
+*** Cache Operations
 
-** Extension Path Functions
-#+BEGIN_SRC emacs-lisp
-;;; Extension Path Functions
+#+begin_src emacs-lisp
+(defun mcg-cache-lookup (key)
+  "Look up KEY in the extension cache.
+Returns the cached value or nil if not found."
+  (mcg-cache-init)
+  (gethash key mcg-extension-cache))
 
+(defun mcg-cache-store (key value)
+  "Store VALUE under KEY in the extension cache.
+Returns VALUE."
+  (mcg-cache-init)
+  (puthash key value mcg-extension-cache)
+  value)
+
+(defun mcg-cache-remove (key)
+  "Remove KEY from the extension cache."
+  (mcg-cache-init)
+  (remhash key mcg-extension-cache))
+
+(defun mcg-cache-clear ()
+  "Clear all entries from the extension cache."
+  (interactive)
+  (mcg-cache-init)
+  (clrhash mcg-extension-cache)
+  (mcg-log "Extension cache cleared"))
+#+end_src
+
+*** Cache Persistence
+
+#+begin_src emacs-lisp
+(defun mcg-cache-save ()
+  "Save the extension cache to disk."
+  (interactive)
+  (mcg-cache-init)
+  (when mcg-extension-cache-file
+    (with-temp-file mcg-extension-cache-file
+      (insert ";; MCG Extension Cache - Auto-generated\n")
+      (insert (format ";; Version: %d\n" mcg-extension-cache-version))
+      (insert (format ";; Generated: %s\n\n" (current-time-string)))
+      (insert "(setq mcg-extension-cache\n")
+      (insert "  #s(hash-table size ")
+      (insert (format "%d " (hash-table-count mcg-extension-cache)))
+      (insert "test equal data (\n")
+      (maphash (lambda (k v)
+                 (insert (format "    %S %S\n" k v)))
+               mcg-extension-cache)
+      (insert "  )))\n"))
+    (mcg-log "Extension cache saved to %s" mcg-extension-cache-file)))
+
+(defun mcg-cache-load ()
+  "Load the extension cache from disk if available."
+  (interactive)
+  (mcg-cache-init)
+  (when (and mcg-extension-cache-file
+             (file-exists-p mcg-extension-cache-file))
+    (condition-case err
+        (progn
+          (load mcg-extension-cache-file nil t)
+          (mcg-log "Extension cache loaded from %s" mcg-extension-cache-file))
+      (error
+       (mcg-log-warning "Failed to load extension cache: %s"
+                        (error-message-string err))
+       (mcg-cache-clear)))))
+#+end_src
+
+** Extension Discovery
+
+扩展发现系统，用于递归查找 extensions 目录中的包。
+
+*** Internal Discovery Functions
+
+#+begin_src emacs-lisp
+(defun mcg--find-el-files-in-dir (dir)
+  "Check if DIR contains any .el files.
+Returns t if .el files are found, nil otherwise."
+  (and (file-directory-p dir)
+       (directory-files dir nil "\\.el$" t)))
+
+(defun mcg--discover-extensions-recursive (dir &optional depth)
+  "Recursively discover extensions under DIR.
+DEPTH limits recursion (default 3).
+Returns a list of (name . path) pairs for directories containing .el files."
+  (let ((depth (or depth 3))
+        (results nil))
+    (when (and (> depth 0) (file-directory-p dir))
+      (dolist (entry (directory-files dir t "^[^.]"))
+        (when (file-directory-p entry)
+          (let ((name (file-name-nondirectory entry)))
+            ;; If this directory contains .el files, add it
+            (if (mcg--find-el-files-in-dir entry)
+                (push (cons name entry) results)
+              ;; Otherwise, recurse into subdirectories
+              (setq results
+                    (append results
+                            (mcg--discover-extensions-recursive entry (1- depth)))))))))
+    results))
+#+end_src
+
+*** Extension Listing
+
+#+begin_src emacs-lisp
+(defun mcg-list-extensions (&optional force-refresh)
+  "List all extensions in the extensions directory.
+Returns an alist of (name . path) pairs.
+If FORCE-REFRESH is non-nil, bypass the cache and rediscover extensions."
+  (interactive "P")
+  (unless mcg-extensions-dir
+    (mcg-init-paths))
+
+  (let ((cached (and (not force-refresh)
+                     (mcg-cache-lookup 'all-extensions))))
+    (if cached
+        cached
+      ;; Discover extensions
+      (let ((extensions (mcg--discover-extensions-recursive mcg-extensions-dir)))
+        ;; Cache the result
+        (mcg-cache-store 'all-extensions extensions)
+        ;; Also cache individual extension paths
+        (dolist (ext extensions)
+          (mcg-cache-store (car ext) (cdr ext)))
+        (mcg-log "Discovered %d extensions" (length extensions))
+        extensions))))
+#+end_src
+
+*** Extension Path Lookup
+
+#+begin_src emacs-lisp
 (defun mcg-extension-path (name)
-  "Get the full path of extension NAME.
+  "Get the path for extension NAME.
+Returns the full directory path or nil if not found."
+  (unless mcg-extensions-dir
+    (mcg-init-paths))
 
-Arguments:
-- NAME: Extension path, e.g., \"core/dash\"
-
-Returns the full filesystem path of the extension."
-  (when (and name (stringp name) mcg-extensions-dir)
-    (expand-file-name name mcg-extensions-dir)))
+  ;; First check cache
+  (let ((cached (mcg-cache-lookup name)))
+    (if cached
+        cached
+      ;; Not in cache, search for it
+      (let ((extensions (mcg-list-extensions)))
+        (cdr (assoc name extensions))))))
 
 (defun mcg-extension-exists-p (name)
   "Check if extension NAME exists.
+Returns non-nil if the extension is found."
+  (not (null (mcg-extension-path name))))
+#+end_src
 
-Arguments:
-- NAME: Extension path, e.g., \"core/dash\"
+*** Extension Require
 
-Returns t if the extension directory exists, nil otherwise."
+#+begin_src emacs-lisp
+(defun mcg-require-extension (name &optional noerror)
+  "Require extension NAME, adding its path to load-path first.
+If NOERROR is non-nil, return nil instead of signaling an error
+if the extension is not found."
   (let ((path (mcg-extension-path name)))
-    (and path (file-directory-p path))))
+    (if path
+        (progn
+          (add-to-list 'load-path path)
+          (require (intern name) nil noerror))
+      (if noerror
+          (progn
+            (mcg-log-warning "Extension not found: %s" name)
+            nil)
+        (error "Extension not found: %s" name)))))
+#+end_src
 
-(defun mcg-extension-info (name)
-  "Get registration info for extension NAME.
+*** Show Extensions
 
-Arguments:
-- NAME: Extension path, e.g., \"core/dash\"
+#+begin_src emacs-lisp
+(defun mcg-show-extensions ()
+  "Display all discovered extensions in a buffer."
+  (interactive)
+  (let ((extensions (mcg-list-extensions t))
+        (buf (get-buffer-create "*MCG Extensions*")))
+    (with-current-buffer buf
+      (erase-buffer)
+      (insert "=== MCG Extensions ===\n\n")
+      (insert (format "Extensions directory: %s\n" mcg-extensions-dir))
+      (insert (format "Total extensions: %d\n\n" (length extensions)))
+      (insert (format "%-30s %s\n" "Name" "Path"))
+      (insert (make-string 80 ?-) "\n")
+      (dolist (ext (sort extensions (lambda (a b) (string< (car a) (car b)))))
+        (insert (format "%-30s %s\n" (car ext) (cdr ext)))))
+    (display-buffer buf)))
+#+end_src
 
-Returns the extension's plist info, or nil if not registered."
-  (when (and name (stringp name))
-    (let ((entry (assoc name mcg-extensions)))
-      (when entry
-        (list :name name
-              :path (mcg-extension-path name)
-              :provides (plist-get (cdr entry) :provides)
-              :depends (plist-get (cdr entry) :depends)
-              :exists (mcg-extension-exists-p name)
-              :loaded (member name mcg-loaded-extensions))))))
+** Keybinding Registry
 
-#+END_SRC
+键绑定注册表系统，支持冲突检测和管理。
 
-** Extension Loading Functions
-#+BEGIN_SRC emacs-lisp
-;;; Extension Loading Functions
+*** Registry Variables
 
-(defun mcg-extension-dependencies (name)
-  "Get all dependencies for extension NAME (recursively resolved).
+#+begin_src emacs-lisp
+(defvar mcg-keybinding-registry nil
+  "Hash table registry for keybindings.
+Maps key sequences (strings) to (command . source) pairs.
+Used for conflict detection.")
 
-Arguments:
-- NAME: Extension path, e.g., \"core/f.el\"
+(defvar mcg-keybinding-conflicts nil
+  "List of detected keybinding conflicts.
+Each entry is (key old-binding new-binding) where bindings are (command . source).")
+#+end_src
 
-Returns dependency list, ordered for loading (dependencies first)."
-  (let ((entry (assoc name mcg-extensions))
-        (result nil)
-        (visited nil))
-    (when entry
-      (cl-labels ((resolve-deps (ext-name)
-                    (unless (member ext-name visited)
-                      (push ext-name visited)
-                      (let* ((ext-entry (assoc ext-name mcg-extensions))
-                             (deps (plist-get (cdr ext-entry) :depends)))
-                        (dolist (dep deps)
-                          (resolve-deps dep)
-                          (unless (member dep result)
-                            (push dep result)))))))
-        (resolve-deps name)))
-    (nreverse result)))
+*** Registry Initialization
 
-(defun mcg-load-extension (name)
-  "Load extension NAME to load-path.
+#+begin_src emacs-lisp
+(defun mcg-keybinding-init ()
+  "Initialize the keybinding registry."
+  (unless mcg-keybinding-registry
+    (setq mcg-keybinding-registry (make-hash-table :test 'equal))))
+#+end_src
 
-Arguments:
-- NAME: Extension path, e.g., \"core/dash\"
+*** Key Normalization
 
-If the extension directory exists, adds it to load-path and returns t.
-If the extension directory doesn't exist, logs a warning and returns nil.
-This function won't block startup even if extension is missing."
-  (let ((path (mcg-extension-path name)))
-    (cond
-     ;; Already loaded
-     ((member name mcg-loaded-extensions)
-      (mcg-log "Extension already loaded: %s" name)
-      t)
-     
-     ;; Directory exists
-     ((and path (file-directory-p path))
-      ;; Load dependencies first
-      (let ((deps (mcg-extension-dependencies name)))
-        (dolist (dep deps)
-          (mcg-load-extension dep)))
-      ;; Add to load-path
-      (add-to-list 'load-path path)
-      (push name mcg-loaded-extensions)
-      (mcg-log "Loaded extension: %s" name)
-      t)
-     
-     ;; Directory doesn't exist - provide detailed error with git command
-     (t
-      (let* ((git-cmd (mcg-generate-git-submodule-command name))
-             (alternatives (mcg-find-alternative-extensions name))
-             (error-info (list :name name
-                               :path path
-                               :git-command git-cmd
-                               :alternatives alternatives
-                               :timestamp (current-time))))
-        (push (cons name error-info) mcg-extension-load-errors)
-        (mcg-log "Warning: Extension directory missing: %s" name)
-        (mcg-log "  To install, run:")
-        (mcg-log "    %s" git-cmd)
-        (when alternatives
-          (mcg-log "  Alternative extensions: %s" (string-join alternatives ", "))))
-      nil))))
+#+begin_src emacs-lisp
+(defun mcg-normalize-key (key)
+  "Normalize KEY to a canonical string form.
+Handles both string and vector key representations."
+  (cond
+   ((stringp key) key)
+   ((vectorp key) (key-description key))
+   (t (format "%s" key))))
+#+end_src
 
-(defun mcg-generate-git-submodule-command (name)
-  "Generate the exact git submodule command to install extension NAME.
+*** Bind and Unbind Keys
 
-Arguments:
-- NAME: Extension path, e.g., \"core/dash\"
+#+begin_src emacs-lisp
+(defun mcg-bind-key (key command source &optional keymap)
+  "Bind KEY to COMMAND, registering it from SOURCE.
+SOURCE is a string identifying where the binding comes from (e.g., module name).
+KEYMAP is the keymap to bind in (defaults to global-map).
+Returns t if binding was successful, nil if there was a conflict."
+  (mcg-keybinding-init)
+  (let* ((normalized-key (mcg-normalize-key key))
+         (existing (gethash normalized-key mcg-keybinding-registry))
+         (new-binding (cons command source))
+         (keymap (or keymap global-map)))
 
-Returns a string with the complete git command."
-  (format "git submodule update --init --recursive site-lisp/extensions/%s" name))
+    ;; Check for conflicts
+    (when (and existing
+               (not (eq (car existing) command)))
+      ;; Record the conflict
+      (push (list normalized-key existing new-binding) mcg-keybinding-conflicts)
+      (mcg-log-warning "Keybinding conflict for %s: %s (%s) -> %s (%s)"
+                       normalized-key
+                       (car existing) (cdr existing)
+                       command source))
 
-(defun mcg-find-alternative-extensions (name)
-  "Find alternative extensions similar to NAME.
+    ;; Register the binding
+    (puthash normalized-key new-binding mcg-keybinding-registry)
 
-Arguments:
-- NAME: Extension path, e.g., \"core/dash\"
+    ;; Actually bind the key
+    (define-key keymap (kbd key) command)
 
-Returns a list of alternative extension names that might serve similar purposes."
-  (let* ((ext-name (file-name-nondirectory name))
-         (category (file-name-directory name))
-         (alternatives nil))
-    ;; Search for extensions with similar names
-    (dolist (entry mcg-extensions)
-      (let* ((other-name (car entry))
-             (other-ext-name (file-name-nondirectory other-name)))
-        ;; Check for similar names (fuzzy match)
-        (when (and (not (equal name other-name))
-                   (mcg-extension-exists-p other-name)
-                   (or
-                    ;; Same category
-                    (string-prefix-p (or category "") other-name)
-                    ;; Similar name (contains part of the name)
-                    (string-match-p (regexp-quote ext-name) other-ext-name)
-                    (string-match-p (regexp-quote other-ext-name) ext-name)))
-          (push other-name alternatives))))
-    (seq-take (nreverse alternatives) 3)))  ; Return at most 3 alternatives
+    (mcg-log "Bound %s to %s (from %s)" normalized-key command source)
+    t))
 
-(defun mcg-format-extension-error (error-info)
-  "Format extension ERROR-INFO into a human-readable string.
+(defun mcg-unbind-key (key &optional keymap)
+  "Unbind KEY and remove it from the registry.
+KEYMAP is the keymap to unbind from (defaults to global-map)."
+  (mcg-keybinding-init)
+  (let ((normalized-key (mcg-normalize-key key))
+        (keymap (or keymap global-map)))
+    (remhash normalized-key mcg-keybinding-registry)
+    (define-key keymap (kbd key) nil)
+    (mcg-log "Unbound %s" normalized-key)))
+#+end_src
 
-Arguments:
-- ERROR-INFO: Error info plist from mcg-extension-load-errors
+*** Keybinding Lookup
 
-Returns a formatted string with error details and installation instructions."
-  (if (listp error-info)
-      (if (plist-get error-info :name)
-          ;; New structured format
-          (let ((name (plist-get error-info :name))
-                (path (plist-get error-info :path))
-                (git-cmd (plist-get error-info :git-command))
-                (alternatives (plist-get error-info :alternatives)))
-            (concat
-             (format "Extension: %s\n" name)
-             (format "Expected path: %s\n" (or path "N/A"))
-             (format "\nTo install, run:\n  %s\n" git-cmd)
-             (when alternatives
-               (format "\nAlternative extensions:\n  %s\n"
-                       (string-join alternatives "\n  ")))))
-        ;; Old string format (for backward compatibility)
-        (format "%s" error-info))
-    (format "%s" error-info)))
+#+begin_src emacs-lisp
+(defun mcg-lookup-keybinding (key)
+  "Look up KEY in the keybinding registry.
+Returns (command . source) or nil if not registered."
+  (mcg-keybinding-init)
+  (gethash (mcg-normalize-key key) mcg-keybinding-registry))
 
-(defun mcg-load-extensions (names)
-  "Batch load extension list NAMES.
+(defun mcg-list-keybindings ()
+  "Return a list of all registered keybindings.
+Each entry is (key command source)."
+  (mcg-keybinding-init)
+  (let ((bindings nil))
+    (maphash (lambda (key binding)
+               (push (list key (car binding) (cdr binding)) bindings))
+             mcg-keybinding-registry)
+    (sort bindings (lambda (a b) (string< (car a) (car b))))))
+#+end_src
 
-Arguments:
-- NAMES: List of extension paths
+*** Show Keybindings
 
-Returns the number of successfully loaded extensions."
-  (let ((loaded-count 0))
-    (dolist (name names)
-      (when (mcg-load-extension name)
-        (cl-incf loaded-count)))
-    loaded-count))
+#+begin_src emacs-lisp
+(defun mcg-show-keybindings ()
+  "Display all registered keybindings in a buffer."
+  (interactive)
+  (let ((bindings (mcg-list-keybindings))
+        (buf (get-buffer-create "*MCG Keybindings*")))
+    (with-current-buffer buf
+      (erase-buffer)
+      (insert "=== MCG Keybindings ===\n\n")
+      (insert (format "Total bindings: %d\n" (length bindings)))
+      (when mcg-keybinding-conflicts
+        (insert (format "Conflicts detected: %d\n" (length mcg-keybinding-conflicts))))
+      (insert "\n")
+      (insert (format "%-20s %-40s %s\n" "Key" "Command" "Source"))
+      (insert (make-string 80 ?-) "\n")
+      (dolist (binding bindings)
+        (insert (format "%-20s %-40s %s\n"
+                        (nth 0 binding)
+                        (nth 1 binding)
+                        (nth 2 binding))))
 
-(defun mcg-require-extension (name &optional feature)
-  "Load extension NAME and require its feature.
+      ;; Show conflicts if any
+      (when mcg-keybinding-conflicts
+        (insert "\n\n=== Keybinding Conflicts ===\n\n")
+        (dolist (conflict mcg-keybinding-conflicts)
+          (let ((key (nth 0 conflict))
+                (old (nth 1 conflict))
+                (new (nth 2 conflict)))
+            (insert (format "%s:\n  Old: %s (from %s)\n  New: %s (from %s)\n\n"
+                            key
+                            (car old) (cdr old)
+                            (car new) (cdr new)))))))
+    (display-buffer buf)))
 
-Arguments:
-- NAME: Extension path, e.g., \"core/dash\"
-- FEATURE: Feature to require, defaults to the first feature provided by the extension
+(defun mcg-show-keybinding-conflicts ()
+  "Display keybinding conflicts in a buffer."
+  (interactive)
+  (if (null mcg-keybinding-conflicts)
+      (message "No keybinding conflicts detected.")
+    (let ((buf (get-buffer-create "*MCG Keybinding Conflicts*")))
+      (with-current-buffer buf
+        (erase-buffer)
+        (insert "=== MCG Keybinding Conflicts ===\n\n")
+        (insert (format "Total conflicts: %d\n\n" (length mcg-keybinding-conflicts)))
+        (dolist (conflict mcg-keybinding-conflicts)
+          (let ((key (nth 0 conflict))
+                (old (nth 1 conflict))
+                (new (nth 2 conflict)))
+            (insert (format "Key: %s\n" key))
+            (insert (format "  Previous: %s (from %s)\n" (car old) (cdr old)))
+            (insert (format "  Current:  %s (from %s)\n\n" (car new) (cdr new))))))
+      (display-buffer buf))))
+#+end_src
 
-Returns t if successful, nil if failed."
-  (when (mcg-load-extension name)
-    (let* ((entry (assoc name mcg-extensions))
-           (provides (plist-get (cdr entry) :provides))
-           (feat (or feature (car provides))))
-      (when feat
-        (condition-case err
-            (progn
-              (require feat)
-              t)
-          (error
-           (let ((error-msg (format "Failed to require %s from %s: %s"
-                                    feat name (error-message-string err))))
-             (push (cons name error-msg) mcg-extension-load-errors)
-             (mcg-log "Error: %s" error-msg))
-           nil))))))
+** Tree-sitter Mode Setup Utilities
 
-#+END_SRC
+Tree-sitter 模式设置工具，用于配置语言模式。
 
-** Extension Query Functions
-#+BEGIN_SRC emacs-lisp
-;;; Extension Query Functions
+*** Tree-sitter Availability Check
 
-(defun mcg-list-all-extensions ()
-  "List all registered extensions.
+#+begin_src emacs-lisp
+(defun mcg-treesit-available-p ()
+  "Check if tree-sitter is available in current Emacs."
+  (and (fboundp 'treesit-available-p)
+       (treesit-available-p)))
+#+end_src
 
-Returns a list of extension paths."
-  (mapcar #'car mcg-extensions))
+*** Language Mode Setup
 
-(defun mcg-list-loaded-extensions ()
-  "List all loaded extensions.
+#+begin_src emacs-lisp
+(defun mcg-setup-lang-mode (lang-config)
+  "Setup language mode based on LANG-CONFIG.
+LANG-CONFIG is a plist with the following keys:
+  :patterns       - Optional list of file patterns for auto-mode-alist
+                    Only use this for patterns NOT already in init-treesit.el
+  :ts-mode        - Tree-sitter mode symbol (e.g., python-ts-mode)
+  :fallback-mode  - Fallback mode symbol (e.g., python-mode)
+  :setup-fn       - Setup function to call in mode hooks
+  :keymap         - Optional keymap to compose with local map
 
-Returns a list of loaded extension paths."
-  mcg-loaded-extensions)
+Note: Common file associations are managed in init-treesit.el.
+Only provide :patterns for additional/custom file types.
 
-(defun mcg-list-missing-extensions ()
-  "List all missing extensions.
+Example:
+  (mcg-setup-lang-mode
+   \\='(:patterns (\"\\\\.custom-py\\\\'\")  ; optional, for custom extensions
+     :ts-mode python-ts-mode
+     :fallback-mode python-mode
+     :setup-fn mcg-python-mode-setup
+     :keymap mcg-python-mode-map))"
+  (let ((patterns (plist-get lang-config :patterns))
+        (ts-mode (plist-get lang-config :ts-mode))
+        (fallback-mode (plist-get lang-config :fallback-mode))
+        (setup-fn (plist-get lang-config :setup-fn))
+        (keymap (plist-get lang-config :keymap)))
 
-Returns a list of extension paths whose directories don't exist."
-  (seq-filter (lambda (name)
-                (not (mcg-extension-exists-p name)))
-              (mcg-list-all-extensions)))
+    ;; Setup tree-sitter mode if available
+    (when (and ts-mode (mcg-treesit-available-p))
+      ;; Add auto-mode-alist entries for ts-mode (only if patterns provided)
+      (when patterns
+        (dolist (pattern patterns)
+          (add-to-list 'auto-mode-alist (cons pattern ts-mode))))
+      ;; Add setup function to ts-mode hook
+      (when setup-fn
+        (add-hook (intern (format "%s-hook" ts-mode)) setup-fn))
+      ;; Add keymap setup to ts-mode hook
+      (when keymap
+        (add-hook (intern (format "%s-hook" ts-mode))
+                  (lambda () (mcg--compose-keymap keymap)))))
 
-(defun mcg-extension-provides (name)
-  "Get features provided by extension NAME.
+    ;; Setup fallback mode
+    (when fallback-mode
+      ;; Add auto-mode-alist for fallback (only if patterns provided and ts-mode not available)
+      (when (and patterns (not (and ts-mode (mcg-treesit-available-p))))
+        (dolist (pattern patterns)
+          (add-to-list 'auto-mode-alist (cons pattern fallback-mode))))
+      ;; Add setup function to fallback mode hook
+      (when setup-fn
+        (add-hook (intern (format "%s-hook" fallback-mode)) setup-fn))
+      ;; Add keymap setup to fallback mode hook
+      (when keymap
+        (add-hook (intern (format "%s-hook" fallback-mode))
+                  (lambda () (mcg--compose-keymap keymap)))))))
 
-Arguments:
-- NAME: Extension path
+(defun mcg--compose-keymap (keymap)
+  "Compose KEYMAP with current local map."
+  (use-local-map (make-composed-keymap keymap (current-local-map))))
+#+end_src
 
-Returns a list of feature symbols."
-  (let ((entry (assoc name mcg-extensions)))
-    (when entry
-      (plist-get (cdr entry) :provides))))
+*** Language Definition Macro
 
-(defun mcg-find-extension-by-feature (feature)
-  "Find the extension that provides FEATURE.
+#+begin_src emacs-lisp
+(defmacro mcg-deflang (name &rest config)
+  "Define a language mode configuration.
+NAME is the language name (symbol).
+CONFIG is a plist passed to `mcg-setup-lang-mode'.
 
-Arguments:
-- FEATURE: Feature symbol
+Common file associations are managed in init-treesit.el.
+Use :patterns only for additional/custom file types not in init-treesit.el.
 
-Returns the extension path, or nil if not found."
-  (catch 'found
-    (dolist (entry mcg-extensions)
-      (let ((provides (plist-get (cdr entry) :provides)))
-        (when (memq feature provides)
-          (throw 'found (car entry)))))
-    nil))
-
-#+END_SRC
-
-
+Example:
+  (mcg-deflang python
+    :ts-mode python-ts-mode
+    :fallback-mode python-mode
+    :setup-fn mcg-python-mode-setup
+    :keymap mcg-python-mode-map)"
+  (declare (indent 1))
+  ;; Quote mode symbols to prevent evaluation as variables
+  (let ((processed-config
+         (cl-loop for (key val) on config by #'cddr
+                  append (list key
+                               (if (memq key '(:ts-mode :fallback-mode :setup-fn :keymap))
+                                   `',val
+                                 (if (eq key :patterns)
+                                     `',val
+                                   val))))))
+    `(progn
+       (mcg-setup-lang-mode (list ,@processed-config))
+       (mcg-log "Language mode configured: %s" ',name))))
+#+end_src
 
 ** Posframe Popup Utility
-#+BEGIN_SRC emacs-lisp
-;;; Posframe Popup Utility
 
+Posframe 弹窗工具，用于显示居中的弹窗内容。
+
+*** Popup Customization
+
+#+begin_src emacs-lisp
 (defgroup mcg-popup nil
   "Posframe popup utilities."
   :group 'convenience)
@@ -447,8 +540,12 @@ Returns the extension path, or nil if not found."
 
 (defvar mcg--popup-current-buffer nil
   "Current popup buffer name.")
+#+end_src
 
-(defun mcg--color-valid-p (color)
+*** Color Validation
+
+#+begin_src emacs-lisp
+(defun mcg--popup-color-valid-p (color)
   "Check if COLOR is a valid, usable color.
 Returns nil for nil, unspecified colors, or invalid color strings."
   (and color
@@ -456,15 +553,19 @@ Returns nil for nil, unspecified colors, or invalid color strings."
        (not (string-prefix-p "unspecified" color))
        (or (string-match-p "^#[0-9A-Fa-f]\\{6\\}$" color)
            (color-defined-p color))))
+#+end_src
 
+*** Color Getters
+
+#+begin_src emacs-lisp
 (defun mcg--popup-get-border-color ()
   "Get border color from current theme.
 Queries font-lock-keyword-face or link face, falling back to a default."
   (let ((keyword-fg (face-foreground 'font-lock-keyword-face nil t))
         (link-fg (face-foreground 'link nil t)))
     (cond
-     ((mcg--color-valid-p keyword-fg) keyword-fg)
-     ((mcg--color-valid-p link-fg) link-fg)
+     ((mcg--popup-color-valid-p keyword-fg) keyword-fg)
+     ((mcg--popup-color-valid-p link-fg) link-fg)
      (t "#61AFEF"))))
 
 (defun mcg--popup-get-background-color ()
@@ -473,18 +574,22 @@ Queries tooltip or default face, falling back to a default."
   (let ((tooltip-bg (face-background 'tooltip nil t))
         (default-bg (face-background 'default nil t)))
     (cond
-     ((mcg--color-valid-p tooltip-bg) tooltip-bg)
-     ((mcg--color-valid-p default-bg) default-bg)
+     ((mcg--popup-color-valid-p tooltip-bg) tooltip-bg)
+     ((mcg--popup-color-valid-p default-bg) default-bg)
      (t "#282C34"))))
 
 (defun mcg--popup-get-foreground-color ()
   "Get foreground color from current theme.
 Queries default face, falling back to a default."
   (let ((default-fg (face-foreground 'default nil t)))
-    (if (mcg--color-valid-p default-fg)
+    (if (mcg--popup-color-valid-p default-fg)
         default-fg
       "#ABB2BF")))
+#+end_src
 
+*** Popup Scrolling
+
+#+begin_src emacs-lisp
 (defun mcg--popup-scroll-down ()
   "Scroll popup content down."
   (when-let* ((buf (get-buffer mcg--popup-current-buffer))
@@ -498,7 +603,11 @@ Queries default face, falling back to a default."
               (frame (buffer-local-value 'posframe--frame buf)))
     (with-selected-frame frame
       (ignore-errors (scroll-down 3)))))
+#+end_src
 
+*** Popup Show Function
+
+#+begin_src emacs-lisp
 (defun mcg-popup-show (buffer-name content &optional width height)
   "Show CONTENT in a centered posframe popup.
 BUFFER-NAME is the buffer name for the popup.
@@ -509,18 +618,18 @@ Keys: j/k scroll, q/ESC exit
 Usage examples:
   ;; Show simple popup
   (mcg-popup-show \"*My Popup*\" \"Hello, World!\")
-  
+
   ;; Show popup with custom dimensions
   (mcg-popup-show \"*Help*\" \"Some help content here\" 80 40)
-  
+
   ;; Show formatted content
   (mcg-popup-show \"*Info*\"
                   (format \"Module: %s\\nStatus: %s\" name status)
                   60 20)"
   (require 'posframe)
-  
+
   (setq mcg--popup-current-buffer buffer-name)
-  
+
   (let* ((buf (get-buffer-create buffer-name))
          (hint "j/k scroll | q/ESC exit")
          (w (or width mcg-popup-width))
@@ -529,7 +638,7 @@ Usage examples:
          (border-color (mcg--popup-get-border-color))
          (bg-color (mcg--popup-get-background-color))
          (fg-color (mcg--popup-get-foreground-color)))
-    
+
     (with-current-buffer buf
       (let ((inhibit-read-only t))
         (erase-buffer)
@@ -540,7 +649,7 @@ Usage examples:
                   (propertize (concat padding hint)
                               'face `(:foreground ,border-color :weight bold)))
       (goto-char (point-min)))
-    
+
     (posframe-show buf
                    :position (point)
                    :poshandler #'posframe-poshandler-frame-center
@@ -552,7 +661,7 @@ Usage examples:
                    :height h
                    :respect-header-line t
                    :accept-focus nil)
-    
+
     (unwind-protect
         (catch 'exit-popup
           (while t
@@ -570,727 +679,26 @@ Usage examples:
                 (mcg--popup-scroll-up))
                (t nil)))))
       (posframe-hide buffer-name))))
+#+end_src
 
-#+END_SRC
+** Initialization
 
-** Configuration Validation System
-#+BEGIN_SRC emacs-lisp
-;;; Configuration Validation System
+模块初始化函数，设置缓存和注册表。
 
-(defvar mcg-doctor-issues nil
-  "List of issues found during diagnosis.
-Each entry format: (:type TYPE :message MSG :fix FIX)")
+#+begin_src emacs-lisp
+(defun mcg-lib-init ()
+  "Initialize the core-lib module.
+Sets up caches and registries."
+  (mcg-cache-init)
+  (mcg-keybinding-init)
+  ;; Try to load cached extension data
+  (mcg-cache-load)
+  (mcg-log "core-lib initialized"))
+#+end_src
 
-(defun mcg-verify-core-directories ()
-  "Verify that core directories exist.
+** Provide Feature
 
-Returns a list of issues."
-  (let ((issues nil)
-        (dirs `((,mcg-emacs-dir . "Emacs configuration root directory")
-                (,mcg-config-dir . "Configuration directory")
-                (,mcg-core-dir . "Core modules directory")
-                (,mcg-modules-dir . "Modules directory")
-                (,mcg-extensions-dir . "Extensions directory"))))
-    (dolist (dir-info dirs)
-      (let ((dir (car dir-info))
-            (desc (cdr dir-info)))
-        (unless (and dir (file-directory-p dir))
-          (push (list :type 'missing-directory
-                      :message (format "%s does not exist: %s" desc (or dir "not set"))
-                      :fix (format "Create directory or check mcg-init-paths configuration"))
-                issues))))
-    issues))
-
-(defun mcg-verify-extensions ()
-  "Verify that extensions exist.
-
-Returns a list of issues."
-  (let ((issues nil)
-        (missing (mcg-list-missing-extensions)))
-    (dolist (name missing)
-      (push (list :type 'missing-extension
-                  :message (format "Extension missing: %s" name)
-                  :fix (format "git submodule update --init site-lisp/extensions/%s" name))
-            issues))
-    issues))
-
-(defun mcg-verify-module-deps (module-name deps)
-  "Verify that module MODULE-NAME's dependencies DEPS are satisfied.
-
-Arguments:
-- MODULE-NAME: Module name
-- DEPS: Dependency list, each element is (category . module)
-
-Returns a list of issues."
-  (let ((issues nil))
-    (dolist (dep deps)
-      (let* ((category (car dep))
-             (module (cdr dep))
-             ;; Check if dependency module file exists
-             (module-file (expand-file-name
-                           (format "%s/+%s.el" category module)
-                           mcg-modules-dir)))
-        (unless (file-exists-p module-file)
-          (push (list :type 'missing-dependency
-                      :message (format "Module %s depends on %s/%s, but that module doesn't exist"
-                                       module-name category module)
-                      :fix (format "Create module file: modules/%s/+%s.org" category module))
-                issues))))
-    issues))
-
-(defun mcg-verify-load-errors ()
-  "Check for extension load errors.
-
-Returns a list of issues."
-  (let ((issues nil))
-    (dolist (err mcg-extension-load-errors)
-      (let ((error-info (cdr err)))
-        (push (list :type 'load-error
-                    :message (if (and (listp error-info) (plist-get error-info :error))
-                                 (format "Extension %s: %s" (car err) (plist-get error-info :error))
-                               (format "Extension %s: %s" (car err) error-info))
-                    :fix (if (and (listp error-info) (plist-get error-info :git-command))
-                             (plist-get error-info :git-command)
-                           "Check extension directory or run git submodule update"))
-              issues)))
-    issues))
-
-(defun mcg-verify-keybinding-conflicts ()
-  "Check for keybinding conflicts.
-
-Returns a list of issues."
-  (let ((issues nil))
-    (when (and (boundp 'mcg-keybinding-conflicts) mcg-keybinding-conflicts)
-      (dolist (conflict mcg-keybinding-conflicts)
-        (let ((key (car conflict))
-              (old-cmd (cadr conflict))
-              (old-src (nth 2 conflict))
-              (new-cmd (nth 3 conflict))
-              (new-src (nth 4 conflict)))
-          (push (list :type 'keybinding-conflict
-                      :message (format "Key %s: %s (from %s) overwritten by %s (from %s)"
-                                       key old-cmd old-src new-cmd new-src)
-                      :fix (format "Review keybindings in %s and %s" old-src new-src))
-                issues))))
-    issues))
-
-(defun mcg-verify-module-load-errors ()
-  "Check for module load errors.
-
-Returns a list of issues."
-  (let ((issues nil))
-    (when (boundp 'mcg-module-load-errors)
-      (dolist (err mcg-module-load-errors)
-        (let* ((mod-key (car err))
-               (error-info (cdr err))
-               (category (if (consp mod-key) (car mod-key) "unknown"))
-               (module (if (consp mod-key) (cdr mod-key) mod-key)))
-          (push (list :type 'module-load-error
-                      :message (format "Module %s/%s failed to load: %s"
-                                       category module
-                                       (if (and (listp error-info) (plist-get error-info :error))
-                                           (plist-get error-info :error)
-                                         error-info))
-                      :fix (format "Check module file at modules/%s/init-%s.org"
-                                   (if (keywordp category)
-                                       (substring (symbol-name category) 1)
-                                     category)
-                                   module))
-                issues))))
-    issues))
-
-(defun mcg-verify-extension-cache ()
-  "Check if extension cache is outdated.
-
-Returns a list of issues."
-  (let ((issues nil))
-    ;; Check if cache exists and is potentially stale
-    (when (and (boundp 'mcg-extension-cache)
-               mcg-extension-cache
-               (boundp 'mcg-extensions-dir)
-               (file-directory-p mcg-extensions-dir))
-      ;; Check if extensions directory has been modified recently
-      (let* ((cache-time (when (boundp 'mcg-extension-cache-time)
-                           mcg-extension-cache-time))
-             (dir-mtime (file-attribute-modification-time
-                         (file-attributes mcg-extensions-dir))))
-        (when (and cache-time dir-mtime
-                   (time-less-p cache-time dir-mtime))
-          (push (list :type 'stale-cache
-                      :message "Extension cache may be outdated"
-                      :fix "Run M-x mcg/rebuild-extension-cache")
-                issues))))
-    issues))
-
-(defun mcg-verify-missing-dependencies ()
-  "Check for missing module dependencies.
-
-Returns a list of issues."
-  (let ((issues nil))
-    ;; Check module dependencies if core-modules is loaded
-    (when (boundp 'mcg-module-dependencies)
-      (dolist (dep-entry mcg-module-dependencies)
-        (let* ((mod-key (car dep-entry))
-               (deps (cdr dep-entry))
-               (category (car mod-key))
-               (module (cdr mod-key)))
-          (dolist (dep deps)
-            (let ((dep-cat (car dep))
-                  (dep-mod (cdr dep)))
-              ;; Check if dependency module exists
-              (when (and (boundp 'mcg-modules-dir) mcg-modules-dir)
-                (let ((dep-file (expand-file-name
-                                 (format "%s/init-%s.el"
-                                         (if (keywordp dep-cat)
-                                             (substring (symbol-name dep-cat) 1)
-                                           dep-cat)
-                                         dep-mod)
-                                 mcg-modules-dir)))
-                  (unless (file-exists-p dep-file)
-                    (push (list :type 'missing-module-dependency
-                                :message (format "Module %s/%s depends on %s/%s which doesn't exist"
-                                                 category module dep-cat dep-mod)
-                                :fix (format "Create module file: modules/%s/init-%s.org"
-                                             (if (keywordp dep-cat)
-                                                 (substring (symbol-name dep-cat) 1)
-                                               dep-cat)
-                                             dep-mod))
-                          issues)))))))))
-    issues))
-
-(defun mcg-doctor ()
-  "Perform complete configuration diagnosis.
-
-Interactive command that displays all found issues and fix suggestions.
-Checks for:
-- Core directory existence
-- Missing extensions
-- Extension load errors
-- Module load errors
-- Keybinding conflicts
-- Missing dependencies
-- Outdated cache"
-  (interactive)
-  (setq mcg-doctor-issues nil)
-  
-  ;; Collect all issues
-  (setq mcg-doctor-issues
-        (append (mcg-verify-core-directories)
-                (mcg-verify-extensions)
-                (mcg-verify-load-errors)
-                (mcg-verify-module-load-errors)
-                (mcg-verify-keybinding-conflicts)
-                (mcg-verify-missing-dependencies)
-                (mcg-verify-extension-cache)
-                (mcg-doctor-check-all-deps)))
-  
-  ;; Display results
-  (if (null mcg-doctor-issues)
-      (message "✅ Configuration diagnosis passed, no issues found!")
-    (with-current-buffer (get-buffer-create "*MCG Doctor*")
-      (let ((inhibit-read-only t))
-        (erase-buffer)
-        (insert "MCG Configuration Diagnosis Report\n")
-        (insert "===================================\n\n")
-        (insert (format "Found %d issues:\n\n" (length mcg-doctor-issues)))
-        
-        ;; Group issues by type
-        (let ((grouped (seq-group-by (lambda (issue) (plist-get issue :type))
-                                     mcg-doctor-issues))
-              (issue-num 1))
-          (dolist (group grouped)
-            (let ((type (car group))
-                  (issues (cdr group)))
-              (insert (format "── %s (%d) ──\n" (symbol-name type) (length issues)))
-              (dolist (issue issues)
-                (let ((msg (plist-get issue :message))
-                      (fix (plist-get issue :fix)))
-                  (insert (format "%d. %s\n" issue-num msg))
-                  (insert (format "   Fix: %s\n\n" fix))
-                  (cl-incf issue-num))))))
-        
-        (insert "\n")
-        (insert (make-string 50 ?─))
-        (insert "\n\nKeys: [q] Quit  [r] Re-run doctor\n")
-        
-        (setq-local buffer-read-only t)
-        (use-local-map (let ((map (make-sparse-keymap)))
-                         (define-key map "q" #'quit-window)
-                         (define-key map "r" #'mcg-doctor)
-                         map)))
-      (goto-char (point-min))
-      (display-buffer (current-buffer))))
-  
-  mcg-doctor-issues)
-
-(defun mcg-doctor-check-all-deps ()
-  "Check all module dependencies.
-
-Returns a list of issues."
-  (let ((issues nil))
-    ;; This can only fully check after core-modules is loaded
-    ;; Currently only checks extension dependencies
-    (dolist (entry mcg-extensions)
-      (let* ((name (car entry))
-             (deps (plist-get (cdr entry) :depends)))
-        (dolist (dep deps)
-          (unless (mcg-extension-exists-p dep)
-            (push (list :type 'extension-dependency
-                        :message (format "Extension %s depends on %s, but %s doesn't exist"
-                                         name dep dep)
-                        :fix (format "git submodule update --init site-lisp/extensions/%s" dep))
-                  issues)))))
-    issues))
-
-#+END_SRC
-
-** Interactive Commands
-#+BEGIN_SRC emacs-lisp
-;;; Interactive Commands
-
-(defun mcg/extension-info (name)
-  "Display detailed info for extension NAME.
-
-When called interactively, prompts for extension name."
-  (interactive
-   (list (completing-read "Extension: " (mcg-list-all-extensions) nil t)))
-  (let ((info (mcg-extension-info name)))
-    (if info
-        (message "Extension: %s\n  Path: %s\n  Provides: %s\n  Depends: %s\n  Exists: %s\n  Loaded: %s"
-                 (plist-get info :name)
-                 (plist-get info :path)
-                 (plist-get info :provides)
-                 (or (plist-get info :depends) "none")
-                 (if (plist-get info :exists) "yes" "NO")
-                 (if (plist-get info :loaded) "yes" "no"))
-      (message "Extension not found: %s" name))))
-
-(defun mcg/list-extensions ()
-  "Display status of all extensions with enhanced UI.
-
-Shows load status with icons, error messages inline,
-and action buttons for common operations."
-  (interactive)
-  (with-current-buffer (get-buffer-create "*MCG Extensions*")
-    (let ((inhibit-read-only t))
-      (erase-buffer)
-      (insert "MCG Extension List\n")
-      (insert "==================\n\n")
-      
-      ;; Summary section
-      (let* ((all-exts (mcg-list-all-extensions))
-             (loaded-count (length mcg-loaded-extensions))
-             (missing-count (length (mcg-list-missing-extensions)))
-             (error-count (length mcg-extension-load-errors)))
-        (insert (format "Total: %d | Loaded: %d | Missing: %d | Errors: %d\n\n"
-                        (length all-exts) loaded-count missing-count error-count)))
-      
-      ;; Column headers
-      (insert (format "%-40s %-8s %-8s %s\n" "Extension" "Exists" "Loaded" "Status"))
-      (insert (make-string 80 ?─))
-      (insert "\n")
-      
-      ;; Extension list with icons and status
-      (dolist (name (sort (mcg-list-all-extensions) #'string<))
-        (let* ((exists (mcg-extension-exists-p name))
-               (loaded (member name mcg-loaded-extensions))
-               (error-entry (assoc name mcg-extension-load-errors))
-               (exists-icon (if exists "✓" "✗"))
-               (loaded-icon (cond
-                             (loaded "✓")
-                             (error-entry "!")
-                             (t "-")))
-               (status (cond
-                        (error-entry
-                         (propertize (format "Error: %s" (cdr error-entry))
-                                     'face 'error))
-                        ((not exists)
-                         (propertize "Missing - run git submodule update"
-                                     'face 'warning))
-                        (loaded
-                         (propertize "OK" 'face 'success))
-                        (t
-                         "Not loaded"))))
-          (insert (format "%-40s %-8s %-8s %s\n"
-                          name
-                          (if exists
-                              (propertize exists-icon 'face 'success)
-                            (propertize exists-icon 'face 'error))
-                          (cond
-                           (loaded (propertize loaded-icon 'face 'success))
-                           (error-entry (propertize loaded-icon 'face 'error))
-                           (t loaded-icon))
-                          status))))
-      
-      ;; Actions section
-      (insert "\n")
-      (insert (make-string 80 ?─))
-      (insert "\n\nActions:\n")
-      (insert "  [r] Refresh list  [m] Show missing  [e] Show errors  [l] Load extension\n")
-      (insert "  [c] Rebuild cache [d] Run doctor    [q] Quit\n")
-      
-      ;; Set up keymap
-      (setq-local buffer-read-only t)
-      (use-local-map (let ((map (make-sparse-keymap)))
-                       (define-key map "r" (lambda () (interactive) (mcg/list-extensions)))
-                       (define-key map "m" #'mcg/list-missing-extensions)
-                       (define-key map "e" #'mcg/show-extension-errors)
-                       (define-key map "l" #'mcg/load-extension-interactive)
-                       (define-key map "c" #'mcg/rebuild-extension-cache)
-                       (define-key map "d" #'mcg-doctor)
-                       (define-key map "q" #'quit-window)
-                       map)))
-    (goto-char (point-min))
-    (display-buffer (current-buffer))))
-
-(defun mcg/show-extension-errors ()
-  "Display all extension load errors."
-  (interactive)
-  (if (null mcg-extension-load-errors)
-      (message "No extension load errors!")
-    (with-current-buffer (get-buffer-create "*MCG Extension Errors*")
-      (let ((inhibit-read-only t))
-        (erase-buffer)
-        (insert "MCG Extension Load Errors\n")
-        (insert "=========================\n\n")
-        (insert (format "Total errors: %d\n\n" (length mcg-extension-load-errors)))
-        (dolist (err mcg-extension-load-errors)
-          (insert (format "Extension: %s\n" (car err)))
-          (insert (format "  Error: %s\n" (cdr err)))
-          (insert (format "  Fix: git submodule update --init site-lisp/extensions/%s\n\n"
-                          (car err))))
-        (setq-local buffer-read-only t))
-      (goto-char (point-min))
-      (display-buffer (current-buffer)))))
-
-(defun mcg/load-extension-interactive (name)
-  "Interactively load an extension by NAME."
-  (interactive
-   (list (completing-read "Load extension: "
-                          (seq-filter (lambda (ext)
-                                        (and (mcg-extension-exists-p ext)
-                                             (not (member ext mcg-loaded-extensions))))
-                                      (mcg-list-all-extensions))
-                          nil t)))
-  (if (mcg-load-extension name)
-      (message "Loaded extension: %s" name)
-    (message "Failed to load extension: %s" name)))
-
-(defun mcg/list-missing-extensions ()
-  "Display all missing extensions."
-  (interactive)
-  (let ((missing (mcg-list-missing-extensions)))
-    (if missing
-        (with-current-buffer (get-buffer-create "*MCG Missing Extensions*")
-          (erase-buffer)
-          (insert "Missing Extensions\n")
-          (insert "==================\n\n")
-          (insert "Run the following commands to install:\n\n")
-          (dolist (name missing)
-            (insert (format "git submodule update --init site-lisp/extensions/%s\n" name)))
-          (goto-char (point-min))
-          (display-buffer (current-buffer)))
-      (message "All extensions are installed!"))))
-
-#+END_SRC
-
-** Keybinding Registry System
-#+BEGIN_SRC emacs-lisp
-;;; Keybinding Registry System
-
-(defvar mcg-keybinding-registry nil
-  "Registry of all keybindings.
-Format: ((KEY . (COMMAND . SOURCE)) ...)
-
-Each entry tracks:
-- KEY: The key sequence string (e.g., \"C-c s l\")
-- COMMAND: The command symbol bound to the key
-- SOURCE: The source module that defined the binding")
-
-(defvar mcg-keybinding-conflicts nil
-  "List of detected keybinding conflicts.
-Format: ((KEY OLD-COMMAND OLD-SOURCE NEW-COMMAND NEW-SOURCE) ...)")
-
-(defun mcg-register-keybinding (key command source)
-  "Register KEY bound to COMMAND from SOURCE.
-Warns if KEY is already bound to a different command.
-
-Arguments:
-- KEY: Key sequence string (e.g., \"C-c s l\")
-- COMMAND: Command symbol to bind
-- SOURCE: Source module name (string)
-
-Returns t if registered successfully, nil if conflict detected."
-  (let ((existing (assoc key mcg-keybinding-registry)))
-    (cond
-     ;; Key already bound to same command - just update source if needed
-     ((and existing (eq (cadr existing) command))
-      (setcdr existing (cons command source))
-      t)
-     ;; Key bound to different command - conflict!
-     ((and existing (not (eq (cadr existing) command)))
-      (let ((old-command (cadr existing))
-            (old-source (cddr existing)))
-        (push (list key old-command old-source command source)
-              mcg-keybinding-conflicts)
-        (display-warning 'mcg
-          (format "Keybinding conflict: %s\n  Was: %s (from %s)\n  Now: %s (from %s)"
-                  key old-command old-source command source)
-          :warning)
-        ;; Still register the new binding (last one wins)
-        (setf (alist-get key mcg-keybinding-registry nil nil #'equal)
-              (cons command source))
-        nil))
-     ;; New binding
-     (t
-      (push (cons key (cons command source)) mcg-keybinding-registry)
-      t))))
-
-(defmacro mcg-bind-key (key command &optional source keymap)
-  "Bind KEY to COMMAND and register it in the keybinding registry.
-
-Arguments:
-- KEY: Key sequence string (e.g., \"C-c s l\")
-- COMMAND: Command to bind (will be quoted)
-- SOURCE: Optional source module name (defaults to \"unknown\")
-- KEYMAP: Optional keymap (defaults to global-map)
-
-Example:
-  (mcg-bind-key \"C-c s l\" consult-line \"init-keybindings\")
-  (mcg-bind-key \"C-c C-b\" eval-buffer \"init-keybindings\" emacs-lisp-mode-map)"
-  (let ((src (or source "unknown")))
-    (if keymap
-        `(progn
-           (mcg-register-keybinding ,key ',command ,src)
-           (define-key ,keymap (kbd ,key) ',command))
-      `(progn
-         (mcg-register-keybinding ,key ',command ,src)
-         (global-set-key (kbd ,key) ',command)))))
-
-(defun mcg-list-keybindings ()
-  "Return a sorted list of all registered keybindings.
-Each entry is (KEY COMMAND SOURCE)."
-  (let ((bindings nil))
-    (dolist (entry mcg-keybinding-registry)
-      (push (list (car entry) (cadr entry) (cddr entry)) bindings))
-    (sort bindings (lambda (a b) (string< (car a) (car b))))))
-
-(defun mcg-list-keybinding-conflicts ()
-  "Return list of all detected keybinding conflicts."
-  mcg-keybinding-conflicts)
-
-(defun mcg-keybinding-source (key)
-  "Get the source module for KEY binding.
-
-Arguments:
-- KEY: Key sequence string
-
-Returns the source module name, or nil if not registered.
-
-Usage example:
-  ;; Find which module defined a keybinding
-  (mcg-keybinding-source \"C-c s l\")  ; => \"init-keybindings\""
-  (let ((entry (assoc key mcg-keybinding-registry)))
-    (when entry
-      (cddr entry))))
-
-(defun mcg-keybindings-by-source (source)
-  "Get all keybindings from SOURCE module.
-
-Arguments:
-- SOURCE: Source module name (string)
-
-Returns list of (KEY . COMMAND) pairs.
-
-Usage example:
-  ;; Get all keybindings defined in init-keybindings
-  (mcg-keybindings-by-source \"init-keybindings\")
-  ;; => ((\"C-c s l\" . consult-line) (\"C-c s g\" . color-rg-search-input) ...)"
-  (let ((result nil))
-    (dolist (entry mcg-keybinding-registry)
-      (when (equal (cddr entry) source)
-        (push (cons (car entry) (cadr entry)) result)))
-    (nreverse result)))
-
-(defun mcg-clear-keybinding-registry ()
-  "Clear the keybinding registry and conflicts list.
-Useful for testing or reloading configuration."
-  (setq mcg-keybinding-registry nil)
-  (setq mcg-keybinding-conflicts nil))
-
-#+END_SRC
-
-** Notification System
-#+BEGIN_SRC emacs-lisp
-;;; Notification System
-
-(defvar mcg-notification-style 'message
-  "Notification display style.
-Can be 'posframe, 'message, or 'minibuffer.
-Default is 'message for compatibility.")
-
-(defun mcg-notify (title message &optional type)
-  "Show notification with TITLE and MESSAGE.
-
-Arguments:
-- TITLE: Notification title string
-- MESSAGE: Notification message string
-- TYPE: Optional type symbol ('info, 'warning, or 'error)
-
-The display style is controlled by `mcg-notification-style'.
-
-Usage examples:
-  ;; Show info notification
-  (mcg-notify \"Module Loaded\" \"Successfully loaded rust module\")
-  
-  ;; Show warning notification
-  (mcg-notify \"Deprecation\" \"This function will be removed\" 'warning)
-  
-  ;; Show error notification
-  (mcg-notify \"Load Failed\" \"Could not load extension\" 'error)"
-  (let ((face (pcase type
-                ('warning 'warning)
-                ('error 'error)
-                (_ 'success)))
-        (type-str (pcase type
-                    ('warning "Warning")
-                    ('error "Error")
-                    (_ "Info"))))
-    (pcase mcg-notification-style
-      ('posframe
-       (when (and (fboundp 'mcg-popup-show)
-                  (require 'posframe nil t))
-         (mcg-popup-show "*MCG Notification*"
-                         (format "【%s】\n\n%s" title message)
-                         40 10)))
-      ('message
-       (message "[MCG %s] %s: %s" type-str title message))
-      ('minibuffer
-       (minibuffer-message "%s: %s" title message))
-      (_
-       (message "[MCG %s] %s: %s" type-str title message)))))
-
-#+END_SRC
-
-** Startup Error Summary
-#+BEGIN_SRC emacs-lisp
-;;; Startup Error Summary
-
-(defvar mcg-startup-errors-shown nil
-  "Flag to track if startup errors have been shown.")
-
-(defun mcg-collect-startup-errors ()
-  "Collect all errors that occurred during startup.
-
-Returns a plist with:
-- :module-errors - List of module load errors
-- :extension-errors - List of extension load errors
-- :total-count - Total number of errors"
-  (let ((module-errors (when (boundp 'mcg-module-load-errors)
-                         mcg-module-load-errors))
-        (extension-errors mcg-extension-load-errors))
-    (list :module-errors module-errors
-          :extension-errors extension-errors
-          :total-count (+ (length module-errors)
-                          (length extension-errors)))))
-
-(defun mcg-format-startup-error-summary ()
-  "Format a summary of startup errors.
-
-Returns a formatted string summarizing all errors."
-  (let* ((errors (mcg-collect-startup-errors))
-         (module-errors (plist-get errors :module-errors))
-         (extension-errors (plist-get errors :extension-errors))
-         (total (plist-get errors :total-count)))
-    (if (= total 0)
-        nil
-      (with-temp-buffer
-        (insert "MCG Startup Error Summary\n")
-        (insert "=========================\n\n")
-        (insert (format "Total errors: %d\n\n" total))
-        
-        ;; Module errors
-        (when module-errors
-          (insert (format "Module Errors (%d):\n" (length module-errors)))
-          (insert (make-string 40 ?─))
-          (insert "\n")
-          (dolist (err module-errors)
-            (let* ((mod-key (car err))
-                   (error-info (cdr err))
-                   (category (if (consp mod-key) (car mod-key) "unknown"))
-                   (module (if (consp mod-key) (cdr mod-key) mod-key)))
-              (insert (format "  • %s/%s\n" category module))
-              (when (and (listp error-info) (plist-get error-info :error))
-                (insert (format "    Error: %s\n" (plist-get error-info :error))))))
-          (insert "\n"))
-        
-        ;; Extension errors
-        (when extension-errors
-          (insert (format "Extension Errors (%d):\n" (length extension-errors)))
-          (insert (make-string 40 ?─))
-          (insert "\n")
-          (dolist (err extension-errors)
-            (let* ((name (car err))
-                   (error-info (cdr err)))
-              (insert (format "  • %s\n" name))
-              (when (and (listp error-info) (plist-get error-info :git-command))
-                (insert (format "    Fix: %s\n" (plist-get error-info :git-command))))))
-          (insert "\n"))
-        
-        (insert "\nRun M-x mcg-doctor for detailed diagnostics.\n")
-        (buffer-string)))))
-
-(defun mcg-show-startup-errors ()
-  "Show startup error summary if errors occurred.
-
-This function should be called after startup is complete.
-It shows a notification if errors occurred and provides
-quick access to error details."
-  (interactive)
-  (let* ((errors (mcg-collect-startup-errors))
-         (total (plist-get errors :total-count)))
-    (if (= total 0)
-        (when (called-interactively-p 'any)
-          (message "✓ No startup errors!"))
-      ;; Show notification
-      (mcg-notify "Startup Errors"
-                  (format "%d error(s) occurred during startup. Run M-x mcg-show-startup-error-details"
-                          total)
-                  'warning)
-      ;; Set flag
-      (setq mcg-startup-errors-shown t))))
-
-(defun mcg-show-startup-error-details ()
-  "Show detailed startup error information in a buffer."
-  (interactive)
-  (let ((summary (mcg-format-startup-error-summary)))
-    (if summary
-        (with-current-buffer (get-buffer-create "*MCG Startup Errors*")
-          (let ((inhibit-read-only t))
-            (erase-buffer)
-            (insert summary)
-            (setq-local buffer-read-only t)
-            ;; Set up keymap
-            (use-local-map (let ((map (make-sparse-keymap)))
-                             (define-key map "q" #'quit-window)
-                             (define-key map "d" #'mcg-doctor)
-                             (define-key map "e" #'mcg/show-extension-errors)
-                             map)))
-          (goto-char (point-min))
-          (display-buffer (current-buffer)))
-      (message "✓ No startup errors!"))))
-
-(defun mcg-setup-startup-error-notification ()
-  "Setup hook to show startup errors after Emacs initialization.
-
-This function adds a hook to `emacs-startup-hook' to display
-error notifications after startup is complete."
-  (add-hook 'emacs-startup-hook #'mcg-show-startup-errors))
-
-#+END_SRC
-
-** Provide
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (provide 'core-lib)
 ;;; core-lib.el ends here
-#+END_SRC
+#+end_src

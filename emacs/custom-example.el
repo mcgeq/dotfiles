@@ -1,276 +1,348 @@
-;;; custom-example.el --- 用户自定义配置示例 -*- lexical-binding: t; -*-
+;;; custom-example.el --- Example user configuration template -*- lexical-binding: t; -*-
 
-;; Filename: custom-example.el
-;; Description: 用户自定义配置模板
-;; Author: mcge <mcgeq@outlook.com>
-;; Created: 2025-12-06
+;; Copyright (C) 2024 MCG
+;; Author: MCG <mcgeq@outlook.com>
+;; Keywords: configuration, example
 
 ;;; Commentary:
 ;;
-;; 这是一个配置示例文件，展示如何自定义 Emacs 配置
-;; 
-;; 使用方法:
-;;   1. 复制此文件为 custom.el
-;;   2. 修改下面的配置项
-;;   3. 重启 Emacs
+;; This is an example configuration template for MCG Emacs.
+;; It demonstrates common customization options and best practices.
 ;;
-;; 注意: custom.el 已被添加到 .gitignore，不会被提交
+;; Requirements: 13.4
 ;;
+;; Usage:
+;;   1. Copy this file to site-lisp/config/private/config.el
+;;   2. Uncomment and modify the settings you want to customize
+;;   3. Restart Emacs or run M-x mcg-reload-config
+;;
+;; Note: The private config file is NOT tracked by Git, so your
+;; personal settings remain private.
 
 ;;; Code:
 
-;; =============================================================================
-;; 路径配置
-;; =============================================================================
+;;; ============================================================
+;;; Quick Start - Essential Settings
+;;; ============================================================
 
-;; 配置基础目录
-;; Windows: "D:/config"
-;; Linux/macOS: (expand-file-name "~")
-(setq mcg-base-dir "D:/config")
+;; Uncomment and modify these for a quick start:
 
-;; Org 文件目录
-;; (setq mcg-org-dir (concat mcg-base-dir "/org"))
+;; Your base directory for personal files
+(setq mcg-user-base-dir "D:/config")
 
-;; 博客目录
-;; (setq mcg-blog-dir (concat mcg-base-dir "/workspaces/blog/mcge-blog"))
-
-
-;; =============================================================================
-;; 模块配置
-;; =============================================================================
-
-;; 使用 mcg! 宏声明启用的模块
-;; 示例:
-;;   :core           - 启用核心模块（必需）
-;;   :ui doom-modeline  - 启用 UI 类别的 doom-modeline 模块
-;;   :editor line-number indent  - 启用多个编辑器模块
-;;   :lang (rust lua typescript)  - 启用多个语言支持
-;;   :org -org-download  - 禁用特定模块（前缀 -）
-
-(mcg! :core                             ; 核心模块（必需）
-      
-      :ui doom-modeline                 ; UI 模块
-      
-      :editor                           ; 编辑器增强
-      line-number
-      indent
-      editor
-      treesit
-      
-      :completion                       ; 补全系统
-      marginalia
-      vertico
-      embark
-      yasnippet
-      
-      :keybindings                      ; 键盘绑定
-      keymaps
-      vundo
-      
-      :tools                            ; 工具
-      sort-tab
-      auto-save
-      recentf
-      generic
-      symbol-overlay
-      
-      :search                           ; 搜索
-      blink-search
-      color-rg
-      helpful
-      
-      :input                            ; 输入法
-      rime
-      wraplish
-      fingertip
-      
-      :git                              ; 版本控制
-      magit
-      
-      :lang                             ; 语言支持
-      lsp-bridge
-      (rust lua cpp typescript web)
-      
-      :org                              ; Org Mode
-      org
-      org-agenda
-      org-download
-      capture-hugo
-      consult-todo
-      org-numbering
-      
-      :docs                             ; 文档
-      markdown
-      grip-mode)
-
-
-;; =============================================================================
-;; UI 配置
-;; =============================================================================
-
-;; 主题选择
-;; 可选值: 'doom-one 'modus-operandi 'modus-vivendi 'ef-day 'ef-night
-;; (setq mcg-theme 'doom-one)
-
-;; 字体配置
-;; 默认字体
+;; Font settings
 (setq mcg-font-family "FiraCode Nerd Font Mono")
 (setq mcg-font-size 14)
 
-;; 中文字体
-;; (setq mcg-cjk-font "Microsoft Yahei")
-
-;; 图标字体
-;; (setq mcg-icon-font "FiraCode Nerd Font")
-
-
-;; =============================================================================
-;; LSP 配置
-;; =============================================================================
-
-;; LSP 后端选择
-;; 可选值: 'lsp-bridge 'eglot 'lsp-mode
-(setq mcg-lsp-backend 'lsp-bridge)
-
-;; LSP 服务器配置目录
-;; (setq mcg-lsp-server-dir (concat mcgemacs-root-dir "/langservers"))
-
-
-;; =============================================================================
-;; 补全系统配置
-;; =============================================================================
-
-;; 补全系统选择
-;; 可选值: 'vertico 'ivy 'helm
-(setq mcg-completion-system 'vertico)
-
-;; Vertico 显示行数
-;; (setq vertico-count 15)
-
-;; 是否启用拼音搜索
-;; (setq mcg-enable-pinyin-search t)
-
-
-;; =============================================================================
-;; 功能开关
-;; =============================================================================
-
-;; Dashboard
-(setq mcg-enable-dashboard t)
-
-;; Line numbers
+;; Enable features
 (setq mcg-enable-line-numbers t)
-
-;; Auto-save
 (setq mcg-enable-auto-save t)
 
-;; Symbol overlay
-(setq mcg-enable-symbol-overlay t)
 
-;; Treesit (tree-sitter)
-(setq mcg-enable-treesit t)
+;;; ============================================================
+;;; Path Configuration
+;;; ============================================================
 
+;; Base directory for your personal files
+;; Windows: "D:/config"
+;; Linux/macOS: (expand-file-name "~")
+;; (setq mcg-user-base-dir "D:/config")
 
-;; =============================================================================
-;; Org Mode 配置
-;; =============================================================================
+;; Org files directory
+;; (setq mcg-org-dir (expand-file-name "org" mcg-user-base-dir))
 
-;; 是否启用 Org mode
-(setq mcg-enable-org t)
-
-;; Org 文件位置
-;; (setq org-directory (concat mcg-base-dir "/org"))
-
-;; Agenda 文件
-;; (setq org-agenda-files '("~/org/tasks.org" "~/org/projects.org"))
-
-;; Capture templates (示例)
-;; (setq org-capture-templates
-;;       '(("t" "Task" entry (file+headline "~/org/tasks.org" "Tasks")
-;;          "* TODO %?\n  %i\n  %a")
-;;         ("n" "Note" entry (file+headline "~/org/notes.org" "Notes")
-;;          "* %?\n  %i\n  %a")))
+;; Blog/Hugo directory for ox-hugo
+;; (setq mcg-blog-dir (expand-file-name "workspaces/blog" mcg-user-base-dir))
 
 
-;; =============================================================================
-;; 输入法配置
-;; =============================================================================
+;;; ============================================================
+;;; Theme and Appearance
+;;; ============================================================
 
-;; Rime 用户数据目录
-;; Windows: (concat mcg-base-dir "/rime")
-;; Linux: "~/.config/fcitx/rime"
-;; (setq mcg-rime-user-data-dir (concat mcg-base-dir "/rime"))
+;; Theme selection
+;; ef-themes: 'ef-day 'ef-night 'ef-spring 'ef-summer 'ef-autumn 'ef-winter
+;;            'ef-duo-dark 'ef-duo-light 'ef-trio-dark 'ef-trio-light
+;; modus-themes: 'modus-operandi 'modus-vivendi
+;; (setq mcg-theme 'ef-day)
 
-
-;; =============================================================================
-;; 性能配置
-;; =============================================================================
-
-;; GC 阈值（字节）
-;; 默认: 800000 (800KB)
-;; 推荐: 100000000 (100MB) for better performance
-;; (setq gc-cons-threshold 100000000)
-
-;; 启动后恢复 GC 阈值
-;; (add-hook 'emacs-startup-hook
-;;           (lambda ()
-;;             (setq gc-cons-threshold 800000)))
-
-;; 是否启用性能监控
-;; (setq mcg-benchmark-enabled nil)
+;; Override theme after loading
+;; (with-eval-after-load 'init-theme
+;;   (load-theme 'modus-vivendi t))
 
 
-;; =============================================================================
-;; 编辑器行为
-;; =============================================================================
+;;; ============================================================
+;;; Font Configuration
+;;; ============================================================
 
-;; 是否使用空格缩进
-;; (setq-default indent-tabs-mode nil)
+;; ASCII font family (monospace recommended)
+;; Popular choices:
+;;   "FiraCode Nerd Font Mono"
+;;   "JetBrains Mono"
+;;   "Cascadia Code"
+;;   "Source Code Pro"
+;; (setq mcg-font-family "FiraCode Nerd Font Mono")
 
-;; Tab 宽度
+;; Font size (in points)
+;; (setq mcg-font-size 14)
+
+;; CJK (Chinese/Japanese/Korean) font
+;; Windows: "Microsoft YaHei" or "SimHei"
+;; macOS: "PingFang SC" or "Hiragino Sans GB"
+;; Linux: "Noto Sans CJK SC" or "WenQuanYi Micro Hei"
+;; (setq mcg-cjk-font "Microsoft YaHei")
+
+
+;;; ============================================================
+;;; Editor Defaults
+;;; ============================================================
+
+;; Line numbers
+;; (setq mcg-enable-line-numbers t)
+;; (setq display-line-numbers-type 'relative)  ; 'relative 'absolute nil
+
+;; Indentation
+;; (setq-default indent-tabs-mode nil)  ; Use spaces
 ;; (setq-default tab-width 4)
 
-;; 行号显示模式
-;; 可选值: 'relative 'absolute nil
-;; (setq display-line-numbers-type 'relative)
+;; Scrolling behavior
+;; (setq scroll-margin 3)
+;; (setq scroll-conservatively 101)
 
-;; 自动保存间隔（秒）
-;; (setq auto-save-interval 5)
-
-
-;; =============================================================================
-;; 键盘绑定 (可选)
-;; =============================================================================
-
-;; 自定义键盘绑定示例
-;; (global-set-key (kbd "C-c C-c") #'my-custom-function)
+;; Auto-save
+;; (setq mcg-enable-auto-save t)
+;; (setq auto-save-idle 5)  ; seconds
 
 
-;; =============================================================================
-;; 语言特定配置
-;; =============================================================================
+;;; ============================================================
+;;; LSP Configuration (lsp-bridge)
+;;; ============================================================
+
+;; LSP backend
+;; (setq mcg-lsp-backend 'lsp-bridge)
+
+;; Diagnostics
+;; (setq lsp-bridge-enable-diagnostics t)
+;; (setq lsp-bridge-enable-hover-diagnostic t)
+
+;; Completion
+;; (setq acm-enable-icon t)
+;; (setq acm-enable-doc t)
+
+;; Language server paths (if not in PATH)
+;; (setq lsp-bridge-python-command "python3")
+;; (setq lsp-bridge-python-lsp-server "pyright")
+
+
+;;; ============================================================
+;;; Completion System (Vertico)
+;;; ============================================================
+
+;; Number of candidates to display
+;; (setq vertico-count 15)
+
+;; Enable pinyin search for Chinese
+;; (setq mcg-enable-pinyin-search t)
+
+;; Orderless matching style
+;; (setq orderless-matching-styles '(orderless-literal orderless-regexp))
+
+
+;;; ============================================================
+;;; Input Method (Rime)
+;;; ============================================================
+
+;; Rime user data directory
+;; Windows: "D:/config/rime"
+;; Linux: "~/.config/fcitx/rime" or "~/.local/share/fcitx5/rime"
+;; macOS: "~/Library/Rime"
+;; (setq rime-user-data-dir "D:/config/rime")
+
+;; Rime shared data directory (optional)
+;; (setq rime-share-data-dir "/usr/share/rime-data")
+
+
+;;; ============================================================
+;;; Org Mode Configuration
+;;; ============================================================
+
+;; Enable Org mode
+;; (setq mcg-enable-org t)
+
+;; Org directory
+;; (setq org-directory "~/org")
+
+;; Agenda files
+;; (setq org-agenda-files '("~/org/tasks.org"
+;;                          "~/org/projects.org"
+;;                          "~/org/calendar.org"))
+
+;; Default notes file
+;; (setq org-default-notes-file "~/org/notes.org")
+
+;; Capture templates
+;; (setq org-capture-templates
+;;       '(("t" "Task" entry
+;;          (file+headline "~/org/tasks.org" "Inbox")
+;;          "* TODO %?\n  %i\n  %a"
+;;          :empty-lines 1)
+;;         ("n" "Note" entry
+;;          (file+headline "~/org/notes.org" "Notes")
+;;          "* %?\n  %i\n  %a"
+;;          :empty-lines 1)
+;;         ("j" "Journal" entry
+;;          (file+datetree "~/org/journal.org")
+;;          "* %?\n  %i"
+;;          :empty-lines 1)))
+
+;; TODO keywords
+;; (setq org-todo-keywords
+;;       '((sequence "TODO(t)" "NEXT(n)" "WAITING(w)" "|" "DONE(d)" "CANCELLED(c)")))
+
+
+;;; ============================================================
+;;; Language-Specific Settings
+;;; ============================================================
 
 ;; Python
 ;; (setq python-shell-interpreter "python3")
+;; (with-eval-after-load 'init-python
+;;   (setq python-indent-offset 4))
 
 ;; Rust
-;; (setq rust-format-on-save t)
+;; (with-eval-after-load 'init-rust
+;;   (setq rust-format-on-save t))
 
-;; JavaScript/TypeScript
+;; TypeScript/JavaScript
 ;; (setq js-indent-level 2)
 ;; (setq typescript-indent-level 2)
 
+;; Web mode (HTML/Vue/JSX)
+;; (with-eval-after-load 'init-web
+;;   (setq web-mode-markup-indent-offset 2)
+;;   (setq web-mode-css-indent-offset 2)
+;;   (setq web-mode-code-indent-offset 2))
 
-;; =============================================================================
-;; 其他配置
-;; =============================================================================
+;; C/C++
+;; (with-eval-after-load 'init-cpp
+;;   (setq c-basic-offset 4))
 
-;; 启动时显示的 buffer
-;; 可选值: "*scratch*" "*dashboard*" 或文件路径
-;; (setq initial-buffer-choice "*scratch*")
 
-;; 是否显示启动时间
+;;; ============================================================
+;;; Git (Magit) Configuration
+;;; ============================================================
+
+;; Git executable path (if not in PATH)
+;; (setq magit-git-executable "C:/Program Files/Git/bin/git.exe")
+
+;; Default directory for new repositories
+;; (setq magit-repository-directories '(("~/projects" . 2)))
+
+
+;;; ============================================================
+;;; Performance Tuning
+;;; ============================================================
+
+;; GC threshold (bytes)
+;; Default: 16MB, High performance: 100MB
+;; (setq gc-cons-threshold (* 100 1024 1024))
+
+;; Restore GC after startup
+;; (add-hook 'emacs-startup-hook
+;;           (lambda ()
+;;             (setq gc-cons-threshold (* 16 1024 1024))))
+
+;; Native compilation (Emacs 29+)
+;; (setq native-comp-async-report-warnings-errors nil)
+;; (setq native-comp-deferred-compilation t)
+
+;; File name handler optimization
+;; (setq file-name-handler-alist nil)  ; Restore in emacs-startup-hook
+
+
+;;; ============================================================
+;;; Debug and Profiling
+;;; ============================================================
+
+;; Enable debug mode for verbose logging
+;; (setq mcg-debug-mode t)
+
+;; Enable profiling to track module load times
+;; (setq mcg-profile-mode t)
+
+;; Show startup time
 ;; (setq mcg-display-startup-time t)
 
 
+;;; ============================================================
+;;; Custom Keybindings
+;;; ============================================================
+
+;; Use mcg-bind-key for conflict detection
+;; (mcg-bind-key "C-c g g" #'magit-status "private/config")
+;; (mcg-bind-key "C-c f f" #'find-file "private/config")
+
+;; Or use standard global-set-key
+;; (global-set-key (kbd "C-c m") #'my-custom-command)
+
+;; Quick access to config files
+;; (global-set-key (kbd "C-c e c")
+;;                 (lambda ()
+;;                   (interactive)
+;;                   (find-file (expand-file-name "private/config.el" mcg-config-dir))))
+
+
+;;; ============================================================
+;;; Custom Functions
+;;; ============================================================
+
+;; Quick reload configuration
+(defun my/reload-config ()
+  "Reload MCG Emacs configuration."
+  (interactive)
+  (load-file (expand-file-name "init.el" mcg-config-dir))
+  (message "Configuration reloaded!"))
+
+;; Open private config
+(defun my/open-private-config ()
+  "Open private configuration file."
+  (interactive)
+  (find-file (expand-file-name "private/config.el" mcg-config-dir)))
+
+;; Toggle debug mode
+(defun my/toggle-debug-mode ()
+  "Toggle MCG debug mode."
+  (interactive)
+  (setq mcg-debug-mode (not mcg-debug-mode))
+  (message "Debug mode: %s" (if mcg-debug-mode "ON" "OFF")))
+
+
+;;; ============================================================
+;;; Module Overrides
+;;; ============================================================
+
+;; Override settings after specific modules load
+;; Use with-eval-after-load to ensure the module is loaded first
+
+;; Example: Custom theme setup
+;; (with-eval-after-load 'init-theme
+;;   (load-theme 'modus-vivendi t)
+;;   (set-face-attribute 'default nil :background "#1a1a1a"))
+
+;; Example: Extra Rust mode hooks
+;; (with-eval-after-load 'init-rust
+;;   (add-hook 'rust-mode-hook #'my-rust-setup))
+
+;; Example: Custom Org mode settings
+;; (with-eval-after-load 'init-org
+;;   (setq org-hide-emphasis-markers t)
+;;   (setq org-startup-indented t))
+
+
+;;; ============================================================
+;;; Startup Message
+;;; ============================================================
+
+(message "✅ Custom configuration loaded!")
+
+(provide 'custom-example)
 ;;; custom-example.el ends here

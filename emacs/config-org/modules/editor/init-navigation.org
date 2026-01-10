@@ -1,64 +1,64 @@
-* init-navigation.el
-:PROPERTIES:
-:HEADER-ARGS: :tangle init-navigation.el :lexical t
-:END:
+#+TITLE: Navigation Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-navigation.el :lexical t
 
-** Headers
-#+BEGIN_SRC emacs-lisp
+* Navigation Module
+
+本模块负责 MCG Emacs 的导航工具配置，包括：
+- Ace-window 快速窗口切换
+- Avy 快速跳转
+- Winner-mode 窗口布局撤销
+
+** File Header
+
+#+begin_src emacs-lisp
 ;;; init-navigation.el --- Navigation Tools for MCG Emacs -*- lexical-binding: t; -*-
 
-;; Filename: init-navigation.el
-;; Description: Navigation tools module (Ace-window + Avy)
+;; Copyright (C) 2024-2026 MCG
 ;; Author: mcge <mcgeq@outlook.com>
-;; Copyright (C) 2024-2026, mcge, all rights reserved.
-;; Create   Date: 2026-01-07
-;; Version: 3.0
 ;; Keywords: navigation, window, jump, avy, ace-window
 ;; Compatibility: GNU Emacs 29.0+
 
 ;;; Commentary:
-;;
 ;; Navigation tools module for MCG Emacs configuration, responsible for:
 ;; - Ace-window fast window switching
 ;; - Avy fast jumping
 ;; - Winner-mode window layout undo
-;;
+#+end_src
 
-#+END_SRC
+** Require
 
-** Dependencies
-#+BEGIN_SRC emacs-lisp
-;;; Dependencies
+#+begin_src emacs-lisp
+;;; Code:
 
 (require 'core-lib)
-
-#+END_SRC
+#+end_src
 
 ** Ace-Window Configuration
-#+BEGIN_SRC emacs-lisp
+
+Ace-window 快速窗口切换配置。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Ace-Window Configuration
+;;; ============================================================
 
 (defun mcg--setup-ace-window ()
   "Set up Ace-window for fast window switching."
-  (when (mcg-require-extension "editor/ace-window" 'ace-window)
+  ;; ace-window is in the avy-window directory
+  (when (mcg-require-extension "avy-window" t)
     ;; Use easier-to-press keys as window labels
     (setq aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l))
-    
     ;; Window label position
     (setq aw-char-position 'top-left)
-    
     ;; Show background
     (setq aw-background t)
-    
     ;; Ignore certain buffers
     (setq aw-ignored-buffers '("*Calc Trail*" "*LV*"))
-    
     ;; Always show dispatch menu for more actions
     (setq aw-dispatch-always t)
-    
     ;; Scope: only current frame
     (setq aw-scope 'frame)
-    
     ;; Custom dispatch alist with enhanced actions
     (setq aw-dispatch-alist
           '((?x aw-delete-window "Delete Window")
@@ -75,19 +75,21 @@
             (?o delete-other-windows "Delete Other Windows")
             (?T aw-transpose-frame "Transpose Frame")
             (?? aw-show-dispatch-help)))
-    
     ;; Window label style
     (custom-set-faces
      '(aw-leading-char-face
        ((t (:inherit ace-jump-face-foreground :height 2.0)))))
-    
     (mcg-log "Ace-window configured")))
-
-#+END_SRC
+#+end_src
 
 ** Ace-Window Keybindings
-#+BEGIN_SRC emacs-lisp
+
+Ace-window 快捷键配置。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Ace-Window Keybindings
+;;; ============================================================
 
 (defun mcg--setup-ace-window-keybindings ()
   "Set up Ace-window keybindings."
@@ -95,7 +97,6 @@
     ;; Main keybindings
     (global-set-key (kbd "M-O") 'ace-window)
     (global-set-key (kbd "C-x o") 'ace-window)
-    
     ;; C-c w prefix
     (global-set-key (kbd "C-c w w") 'ace-window)
     (global-set-key (kbd "C-c w d") 'ace-delete-window)
@@ -104,72 +105,70 @@
     (global-set-key (kbd "C-c w o") 'delete-other-windows)
     (global-set-key (kbd "C-c w v") 'split-window-right)
     (global-set-key (kbd "C-c w h") 'split-window-below)
-    
     ;; Quick delete window
     (global-set-key (kbd "C-x 0") 'ace-delete-window)
-    
     ;; Quick swap window
     (global-set-key (kbd "C-x 4 s") 'ace-swap-window)
-    
     (mcg-log "Ace-window keybindings configured")))
-
-#+END_SRC
+#+end_src
 
 ** Winner Mode Configuration
-#+BEGIN_SRC emacs-lisp
+
+Winner-mode 窗口布局撤销/重做配置。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Winner Mode Configuration
+;;; ============================================================
 
 (defun mcg--setup-winner-mode ()
   "Set up Winner-mode for window layout undo/redo."
   ;; winner-mode is built-in
   (winner-mode 1)
-  
   ;; Custom keybindings for winner-mode
-  ;; Default: C-c <left> for undo, C-c <right> for redo
-  ;; Add more convenient bindings
   (global-set-key (kbd "C-c w u") 'winner-undo)
   (global-set-key (kbd "C-c w r") 'winner-redo)
-  
   (mcg-log "Winner-mode enabled with layout undo/redo"))
-
-#+END_SRC
+#+end_src
 
 ** Avy Configuration
-#+BEGIN_SRC emacs-lisp
+
+Avy 快速跳转配置。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Avy Configuration
+;;; ============================================================
 
 (defun mcg--setup-avy ()
   "Set up Avy for fast jumping."
-  (when (mcg-require-extension "editor/avy" 'avy)
+  (when (mcg-require-extension "avy" t)
     ;; Use easier-to-press keys
     (setq avy-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l ?q ?w ?e ?r ?u ?i ?o ?p))
-    
     ;; Jump style
     (setq avy-style 'at-full)
-    
     ;; Dim background
     (setq avy-background t)
-    
     ;; Jump across all windows
     (setq avy-all-windows t)
     (setq avy-all-windows-alt nil)
-    
     ;; Timeout
     (setq avy-timeout-seconds 0.5)
-    
     ;; Highlight first character
     (setq avy-highlight-first t)
-    
     ;; Case insensitive
     (setq avy-case-fold-search t)
-    
     (mcg-log "Avy configured")))
-
-#+END_SRC
+#+end_src
 
 ** Avy Keybindings
-#+BEGIN_SRC emacs-lisp
+
+Avy 快捷键配置。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Avy Keybindings
+;;; ============================================================
 
 (defun mcg--setup-avy-keybindings ()
   "Set up Avy keybindings."
@@ -177,30 +176,30 @@
     ;; Jump to character
     (global-set-key (kbd "C-;") 'avy-goto-char)
     (global-set-key (kbd "C-'") 'avy-goto-char-2)
-    
     ;; M-g prefix (standard Emacs goto prefix)
     (global-set-key (kbd "M-g w") 'avy-goto-word-1)
     (global-set-key (kbd "M-g g") 'avy-goto-line)
     (global-set-key (kbd "M-g c") 'avy-goto-char-timer)
     (global-set-key (kbd "M-g j") 'avy-goto-char-in-line)
-    
     ;; Advanced commands
     (global-set-key (kbd "M-g y") 'avy-copy-line)
     (global-set-key (kbd "M-g m") 'avy-move-line)
     (global-set-key (kbd "M-g k") 'avy-kill-whole-line)
     (global-set-key (kbd "M-g Y") 'avy-copy-region)
     (global-set-key (kbd "M-g K") 'avy-kill-region)
-    
     ;; isearch integration
     (define-key isearch-mode-map (kbd "C-;") 'avy-isearch)
-    
     (mcg-log "Avy keybindings configured")))
-
-#+END_SRC
+#+end_src
 
 ** Avy Custom Functions
-#+BEGIN_SRC emacs-lisp
+
+Avy 自定义函数。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Avy Custom Functions
+;;; ============================================================
 
 (defun mcg/avy-goto-word-or-subword ()
   "Jump to word or subword (part of camelCase)."
@@ -229,24 +228,23 @@
   (global-set-key (kbd "M-g (") 'mcg/avy-goto-open-paren)
   (global-set-key (kbd "M-g )") 'mcg/avy-goto-close-paren)
   (global-set-key (kbd "M-g \"") 'mcg/avy-goto-string))
-
-#+END_SRC
+#+end_src
 
 ** Window Management Transient Menu
-#+BEGIN_SRC emacs-lisp
+
+窗口管理 Transient 菜单配置。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Window Management Transient Menu
+;;; ============================================================
 
 (defun mcg--setup-window-transient ()
   "Setup window management transient menu."
   (when (require 'transient nil t)
     ;; Window management transient menu
     (transient-define-prefix mcg-window-transient ()
-      "Window management transient menu.
-Provides quick access to window operations including:
-- Window switching with ace-window
-- Window splitting (vertical/horizontal)
-- Window deletion and layout management
-- Layout undo/redo with winner-mode"
+      "Window management transient menu."
       [["Switch"
         ("w" "Ace window" ace-window)
         ("o" "Other window" other-window)
@@ -279,13 +277,20 @@ Provides quick access to window operations including:
         ("2" "Split below" split-window-below)
         ("3" "Split right" split-window-right)
         ("0" "Delete this window" delete-window)]])
-    
     ;; Bind the transient menu
     (global-set-key (kbd "C-c w W") 'mcg-window-transient)
-    
     (mcg-log "Window management transient menu configured")))
+#+end_src
 
-;; Custom window functions
+** Custom Window Functions
+
+自定义窗口函数。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Custom Window Functions
+;;; ============================================================
+
 (defun mcg/maximize-window ()
   "Maximize current window (delete other windows)."
   (interactive)
@@ -309,12 +314,16 @@ Provides quick access to window operations including:
   (if (one-window-p)
       (delete-frame)
     (delete-window)))
-
-#+END_SRC
+#+end_src
 
 ** Initialize
-#+BEGIN_SRC emacs-lisp
+
+模块初始化。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Initialize
+;;; ============================================================
 
 (mcg--setup-ace-window)
 (mcg--setup-ace-window-keybindings)
@@ -322,11 +331,11 @@ Provides quick access to window operations including:
 (mcg--setup-avy)
 (mcg--setup-avy-keybindings)
 (mcg--setup-window-transient)
+#+end_src
 
-#+END_SRC
+** Provide Feature
 
-** Provide
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (provide 'init-navigation)
 ;;; init-navigation.el ends here
-#+END_SRC
+#+end_src

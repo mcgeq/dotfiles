@@ -1,46 +1,57 @@
-* init-rime.el
-:PROPERTIES:
-:HEADER-ARGS: :tangle init-rime.el :lexical t
-:END:
+#+TITLE: Chinese Input Method Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-rime.el :lexical t
 
-** Headers
-#+BEGIN_SRC emacs-lisp
-  ;;; init-rime.el --- Chinese Input Method for MCG Emacs -*- lexical-binding: t; -*-
+* Chinese Input Method Module
 
-  ;; Filename: init-rime.el
-  ;; Description: Chinese input method module (emacs-rime)
-  ;; Author: mcge <mcgeq@outlook.com>
-  ;; Copyright (C) 2024-2026, mcge, all rights reserved.
-  ;; Create   Date: 2026-01-07
-  ;; Version: 3.0
-  ;; Keywords: input-method, rime, chinese
-  ;; Compatibility: GNU Emacs 29.0+
+本模块负责 MCG Emacs 的中文输入法配置，包括：
+- emacs-rime 配置
+- 自动中英文切换
+- 光标颜色指示器
 
-  ;;; Commentary:
-  ;;
-  ;; Chinese input method module for MCG Emacs, responsible for:
-  ;; - emacs-rime configuration
-  ;; - Automatic Chinese/English switching
-  ;; - Cursor color indicator
-  ;;
-  ;; Module metadata:
-  ;; :depends ()
-  ;; :defer t
-  ;;
+** File Header
 
-#+END_SRC
+#+begin_src emacs-lisp
+;;; init-rime.el --- Chinese Input Method for MCG Emacs -*- lexical-binding: t; -*-
 
-** Dependencies
-#+BEGIN_SRC emacs-lisp
-;;; Dependencies
+;; Filename: init-rime.el
+;; Description: Chinese input method module (emacs-rime)
+;; Author: mcge <mcgeq@outlook.com>
+;; Copyright (C) 2024-2026, mcge, all rights reserved.
+;; Create   Date: 2026-01-10
+;; Version: 3.0
+;; Keywords: input-method, rime, chinese
+;; Compatibility: GNU Emacs 29.0+
+
+;;; Commentary:
+;;
+;; Chinese input method module for MCG Emacs, responsible for:
+;; - emacs-rime configuration
+;; - Automatic Chinese/English switching
+;; - Cursor color indicator
+;;
+;; Module metadata:
+;; :depends ()
+;; :defer t
+;;
+#+end_src
+
+** Require
+
+#+begin_src emacs-lisp
+;;; Code:
 
 (require 'core-lib)
-
-#+END_SRC
+#+end_src
 
 ** Variables
-#+BEGIN_SRC emacs-lisp
+
+Rime 相关的配置变量。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Variables
+;;; ============================================================
 
 (defvar mcg-tools-rime-user-data-dir "~/.config/emacs_rime"
   "Rime user data directory.")
@@ -72,18 +83,22 @@ after being disabled in prog-mode.")
 (defvar mcg-rime-prog-mode-disabled nil
   "Internal variable to track if rime was disabled by prog-mode hook.
 Used to restore rime state when switching to text-mode.")
-
-#+END_SRC
+#+end_src
 
 ** Rime Configuration
-#+BEGIN_SRC emacs-lisp
+
+Rime 核心配置。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Rime Configuration
+;;; ============================================================
 
 (defun mcg--setup-rime ()
   "Setup emacs-rime."
-  (when (mcg-require-extension "input/rime" 'rime)
+  (when (mcg-require-extension "emacs-rime" t)
     ;; Load popup (optional dependency)
-    (mcg-load-extension "input/popup")
+    (mcg-require-extension "popup" t)
     (require 'popup nil t)
     
     ;; Set default input method
@@ -102,12 +117,16 @@ Used to restore rime state when switching to text-mode.")
                 :internal-border-width mcg-tools-rime-posframe-border-width))
     
     (mcg-log "emacs-rime configured")))
-
-#+END_SRC
+#+end_src
 
 ** Rime Keybindings
-#+BEGIN_SRC emacs-lisp
+
+Rime 快捷键配置。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Rime Keybindings
+;;; ============================================================
 
 (defun mcg--setup-rime-keybindings ()
   "Setup Rime keybindings."
@@ -115,12 +134,16 @@ Used to restore rime state when switching to text-mode.")
     (define-key rime-active-mode-map (kbd "M-DEL") 'rime--escape)
     (define-key rime-active-mode-map (kbd "C-w") 'rime--escape)
     (mcg-log "Rime keybindings configured")))
-
-#+END_SRC
+#+end_src
 
 ** Auto Switch Predicates
-#+BEGIN_SRC emacs-lisp
+
+Rime 自动切换规则配置。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Auto Switch Predicates
+;;; ============================================================
 
 (defun mcg--setup-rime-predicates ()
   "Setup Rime auto-switch rules."
@@ -138,17 +161,27 @@ Used to restore rime state when switching to text-mode.")
             rime-predicate-current-uppercase-letter-p
             rime-predicate-tex-math-or-command-p))
     (mcg-log "Rime predicates configured")))
-
-#+END_SRC
+#+end_src
 
 ** Cursor Color Indicator
-#+BEGIN_SRC emacs-lisp
+
+光标颜色指示器配置。
+
+*** Get Frame Cursor Color
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Cursor Color Indicator
+;;; ============================================================
 
 (defun mcg--get-frame-cursor-color ()
   "Get current frame cursor color."
   (frame-parameter nil 'cursor-color))
+#+end_src
 
+*** Change Cursor Color
+
+#+begin_src emacs-lisp
 (defun mcg--change-cursor-color-on-input-method ()
   "Change cursor color based on input method state."
   (when (featurep 'rime)
@@ -158,7 +191,11 @@ Used to restore rime state when switching to text-mode.")
               current-input-method)
          mcg-tools-rime-cursor-color
        (or mcg-tools-rime-default-cursor-color "black")))))
+#+end_src
 
+*** Setup Cursor Color
+
+#+begin_src emacs-lisp
 (defun mcg--setup-rime-cursor-color ()
   "Setup Rime cursor color indicator."
   (when (featurep 'rime)
@@ -172,25 +209,39 @@ Used to restore rime state when switching to text-mode.")
     (add-hook 'post-command-hook #'mcg--change-cursor-color-on-input-method)
     
     (mcg-log "Rime cursor color indicator configured")))
-
-#+END_SRC
+#+end_src
 
 ** Commands
-#+BEGIN_SRC emacs-lisp
+
+Rime 操作命令。
+
+*** Switch Manually
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Commands
+;;; ============================================================
 
 (defun mcg/rime-switch-manually ()
   "Manually switch to Rime input method."
   (interactive)
   (when (featurep 'rime)
     (rime-force-enable)))
+#+end_src
 
+*** Switch Auto
+
+#+begin_src emacs-lisp
 (defun mcg/rime-switch-auto ()
   "Switch to auto mode."
   (interactive)
   (when (featurep 'rime)
     (rime-disable)))
+#+end_src
 
+*** Toggle Show Candidate
+
+#+begin_src emacs-lisp
 (defun mcg/rime-toggle-show-candidate ()
   "Toggle candidate display method."
   (interactive)
@@ -202,14 +253,22 @@ Used to restore rime state when switching to text-mode.")
             ('minibuffer 'posframe)
             (_ 'posframe)))
     (message "Rime show candidate: %s" rime-show-candidate)))
+#+end_src
 
+*** Rime Sync
+
+#+begin_src emacs-lisp
 (defun mcg/rime-sync ()
   "Sync Rime user data."
   (interactive)
   (when (featurep 'rime)
     (rime-sync)
     (message "Rime sync done")))
+#+end_src
 
+*** Sync with ibus
+
+#+begin_src emacs-lisp
 (defun mcg/rime-sync-with-ibus ()
   "Sync ibus and emacs-rime user databases."
   (interactive)
@@ -220,12 +279,18 @@ Used to restore rime state when switching to text-mode.")
      nil
      "ibus exit;cd ~/.config/ibus/rime; rime_dict_manager -s;ibus-daemon --xim -d -r")
     (message "ibus-rime and emacs rime sync done")))
-
-#+END_SRC
+#+end_src
 
 ** Prog-mode Integration
-#+BEGIN_SRC emacs-lisp
+
+编程模式集成配置。
+
+*** Disable in Prog-mode
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Prog-mode Integration
+;;; ============================================================
 
 (defun mcg--rime-disable-in-prog-mode ()
   "Auto-disable rime in programming modes.
@@ -240,7 +305,11 @@ disable Chinese input when editing code."
     ;; Disable rime input method
     (deactivate-input-method)
     (mcg-log "Rime auto-disabled in prog-mode: %s" major-mode)))
+#+end_src
 
+*** Enable in Text-mode
+
+#+begin_src emacs-lisp
 (defun mcg--rime-enable-in-text-mode ()
   "Auto-enable rime in text modes.
 This function is added to `text-mode-hook' to automatically
@@ -254,7 +323,11 @@ disabled by prog-mode and `mcg-rime-auto-enable' is non-nil."
     ;; Re-enable rime input method
     (activate-input-method "rime")
     (mcg-log "Rime auto-enabled in text-mode: %s" major-mode)))
+#+end_src
 
+*** Setup Prog-mode Integration
+
+#+begin_src emacs-lisp
 (defun mcg--setup-rime-prog-mode ()
   "Setup auto-disable rime in programming modes."
   (when (featurep 'rime)
@@ -265,19 +338,29 @@ disabled by prog-mode and `mcg-rime-auto-enable' is non-nil."
     (add-hook 'text-mode-hook #'mcg--rime-enable-in-text-mode)
     
     (mcg-log "Rime prog-mode integration configured")))
+#+end_src
 
+*** Toggle Auto Enable
+
+#+begin_src emacs-lisp
 (defun mcg/toggle-rime-auto-enable ()
   "Toggle automatic rime re-enable in text-mode."
   (interactive)
   (setq mcg-rime-auto-enable (not mcg-rime-auto-enable))
   (message "Rime auto-enable in text-mode: %s"
            (if mcg-rime-auto-enable "enabled" "disabled")))
-
-#+END_SRC
+#+end_src
 
 ** Symbol to Rime
-#+BEGIN_SRC emacs-lisp
+
+符号转换为 Rime 输入。
+
+*** Translate Symbol
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Symbol to Rime
+;;; ============================================================
 
 (defun mcg/translate-symbol-to-rime ()
   "Convert English characters before cursor to Rime input."
@@ -292,7 +375,11 @@ disabled by prog-mode and `mcg-rime-auto-enable' is non-nil."
       (dolist (c (string-to-list input))
         (rime-lib-process-key c 0))
       (rime--redisplay))))
+#+end_src
 
+*** Convert Code or Disable
+
+#+begin_src emacs-lisp
 (defun mcg/convert-code-or-disable-rime ()
   "Convert code or disable Rime."
   (interactive)
@@ -303,12 +390,18 @@ disabled by prog-mode and `mcg-rime-auto-enable' is non-nil."
       (cond ((string-match-p "[a-z]" str-before-1)
              (mcg/translate-symbol-to-rime))
             (t (toggle-input-method))))))
-
-#+END_SRC
+#+end_src
 
 ** Modeline Indicator
-#+BEGIN_SRC emacs-lisp
+
+模式行指示器配置。
+
+*** Indicator Variables
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Modeline Indicator
+;;; ============================================================
 
 (defvar mcg-rime-modeline-indicator " 中"
   "Modeline indicator when rime is active.
@@ -317,7 +410,11 @@ This string is displayed in the modeline to show Chinese input is enabled.")
 (defvar mcg-rime-modeline-indicator-ascii " En"
   "Modeline indicator when rime is in ASCII mode.
 This string is displayed in the modeline to show English input is active.")
+#+end_src
 
+*** Get Modeline Indicator
+
+#+begin_src emacs-lisp
 (defun mcg--rime-get-modeline-indicator ()
   "Get the current rime modeline indicator string.
 Returns the appropriate indicator based on rime state."
@@ -330,7 +427,11 @@ Returns the appropriate indicator based on rime state."
           mcg-rime-modeline-indicator-ascii
         mcg-rime-modeline-indicator)
     ""))
+#+end_src
 
+*** Setup Modeline
+
+#+begin_src emacs-lisp
 (defun mcg--setup-rime-modeline ()
   "Setup rime indicator in modeline."
   (when (featurep 'rime)
@@ -346,7 +447,11 @@ Returns the appropriate indicator based on rime state."
       (push '(:eval (mcg--rime-get-modeline-indicator)) mode-line-misc-info))
     
     (mcg-log "Rime modeline indicator configured")))
+#+end_src
 
+*** Toggle Modeline Indicator
+
+#+begin_src emacs-lisp
 (defun mcg/toggle-rime-modeline-indicator ()
   "Toggle rime modeline indicator visibility."
   (interactive)
@@ -358,12 +463,16 @@ Returns the appropriate indicator based on rime state."
     (push '(:eval (mcg--rime-get-modeline-indicator)) mode-line-misc-info)
     (message "Rime modeline indicator shown"))
   (force-mode-line-update t))
-
-#+END_SRC
+#+end_src
 
 ** Initialize
-#+BEGIN_SRC emacs-lisp
+
+模块初始化。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Initialize
+;;; ============================================================
 
 ;; Setup Rime
 (mcg--setup-rime)
@@ -375,11 +484,11 @@ Returns the appropriate indicator based on rime state."
   (mcg--setup-rime-cursor-color)
   (mcg--setup-rime-prog-mode)
   (mcg--setup-rime-modeline))
+#+end_src
 
-#+END_SRC
+** Provide Feature
 
-** Provide
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (provide 'init-rime)
 ;;; init-rime.el ends here
-#+END_SRC
+#+end_src

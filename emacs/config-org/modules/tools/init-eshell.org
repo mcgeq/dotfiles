@@ -1,17 +1,25 @@
-* init-eshell.el
-:PROPERTIES:
-:HEADER-ARGS: :tangle init-eshell.el :lexical t
-:END:
+#+TITLE: Eshell Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-eshell.el :lexical t
 
-** Headers
-#+BEGIN_SRC emacs-lisp
+* Eshell Module
+
+本模块负责 MCG Emacs 的 Eshell 配置，包括：
+- Eshell 基本设置
+- 自定义提示符（带 Git 分支显示）
+- 常用别名
+- 与 Emacs 生态系统的集成
+
+** File Header
+
+#+begin_src emacs-lisp
 ;;; init-eshell.el --- Eshell Configuration for MCG Emacs -*- lexical-binding: t; -*-
 
 ;; Filename: init-eshell.el
 ;; Description: Eshell shell module
 ;; Author: mcge <mcgeq@outlook.com>
 ;; Copyright (C) 2024-2026, mcge, all rights reserved.
-;; Create   Date: 2026-01-08
+;; Create   Date: 2026-01-10
 ;; Version: 3.0
 ;; Keywords: eshell, shell, terminal
 ;; Compatibility: GNU Emacs 29.0+
@@ -24,12 +32,12 @@
 ;; - Useful aliases
 ;; - Integration with Emacs ecosystem
 ;;
+#+end_src
 
-#+END_SRC
+** Require
 
-** Dependencies
-#+BEGIN_SRC emacs-lisp
-;;; Dependencies
+#+begin_src emacs-lisp
+;;; Code:
 
 (require 'core-lib)
 (require 'eshell)
@@ -37,12 +45,16 @@
 (require 'em-hist)
 (require 'em-dirs)
 (require 'em-alias)
-
-#+END_SRC
+#+end_src
 
 ** Basic Settings
-#+BEGIN_SRC emacs-lisp
+
+Eshell 基本设置，包括目录、历史记录、缓冲区和行为配置。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Basic Settings
+;;; ============================================================
 
 (defun mcg--setup-eshell-basic ()
   "Setup Eshell basic settings."
@@ -77,12 +89,18 @@
         '(("git" "log" "diff" "show" "stash")))
   
   (mcg-log "Eshell basic settings configured"))
-
-#+END_SRC
+#+end_src
 
 ** Prompt Configuration
-#+BEGIN_SRC emacs-lisp
+
+自定义 Eshell 提示符，显示当前目录和 Git 分支。
+
+*** Git Branch
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Prompt Configuration
+;;; ============================================================
 
 (defun mcg--eshell-git-branch ()
   "Get current git branch name."
@@ -91,7 +109,11 @@
     (if branch
         (format " (%s)" branch)
       "")))
+#+end_src
 
+*** Prompt Function
+
+#+begin_src emacs-lisp
 (defun mcg--eshell-prompt ()
   "Custom eshell prompt function."
   (let* ((dir (abbreviate-file-name (eshell/pwd)))
@@ -101,18 +123,26 @@
      (propertize dir 'face 'font-lock-keyword-face)
      (propertize branch 'face 'font-lock-function-name-face)
      (propertize (format " %s " user) 'face 'eshell-prompt-face))))
+#+end_src
 
+*** Setup Prompt
+
+#+begin_src emacs-lisp
 (defun mcg--setup-eshell-prompt ()
   "Setup Eshell prompt."
   (setq eshell-prompt-function #'mcg--eshell-prompt)
   (setq eshell-prompt-regexp "^.* [λ#] ")
   (mcg-log "Eshell prompt configured"))
-
-#+END_SRC
+#+end_src
 
 ** Aliases
-#+BEGIN_SRC emacs-lisp
+
+Eshell 别名配置，包括文件操作、Emacs 集成、导航和 Git 快捷方式。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Aliases
+;;; ============================================================
 
 (defun mcg--setup-eshell-aliases ()
   "Setup Eshell aliases."
@@ -148,18 +178,28 @@
   (eshell/alias "cls" "eshell/clear-scrollback")
   
   (mcg-log "Eshell aliases configured"))
-
-#+END_SRC
+#+end_src
 
 ** Custom Commands
-#+BEGIN_SRC emacs-lisp
+
+自定义 Eshell 命令。
+
+*** File Search
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Custom Commands
+;;; ============================================================
 
 (defun eshell/f (filename &optional dir)
   "Search for files matching FILENAME in DIR (default current)."
   (let ((dir (or dir default-directory)))
     (find-name-dired dir filename)))
+#+end_src
 
+*** Directory Jump
+
+#+begin_src emacs-lisp
 (defun eshell/z (pattern)
   "Jump to directory matching PATTERN using recent directories."
   (let* ((dirs (ring-elements eshell-last-dir-ring))
@@ -167,12 +207,20 @@
     (if match
         (eshell/cd match)
       (message "No matching directory found for: %s" pattern))))
+#+end_src
 
+*** Make and Change Directory
+
+#+begin_src emacs-lisp
 (defun eshell/mkcd (dir)
   "Create directory DIR and cd into it."
   (make-directory dir t)
   (eshell/cd dir))
+#+end_src
 
+*** Syntax Highlighted Cat
+
+#+begin_src emacs-lisp
 (defun eshell/ccat (file)
   "Like cat but with syntax highlighting."
   (with-temp-buffer
@@ -182,16 +230,24 @@
         (set-auto-mode)
         (font-lock-ensure)))
     (buffer-string)))
+#+end_src
 
+*** Take (Alias for mkcd)
+
+#+begin_src emacs-lisp
 (defun eshell/take (dir)
   "Create DIR and cd into it (alias for mkcd)."
   (eshell/mkcd dir))
-
-#+END_SRC
+#+end_src
 
 ** Mode Hook
-#+BEGIN_SRC emacs-lisp
+
+Eshell 模式钩子配置。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Mode Hook
+;;; ============================================================
 
 (defun mcg--eshell-mode-setup ()
   "Setup for eshell-mode."
@@ -214,17 +270,27 @@
     (yas-minor-mode -1)))
 
 (add-hook 'eshell-mode-hook #'mcg--eshell-mode-setup)
-
-#+END_SRC
+#+end_src
 
 ** Integration
-#+BEGIN_SRC emacs-lisp
+
+与其他 Emacs 包的集成。
+
+*** With-Editor Integration
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Integration
+;;; ============================================================
 
 ;; With-editor integration for git commit etc.
 (with-eval-after-load 'with-editor
   (add-hook 'eshell-mode-hook #'with-editor-export-editor))
+#+end_src
 
+*** Completion Integration
+
+#+begin_src emacs-lisp
 ;; Completion integration
 (defun mcg--eshell-completion-setup ()
   "Setup completion for eshell."
@@ -239,14 +305,18 @@
     (setq-local corfu-auto nil)))
 
 (add-hook 'eshell-mode-hook #'mcg--eshell-completion-setup)
-
-#+END_SRC
+#+end_src
 
 ** Display Buffer Rules
-#+BEGIN_SRC emacs-lisp
-;;; Display Buffer Rules
 
-;; 强制 eshell 在底部窗口显示
+Eshell 缓冲区显示规则。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Display Buffer Rules
+;;; ============================================================
+
+;; Force eshell to display in bottom window
 (add-to-list 'display-buffer-alist
              '("\\*eshell.*\\*"
                (display-buffer-in-side-window)
@@ -254,12 +324,18 @@
                (slot . 0)
                (window-height . 0.3)
                (window-parameters . ((no-delete-other-windows . t)))))
-
-#+END_SRC
+#+end_src
 
 ** Interactive Commands
-#+BEGIN_SRC emacs-lisp
+
+交互式 Eshell 命令。
+
+*** Toggle Eshell
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Interactive Commands
+;;; ============================================================
 
 (defun mcg/eshell-toggle ()
   "Toggle eshell at bottom of frame."
@@ -272,17 +348,21 @@
          (buf (get-buffer eshell-buffer-name))
          (win (and buf (get-buffer-window buf t))))
     (cond
-     ;; 已显示则关闭窗口
+     ;; Already displayed, close window
      (win
       (delete-window win))
-     ;; 已存在但未显示则显示
+     ;; Exists but not displayed, show it
      (buf
       (pop-to-buffer buf))
-     ;; 不存在则创建新的
+     ;; Doesn't exist, create new
      (t
       (let ((default-directory dir))
         (eshell 'N))))))
+#+end_src
 
+*** Eshell Here
+
+#+begin_src emacs-lisp
 (defun mcg/eshell-here ()
   "Open eshell at bottom in current buffer's directory."
   (interactive)
@@ -306,18 +386,26 @@
      (t
       (let ((default-directory dir))
         (eshell 'N))))))
+#+end_src
 
+*** New Eshell
+
+#+begin_src emacs-lisp
 (defun mcg/eshell-new ()
   "Open a new eshell buffer at bottom."
   (interactive)
   (let ((buf (eshell 'N)))
     (pop-to-buffer buf)))
-
-#+END_SRC
+#+end_src
 
 ** Keybindings
-#+BEGIN_SRC emacs-lisp
+
+Eshell 快捷键配置。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Keybindings
+;;; ============================================================
 
 (global-set-key (kbd "C-c e e") #'mcg/eshell-toggle)
 (global-set-key (kbd "C-c e h") #'mcg/eshell-here)
@@ -328,18 +416,32 @@
 (with-eval-after-load 'which-key
   (which-key-add-key-based-replacements
     "C-c e" "🐚 Eshell"))
-
-#+END_SRC
+#+end_src
 
 ** Help Popup
-#+BEGIN_SRC emacs-lisp
+
+Eshell 帮助弹窗。
+
+*** Help Command
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Help Popup
+;;; ============================================================
 
 (defun mcg/eshell-help ()
-  "Show Eshell commands reference in posframe popup."
+  "Show Eshell commands reference."
   (interactive)
-  (mcg-popup-show "*Eshell Help*" (mcg--eshell-help-content) 55 30))
+  (let ((buf (get-buffer-create "*Eshell Help*")))
+    (with-current-buffer buf
+      (erase-buffer)
+      (insert (mcg--eshell-help-content)))
+    (display-buffer buf)))
+#+end_src
 
+*** Help Content
+
+#+begin_src emacs-lisp
 (defun mcg--eshell-help-content ()
   "Generate Eshell help content."
   "
@@ -378,20 +480,24 @@
     f <name>        搜索文件                              
     ccat <file>     语法高亮显示文件                      
 ")
-
-#+END_SRC
+#+end_src
 
 ** Initialize
-#+BEGIN_SRC emacs-lisp
+
+模块初始化。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Initialize
+;;; ============================================================
 
 (mcg--setup-eshell-basic)
 (mcg--setup-eshell-prompt)
+#+end_src
 
-#+END_SRC
+** Provide Feature
 
-** Provide
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (provide 'init-eshell)
 ;;; init-eshell.el ends here
-#+END_SRC
+#+end_src

@@ -1,44 +1,55 @@
-* init-theme.el
-:PROPERTIES:
-:HEADER-ARGS: :tangle init-theme.el :lexical t
-:END:
+#+TITLE: Theme Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-theme.el :lexical t
 
-** Headers
-#+BEGIN_SRC emacs-lisp
-  ;;; init-theme.el --- Theme Configuration for MCG Emacs -*- lexical-binding: t; -*-
+* Theme Module
 
-  ;; Filename: init-theme.el
-  ;; Description: Theme configuration module
-  ;; Author: mcge <mcgeq@outlook.com>
-  ;; Copyright (C) 2024-2026, mcge, all rights reserved.
-  ;; Create   Date: 2026-01-07
-  ;; Version: 3.0
-  ;; Keywords: theme, ui, appearance
-  ;; Compatibility: GNU Emacs 29.0+
+本模块负责 MCG Emacs 的主题配置，包括：
+- ef-themes 主题配置
+- 主题切换命令
+- 自动主题切换功能
 
-  ;;; Commentary:
-  ;;
-  ;; Theme module for MCG Emacs configuration, responsible for:
-  ;; - ef-themes configuration
-  ;; - Theme switching commands
-  ;;
-  ;; Module metadata:
-  ;; :depends ()
-  ;; :defer nil
-  ;;
+** File Header
 
-#+END_SRC
+#+begin_src emacs-lisp
+;;; init-theme.el --- Theme Configuration for MCG Emacs -*- lexical-binding: t; -*-
 
-** Dependencies
-#+BEGIN_SRC emacs-lisp
+;; Filename: init-theme.el
+;; Description: Theme configuration module
+;; Author: mcge <mcgeq@outlook.com>
+;; Copyright (C) 2024-2026, mcge, all rights reserved.
+;; Create   Date: 2026-01-07
+;; Version: 3.0
+;; Keywords: theme, ui, appearance
+;; Compatibility: GNU Emacs 29.0+
+
+;;; Commentary:
+;;
+;; Theme module for MCG Emacs configuration, responsible for:
+;; - ef-themes configuration
+;; - Theme switching commands
+;;
+;; Module metadata:
+;; :depends ()
+;; :defer nil
+;;
+#+end_src
+
+** Require
+
+#+begin_src emacs-lisp
+;;; Code:
+
 ;;; Dependencies
 
 (require 'core-lib)
-
-#+END_SRC
+#+end_src
 
 ** Variables
-#+BEGIN_SRC emacs-lisp
+
+主题相关的配置变量。
+
+#+begin_src emacs-lisp
 ;;; Variables
 
 (defvar mcg-ui-default-theme 'ef-dream
@@ -58,16 +69,18 @@ When set to t, uses dark theme after 18:00, otherwise uses light theme.")
   "Theme switch hour.
 When `mcg-ui-auto-switch-theme' is t,
 uses dark theme after this hour.")
-
-#+END_SRC
+#+end_src
 
 ** Theme Configuration
-#+BEGIN_SRC emacs-lisp
+
+主题加载和选择的核心函数。
+
+#+begin_src emacs-lisp
 ;;; Theme Configuration
 
 (defun mcg--load-ef-themes ()
   "Load ef-themes extension."
-  (mcg-require-extension "ui/themes" 'ef-themes))
+  (mcg-require-extension "ef-themes" t))
 
 (defun mcg--select-theme ()
   "Select theme to load based on configuration."
@@ -84,11 +97,15 @@ uses dark theme after this hour.")
     (let ((theme (mcg--select-theme)))
       (load-theme theme t)
       (mcg-log "Loaded theme: %s" theme))))
-
-#+END_SRC
+#+end_src
 
 ** Theme Commands
-#+BEGIN_SRC emacs-lisp
+
+交互式主题切换命令。
+
+*** Switch Theme
+
+#+begin_src emacs-lisp
 ;;; Theme Commands
 
 (defun mcg/switch-theme ()
@@ -107,7 +124,11 @@ Uses completing-read to select from ef-themes."
       (load-theme theme t)
       (mcg-log "Switched to theme: %s" theme)
       (message "Theme: %s" theme))))
+#+end_src
 
+*** Toggle Dark/Light
+
+#+begin_src emacs-lisp
 (defun mcg/toggle-dark-light ()
   "Toggle between light and dark themes."
   (interactive)
@@ -123,7 +144,11 @@ Uses completing-read to select from ef-themes."
       (load-theme new-theme t)
       (mcg-log "Toggled to theme: %s" new-theme)
       (message "Theme: %s" new-theme))))
+#+end_src
 
+*** Reload Theme
+
+#+begin_src emacs-lisp
 (defun mcg/reload-theme ()
   "Reload current theme."
   (interactive)
@@ -132,20 +157,22 @@ Uses completing-read to select from ef-themes."
       (mapc #'disable-theme custom-enabled-themes)
       (load-theme current t)
       (message "Reloaded theme: %s" current))))
-
-#+END_SRC
+#+end_src
 
 ** Initialize
-#+BEGIN_SRC emacs-lisp
+
+模块初始化，设置主题。
+
+#+begin_src emacs-lisp
 ;;; Initialize
 
 ;; Set up theme
 (mcg-ui-setup-theme)
+#+end_src
 
-#+END_SRC
+** Provide Feature
 
-** Provide
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (provide 'init-theme)
 ;;; init-theme.el ends here
-#+END_SRC
+#+end_src

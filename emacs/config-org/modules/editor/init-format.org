@@ -1,44 +1,43 @@
-* init-format.el
-:PROPERTIES:
-:HEADER-ARGS: :tangle init-format.el :lexical t
-:END:
+#+TITLE: Text Format Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-format.el :lexical t
 
-** Headers
-#+BEGIN_SRC emacs-lisp
+* Text Format Module
+
+本模块负责 MCG Emacs 的文本格式化配置，包括：
+- 自动在中英文之间添加空格（wraplish）
+
+** File Header
+
+#+begin_src emacs-lisp
 ;;; init-format.el --- Text Formatting Configuration for MCG Emacs -*- lexical-binding: t; -*-
 
-;; Filename: init-format.el
-;; Description: Text formatting module (formerly init-wraplish)
+;; Copyright (C) 2024-2026 MCG
 ;; Author: mcge <mcgeq@outlook.com>
-;; Copyright (C) 2024-2026, mcge, all rights reserved.
-;; Create   Date: 2026-01-07
-;; Modified Date: 2026-01-09
-;; Version: 3.0
 ;; Keywords: wraplish, chinese, spacing, format
 ;; Compatibility: GNU Emacs 29.0+
 
 ;;; Commentary:
-;;
 ;; Text formatting module for MCG Emacs, responsible for:
 ;; - Automatically adding spaces between Chinese and English text
-;;
-;; This module was renamed from init-wraplish to init-format
-;; as part of the input -> editor category merge.
-;;
+#+end_src
 
-#+END_SRC
+** Require
 
-** Dependencies
-#+BEGIN_SRC emacs-lisp
-;;; Dependencies
+#+begin_src emacs-lisp
+;;; Code:
 
 (require 'core-lib)
-
-#+END_SRC
+#+end_src
 
 ** Variables
-#+BEGIN_SRC emacs-lisp
+
+wraplish 相关的配置变量。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Variables
+;;; ============================================================
 
 (defvar mcg-wraplish-modes
   '(markdown-mode-hook
@@ -46,33 +45,40 @@
     org-mode-hook
     prog-mode-hook)
   "List of modes to enable wraplish.")
-
-#+END_SRC
+#+end_src
 
 ** Configuration
-#+BEGIN_SRC emacs-lisp
+
+wraplish 配置函数。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Configuration
+;;; ============================================================
 
 (defun mcg--setup-wraplish ()
   "Setup wraplish Chinese-English mixed text."
-  (when (mcg-require-extension "editor/wraplish" 'wraplish)
+  (when (mcg-require-extension "wraplish" t)
     (dolist (hook mcg-wraplish-modes)
       (add-hook hook (lambda () (wraplish-mode 1))))
-    
     (mcg-log "Configured wraplish")))
-
-#+END_SRC
+#+end_src
 
 ** Initialize
-#+BEGIN_SRC emacs-lisp
+
+模块初始化。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Initialize
+;;; ============================================================
 
 (mcg--setup-wraplish)
+#+end_src
 
-#+END_SRC
+** Provide Feature
 
-** Provide
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (provide 'init-format)
 ;;; init-format.el ends here
-#+END_SRC
+#+end_src

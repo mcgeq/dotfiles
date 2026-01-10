@@ -284,7 +284,9 @@
       ;; Check that it contains expected language modes
       (should (assq 'rust-mode mcg-lsp-servers))
       (should (assq 'python-mode mcg-lsp-servers))
-      (should (assq 'typescript-mode mcg-lsp-servers)))))
+      ;; Note: typescript-mode is NOT included to avoid hierarchy conflicts
+      ;; Use typescript-ts-mode instead
+      (should (assq 'typescript-ts-mode mcg-lsp-servers)))))
 
 (ert-deftest test-lsp-format-on-save-variables-defined ()
   "Test that format-on-save variables are defined."

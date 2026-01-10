@@ -1,310 +1,225 @@
-* init-rust.el
-:PROPERTIES:
-:HEADER-ARGS: :tangle init-rust.el :lexical t
-:END:
+#+TITLE: Rust Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-rust.el :lexical t
 
-** Headers
-#+BEGIN_SRC emacs-lisp
-  ;;; init-rust.el --- Rust Language Support for MCG Emacs -*- lexical-binding: t; -*-
+* Rust Module
 
-  ;; Filename: init-rust.el
-  ;; Description: Rust language support module
-  ;; Author: mcge <mcgeq@outlook.com>
-  ;; Copyright (C) 2024-2026, mcge, all rights reserved.
-  ;; Create   Date: 2026-01-07
-  ;; Version: 3.0
-  ;; Keywords: rust, rust-analyzer, development
-  ;; Compatibility: GNU Emacs 29.0+
+本模块负责 MCG Emacs 的 Rust 语言支持，包括：
+- rust-mode / rust-ts-mode 配置
+- rust-analyzer LSP 集成（通过 lsp-bridge）
+- Cargo 集成
+- 使用 rustfmt 保存时格式化
 
-  ;;; Commentary:
-  ;;
-  ;; Rust language support module for MCG Emacs, providing:
-  ;; - rust-mode / rust-ts-mode configuration
-  ;; - rust-analyzer LSP integration (via +lsp module)
-  ;; - Cargo command integration
-  ;; - Code formatting (rustfmt)
-  ;; - Test running support
-  ;;
-  ;; Module metadata:
-  ;; :depends (+lsp)
-  ;; :defer t
-  ;;
+** File Header
 
-#+END_SRC
+#+begin_src emacs-lisp
+;;; init-rust.el --- Rust language support for MCG Emacs -*- lexical-binding: t; -*-
 
-** Dependencies
-#+BEGIN_SRC emacs-lisp
-;;; Dependencies
+;; Copyright (C) 2024-2026 MCG
+;; Author: mcge <mcgeq@outlook.com>
+;; Keywords: languages, rust
+;; Compatibility: GNU Emacs 29.0+
+
+;;; Commentary:
+;; Rust language support module for MCG Emacs:
+;; - rust-mode / rust-ts-mode configuration
+;; - rust-analyzer LSP integration (via lsp-bridge)
+;; - Cargo integration
+;; - Format on save with rustfmt
+;;
+#+end_src
+
+** Require
+
+#+begin_src emacs-lisp
+;;; Code:
 
 (require 'core-lib)
+#+end_src
 
-;; Ensure +lsp module is loaded
-(when (and (boundp 'mcg-module-enabled-p)
-           (fboundp 'mcg-module-enabled-p)
-           (mcg-module-enabled-p :lang 'lsp))
-  (require '+lsp nil t))
+** Variables
 
-#+END_SRC
+Rust 模块的配置变量。
 
-** Rust Mode Configuration
-#+BEGIN_SRC emacs-lisp
-;;; Rust Basic Configuration
-
-;; Load rust-mode extension
-(mcg-require-extension "lsp/rust-mode" 'rust-mode)
-
-;; Use rust-ts-mode (if available)
-(when (and (fboundp 'treesit-available-p)
-           (treesit-available-p))
-  (add-to-list 'major-mode-remap-alist '(rust-mode . rust-ts-mode)))
-
-;; File associations
-;; (add-to-list 'auto-mode-alist '("\\.rs\\'" . rust-mode))
-(add-to-list 'auto-mode-alist '("Cargo\\.toml\\'" . toml-ts-mode))
-
-;; Rust indentation settings
-(setq rust-indent-offset 4)
-
-#+END_SRC
-
-** Cargo Integration
-#+BEGIN_SRC emacs-lisp
-;;; Cargo Command Integration
-
-(defun mcg/rust-cargo-build ()
-  "Run cargo build."
-  (interactive)
-  (let ((compilation-scroll-output t))
-    (compile "cargo build")))
-
-(defun mcg/rust-cargo-run ()
-  "Run cargo run."
-  (interactive)
-  (let ((compilation-scroll-output t))
-    (compile "cargo run")))
-
-(defun mcg/rust-cargo-test ()
-  "Run cargo test."
-  (interactive)
-  (let ((compilation-scroll-output t))
-    (compile "cargo test")))
-
-(defun mcg/rust-cargo-check ()
-  "Run cargo check."
-  (interactive)
-  (let ((compilation-scroll-output t))
-    (compile "cargo check")))
-
-(defun mcg/rust-cargo-clippy ()
-  "Run cargo clippy."
-  (interactive)
-  (let ((compilation-scroll-output t))
-    (compile "cargo clippy")))
-
-(defun mcg/rust-cargo-doc ()
-  "Run cargo doc --open."
-  (interactive)
-  (let ((compilation-scroll-output t))
-    (compile "cargo doc --open")))
-
-(defun mcg/rust-cargo-fmt ()
-  "Run cargo fmt."
-  (interactive)
-  (let ((file (buffer-file-name)))
-    (when file
-      (save-buffer)
-      (if (zerop (call-process "cargo" nil nil nil "fmt"))
-          (progn
-            (revert-buffer t t t)
-            (message "Formatted with cargo fmt"))
-        (message "cargo fmt failed")))))
-
-#+END_SRC
-
-** Test Functions
-#+BEGIN_SRC emacs-lisp
-;;; Testing Support
-
-(defun mcg/rust-test-current-fn ()
-  "Run test function at cursor."
-  (interactive)
-  (let ((fn-name (mcg--rust-current-fn-name)))
-    (if fn-name
-        (let ((compilation-scroll-output t))
-          (compile (format "cargo test %s -- --nocapture" fn-name)))
-      (message "No test function at point"))))
-
-(defun mcg--rust-current-fn-name ()
-  "Get function name at cursor."
-  (save-excursion
-    (when (re-search-backward "^\\s-*\\(?:pub\\s-+\\)?\\(?:async\\s-+\\)?fn\\s-+\\([a-zA-Z_][a-zA-Z0-9_]*\\)" nil t)
-      (match-string-no-properties 1))))
-
-(defun mcg/rust-test-module ()
-  "Run all tests in current module."
-  (interactive)
-  (let* ((file (buffer-file-name))
-         (module-name (when file
-                        (file-name-sans-extension
-                         (file-name-nondirectory file)))))
-    (if module-name
-        (let ((compilation-scroll-output t))
-          (compile (format "cargo test %s::" module-name)))
-      (message "Cannot determine module name"))))
-
-#+END_SRC
-
-** Format on Save
-#+BEGIN_SRC emacs-lisp
-;;; Format on Save
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Variables
+;;; ============================================================
 
 (defvar mcg-rust-format-on-save t
-  "Whether to auto-format Rust code on save.")
+  "Whether to format Rust files on save using rustfmt.")
 
-(defun mcg-rust-format-buffer ()
-  "Format current buffer using rustfmt."
+(defvar mcg-rust-clippy-on-save nil
+  "Whether to run clippy on save.")
+#+end_src
+
+** rust-mode / rust-ts-mode Configuration
+
+rust-mode 和 rust-ts-mode 的配置，包括缩进、子词模式和电气配对。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; rust-mode / rust-ts-mode Configuration
+;;; ============================================================
+
+(defun mcg-rust-mode-setup ()
+  "Setup function for rust-mode and rust-ts-mode."
+  ;; Indentation
+  (setq-local indent-tabs-mode nil)
+  (setq-local tab-width 4)
+  
+  ;; Enable subword mode for CamelCase navigation
+  (subword-mode 1)
+  
+  ;; Electric pair for angle brackets
+  (setq-local electric-pair-pairs
+              (append electric-pair-pairs '((?< . ?>))))
+  
+  (mcg-log "Rust mode setup complete"))
+
+;; Setup Rust mode hooks (auto-mode-alist is managed in init-treesit.el)
+(mcg-deflang rust
+  :ts-mode rust-ts-mode
+  :fallback-mode rust-mode
+  :setup-fn mcg-rust-mode-setup)
+
+;; rust-mode specific settings (loaded after rust-mode)
+(with-eval-after-load 'rust-mode
+  (setq rust-format-on-save mcg-rust-format-on-save)
+  (setq rust-format-show-buffer nil)
+  (setq rust-format-goto-problem t))
+#+end_src
+
+** Cargo Integration
+
+Cargo 命令集成，提供构建、运行、测试等功能。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Cargo Integration
+;;; ============================================================
+
+(defun mcg/cargo-build ()
+  "Run cargo build."
   (interactive)
-  (if (and (bound-and-true-p lsp-bridge-mode)
-           (fboundp 'lsp-bridge-code-format))
-      (lsp-bridge-code-format)
-    ;; Fallback to direct rustfmt call
-    (when (executable-find "rustfmt")
-      (let ((temp-file (make-temp-file "rustfmt" nil ".rs")))
-        (unwind-protect
-            (progn
-              (write-region (point-min) (point-max) temp-file nil 'silent)
-              (when (zerop (call-process "rustfmt" nil nil nil temp-file))
-                (let ((formatted (with-temp-buffer
-                                   (insert-file-contents temp-file)
-                                   (buffer-string))))
-                  (erase-buffer)
-                  (insert formatted)
-                  (message "Formatted with rustfmt"))))
-          (delete-file temp-file))))))
+  (compile "cargo build"))
 
-(defun mcg-rust-maybe-format-on-save ()
-  "Maybe format Rust code on save."
-  (when (and mcg-rust-format-on-save
-             (or (derived-mode-p 'rust-mode)
-                 (derived-mode-p 'rust-ts-mode)))
-    (mcg-rust-format-buffer)))
+(defun mcg/cargo-run ()
+  "Run cargo run."
+  (interactive)
+  (compile "cargo run"))
 
-;; Note: Formatting is handled by +lsp module's mcg-lsp-format-on-save
-;; No longer adding before-save-hook here
+(defun mcg/cargo-test ()
+  "Run cargo test."
+  (interactive)
+  (compile "cargo test"))
 
-#+END_SRC
+(defun mcg/cargo-check ()
+  "Run cargo check."
+  (interactive)
+  (compile "cargo check"))
 
-** Keybindings
-#+BEGIN_SRC emacs-lisp
-;;; Keybindings Configuration
+(defun mcg/cargo-clippy ()
+  "Run cargo clippy."
+  (interactive)
+  (compile "cargo clippy"))
+
+(defun mcg/cargo-fmt ()
+  "Run cargo fmt."
+  (interactive)
+  (let ((default-directory (or (locate-dominating-file default-directory "Cargo.toml")
+                               default-directory)))
+    (shell-command "cargo fmt")
+    (revert-buffer t t t)
+    (message "Formatted with cargo fmt")))
+
+(defun mcg/cargo-doc ()
+  "Run cargo doc --open."
+  (interactive)
+  (compile "cargo doc --open"))
+
+(defun mcg/cargo-add (crate)
+  "Add CRATE to Cargo.toml."
+  (interactive "sCrate name: ")
+  (compile (format "cargo add %s" crate)))
+#+end_src
+
+** Rust Keybindings
+
+Rust 模式的快捷键配置。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Rust Keybindings
+;;; ============================================================
+
+(defvar mcg-rust-mode-map
+  (let ((map (make-sparse-keymap)))
+    ;; Cargo commands
+    (define-key map (kbd "C-c C-c C-b") #'mcg/cargo-build)
+    (define-key map (kbd "C-c C-c C-r") #'mcg/cargo-run)
+    (define-key map (kbd "C-c C-c C-t") #'mcg/cargo-test)
+    (define-key map (kbd "C-c C-c C-k") #'mcg/cargo-check)
+    (define-key map (kbd "C-c C-c C-l") #'mcg/cargo-clippy)
+    (define-key map (kbd "C-c C-c C-f") #'mcg/cargo-fmt)
+    (define-key map (kbd "C-c C-c C-d") #'mcg/cargo-doc)
+    (define-key map (kbd "C-c C-c C-a") #'mcg/cargo-add)
+    map)
+  "Keymap for Rust-specific commands.")
 
 (defun mcg-rust-setup-keybindings ()
-  "Setup Rust mode keybindings."
-  ;; Cargo commands (C-c C-u prefix)
-  (local-set-key (kbd "C-c C-u C-b") #'mcg/rust-cargo-build)
-  (local-set-key (kbd "C-c C-u C-r") #'mcg/rust-cargo-run)
-  (local-set-key (kbd "C-c C-u C-t") #'mcg/rust-cargo-test)
-  (local-set-key (kbd "C-c C-u C-k") #'mcg/rust-cargo-check)
-  (local-set-key (kbd "C-c C-u C-l") #'mcg/rust-cargo-clippy)
-  (local-set-key (kbd "C-c C-u C-d") #'mcg/rust-cargo-doc)
-  (local-set-key (kbd "C-c C-u C-f") #'mcg/rust-cargo-fmt)
-  
-  ;; Testing (C-c t prefix)
-  (local-set-key (kbd "C-c t f") #'mcg/rust-test-current-fn)
-  (local-set-key (kbd "C-c t m") #'mcg/rust-test-module)
-  (local-set-key (kbd "C-c t t") #'mcg/rust-cargo-test)
-  
-  ;; Formatting
-  (local-set-key (kbd "C-c r f") #'mcg-rust-format-buffer))
+  "Setup Rust-specific keybindings."
+  (use-local-map (make-composed-keymap mcg-rust-mode-map (current-local-map))))
 
-(add-hook 'rust-mode-hook #'mcg-rust-setup-keybindings)
-(add-hook 'rust-ts-mode-hook #'mcg-rust-setup-keybindings)
+;; Keybindings setup via hooks
+(with-eval-after-load 'rust-mode
+  (add-hook 'rust-mode-hook #'mcg-rust-setup-keybindings))
+(when (mcg-treesit-available-p)
+  (add-hook 'rust-ts-mode-hook #'mcg-rust-setup-keybindings))
+#+end_src
 
-#+END_SRC
+** Help Command
 
-** Project Detection
-#+BEGIN_SRC emacs-lisp
-;;; Project Detection
+Rust 帮助命令，显示快捷键和使用说明。
 
-(defun mcg-rust-project-p ()
-  "Detect if current project is a Rust project."
-  (when-let* ((project-root (when (project-current)
-                              (project-root (project-current)))))
-    (file-exists-p (expand-file-name "Cargo.toml" project-root))))
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Help Command
+;;; ============================================================
 
-(defun mcg/rust-project-info ()
-  "Show Rust project information."
+(defun mcg/rust-help ()
+  "Show Rust keybindings and command help."
   (interactive)
-  (if (mcg-rust-project-p)
-      (let* ((project-root (project-root (project-current)))
-             (cargo-toml (expand-file-name "Cargo.toml" project-root)))
-        (message "Rust project: %s" project-root))
-    (message "Not in a Rust project")))
+  (with-help-window "*MCG Rust Help*"
+    (princ "
+╔═══════════════════════════════════════════╗
+║       MCG Rust Keybindings                ║
+╚═══════════════════════════════════════════╝
 
-#+END_SRC
+CARGO COMMANDS:
+  C-c C-c C-b  - cargo build
+  C-c C-c C-r  - cargo run
+  C-c C-c C-t  - cargo test
+  C-c C-c C-k  - cargo check
+  C-c C-c C-l  - cargo clippy
+  C-c C-c C-f  - cargo fmt
+  C-c C-c C-d  - cargo doc --open
+  C-c C-c C-a  - cargo add <crate>
 
-** Tool Status Check
-#+BEGIN_SRC emacs-lisp
-;;; Tool Status Check
+LSP COMMANDS (via lsp-bridge):
+  M-.          - Go to definition
+  M-,          - Return from definition
+  M-?          - Find references
+  C-c r r      - Rename symbol
+  C-c r f      - Format buffer
 
-(defun mcg/rust-check-tools ()
-  "Check if Rust development tools are installed."
-  (interactive)
-  (let ((tools '(("rustc" . "rustup install stable")
-                 ("cargo" . "rustup install stable")
-                 ("rustfmt" . "rustup component add rustfmt")
-                 ("clippy" . "rustup component add clippy")
-                 ("rust-analyzer" . "rustup component add rust-analyzer"))))
-    (with-help-window "*Rust Tools Status*"
-      (princ "═══════════════════════════════════════════\n")
-      (princ "   Rust Development Tools Status\n")
-      (princ "═══════════════════════════════════════════\n\n")
-      (dolist (tool tools)
-        (let ((name (car tool))
-              (install-cmd (cdr tool)))
-          (princ (format "%-16s %s\n"
-                         name
-                         (if (executable-find name)
-                             "✓ Installed"
-                           (format "✗ Not installed (%s)" install-cmd))))))
-      (princ "\n═══════════════════════════════════════════\n")
-      (princ "\nRecommended install commands:\n")
-      (princ "  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh\n")
-      (princ "  rustup component add rustfmt clippy rust-analyzer\n"))))
+═══════════════════════════════════════════
+")))
+#+end_src
 
-#+END_SRC
+** Provide Feature
 
-** Keybindings Summary
-#+BEGIN_SRC emacs-lisp
-;;; Keybindings Summary
-
-;; Cargo commands (C-c C-u prefix):
-;; C-c C-u C-b   - cargo build
-;; C-c C-u C-r   - cargo run
-;; C-c C-u C-t   - cargo test
-;; C-c C-u C-k   - cargo check
-;; C-c C-u C-l   - cargo clippy
-;; C-c C-u C-d   - cargo doc --open
-;; C-c C-u C-f   - cargo fmt
-;;
-;; Testing (C-c t prefix):
-;; C-c t f       - Run current function test
-;; C-c t m       - Run current module tests
-;; C-c t t       - Run all tests
-;;
-;; Formatting:
-;; C-c r f       - Format code
-;;
-;; LSP (provided by +lsp module):
-;; M-.           - Jump to definition
-;; M-,           - Return
-;; M-?           - Find references
-;; C-c r r       - Rename
-
-#+END_SRC
-
-** Provide
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (provide 'init-rust)
 ;;; init-rust.el ends here
-#+END_SRC
+#+end_src

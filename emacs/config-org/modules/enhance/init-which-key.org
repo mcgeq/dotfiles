@@ -1,17 +1,23 @@
-* init-which-key.el
-:PROPERTIES:
-:HEADER-ARGS: :tangle init-which-key.el :lexical t
-:END:
+#+TITLE: Which-Key Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-which-key.el :lexical t
 
-** Headers
-#+BEGIN_SRC emacs-lisp
+* Which-Key Module
+
+本模块负责 MCG Emacs 的按键提示功能，包括：
+- 在弹出窗口中显示按键绑定提示
+- 自定义按键描述和前缀
+
+** File Header
+
+#+begin_src emacs-lisp
 ;;; init-which-key.el --- Which-Key Configuration for MCG Emacs -*- lexical-binding: t; -*-
 
 ;; Filename: init-which-key.el
 ;; Description: Which-key keybinding hints module
 ;; Author: mcge <mcgeq@outlook.com>
 ;; Copyright (C) 2024-2026, mcge, all rights reserved.
-;; Create   Date: 2026-01-09
+;; Create   Date: 2026-01-10
 ;; Version: 3.0
 ;; Keywords: which-key, keybindings, hints
 ;; Compatibility: GNU Emacs 29.0+
@@ -22,24 +28,32 @@
 ;; - Displaying keybinding hints in a popup
 ;; - Customizing key descriptions and prefixes
 ;;
+;; Module metadata:
+;; :depends ()
+;; :defer nil
+;;
+#+end_src
 
-#+END_SRC
+** Require
 
-** Dependencies
-#+BEGIN_SRC emacs-lisp
-;;; Dependencies
+#+begin_src emacs-lisp
+;;; Code:
 
 (require 'core-lib)
-
-#+END_SRC
+#+end_src
 
 ** Which-Key Configuration
-#+BEGIN_SRC emacs-lisp
+
+Which-key 配置函数，设置按键提示的显示方式和外观。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Which-Key Configuration
+;;; ============================================================
 
 (defun mcg--setup-which-key ()
-  "Setup Which-key keybinding hints."
-  ;; which-key is built-in for Emacs 30+
+  "Setup Which-key keybinding hints.
+which-key is built-in for Emacs 30+."
   (require 'which-key)
   
   ;; Basic settings
@@ -122,19 +136,23 @@
   (which-key-mode 1)
   
   (mcg-log "Which-key configured"))
-
-#+END_SRC
+#+end_src
 
 ** Initialize
-#+BEGIN_SRC emacs-lisp
+
+初始化 Which-key 功能。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Initialize
+;;; ============================================================
 
 (mcg--setup-which-key)
+#+end_src
 
-#+END_SRC
+** Provide Feature
 
-** Provide
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (provide 'init-which-key)
 ;;; init-which-key.el ends here
-#+END_SRC
+#+end_src

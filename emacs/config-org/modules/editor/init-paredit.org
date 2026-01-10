@@ -1,45 +1,45 @@
-* init-paredit.el
-:PROPERTIES:
-:HEADER-ARGS: :tangle init-paredit.el :lexical t
-:END:
+#+TITLE: Paredit Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-paredit.el :lexical t
 
-** Headers
-#+BEGIN_SRC emacs-lisp
+* Paredit Module
+
+本模块负责 MCG Emacs 的结构化编辑配置，包括：
+- fingertip 智能括号处理
+- 结构化编辑快捷键绑定
+
+** File Header
+
+#+begin_src emacs-lisp
 ;;; init-paredit.el --- Structural Editing Configuration for MCG Emacs -*- lexical-binding: t; -*-
 
-;; Filename: init-paredit.el
-;; Description: Structural editing module (formerly init-fingertip)
+;; Copyright (C) 2024-2026 MCG
 ;; Author: mcge <mcgeq@outlook.com>
-;; Copyright (C) 2024-2026, mcge, all rights reserved.
-;; Create   Date: 2026-01-07
-;; Modified Date: 2026-01-09
-;; Version: 3.0
 ;; Keywords: fingertip, paredit, structural-editing
 ;; Compatibility: GNU Emacs 29.0+
 
 ;;; Commentary:
-;;
 ;; Structural editing module for MCG Emacs, responsible for:
 ;; - fingertip smart parenthesis handling
 ;; - Structural editing keybindings
-;;
-;; This module was renamed from init-fingertip to init-paredit
-;; as part of the input -> editor category merge.
-;;
+#+end_src
 
-#+END_SRC
+** Require
 
-** Dependencies
-#+BEGIN_SRC emacs-lisp
-;;; Dependencies
+#+begin_src emacs-lisp
+;;; Code:
 
 (require 'core-lib)
-
-#+END_SRC
+#+end_src
 
 ** Variables
-#+BEGIN_SRC emacs-lisp
+
+fingertip 模式启用的 mode 列表。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Variables
+;;; ============================================================
 
 (defvar mcg-fingertip-modes
   '(bash-ts-mode-hook
@@ -74,23 +74,27 @@
     sh-mode-hook
     swift-mode-hook
     toml-ts-mode-hook
-    typescript-mode-hook typescript-ts-mode-hook
+    typescript-ts-mode-hook tsx-ts-mode-hook
     web-mode-hook
     zig-mode-hook
     fsharp-mode-hook
     clojure-mode-hook clojure-ts-mode-hook
     cider-repl-mode-hook)
   "List of modes to enable fingertip.")
-
-#+END_SRC
+#+end_src
 
 ** Configuration
-#+BEGIN_SRC emacs-lisp
+
+fingertip 结构化编辑配置。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Configuration
+;;; ============================================================
 
 (defun mcg--setup-fingertip ()
   "Setup fingertip structural editing."
-  (when (mcg-require-extension "editor/fingertip" 'fingertip)
+  (when (mcg-require-extension "fingertip" t)
     ;; Enable fingertip for various modes
     (dolist (hook mcg-fingertip-modes)
       (add-hook hook
@@ -98,14 +102,19 @@
                   (when (or (not (buffer-file-name))
                             (not (string-equal (file-name-extension (buffer-file-name)) "chat")))
                     (fingertip-mode 1)))))
-    
     (mcg-log "Configured fingertip")))
-
-#+END_SRC
+#+end_src
 
 ** Keybindings
-#+BEGIN_SRC emacs-lisp
+
+fingertip 快捷键配置。
+
+*** Setup Function
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Keybindings
+;;; ============================================================
 
 (defun mcg--setup-fingertip-keys ()
   "Setup fingertip keybindings."
@@ -113,11 +122,19 @@
     ;; Unbind default keys
     (dolist (key '("M-J" "M-r" "M-s" "M-;" "C-M-f" "C-M-b" "M-)"))
       (define-key fingertip-mode-map (kbd key) nil))
-    
+#+end_src
+
+*** Movement Keys
+
+#+begin_src emacs-lisp
     ;; Movement
     (define-key fingertip-mode-map (kbd "M-n") 'fingertip-jump-left)
     (define-key fingertip-mode-map (kbd "M-p") 'fingertip-jump-right)
-    
+#+end_src
+
+*** Symbol Insertion Keys
+
+#+begin_src emacs-lisp
     ;; Symbol insertion
     (define-key fingertip-mode-map (kbd "%") 'fingertip-match-paren)
     (define-key fingertip-mode-map (kbd "(") 'fingertip-open-round)
@@ -126,7 +143,11 @@
     (define-key fingertip-mode-map (kbd ")") 'fingertip-close-round)
     (define-key fingertip-mode-map (kbd "]") 'fingertip-close-bracket)
     (define-key fingertip-mode-map (kbd "}") 'fingertip-close-curly)
-    
+#+end_src
+
+*** Chinese Brackets Keys
+
+#+begin_src emacs-lisp
     ;; Chinese brackets
     (define-key fingertip-mode-map (kbd "（") 'fingertip-open-chinese-round)
     (define-key fingertip-mode-map (kbd "「") 'fingertip-open-chinese-bracket)
@@ -134,26 +155,42 @@
     (define-key fingertip-mode-map (kbd "）") 'fingertip-close-chinese-round)
     (define-key fingertip-mode-map (kbd "」") 'fingertip-close-chinese-bracket)
     (define-key fingertip-mode-map (kbd "】") 'fingertip-close-chinese-curly)
-    
+#+end_src
+
+*** Quotes and Others Keys
+
+#+begin_src emacs-lisp
     ;; Quotes and others
     (define-key fingertip-mode-map (kbd "\"") 'fingertip-double-quote)
     (define-key fingertip-mode-map (kbd "'") 'fingertip-single-quote)
     (define-key fingertip-mode-map (kbd "=") 'fingertip-equal)
     (define-key fingertip-mode-map (kbd "SPC") 'fingertip-space)
     (define-key fingertip-mode-map (kbd "RET") 'fingertip-newline)
-    
+#+end_src
+
+*** Deletion Keys
+
+#+begin_src emacs-lisp
     ;; Deletion
     (define-key fingertip-mode-map (kbd "M-o") 'fingertip-backward-delete)
     (define-key fingertip-mode-map (kbd "C-d") 'fingertip-forward-delete)
     (define-key fingertip-mode-map (kbd "C-k") 'fingertip-kill)
-    
+#+end_src
+
+*** Wrapping Keys
+
+#+begin_src emacs-lisp
     ;; Wrapping
     (define-key fingertip-mode-map (kbd "M-\"") 'fingertip-wrap-double-quote)
     (define-key fingertip-mode-map (kbd "M-'") 'fingertip-wrap-single-quote)
     (define-key fingertip-mode-map (kbd "M-{") 'fingertip-wrap-curly)
     (define-key fingertip-mode-map (kbd "M-(") 'fingertip-wrap-round)
     (define-key fingertip-mode-map (kbd "M-)") 'fingertip-unwrap)
-    
+#+end_src
+
+*** Jump and Navigation Keys
+
+#+begin_src emacs-lisp
     ;; Jump out and newline
     (define-key fingertip-mode-map (kbd "M-:") 'fingertip-jump-out-pair-and-newline)
     
@@ -161,20 +198,24 @@
     (define-key fingertip-mode-map (kbd "C-j") 'fingertip-jump-up)
     
     (mcg-log "Configured fingertip keybindings")))
-
-#+END_SRC
+#+end_src
 
 ** Initialize
-#+BEGIN_SRC emacs-lisp
+
+模块初始化。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Initialize
+;;; ============================================================
 
 (mcg--setup-fingertip)
 (mcg--setup-fingertip-keys)
+#+end_src
 
-#+END_SRC
+** Provide Feature
 
-** Provide
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (provide 'init-paredit)
 ;;; init-paredit.el ends here
-#+END_SRC
+#+end_src

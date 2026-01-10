@@ -1,53 +1,65 @@
-* init-icons.el
-:PROPERTIES:
-:HEADER-ARGS: :tangle init-icons.el :lexical t
-:END:
+#+TITLE: Icons Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-icons.el :lexical t
 
-** Headers
-#+BEGIN_SRC emacs-lisp
-  ;;; init-icons.el --- Nerd Icons Configuration for MCG Emacs -*- lexical-binding: t; -*-
+* Icons Module
 
-  ;; Filename: init-icons.el
-  ;; Description: Nerd icons configuration module
-  ;; Author: mcge <mcgeq@outlook.com>
-  ;; Copyright (C) 2024-2026, mcge, all rights reserved.
-  ;; Create   Date: 2026-01-09
-  ;; Version: 3.0
-  ;; Keywords: icons, ui, nerd-icons
-  ;; Compatibility: GNU Emacs 29.0+
+本模块负责 MCG Emacs 的图标配置，包括：
+- nerd-icons 配置
+- nerd-icons-completion 集成
 
-  ;;; Commentary:
-  ;;
-  ;; Icons module for MCG Emacs configuration, responsible for:
-  ;; - nerd-icons configuration
-  ;; - nerd-icons-completion integration
-  ;;
-  ;; Module metadata:
-  ;; :depends ()
-  ;; :defer nil
-  ;;
+** File Header
 
-#+END_SRC
+#+begin_src emacs-lisp
+;;; init-icons.el --- Nerd Icons Configuration for MCG Emacs -*- lexical-binding: t; -*-
 
-** Dependencies
-#+BEGIN_SRC emacs-lisp
+;; Filename: init-icons.el
+;; Description: Nerd icons configuration module
+;; Author: mcge <mcgeq@outlook.com>
+;; Copyright (C) 2024-2026, mcge, all rights reserved.
+;; Create   Date: 2026-01-09
+;; Version: 3.0
+;; Keywords: icons, ui, nerd-icons
+;; Compatibility: GNU Emacs 29.0+
+
+;;; Commentary:
+;;
+;; Icons module for MCG Emacs configuration, responsible for:
+;; - nerd-icons configuration
+;; - nerd-icons-completion integration
+;;
+;; Module metadata:
+;; :depends ()
+;; :defer nil
+;;
+#+end_src
+
+** Require
+
+#+begin_src emacs-lisp
+;;; Code:
+
 ;;; Dependencies
 
 (require 'core-lib)
-
-#+END_SRC
+#+end_src
 
 ** Variables
-#+BEGIN_SRC emacs-lisp
+
+图标相关的配置变量。
+
+#+begin_src emacs-lisp
 ;;; Variables
 
 (defvar mcg-ui-icon-font-family "FiraCode Nerd Font"
   "Icon font family name.")
-
-#+END_SRC
+#+end_src
 
 ** Nerd Icons Configuration
-#+BEGIN_SRC emacs-lisp
+
+Nerd Icons 设置函数。
+
+#+begin_src emacs-lisp
 ;;; Nerd Icons Configuration
 
 (defun mcg-ui-setup-nerd-icons ()
@@ -68,20 +80,22 @@ Path is already added to load-path by core-bootstrap's mcg-setup-load-path."
       (mcg-log "nerd-icons-completion configured")))
   
   (mcg-log "nerd-icons configured"))
-
-#+END_SRC
+#+end_src
 
 ** Initialize
-#+BEGIN_SRC emacs-lisp
+
+模块初始化，设置图标。
+
+#+begin_src emacs-lisp
 ;;; Initialize
 
 ;; Set up icons
 (mcg-ui-setup-nerd-icons)
+#+end_src
 
-#+END_SRC
+** Provide Feature
 
-** Provide
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (provide 'init-icons)
 ;;; init-icons.el ends here
-#+END_SRC
+#+end_src

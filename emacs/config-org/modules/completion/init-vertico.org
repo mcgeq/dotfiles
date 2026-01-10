@@ -1,50 +1,54 @@
-* init-vertico.el
-:PROPERTIES:
-:HEADER-ARGS: :tangle init-vertico.el :lexical t
-:END:
+#+TITLE: Completion System Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-vertico.el :lexical t
 
-** Headers
-#+BEGIN_SRC emacs-lisp
-  ;;; init-vertico.el --- Completion System for MCG Emacs -*- lexical-binding: t; -*-
+* Completion System Module
 
-  ;; Filename: init-vertico.el
-  ;; Description: Completion system module (Vertico + Marginalia + Embark + Consult + Orderless)
-  ;; Author: mcge <mcgeq@outlook.com>
-  ;; Copyright (C) 2024-2026, mcge, all rights reserved.
-  ;; Create   Date: 2026-01-07
-  ;; Version: 3.0
-  ;; Keywords: completion, vertico, marginalia, embark, consult, orderless
-  ;; Compatibility: GNU Emacs 29.0+
+本模块负责 MCG Emacs 的补全系统配置，包括：
+- Vertico 垂直补全界面
+- Marginalia 候选项注释
+- Embark 上下文操作
+- Consult 搜索命令
+- Orderless 模糊匹配
+- 拼音支持（中文）
 
-  ;;; Commentary:
-  ;;
-  ;; Completion system module for MCG Emacs, responsible for:
-  ;; - Vertico vertical completion interface
-  ;; - Marginalia candidate annotations
-  ;; - Embark contextual actions
-  ;; - Consult consulting search commands
-  ;; - Orderless fuzzy matching
-  ;; - Pinyin support (Chinese)
-  ;;
-  ;; Module metadata:
-  ;; :depends ()
-  ;; :defer nil
-  ;;
+** File Header
 
-#+END_SRC
+#+begin_src emacs-lisp
+;;; init-vertico.el --- Completion System for MCG Emacs -*- lexical-binding: t; -*-
 
-** Dependencies
-#+BEGIN_SRC emacs-lisp
-;;; Dependencies
+;; Copyright (C) 2024-2026 MCG
+;; Author: mcge <mcgeq@outlook.com>
+;; Keywords: completion, vertico, marginalia, embark, consult, orderless
+;; Compatibility: GNU Emacs 29.0+
+
+;;; Commentary:
+;; Completion system module for MCG Emacs, responsible for:
+;; - Vertico vertical completion interface
+;; - Marginalia candidate annotations
+;; - Embark contextual actions
+;; - Consult consulting search commands
+;; - Orderless fuzzy matching
+;; - Pinyin support (Chinese)
+#+end_src
+
+** Require
+
+#+begin_src emacs-lisp
+;;; Code:
 
 (require 'core-lib)
 (require 'crm)
-
-#+END_SRC
+#+end_src
 
 ** Variables
-#+BEGIN_SRC emacs-lisp
+
+补全系统相关的配置变量。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Variables
+;;; ============================================================
 
 (defvar mcg-completion-vertico-count 15
   "Number of candidates displayed by Vertico.")
@@ -55,16 +59,20 @@
 (defvar mcg-completion-preview-key 'any
   "Consult preview trigger key.
 Options: 'any, nil, or specific key.")
-
-#+END_SRC
+#+end_src
 
 ** Orderless Configuration
-#+BEGIN_SRC emacs-lisp
+
+Orderless 模糊匹配引擎配置。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Orderless Configuration
+;;; ============================================================
 
 (defun mcg--setup-orderless ()
   "Setup Orderless fuzzy matching engine."
-  (when (mcg-require-extension "completion/orderless" 'orderless)
+  (when (mcg-require-extension "orderless" t)
     ;; Core completion styles
     (setq completion-styles '(orderless partial-completion basic)
           completion-category-defaults nil)
@@ -89,17 +97,23 @@ Options: 'any, nil, or specific key.")
           '(orderless-affix-dispatch))
     
     (mcg-log "Orderless configured")))
+#+end_src
 
-#+END_SRC
+** Pinyin Support (Chinese)
 
-** Pinyin Support
-#+BEGIN_SRC emacs-lisp
+拼音补全支持配置。
+
+*** Setup Pinyin
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Pinyin Support (Chinese)
+;;; ============================================================
 
 (defun mcg--setup-pinyin ()
   "Setup pinyin completion support."
   (when (and mcg-completion-enable-pinyin
-             (mcg-require-extension "completion/pinyinlib" 'pinyinlib))
+             (mcg-require-extension "pinyinlib" t))
     
     (defun mcg/completion-regex-pinyin (str)
       "Pinyin match STR."
@@ -109,7 +123,11 @@ Options: 'any, nil, or specific key.")
     (add-to-list 'orderless-matching-styles 'mcg/completion-regex-pinyin)
     
     (mcg-log "Pinyin completion enabled")))
+#+end_src
 
+*** Toggle Pinyin Completion
+
+#+begin_src emacs-lisp
 (defun mcg/toggle-pinyin-completion ()
   "Toggle pinyin completion."
   (interactive)
@@ -120,16 +138,22 @@ Options: 'any, nil, or specific key.")
         (message "Pinyin completion disabled"))
     (add-to-list 'orderless-matching-styles 'mcg/completion-regex-pinyin)
     (message "Pinyin completion enabled")))
-
-#+END_SRC
+#+end_src
 
 ** Vertico Configuration
-#+BEGIN_SRC emacs-lisp
+
+Vertico 垂直补全界面配置。
+
+*** Setup Vertico
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Vertico Configuration
+;;; ============================================================
 
 (defun mcg--setup-vertico ()
   "Setup Vertico vertical completion interface."
-  (when (mcg-require-extension "completion/vertico" 'vertico)
+  (when (mcg-require-extension "vertico" t)
     ;; Display settings
     (setq vertico-count mcg-completion-vertico-count)
     (setq vertico-resize nil)              ; Fixed height
@@ -147,7 +171,11 @@ Options: 'any, nil, or specific key.")
       (setq vertico-sort-function #'vertico-sort-history-length-alpha))
     
     (mcg-log "Vertico configured")))
+#+end_src
 
+*** Setup Vertico Keybindings
+
+#+begin_src emacs-lisp
 (defun mcg--setup-vertico-keybindings ()
   "Setup Vertico keybindings."
   (when (and (featurep 'vertico) (boundp 'vertico-map))
@@ -159,19 +187,25 @@ Options: 'any, nil, or specific key.")
     (define-key vertico-map (kbd "M-<") #'vertico-first)
     (define-key vertico-map (kbd "M->") #'vertico-last)
     
-    ;; vertico-directory 键绑定
+    ;; vertico-directory keybindings
     (when (featurep 'vertico-directory)
       (define-key vertico-map (kbd "DEL") #'vertico-directory-delete-char))))
-
-#+END_SRC
+#+end_src
 
 ** Marginalia Configuration
-#+BEGIN_SRC emacs-lisp
+
+Marginalia 候选项注释配置。
+
+*** Setup Marginalia
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Marginalia Configuration
+;;; ============================================================
 
 (defun mcg--setup-marginalia ()
   "Setup Marginalia candidate annotations."
-  (when (mcg-require-extension "completion/marginalia" 'marginalia)
+  (when (mcg-require-extension "marginalia" t)
     ;; Alignment settings
     (setq marginalia-align 'right)
     (setq marginalia-align-offset 0)
@@ -186,7 +220,11 @@ Options: 'any, nil, or specific key.")
     (define-key minibuffer-local-map (kbd "M-A") #'marginalia-cycle)
     
     (mcg-log "Marginalia configured")))
+#+end_src
 
+*** Toggle Marginalia
+
+#+begin_src emacs-lisp
 (defun mcg/toggle-marginalia ()
   "Toggle Marginalia mode."
   (interactive)
@@ -196,16 +234,22 @@ Options: 'any, nil, or specific key.")
         (message "Marginalia disabled"))
     (marginalia-mode 1)
     (message "Marginalia enabled")))
-
-#+END_SRC
+#+end_src
 
 ** Consult Configuration
-#+BEGIN_SRC emacs-lisp
+
+Consult 搜索命令配置。
+
+*** Setup Consult
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Consult Configuration
+;;; ============================================================
 
 (defun mcg--setup-consult ()
   "Setup Consult consulting search commands."
-  (when (mcg-require-extension "completion/consult" 'consult)
+  (when (mcg-require-extension "consult" t)
     ;; Preview configuration
     (setq consult-preview-key mcg-completion-preview-key)
     (setq consult-narrow-key "<")
@@ -258,7 +302,11 @@ Options: 'any, nil, or specific key.")
                     process-coding-system-alist)))
     
     (mcg-log "Consult configured")))
+#+end_src
 
+*** Setup Consult Keybindings
+
+#+begin_src emacs-lisp
 (defun mcg--setup-consult-keybindings ()
   "Setup Consult keybindings."
   (when (featurep 'consult)
@@ -272,12 +320,16 @@ Options: 'any, nil, or specific key.")
     
     ;; Enable completion list preview
     (add-hook 'completion-list-mode-hook #'consult-preview-at-point-mode)))
-
-#+END_SRC
+#+end_src
 
 ** Consult Buffer Sources Configuration
-#+BEGIN_SRC emacs-lisp
+
+Consult 缓冲区源配置。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Consult Buffer Sources Configuration
+;;; ============================================================
 
 (defun mcg--setup-consult-buffer-sources ()
   "Setup consult-buffer with project filtering and buffer grouping."
@@ -356,12 +408,18 @@ Options: 'any, nil, or specific key.")
             consult--source-bookmark))
     
     (mcg-log "Consult buffer sources configured with project filtering")))
-
-#+END_SRC
+#+end_src
 
 ** Consult Project Buffer Functions
-#+BEGIN_SRC emacs-lisp
+
+Consult 项目缓冲区函数。
+
+*** Consult Project Buffer
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Consult Project Buffer Functions
+;;; ============================================================
 
 (defun mcg/consult-project-buffer ()
   "Switch to a buffer within the current project.
@@ -370,7 +428,11 @@ If not in a project, falls back to `consult-buffer'."
   (if (project-current)
       (consult-project-buffer)
     (consult-buffer)))
+#+end_src
 
+*** Consult Buffer by Mode
+
+#+begin_src emacs-lisp
 (defun mcg/consult-buffer-by-mode ()
   "Switch to a buffer filtered by major mode.
 Prompts for a major mode, then shows only buffers with that mode."
@@ -398,7 +460,11 @@ Prompts for a major mode, then shows only buffers with that mode."
              :predicate
              (lambda (buf)
                (eq (buffer-local-value 'major-mode buf) mode))))))))))
+#+end_src
 
+*** Kill Project Buffers
+
+#+begin_src emacs-lisp
 (defun mcg/kill-project-buffers ()
   "Kill all buffers belonging to the current project."
   (interactive)
@@ -413,18 +479,28 @@ Prompts for a major mode, then shows only buffers with that mode."
       (when (yes-or-no-p (format "Kill %d project buffers? " count))
         (mapc #'kill-buffer buffers)
         (message "Killed %d project buffers" count)))))
-
-#+END_SRC
+#+end_src
 
 ** Consult Custom Functions
-#+BEGIN_SRC emacs-lisp
+
+Consult 自定义函数。
+
+*** Consult Line Symbol at Point
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Consult Custom Functions
+;;; ============================================================
 
 (defun mcg/consult-line-symbol-at-point ()
   "Search for symbol at point in current buffer."
   (interactive)
   (consult-line (thing-at-point 'symbol)))
+#+end_src
 
+*** Consult Find Org Headings
+
+#+begin_src emacs-lisp
 (defun mcg/consult-find-org-headings (&optional match)
   "Find headings in all org files.
 MATCH is an optional match condition."
@@ -433,16 +509,22 @@ MATCH is an optional match condition."
     (consult-org-heading
      match
      (directory-files org-directory t "^[0-9]\\{8\\}.+\\.org$"))))
-
-#+END_SRC
+#+end_src
 
 ** Embark Configuration
-#+BEGIN_SRC emacs-lisp
+
+Embark 上下文操作配置。
+
+*** Setup Embark
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Embark Configuration
+;;; ============================================================
 
 (defun mcg--setup-embark ()
   "Setup Embark contextual actions."
-  (when (mcg-require-extension "completion/embark" 'embark)
+  (when (mcg-require-extension "embark" t)
     ;; Action behavior
     (setq embark-quit-after-action nil)
     (setq embark-confirm-act-all nil)
@@ -478,7 +560,11 @@ MATCH is an optional match condition."
     (setq embark-collect-live-update-delay 0.15)
     
     (mcg-log "Embark configured")))
+#+end_src
 
+*** Setup Embark Consult Integration
+
+#+begin_src emacs-lisp
 (defun mcg--setup-embark-consult ()
   "Setup Embark-Consult integration."
   (when (and (featurep 'embark) (featurep 'consult))
@@ -486,12 +572,16 @@ MATCH is an optional match condition."
     ;; Enable consult preview in embark collect
     (add-hook 'embark-collect-mode-hook #'consult-preview-at-point-mode)
     (mcg-log "Embark-Consult integration configured")))
-
-#+END_SRC
+#+end_src
 
 ** Embark Custom Actions
-#+BEGIN_SRC emacs-lisp
+
+Embark 自定义操作。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Embark Custom Actions
+;;; ============================================================
 
 (defun mcg/embark-open-externally (&optional arg)
   "Open ARG marked or current file with system default application."
@@ -501,12 +591,16 @@ MATCH is an optional match condition."
     (dired-map-over-marks
      (embark-open-externally (dired-get-filename))
      arg)))
-
-#+END_SRC
+#+end_src
 
 ** Minibuffer Enhancement
-#+BEGIN_SRC emacs-lisp
+
+Minibuffer 增强配置。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Minibuffer Enhancement
+;;; ============================================================
 
 (defun mcg--setup-minibuffer ()
   "Setup Minibuffer enhancements."
@@ -533,12 +627,16 @@ MATCH is an optional match condition."
   (minibuffer-depth-indicate-mode 1)
   
   (mcg-log "Minibuffer enhancements configured"))
-
-#+END_SRC
+#+end_src
 
 ** Performance Tuning
-#+BEGIN_SRC emacs-lisp
+
+性能优化配置。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Performance Tuning
+;;; ============================================================
 
 (defun mcg--setup-completion-performance ()
   "Setup completion performance optimization."
@@ -555,12 +653,16 @@ MATCH is an optional match condition."
   (add-hook 'minibuffer-exit-hook #'mcg/minibuffer-exit-hook)
   
   (mcg-log "Completion performance tuning configured"))
-
-#+END_SRC
+#+end_src
 
 ** Initialize
-#+BEGIN_SRC emacs-lisp
+
+模块初始化。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Initialize
+;;; ============================================================
 
 ;; Setup components in order
 (mcg--setup-orderless)
@@ -575,11 +677,11 @@ MATCH is an optional match condition."
 (mcg--setup-embark-consult)
 (mcg--setup-minibuffer)
 (mcg--setup-completion-performance)
+#+end_src
 
-#+END_SRC
+** Provide Feature
 
-** Provide
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (provide 'init-vertico)
 ;;; init-vertico.el ends here
-#+END_SRC
+#+end_src

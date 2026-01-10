@@ -168,6 +168,119 @@ emacs/
 | make lock-packages| Lock current package versions  |
 | make h            | Show help                      |
 
+* 📦 Git Submodule Package Management
+
+This configuration uses Git Submodules to manage third-party Emacs packages. All packages are stored in =site-lisp/extensions/= organized by category.
+
+** Extension Directory Organization
+
+Extensions are organized into category subdirectories:
+
+#+begin_src text
+site-lisp/extensions/
+├── core/           # Core libraries (dash, s.el, f.el, compat, lazy-load)
+├── completion/     # Completion system (vertico, consult, marginalia, orderless, embark)
+├── editor/         # Editor features (avy, ace-window, vundo, markmacro, fingertip)
+├── git/            # Git integration (magit, with-editor, jujutsu)
+├── input/          # Input methods (emacs-rime, posframe)
+├── lsp/            # LSP and language support (lsp-bridge, rust-mode, lua-mode, etc.)
+├── org/            # Org-mode extensions (org-modern, ox-hugo, org-download)
+├── search/         # Search tools (blink-search, color-rg, consult-todo)
+├── snippets/       # Snippet libraries (yasnippet, yasnippet-snippets)
+├── ui/             # UI components (awesome-tray, themes/, nerd-icons)
+├── utils/          # Utility packages (helpful, json-mode, hydra)
+└── docs/           # Documentation tools (markdown-ts-mode, flymake-vale)
+#+end_src
+
+** Submodule Commands
+
+| Command    | Alias | Description                                    |
+|------------+-------+------------------------------------------------|
+| make gsb   | init  | Initialize all submodules (bootstrap)          |
+| make gsbr  |       | Switch submodules to main/master branch        |
+| make gsu   | up    | Update all submodules to latest                |
+| make gss   |       | Full sync: init + branch + update              |
+| make gsr   |       | Reset submodules to remote HEAD                |
+| make gsst  | st    | Check submodule status                         |
+| make gsync |       | Sync .gitmodules URLs after manual edits       |
+| make gsa   |       | Add new submodule (requires URL, CAT, NAME)    |
+| make gsrm  |       | Remove submodule (requires CAT, NAME)          |
+
+** Adding New Packages
+
+To add a new package as a Git submodule:
+
+#+begin_src bash
+# Syntax: make gsa URL=<repo-url> CAT=<category> NAME=<package-name>
+
+# Example: Add a new theme package
+make gsa URL=https://github.com/hlissner/emacs-doom-themes CAT=ui/themes NAME=doom-themes
+
+# Example: Add a new editor package
+make gsa URL=https://github.com/abo-abo/swiper CAT=editor NAME=swiper
+
+# Example: Add a new LSP language support
+make gsa URL=https://github.com/emacs-lsp/lsp-mode CAT=lsp NAME=lsp-mode
+#+end_src
+
+After adding a package:
+1. The submodule is added to =.gitmodules=
+2. The package is cloned to =site-lisp/extensions/<CAT>/<NAME>=
+3. Commit the changes: =git add .gitmodules site-lisp/extensions/<CAT>/<NAME> && git commit=
+
+** Updating Packages
+
+To update all packages to their latest versions:
+
+#+begin_src bash
+# Update all submodules
+make gsu
+
+# Or use the alias
+make up
+#+end_src
+
+For a complete sync (recommended after cloning or when submodules are out of sync):
+
+#+begin_src bash
+# Full sync: initialize + switch to main branch + pull latest
+make gss
+#+end_src
+
+** Removing Packages
+
+To remove a package:
+
+#+begin_src bash
+# Syntax: make gsrm CAT=<category> NAME=<package-name>
+
+# Example: Remove a package
+make gsrm CAT=ui/themes NAME=doom-themes
+#+end_src
+
+This will:
+1. Deinitialize the submodule
+2. Remove it from the Git index
+3. Clean up the =.git/modules= directory
+
+** Checking Package Status
+
+#+begin_src bash
+# View status of all submodules
+make gsst
+
+# Or use the alias
+make st
+#+end_src
+
+** Best Practices
+
+1. *Choose the right category*: Place packages in appropriate category directories
+2. *Use descriptive names*: Package names should match the repository name
+3. *Commit after changes*: Always commit =.gitmodules= and the submodule directory together
+4. *Regular updates*: Run =make gsu= periodically to keep packages updated
+5. *Test after updates*: Run =make test= after updating to catch any breaking changes
+
 ** Module Declaration
 
 Use =mcg!= macro in =init.org= to declare enabled modules:

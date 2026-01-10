@@ -1,316 +1,305 @@
-* init-typescript.el
-:PROPERTIES:
-:HEADER-ARGS: :tangle init-typescript.el :lexical t
-:END:
+#+TITLE: TypeScript Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-typescript.el :lexical t
 
-** Headers
-#+BEGIN_SRC emacs-lisp
-  ;;; init-typescript.el --- TypeScript/JavaScript Support for MCG Emacs -*- lexical-binding: t; -*-
+* TypeScript Module
 
-  ;; Filename: init-typescript.el
-  ;; Description: TypeScript/JavaScript language support module
-  ;; Author: mcge <mcgeq@outlook.com>
-  ;; Copyright (C) 2024-2026, mcge, all rights reserved.
-  ;; Create   Date: 2026-01-07
-  ;; Version: 3.0
-  ;; Keywords: typescript, javascript, tsx, jsx, biome
-  ;; Compatibility: GNU Emacs 29.0+
+本模块负责 MCG Emacs 的 TypeScript/JavaScript 语言支持，包括：
+- typescript-ts-mode / tsx-ts-mode 配置
+- tsserver LSP 集成（通过 lsp-bridge）
+- Biome 格式化和 lint
+- npm/pnpm 集成
 
-  ;;; Commentary:
-  ;;
-  ;; TypeScript/JavaScript language support module for MCG Emacs, providing:
-  ;; - typescript-ts-mode / tsx-ts-mode / js-ts-mode configuration
-  ;; - Biome formatting and lint (replaces ESLint + Prettier)
-  ;; - LSP integration (via +lsp module)
-  ;; - Node.js run support
-  ;; - React/JSX support
-  ;;
-  ;; Module metadata:
-  ;; :depends (+lsp)
-  ;; :defer t
-  ;;
+** File Header
 
-#+END_SRC
+#+begin_src emacs-lisp
+;;; init-typescript.el --- TypeScript language support for MCG Emacs -*- lexical-binding: t; -*-
 
-** Dependencies
-#+BEGIN_SRC emacs-lisp
-;;; Dependencies
+;; Copyright (C) 2024-2026 MCG
+;; Author: mcge <mcgeq@outlook.com>
+;; Keywords: languages, typescript, javascript
+;; Compatibility: GNU Emacs 29.0+
+
+;;; Commentary:
+;; TypeScript/JavaScript language support module for MCG Emacs:
+;; - typescript-ts-mode / tsx-ts-mode configuration
+;; - tsserver LSP integration (via lsp-bridge)
+;; - Biome for formatting and linting
+;; - npm/pnpm integration
+;;
+#+end_src
+
+** Require
+
+#+begin_src emacs-lisp
+;;; Code:
 
 (require 'core-lib)
+#+end_src
 
-#+END_SRC
+** Variables
 
-** TypeScript Mode Configuration
-#+BEGIN_SRC emacs-lisp
-;;; TypeScript Basic Configuration
+TypeScript 模块的配置变量。
 
-;; Indentation settings
-(setq typescript-indent-level 2
-      js-indent-level 2)
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Variables
+;;; ============================================================
 
-;; Enable JSX syntax highlighting
-(setq js-jsx-syntax t)
+(defvar mcg-ts-format-on-save t
+  "Whether to format TypeScript files on save using biome.")
 
-;; Note: auto-mode-alist and major-mode-remap-alist are configured in init-treesit.el
-;; Note: Biome formatting functions (mcg-ts-format-buffer, etc.) are in init-lsp.el
+(defvar mcg-ts-package-manager "pnpm"
+  "Package manager to use (npm, pnpm, yarn).")
+#+end_src
 
-#+END_SRC
+** typescript-ts-mode / tsx-ts-mode Configuration
 
-** Node.js Support
-#+BEGIN_SRC emacs-lisp
-;;; Node.js Support
+typescript-ts-mode 和 tsx-ts-mode 的配置，包括缩进和子词模式。
 
-(defun mcg/ts-run-node ()
-  "Run current file using Node.js."
-  (interactive)
-  (if (executable-find "node")
-      (let ((compilation-scroll-output t))
-        (compile (format "node %s" (buffer-file-name))))
-    (message "Node.js not found")))
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; typescript-ts-mode / tsx-ts-mode Configuration
+;;; ============================================================
 
-(defun mcg/ts-run-npm-script ()
-  "Run npm script."
-  (interactive)
-  (if (executable-find "npm")
-      (let* ((package-json (locate-dominating-file default-directory "package.json"))
-             (default-directory (or package-json default-directory))
-             (scripts (mcg--ts-get-npm-scripts))
-             (script (completing-read "Run npm script: " scripts)))
-        (compile (format "npm run %s" script)))
-    (message "npm not found")))
-
-(defun mcg--ts-get-npm-scripts ()
-  "Get scripts from package.json."
-  (when-let* ((package-json (locate-dominating-file default-directory "package.json"))
-              (json-file (expand-file-name "package.json" package-json)))
-    (when (file-exists-p json-file)
-      (let* ((json-object-type 'hash-table)
-             (json (json-read-file json-file))
-             (scripts (gethash "scripts" json)))
-        (when scripts
-          (hash-table-keys scripts))))))
-
-#+END_SRC
-
-** Import Management
-#+BEGIN_SRC emacs-lisp
-;;; Import Management and Code Actions
-
-(defun mcg/ts-organize-imports ()
-  "Organize imports (requires LSP support)."
-  (interactive)
-  (if (and (fboundp 'lsp-bridge-code-action)
-           (bound-and-true-p lsp-bridge-mode))
-      (lsp-bridge-code-action "source.organizeImports")
-    (message "LSP not active")))
-
-(defun mcg/ts-remove-unused ()
-  "Remove unused imports and variables."
-  (interactive)
-  (if (and (fboundp 'lsp-bridge-code-action)
-           (bound-and-true-p lsp-bridge-mode))
-      (lsp-bridge-code-action "source.removeUnused")
-    (message "LSP not active")))
-
-(defun mcg/ts-fix-all ()
-  "Auto-fix all fixable issues."
-  (interactive)
-  (if (and (fboundp 'lsp-bridge-code-action)
-           (bound-and-true-p lsp-bridge-mode))
-      (lsp-bridge-code-action "source.fixAll")
-    (message "LSP not active")))
-
-#+END_SRC
-
-** React/JSX Support
-#+BEGIN_SRC emacs-lisp
-;;; React/JSX Support
-
-(defun mcg/ts-insert-component ()
-  "Insert React component template."
-  (interactive)
-  (let ((component-name (read-string "Component name: ")))
-    (insert (format "import React from 'react';\n\n"))
-    (insert (format "interface %sProps {\n  \n}\n\n" component-name))
-    (insert (format "export const %s: React.FC<%sProps> = (props) => {\n"
-                    component-name component-name))
-    (insert "  return (\n    <div>\n      \n    </div>\n  );\n};\n")))
-
-(defun mcg/ts-insert-interface ()
-  "Create TypeScript interface."
-  (interactive)
-  (let ((name (read-string "Interface name: ")))
-    (insert (format "interface %s {\n  \n}\n" name))
-    (forward-line -2)
-    (end-of-line)))
-
-(defun mcg/ts-insert-type ()
-  "Create TypeScript type alias."
-  (interactive)
-  (let ((name (read-string "Type name: ")))
-    (insert (format "type %s = \n" name))
-    (backward-char 1)))
-
-#+END_SRC
-
-** Console Log Helper
-#+BEGIN_SRC emacs-lisp
-;;; Console.log Helper
-
-(defun mcg/ts-insert-console-log ()
-  "Insert console.log statement."
-  (interactive)
-  (let ((var-name (if (use-region-p)
-                      (buffer-substring-no-properties (region-beginning) (region-end))
-                    (read-string "Variable to log: "))))
-    (end-of-line)
-    (newline-and-indent)
-    (insert (format "console.log('%s:', %s);" var-name var-name))))
-
-(defun mcg/ts-remove-console-logs ()
-  "Remove all console.log statements."
-  (interactive)
-  (save-excursion
-    (goto-char (point-min))
-    (let ((count 0))
-      (while (re-search-forward "^.*console\\.log.*$" nil t)
-        (delete-region (line-beginning-position) (1+ (line-end-position)))
-        (setq count (1+ count)))
-      (message "Removed %d console.log statement(s)" count))))
-
-#+END_SRC
-
-** Project Detection
-#+BEGIN_SRC emacs-lisp
-;;; Project Detection
-
-(defun mcg-ts-project-p ()
-  "Detect if current project is a TypeScript/JavaScript project."
-  (when-let* ((project-root (when (project-current)
-                              (project-root (project-current)))))
-    (or (file-exists-p (expand-file-name "package.json" project-root))
-        (file-exists-p (expand-file-name "tsconfig.json" project-root))
-        (file-exists-p (expand-file-name "jsconfig.json" project-root)))))
-
-(defun mcg-ts-is-react-project-p ()
-  "Detect if current project is a React project."
-  (when-let* ((project-root (when (project-current)
-                              (project-root (project-current))))
-              (package-json (expand-file-name "package.json" project-root)))
-    (when (file-exists-p package-json)
-      (with-temp-buffer
-        (insert-file-contents package-json)
-        (or (search-forward "\"react\"" nil t)
-            (search-forward "\"next\"" nil t))))))
-
-#+END_SRC
-
-** Keybindings
-#+BEGIN_SRC emacs-lisp
-;;; Keybindings Configuration
-
-(defun mcg-ts-setup-keybindings ()
-  "Setup TypeScript/JavaScript mode keybindings."
-  ;; Formatting and checking (functions from init-lsp.el)
-  (local-set-key (kbd "C-c r f") #'mcg-ts-format-buffer)
-  (local-set-key (kbd "C-c b") #'mcg/biome-check)
-  (local-set-key (kbd "C-c B") #'mcg/biome-fix)
+(defun mcg-typescript-mode-setup ()
+  "Setup function for typescript-ts-mode and tsx-ts-mode."
+  ;; Indentation
+  (setq-local indent-tabs-mode nil)
+  (setq-local tab-width 2)
+  (setq-local typescript-ts-mode-indent-offset 2)
   
-  ;; Code actions
-  (local-set-key (kbd "C-c i") #'mcg/ts-organize-imports)
-  (local-set-key (kbd "C-c u") #'mcg/ts-remove-unused)
-  (local-set-key (kbd "C-c x") #'mcg/ts-fix-all)
+  ;; Enable subword mode for camelCase navigation
+  (subword-mode 1)
   
-  ;; Run
-  (local-set-key (kbd "C-c r r") #'mcg/ts-run-node)
-  (local-set-key (kbd "C-c n") #'mcg/ts-run-npm-script)
+  ;; JSX/TSX specific
+  (when (derived-mode-p 'tsx-ts-mode)
+    (setq-local sgml-basic-offset 2))
   
-  ;; Code generation
-  (local-set-key (kbd "C-c c") #'mcg/ts-insert-component)
-  (local-set-key (kbd "C-c t i") #'mcg/ts-insert-interface)
-  (local-set-key (kbd "C-c t t") #'mcg/ts-insert-type)
-  
-  ;; Console.log
-  (local-set-key (kbd "C-c C-l") #'mcg/ts-insert-console-log)
-  (local-set-key (kbd "C-c C-k") #'mcg/ts-remove-console-logs))
+  (mcg-log "TypeScript mode setup complete"))
 
-(add-hook 'typescript-mode-hook #'mcg-ts-setup-keybindings)
-(add-hook 'typescript-ts-mode-hook #'mcg-ts-setup-keybindings)
-(add-hook 'tsx-ts-mode-hook #'mcg-ts-setup-keybindings)
-(add-hook 'js-mode-hook #'mcg-ts-setup-keybindings)
-(add-hook 'js-ts-mode-hook #'mcg-ts-setup-keybindings)
+;; Setup TypeScript/JavaScript mode hooks (auto-mode-alist is managed in init-treesit.el)
+;; TypeScript
+(mcg-setup-lang-mode
+ '(:ts-mode typescript-ts-mode
+   :setup-fn mcg-typescript-mode-setup))
 
-#+END_SRC
+;; TSX
+(mcg-setup-lang-mode
+ '(:ts-mode tsx-ts-mode
+   :setup-fn mcg-typescript-mode-setup))
 
-** Tool Status Check
-#+BEGIN_SRC emacs-lisp
-;;; Tool Status Check
+;; JavaScript
+(mcg-setup-lang-mode
+ '(:ts-mode js-ts-mode
+   :setup-fn mcg-typescript-mode-setup))
+#+end_src
 
-(defun mcg/ts-check-tools ()
-  "Check if TypeScript/JavaScript development tools are installed."
+** Biome Integration (Format & Lint)
+
+Biome 集成，提供格式化和 lint 功能。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Biome Integration (Format & Lint)
+;;; ============================================================
+
+;; Note: Biome formatting is handled by init-lsp.el
+;; These are additional convenience commands
+
+(defun mcg--ts-refresh-buffer-silently ()
+  "Refresh buffer content without triggering hooks.
+Uses `replace-buffer-contents' to avoid lsp-bridge reconnection."
+  (let ((file (buffer-file-name)))
+    (when file
+      (let ((inhibit-modification-hooks t)
+            (inhibit-read-only t))
+        (with-temp-buffer
+          (insert-file-contents file)
+          (let ((temp-buf (current-buffer)))
+            (with-current-buffer (get-file-buffer file)
+              (replace-buffer-contents temp-buf)))))
+      (set-buffer-modified-p nil))))
+
+(defun mcg/biome-format ()
+  "Format current buffer with biome."
   (interactive)
-  (let ((tools '(("node" . "Install Node.js")
-                 ("npm" . "Installed with Node.js")
-                 ("biome" . "npm install -g @biomejs/biome")
-                 ("prettier" . "npm install -g prettier")
-                 ("typescript-language-server" . "npm install -g typescript-language-server")
-                 ("tsc" . "npm install -g typescript"))))
-    (with-help-window "*TypeScript Tools Status*"
-      (princ "═══════════════════════════════════════════\n")
-      (princ "   TypeScript/JavaScript Development Tools Status\n")
-      (princ "═══════════════════════════════════════════\n\n")
-      (dolist (tool tools)
-        (let ((name (car tool))
-              (install-cmd (cdr tool)))
-          (princ (format "%-28s %s\n"
-                         name
-                         (if (executable-find name)
-                             "✓ Installed"
-                           (format "✗ Not installed (%s)" install-cmd))))))
-      (princ "\n═══════════════════════════════════════════\n")
-      (princ "\nRecommended install commands:\n")
-      (princ "  npm install -g typescript typescript-language-server\n")
-      (princ "  npm install -g @biomejs/biome\n")
-      (princ "\nOr using pnpm:\n")
-      (princ "  pnpm add -g typescript typescript-language-server @biomejs/biome\n"))))
+  (if (executable-find "biome")
+      (let ((file (buffer-file-name)))
+        (when file
+          (save-buffer)
+          (if (zerop (call-process "biome" nil nil nil "format" "--write" file))
+              (progn
+                (mcg--ts-refresh-buffer-silently)
+                (message "Formatted with biome"))
+            (message "biome format failed"))))
+    (message "biome not found. Install with: npm install -g @biomejs/biome")))
 
-#+END_SRC
+(defun mcg/biome-lint ()
+  "Run biome lint on current buffer."
+  (interactive)
+  (if (executable-find "biome")
+      (compile (format "biome lint %s" (shell-quote-argument (buffer-file-name))))
+    (message "biome not found. Install with: npm install -g @biomejs/biome")))
 
-** Keybindings Summary
-#+BEGIN_SRC emacs-lisp
-;;; Keybindings Summary
+(defun mcg/biome-check-fix ()
+  "Run biome check --write on current buffer."
+  (interactive)
+  (if (executable-find "biome")
+      (let ((file (buffer-file-name)))
+        (when file
+          (save-buffer)
+          (call-process "biome" nil "*biome*" nil "check" "--write" "--unsafe" file)
+          (mcg--ts-refresh-buffer-silently)
+          (message "Fixed with biome")))
+    (message "biome not found. Install with: npm install -g @biomejs/biome")))
+#+end_src
 
-;; Formatting and checking:
-;; C-c r f   - Format code (Biome or Prettier)
-;; C-c b     - Biome check (lint + format)
-;; C-c B     - Biome auto-fix
-;;
-;; Code actions:
-;; C-c i     - Organize imports
-;; C-c u     - Remove unused imports/variables
-;; C-c x     - Auto-fix all issues
-;;
-;; Run:
-;; C-c r r   - Run Node.js
-;; C-c n     - Run npm script
-;;
-;; Code generation:
-;; C-c c     - Insert React component template
-;; C-c t i   - Create interface
-;; C-c t t   - Create type alias
-;; C-c C-l   - Insert console.log
-;; C-c C-k   - Remove all console.log
-;;
-;; LSP (provided by +lsp module):
-;; M-.       - Jump to definition
-;; M-,       - Return
-;; M-?       - Find references
-;; C-c r r   - Rename (note: conflicts with run, use LSP's C-c r r)
+** Package Manager Integration
 
-#+END_SRC
+包管理器集成，支持 npm、pnpm 和 yarn。
 
-** Provide
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Package Manager Integration
+;;; ============================================================
+
+(defun mcg--ts-get-package-manager ()
+  "Get the package manager for current project."
+  (let ((root (or (locate-dominating-file default-directory "package.json")
+                  default-directory)))
+    (cond
+     ((file-exists-p (expand-file-name "pnpm-lock.yaml" root)) "pnpm")
+     ((file-exists-p (expand-file-name "yarn.lock" root)) "yarn")
+     ((file-exists-p (expand-file-name "package-lock.json" root)) "npm")
+     (t mcg-ts-package-manager))))
+
+(defun mcg/ts-install ()
+  "Run package install."
+  (interactive)
+  (let ((pm (mcg--ts-get-package-manager)))
+    (compile (format "%s install" pm))))
+
+(defun mcg/ts-add (package)
+  "Add PACKAGE to dependencies."
+  (interactive "sPackage name: ")
+  (let ((pm (mcg--ts-get-package-manager)))
+    (compile (format "%s add %s" pm package))))
+
+(defun mcg/ts-add-dev (package)
+  "Add PACKAGE to devDependencies."
+  (interactive "sPackage name: ")
+  (let ((pm (mcg--ts-get-package-manager)))
+    (compile (format "%s add -D %s" pm package))))
+
+(defun mcg/ts-run (script)
+  "Run npm SCRIPT."
+  (interactive "sScript name: ")
+  (let ((pm (mcg--ts-get-package-manager)))
+    (compile (format "%s run %s" pm script))))
+
+(defun mcg/ts-test ()
+  "Run test script."
+  (interactive)
+  (let ((pm (mcg--ts-get-package-manager)))
+    (compile (format "%s test" pm))))
+
+(defun mcg/ts-build ()
+  "Run build script."
+  (interactive)
+  (let ((pm (mcg--ts-get-package-manager)))
+    (compile (format "%s run build" pm))))
+#+end_src
+
+** TypeScript Keybindings
+
+TypeScript 模式的快捷键配置。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; TypeScript Keybindings
+;;; ============================================================
+
+(defvar mcg-typescript-mode-map
+  (let ((map (make-sparse-keymap)))
+    ;; Biome commands
+    (define-key map (kbd "C-c C-f") #'mcg/biome-format)
+    (define-key map (kbd "C-c C-l") #'mcg/biome-lint)
+    (define-key map (kbd "C-c C-x") #'mcg/biome-check-fix)
+    ;; Package manager commands
+    (define-key map (kbd "C-c C-p i") #'mcg/ts-install)
+    (define-key map (kbd "C-c C-p a") #'mcg/ts-add)
+    (define-key map (kbd "C-c C-p d") #'mcg/ts-add-dev)
+    (define-key map (kbd "C-c C-p r") #'mcg/ts-run)
+    ;; Build/Test
+    (define-key map (kbd "C-c C-t") #'mcg/ts-test)
+    (define-key map (kbd "C-c C-b") #'mcg/ts-build)
+    map)
+  "Keymap for TypeScript-specific commands.")
+
+(defun mcg-typescript-setup-keybindings ()
+  "Setup TypeScript-specific keybindings."
+  (use-local-map (make-composed-keymap mcg-typescript-mode-map (current-local-map))))
+
+;; Keybindings setup via hooks
+(when (mcg-treesit-available-p)
+  (add-hook 'typescript-ts-mode-hook #'mcg-typescript-setup-keybindings)
+  (add-hook 'tsx-ts-mode-hook #'mcg-typescript-setup-keybindings)
+  (add-hook 'js-ts-mode-hook #'mcg-typescript-setup-keybindings))
+#+end_src
+
+** Help Command
+
+TypeScript 帮助命令，显示快捷键和使用说明。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Help Command
+;;; ============================================================
+
+(defun mcg/typescript-help ()
+  "Show TypeScript keybindings and command help."
+  (interactive)
+  (with-help-window "*MCG TypeScript Help*"
+    (princ "
+╔═══════════════════════════════════════════╗
+║       MCG TypeScript Keybindings          ║
+╚═══════════════════════════════════════════╝
+
+BIOME COMMANDS:
+  C-c C-f      - biome format
+  C-c C-l      - biome lint
+  C-c C-x      - biome check --write
+
+PACKAGE MANAGER:
+  C-c C-p i    - Install dependencies
+  C-c C-p a    - Add package
+  C-c C-p d    - Add dev package
+  C-c C-p r    - Run script
+
+BUILD/TEST:
+  C-c C-t      - Run tests
+  C-c C-b      - Run build
+
+LSP COMMANDS (via lsp-bridge):
+  M-.          - Go to definition
+  M-,          - Return from definition
+  M-?          - Find references
+  C-c r r      - Rename symbol
+  C-c r f      - Format buffer
+
+═══════════════════════════════════════════
+
+INSTALLATION:
+  npm install -g @biomejs/biome typescript
+
+═══════════════════════════════════════════
+")))
+#+end_src
+
+** Provide Feature
+
+#+begin_src emacs-lisp
 (provide 'init-typescript)
 ;;; init-typescript.el ends here
-#+END_SRC
+#+end_src

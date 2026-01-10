@@ -1,44 +1,47 @@
-* init-defaults.el
-:PROPERTIES:
-:HEADER-ARGS: :tangle init-defaults.el :lexical t
-:END:
+#+TITLE: Editor Defaults Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-defaults.el :lexical t
 
-** Headers
-#+BEGIN_SRC emacs-lisp
-  ;;; init-defaults.el --- Editor Defaults for MCG Emacs -*- lexical-binding: t; -*-
+* Editor Defaults Module
 
-  ;; Filename: init-defaults.el
-  ;; Description: Editor defaults configuration module
-  ;; Author: mcge <mcgeq@outlook.com>
-  ;; Copyright (C) 2024-2026, mcge, all rights reserved.
-  ;; Create   Date: 2026-01-07
-  ;; Version: 3.0
-  ;; Keywords: editor, defaults, builtin
-  ;; Compatibility: GNU Emacs 29.0+
+本模块负责 MCG Emacs 的编辑器默认配置，包括：
+- savehist 历史记录
+- saveplace 位置记忆
+- whitespace 空白字符显示
+- autorevert 自动刷新
+- hideshow 代码折叠
+- newcomment 注释功能
+- delete-selection 选择删除
+- beacon 光标高亮
+- 行号显示
 
-  ;;; Commentary:
-  ;;
-  ;; Editor defaults module for MCG Emacs configuration, responsible for:
-  ;; - savehist history records
-  ;; - saveplace position memory
-  ;; - whitespace character display
-  ;; - autorevert auto refresh
-  ;; - hideshow code folding
-  ;; - newcomment commenting
-  ;; - delete-selection selection deletion
-  ;; - beacon cursor highlight
-  ;; - line number display
-  ;;
-  ;; Module metadata:
-  ;; :depends ()
-  ;; :defer nil
-  ;;
+** File Header
 
-#+END_SRC
+#+begin_src emacs-lisp
+;;; init-defaults.el --- Editor Defaults for MCG Emacs -*- lexical-binding: t; -*-
 
-** Dependencies
-#+BEGIN_SRC emacs-lisp
-;;; Dependencies
+;; Copyright (C) 2024-2026 MCG
+;; Author: mcge <mcgeq@outlook.com>
+;; Keywords: editor, defaults, builtin
+;; Compatibility: GNU Emacs 29.0+
+
+;;; Commentary:
+;; Editor defaults module for MCG Emacs configuration, responsible for:
+;; - savehist history records
+;; - saveplace position memory
+;; - whitespace character display
+;; - autorevert auto refresh
+;; - hideshow code folding
+;; - newcomment commenting
+;; - delete-selection selection deletion
+;; - beacon cursor highlight
+;; - line number display
+#+end_src
+
+** Require
+
+#+begin_src emacs-lisp
+;;; Code:
 
 (require 'core-lib)
 (require 'savehist)
@@ -49,17 +52,27 @@
 (require 'newcomment)
 (require 'delsel)
 (require 'display-line-numbers)
-
-#+END_SRC
+#+end_src
 
 ** Basic Settings
-#+BEGIN_SRC emacs-lisp
+
+基础编辑器设置，包括系统时间、编码、性能优化、UI 设置等。
+
+*** System Time Settings
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Basic Settings
+;;; ============================================================
 
 ;; Windows system time settings
 (when (eq system-type 'windows-nt)
   (setq system-time-locale "C"))
+#+end_src
 
+*** UTF-8 Encoding Settings
+
+#+begin_src emacs-lisp
 ;; UTF-8 encoding settings
 (unless (memq system-type '(cygwin windows-nt ms-dos))
   (set-selection-coding-system 'utf-8))
@@ -68,25 +81,36 @@
 (set-terminal-coding-system 'utf-8)
 (set-keyboard-coding-system 'utf-8)
 (set-buffer-file-coding-system 'utf-8)
+#+end_src
 
+*** Performance Optimization
+
+#+begin_src emacs-lisp
 ;; Performance optimization
 (setq bidi-inhibit-bpa t)
 (setq-default bidi-paragraph-direction 'left-to-right)
 (setq process-adaptive-read-buffering nil)
 (setq read-process-output-max (* 1024 1024))
+#+end_src
 
-;; Basic UI settings (UI elements disabled in early-init.el)
+*** Basic UI Settings
+
+#+begin_src emacs-lisp
+;; Basic UI settings
 (setq use-short-answers t)
 (blink-cursor-mode -1)
 (transient-mark-mode 1)
 (global-subword-mode 1)
 (setq use-dialog-box nil)
-;; inhibit-startup-screen set in early-init.el
 (setq initial-scratch-message
       (concat ";; Happy hacking, "
               (capitalize user-login-name)
               " - Emacs ❤ you!\n\n"))
+#+end_src
 
+*** Editing Settings
+
+#+begin_src emacs-lisp
 ;; Editing settings
 (setq-default comment-style 'indent)
 (setq ring-bell-function 'ignore)
@@ -100,27 +124,46 @@
 (setq column-number-mode t)
 (setq completion-auto-select nil)
 (setq ad-redefinition-action 'accept)
-;; frame-resize-pixelwise set in early-init.el
+#+end_src
 
+*** Smooth Scrolling
+
+#+begin_src emacs-lisp
 ;; Smooth scrolling
 (setq scroll-step 1)
 (setq scroll-conservatively 10000)
+#+end_src
 
+*** Cursor Style
+
+#+begin_src emacs-lisp
 ;; Cursor style
 (setq-default cursor-type '(bar . 5))
+#+end_src
 
+*** Auto Line Wrap
+
+#+begin_src emacs-lisp
 ;; Auto line wrap
 (global-visual-line-mode t)
+#+end_src
 
+*** Bracket Matching
+
+#+begin_src emacs-lisp
 ;; Bracket matching
 (setq electric-pair-inhibit-predicate 'electric-pair-conservative-inhibit)
 (electric-pair-mode 1)
-
-#+END_SRC
+#+end_src
 
 ** Variables
-#+BEGIN_SRC emacs-lisp
+
+编辑器相关的配置变量。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Variables
+;;; ============================================================
 
 (defvar mcg-editor-history-length 1000
   "Maximum number of history entries to save.")
@@ -147,23 +190,30 @@ Options: t (absolute), 'relative (relative), 'visual (visual), nil (disabled)")
 
 (defvar mcg-editor-beacon-color 0.5
   "Beacon cursor highlight color/opacity.")
-
-#+END_SRC
+#+end_src
 
 ** Warning Suppression
-#+BEGIN_SRC emacs-lisp
-;;; Warning Suppression
 
-;; Suppress warnings for third-party packages missing lexical-binding cookie
+警告抑制配置。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Warning Suppression
+;;; ============================================================
+
 (setq warning-suppress-types
       '((lexical-binding)
         (files)))
-
-#+END_SRC
+#+end_src
 
 ** Savehist Configuration
-#+BEGIN_SRC emacs-lisp
+
+历史记录配置。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Savehist Configuration
+;;; ============================================================
 
 (defun mcg-editor-setup-savehist ()
   "Setup savehist history records."
@@ -178,23 +228,31 @@ Options: t (absolute), 'relative (relative), 'visual (visual), nil (disabled)")
   (setq savehist-autosave-interval mcg-editor-savehist-interval)
   (savehist-mode 1)
   (mcg-log "Enabled savehist-mode"))
-
-#+END_SRC
+#+end_src
 
 ** Saveplace Configuration
-#+BEGIN_SRC emacs-lisp
+
+位置记忆配置。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Saveplace Configuration
+;;; ============================================================
 
 (defun mcg-editor-setup-saveplace ()
   "Setup saveplace position memory."
   (save-place-mode 1)
   (mcg-log "Enabled save-place-mode"))
-
-#+END_SRC
+#+end_src
 
 ** Whitespace Configuration
-#+BEGIN_SRC emacs-lisp
+
+空白字符显示配置。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Whitespace Configuration
+;;; ============================================================
 
 (defun mcg-editor-setup-whitespace ()
   "Setup whitespace character display."
@@ -228,23 +286,31 @@ Options: t (absolute), 'relative (relative), 'visual (visual), nil (disabled)")
   
   (global-whitespace-mode 1)
   (mcg-log "Enabled global-whitespace-mode"))
-
-#+END_SRC
+#+end_src
 
 ** Autorevert Configuration
-#+BEGIN_SRC emacs-lisp
+
+自动刷新配置。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Autorevert Configuration
+;;; ============================================================
 
 (defun mcg-editor-setup-autorevert ()
   "Setup autorevert auto refresh."
   (global-auto-revert-mode 1)
   (mcg-log "Enabled global-auto-revert-mode"))
-
-#+END_SRC
+#+end_src
 
 ** Hideshow Configuration
-#+BEGIN_SRC emacs-lisp
+
+代码折叠配置。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Hideshow Configuration
+;;; ============================================================
 
 (defconst mcg-editor-hideshow-folded-face
   '((t (:inherit 'font-lock-comment-face :box t)))
@@ -264,12 +330,16 @@ OV is the overlay object."
   (setq hs-set-up-overlay 'mcg-editor--hideshow-overlay-fn)
   (add-hook 'prog-mode-hook #'hs-minor-mode)
   (mcg-log "Configured hideshow for prog-mode"))
-
-#+END_SRC
+#+end_src
 
 ** Newcomment Configuration
-#+BEGIN_SRC emacs-lisp
+
+注释功能配置。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Newcomment Configuration
+;;; ============================================================
 
 (defun mcg/comment-or-uncomment ()
   "Toggle comment state of selected region or current line."
@@ -288,23 +358,31 @@ OV is the overlay object."
   (global-set-key [remap comment-dwim] #'mcg/comment-or-uncomment)
   (setq comment-auto-fill-only-comments t)
   (mcg-log "Configured newcomment"))
-
-#+END_SRC
+#+end_src
 
 ** Delete Selection Configuration
-#+BEGIN_SRC emacs-lisp
+
+选择删除配置。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Delete Selection Configuration
+;;; ============================================================
 
 (defun mcg-editor-setup-delete-selection ()
   "Setup delete-selection mode."
   (delete-selection-mode 1)
   (mcg-log "Enabled delete-selection-mode"))
-
-#+END_SRC
+#+end_src
 
 ** Indent Tabs Configuration
-#+BEGIN_SRC emacs-lisp
+
+缩进制表符配置。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Indent Tabs Configuration
+;;; ============================================================
 
 (defun mcg-editor--toggle-indent-tabs-mode ()
   "Toggle indent-tabs-mode based on major-mode."
@@ -317,28 +395,36 @@ OV is the overlay object."
   "Setup indent-tabs-mode auto-toggle."
   (add-hook 'after-change-major-mode-hook #'mcg-editor--toggle-indent-tabs-mode)
   (mcg-log "Configured indent-tabs-mode auto-toggle"))
-
-#+END_SRC
+#+end_src
 
 ** Language Indent Configuration
-#+BEGIN_SRC emacs-lisp
+
+语言特定缩进配置。
+
+*** Default Indentation Settings
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Language Indent Configuration
+;;; ============================================================
 
 ;; Default indentation settings
 (setq-default indent-tabs-mode nil)
 (setq-default tab-width 4)
+#+end_src
 
+*** Adjust Languages Indent Function
+
+#+begin_src emacs-lisp
 (defun mcg-editor--adjust-languages-indent (n)
   "Set indentation for various languages to N spaces."
   ;; C/C++
   (setq-local c-basic-offset n)
-  
   ;; JavaScript
   (setq-local coffee-tab-width n)
   (setq-local javascript-indent-level n)
   (setq-local js-indent-level n)
   (setq-local js2-basic-offset n)
-  
   ;; Web mode
   (setq-local web-mode-attr-indent-offset n)
   (setq-local web-mode-attr-value-indent-offset n)
@@ -346,52 +432,47 @@ OV is the overlay object."
   (setq-local web-mode-css-indent-offset n)
   (setq-local web-mode-markup-indent-offset n)
   (setq-local web-mode-sql-indent-offset n)
-  
   ;; CSS
   (setq-local css-indent-offset n)
-  
   ;; TypeScript
   (setq-local typescript-indent-level n))
+#+end_src
 
+*** Setup Language Indent
+
+#+begin_src emacs-lisp
 (defun mcg-editor-setup-language-indent ()
   "Setup language-specific indentation."
   ;; Languages with 4-space indentation
-  (dolist (hook '(c-mode-hook
-                  c++-mode-hook
-                  java-mode-hook
-                  haskell-mode-hook
-                  asm-mode-hook
-                  sh-mode-hook
-                  ruby-mode-hook
-                  rust-mode-hook
-                  python-mode-hook))
+  (dolist (hook '(c-mode-hook c++-mode-hook java-mode-hook
+                  haskell-mode-hook asm-mode-hook sh-mode-hook
+                  ruby-mode-hook rust-mode-hook python-mode-hook))
     (add-hook hook (lambda ()
                      (setq indent-tabs-mode nil)
                      (mcg-editor--adjust-languages-indent 4))))
-  
   ;; Languages with 2-space indentation
-  (dolist (hook '(web-mode-hook
-                  js-mode-hook
-                  typescript-mode-hook
-                  json-mode-hook
-                  css-mode-hook
-                  scss-mode-hook))
+  (dolist (hook '(web-mode-hook js-mode-hook js-ts-mode-hook
+                  typescript-ts-mode-hook tsx-ts-mode-hook
+                  json-mode-hook css-mode-hook scss-mode-hook))
     (add-hook hook (lambda ()
                      (setq indent-tabs-mode nil)
                      (mcg-editor--adjust-languages-indent 2))))
-  
   (mcg-log "Configured language-specific indentation"))
-
-#+END_SRC
+#+end_src
 
 ** Beacon Configuration
-#+BEGIN_SRC emacs-lisp
+
+光标高亮配置。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Beacon Configuration
+;;; ============================================================
 
 (defun mcg-editor-setup-beacon ()
   "Setup beacon cursor highlight."
   (when (and mcg-editor-beacon-enabled
-             (mcg-require-extension "editor/beacon" 'beacon))
+             (mcg-require-extension "beacon" t))
     (setq beacon-lighter "")
     (setq beacon-blink-when-point-moves-vertically nil)
     (setq beacon-blink-when-point-moves-horizontally nil)
@@ -403,53 +484,58 @@ OV is the overlay object."
     (setq beacon-blink-delay 0.3)
     (setq beacon-size mcg-editor-beacon-size)
     (setq beacon-color mcg-editor-beacon-color)
-    
     ;; Modes where beacon is disabled
     (add-to-list 'beacon-dont-blink-major-modes 'term-mode)
-    
     (beacon-mode 1)
     (mcg-log "Enabled beacon-mode")))
-
-#+END_SRC
+#+end_src
 
 ** Line Numbers Configuration
-#+BEGIN_SRC emacs-lisp
+
+行号显示配置。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Line Numbers Configuration
+;;; ============================================================
 
 (defun mcg-editor-setup-line-numbers ()
   "Setup line number display."
   (setq display-line-numbers-type mcg-editor-line-numbers-type)
   (setq display-line-numbers-width-start t)
-  
   ;; Enable line numbers in specific modes
-  (dolist (hook '(prog-mode-hook
-                  yaml-mode-hook
-                  conf-mode-hook
-                  markdown-mode-hook))
+  (dolist (hook '(prog-mode-hook yaml-mode-hook conf-mode-hook markdown-mode-hook))
     (add-hook hook #'display-line-numbers-mode))
-  
   (mcg-log "Configured line numbers display"))
-
-#+END_SRC
+#+end_src
 
 ** Auto Fill Configuration
-#+BEGIN_SRC emacs-lisp
+
+自动换行配置。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Auto Fill Configuration
+;;; ============================================================
 
 (defun mcg-editor-setup-auto-fill ()
   "Setup auto line wrap."
   (setq-default fill-column mcg-editor-default-fill-column)
-  
   (dolist (hook '(text-mode-hook message-mode-hook))
     (add-hook hook #'auto-fill-mode))
-  
   (mcg-log "Configured auto-fill"))
-
-#+END_SRC
+#+end_src
 
 ** Commands
-#+BEGIN_SRC emacs-lisp
+
+交互式命令。
+
+*** Toggle Line Numbers
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Commands
+;;; ============================================================
 
 (defun mcg/toggle-line-numbers ()
   "Toggle line number display."
@@ -457,7 +543,11 @@ OV is the overlay object."
   (if display-line-numbers-mode
       (display-line-numbers-mode -1)
     (display-line-numbers-mode 1)))
+#+end_src
 
+*** Cycle Line Numbers Type
+
+#+begin_src emacs-lisp
 (defun mcg/cycle-line-numbers-type ()
   "Cycle line number type: absolute -> relative -> visual -> disabled."
   (interactive)
@@ -472,7 +562,11 @@ OV is the overlay object."
     (display-line-numbers-mode 1))
   (message "Line numbers: %s"
            (or display-line-numbers-type "disabled")))
+#+end_src
 
+*** Toggle Whitespace
+
+#+begin_src emacs-lisp
 (defun mcg/toggle-whitespace ()
   "Toggle whitespace character display."
   (interactive)
@@ -481,7 +575,11 @@ OV is the overlay object."
     (global-whitespace-mode 1))
   (message "Whitespace mode: %s"
            (if global-whitespace-mode "enabled" "disabled")))
+#+end_src
 
+*** Toggle Beacon
+
+#+begin_src emacs-lisp
 (defun mcg/toggle-beacon ()
   "Toggle beacon cursor highlight."
   (interactive)
@@ -490,12 +588,16 @@ OV is the overlay object."
     (beacon-mode 1))
   (message "Beacon mode: %s"
            (if (bound-and-true-p beacon-mode) "enabled" "disabled")))
-
-#+END_SRC
+#+end_src
 
 ** Initialize
-#+BEGIN_SRC emacs-lisp
+
+模块初始化。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Initialize
+;;; ============================================================
 
 ;; Setup built-in features
 (mcg-editor-setup-savehist)
@@ -512,11 +614,11 @@ OV is the overlay object."
 
 ;; Setup extension features (optional)
 (mcg-editor-setup-beacon)
+#+end_src
 
-#+END_SRC
+** Provide Feature
 
-** Provide
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (provide 'init-defaults)
 ;;; init-defaults.el ends here
-#+END_SRC
+#+end_src

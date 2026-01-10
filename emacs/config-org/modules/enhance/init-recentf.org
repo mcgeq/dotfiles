@@ -1,17 +1,23 @@
-* init-recentf.el
-:PROPERTIES:
-:HEADER-ARGS: :tangle init-recentf.el :lexical t
-:END:
+#+TITLE: Recentf Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-recentf.el :lexical t
 
-** Headers
-#+BEGIN_SRC emacs-lisp
+* Recentf Module
+
+本模块负责 MCG Emacs 的最近文件跟踪功能，包括：
+- 跟踪最近打开的文件
+- 配置排除模式
+
+** File Header
+
+#+begin_src emacs-lisp
 ;;; init-recentf.el --- Recentf Configuration for MCG Emacs -*- lexical-binding: t; -*-
 
 ;; Filename: init-recentf.el
 ;; Description: Recentf recent files module
 ;; Author: mcge <mcgeq@outlook.com>
 ;; Copyright (C) 2024-2026, mcge, all rights reserved.
-;; Create   Date: 2026-01-09
+;; Create   Date: 2026-01-10
 ;; Version: 3.0
 ;; Keywords: recentf, recent-files
 ;; Compatibility: GNU Emacs 29.0+
@@ -22,29 +28,42 @@
 ;; - Tracking recently opened files
 ;; - Configuring exclusion patterns
 ;;
+;; Module metadata:
+;; :depends ()
+;; :defer nil
+;;
+#+end_src
 
-#+END_SRC
+** Require
 
-** Dependencies
-#+BEGIN_SRC emacs-lisp
-;;; Dependencies
+#+begin_src emacs-lisp
+;;; Code:
 
 (require 'core-lib)
 (require 'recentf)
-
-#+END_SRC
+#+end_src
 
 ** Recentf Configuration
-#+BEGIN_SRC emacs-lisp
+
+Recentf 配置函数，设置最近文件跟踪的各项参数。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Recentf Configuration
+;;; ============================================================
 
 (defun mcg--setup-recentf ()
-  "Setup Recentf recent files."
+  "Setup Recentf recent files tracking."
+  ;; Maximum number of saved items
   (setq recentf-max-saved-items 300)
+  
+  ;; Don't auto-cleanup (can be slow)
   (setq recentf-auto-cleanup 'never)
+  
+  ;; Use abbreviated file names
   (setq recentf-filename-handlers '(abbreviate-file-name))
   
-  ;; Exclude list
+  ;; Exclude patterns - files/directories to ignore
   (setq recentf-exclude
         '(".cache"
           ".cask"
@@ -60,25 +79,56 @@
           "/su\\(do\\)?:"
           "^/usr/include/"
           "/TAGS\\'"
-          "COMMIT_EDITMSG\\'"))
+          "COMMIT_EDITMSG\\'"
+          ;; Emacs internal files
+          "\\.elc\\'"
+          "loaddefs\\.el\\'"
+          ;; Package directories
+          "/elpa/"
+          "/straight/"
+          ;; Temporary files
+          "\\.tmp\\'"
+          "\\.bak\\'"
+          "~\\'"))
   
-  ;; Enable
+  ;; Enable recentf mode
   (recentf-mode 1)
   
-  (mcg-log "Recentf configured"))
+  (mcg-log "Recentf configured (max items: %d)" recentf-max-saved-items))
+#+end_src
 
-#+END_SRC
+** Commands
+
+用户交互命令。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Commands
+;;; ============================================================
+
+(defun mcg/recentf-open ()
+  "Open a recent file using completing-read."
+  (interactive)
+  (let ((file (completing-read "Recent file: " recentf-list nil t)))
+    (when file
+      (find-file file))))
+#+end_src
 
 ** Initialize
-#+BEGIN_SRC emacs-lisp
+
+初始化 Recentf 功能。
+
+#+begin_src emacs-lisp
+;;; ============================================================
 ;;; Initialize
+;;; ============================================================
 
 (mcg--setup-recentf)
+#+end_src
 
-#+END_SRC
+** Provide Feature
 
-** Provide
-#+BEGIN_SRC emacs-lisp
+#+begin_src emacs-lisp
 (provide 'init-recentf)
 ;;; init-recentf.el ends here
-#+END_SRC
+#+end_src

@@ -1,164 +1,259 @@
-#+TITLE: MCG Emacs Private Configuration
-#+AUTHOR: Your Name
+#+TITLE: Private Configuration Module
+#+AUTHOR: mcge
 #+PROPERTY: header-args:emacs-lisp :tangle config.el :lexical t
 
-* Private Configuration
-:PROPERTIES:
-:HEADER-ARGS: :tangle config.el :lexical t
-:END:
+* Private Configuration Module
 
-** Headers
-#+BEGIN_SRC emacs-lisp
-  ;;; config.el --- Private Configuration -*- lexical-binding: t; -*-
+本模块是用户私有配置文件，在所有其他模块加载完成后加载，允许用户覆盖主配置中的任何设置。
+此文件不被 Git 跟踪（.gitignore），因此您的个人设置保持私密。
 
-  ;; Filename: config.el
-  ;; Description: User private configuration
-  ;; Author: Your Name
-  ;; Copyright (C) 2024-2026, Your Name, all rights reserved.
-  ;; Create   Date: 2026-01-07
-  ;; Version: 1.0
-  ;; Keywords: private, configuration
-  ;; Compatibility: GNU Emacs 29.0+
+** File Header
 
-  ;;; Commentary:
-  ;;
-  ;; This file is for user private configuration, not tracked by Git.
-  ;;
-  ;; You can configure:
-  ;; - Personal information (username, email)
-  ;; - Custom paths
-  ;; - Private keybindings
-  ;; - Work-related configuration
-  ;; - Other personal preferences
-  ;;
+#+begin_src emacs-lisp
+;;; config.el --- Private user configuration -*- lexical-binding: t; -*-
 
-#+END_SRC
+;; Copyright (C) 2024 MCG
+;; Author: MCG
+;; Keywords: configuration, private
 
-** User Information
-#+BEGIN_SRC emacs-lisp
-;;; User Information
+;;; Commentary:
+;;
+;; This is your private configuration file for MCG Emacs.
+;; It is loaded AFTER all other modules, allowing you to override
+;; any settings from the main configuration.
+;;
+;; This file is NOT tracked by Git (.gitignore), so your personal
+;; settings remain private.
+;;
+;; Requirements: 13.1, 13.3
+;;
+;; Usage:
+;;   1. Edit this file to customize your Emacs experience
+;;   2. Restart Emacs or run M-x mcg-reload-config
+;;
+;; Available customization options are documented below.
 
-;; Set username and email
-(setq user-full-name "Your Name"
-      user-mail-address "your.email@example.com")
+;;; Code:
+#+end_src
 
-#+END_SRC
+** Path Configuration
 
-** Custom Paths
-#+BEGIN_SRC emacs-lisp
-;;; Custom Paths
+基础目录配置，用于设置个人文件路径。
 
-;; Example: Set org files directory
-;; (setq org-directory "~/Documents/org")
+#+begin_src emacs-lisp
+;; Base directory for your personal files
+;; Windows example: "D:/config"
+;; Linux/macOS example: (expand-file-name "~")
+;; (setq mcg-user-base-dir "D:/config")
 
-;; Example: Set notes directory
-;; (setq mcg-notes-dir "~/Documents/notes")
+;; Org files directory
+;; (setq mcg-org-dir (expand-file-name "org" mcg-user-base-dir))
 
-;; Example: Set projects directory
-;; (setq mcg-projects-dir "~/Projects")
+;; Blog/Hugo directory
+;; (setq mcg-blog-dir (expand-file-name "blog" mcg-user-base-dir))
+#+end_src
 
-#+END_SRC
+** UI Customization
 
-** Theme Customization
-#+BEGIN_SRC emacs-lisp
-;;; Theme Customization
+界面自定义配置，包括主题、字体等设置。
 
-;; Example: Set default theme
-;; (setq mcg-default-theme 'ef-maris-light)
+#+begin_src emacs-lisp
+;; Theme selection
+;; Available: 'ef-day 'ef-night 'ef-spring 'ef-summer 'ef-autumn 'ef-winter
+;;            'modus-operandi 'modus-vivendi
+;; (setq mcg-theme 'ef-day)
 
-;; Example: Set font size
-;; (when mcg-is-gui
-;;   (set-face-attribute 'default nil :height 140))
+;; Font configuration
+;; ASCII font family
+;; (setq mcg-font-family "FiraCode Nerd Font Mono")
 
-#+END_SRC
+;; Font size (in points)
+;; (setq mcg-font-size 14)
 
-** Editor Preferences
-#+BEGIN_SRC emacs-lisp
-;;; Editor Preferences
+;; CJK (Chinese/Japanese/Korean) font
+;; (setq mcg-cjk-font "Microsoft YaHei")
 
-;; Example: Set indentation width
-;; (setq-default tab-width 4)
+;; Enable/disable line numbers
+;; (setq mcg-enable-line-numbers t)
+
+;; Line number style: 'relative 'absolute nil
+;; (setq display-line-numbers-type 'relative)
+#+end_src
+
+** Editor Behavior
+
+编辑器行为配置，包括缩进、自动保存等设置。
+
+#+begin_src emacs-lisp
+;; Use spaces instead of tabs
 ;; (setq-default indent-tabs-mode nil)
 
-;; Example: Enable line numbers
-;; (global-display-line-numbers-mode 1)
+;; Tab width
+;; (setq-default tab-width 4)
 
-;; Example: Set auto-save
-;; (setq auto-save-default t)
+;; Enable auto-save
+;; (setq mcg-enable-auto-save t)
 
-#+END_SRC
+;; Auto-save interval (seconds)
+;; (setq auto-save-idle 5)
+#+end_src
 
 ** LSP Configuration
-#+BEGIN_SRC emacs-lisp
-;;; LSP Configuration
 
-;; Example: Set Python LSP server
-;; (setq mcg-python-lsp-server "python-ty-ruff")
+LSP 语言服务器配置。
 
-;; Example: Disable format on save
-;; (setq mcg-lsp-format-on-save nil)
+#+begin_src emacs-lisp
+;; LSP backend: 'lsp-bridge (recommended)
+;; (setq mcg-lsp-backend 'lsp-bridge)
 
-#+END_SRC
+;; Enable/disable LSP diagnostics
+;; (setq lsp-bridge-enable-diagnostics t)
+
+;; Enable/disable hover documentation
+;; (setq lsp-bridge-enable-hover-diagnostic t)
+#+end_src
+
+** Completion System
+
+补全系统配置。
+
+#+begin_src emacs-lisp
+;; Vertico display count
+;; (setq vertico-count 15)
+
+;; Enable pinyin search for Chinese users
+;; (setq mcg-enable-pinyin-search t)
+#+end_src
+
+** Input Method (Rime)
+
+Rime 输入法配置。
+
+#+begin_src emacs-lisp
+;; Rime user data directory
+;; Windows: "D:/config/rime"
+;; Linux: "~/.config/fcitx/rime"
+;; macOS: "~/Library/Rime"
+;; (setq rime-user-data-dir "D:/config/rime")
+#+end_src
 
 ** Org Mode Configuration
-#+BEGIN_SRC emacs-lisp
-;;; Org Mode Configuration
 
-;; Example: Set agenda files
-;; (setq org-agenda-files '("~/Documents/org/agenda"))
+Org 模式配置。
 
-;; Example: Set capture templates
+#+begin_src emacs-lisp
+;; Enable Org mode
+;; (setq mcg-enable-org t)
+
+;; Org directory
+;; (setq org-directory "~/org")
+
+;; Agenda files
+;; (setq org-agenda-files '("~/org/tasks.org" "~/org/projects.org"))
+
+;; Custom capture templates
 ;; (setq org-capture-templates
-;;       '(("t" "Todo" entry (file+headline "~/Documents/org/todo.org" "Tasks")
+;;       '(("t" "Task" entry (file+headline "~/org/tasks.org" "Tasks")
 ;;          "* TODO %?\n  %i\n  %a")
-;;         ("n" "Note" entry (file+headline "~/Documents/org/notes.org" "Notes")
+;;         ("n" "Note" entry (file+headline "~/org/notes.org" "Notes")
 ;;          "* %?\n  %i\n  %a")))
+#+end_src
 
-#+END_SRC
+** Language-Specific Settings
+
+语言特定设置。
+
+#+begin_src emacs-lisp
+;; Python
+;; (setq python-shell-interpreter "python3")
+
+;; Rust
+;; (setq rust-format-on-save t)
+
+;; TypeScript/JavaScript
+;; (setq js-indent-level 2)
+;; (setq typescript-indent-level 2)
+
+;; Web mode
+;; (setq web-mode-markup-indent-offset 2)
+;; (setq web-mode-css-indent-offset 2)
+;; (setq web-mode-code-indent-offset 2)
+#+end_src
+
+** Performance Tuning
+
+性能调优配置。
+
+#+begin_src emacs-lisp
+;; GC threshold (bytes) - higher = less GC, more memory
+;; Default: 16MB, Recommended for performance: 100MB
+;; (setq gc-cons-threshold (* 100 1024 1024))
+
+;; Enable native compilation (Emacs 29+)
+;; (setq native-comp-async-report-warnings-errors nil)
+
+;; Enable profiling mode for debugging startup time
+;; (setq mcg-profile-mode t)
+
+;; Enable debug mode for verbose logging
+;; (setq mcg-debug-mode t)
+#+end_src
 
 ** Custom Keybindings
-#+BEGIN_SRC emacs-lisp
-;;; Custom Keybindings
 
-;; Example: Global keybindings
-;; (global-set-key (kbd "C-c o") #'org-capture)
-;; (global-set-key (kbd "C-c a") #'org-agenda)
+自定义快捷键配置。
 
-;; Example: Use mcg-after! to set keybindings after module loads
-;; (mcg-after! magit
-;;   (global-set-key (kbd "C-c g") #'magit-status))
+#+begin_src emacs-lisp
+;; Add your custom keybindings here
+;; Use mcg-bind-key for conflict detection:
+;; (mcg-bind-key "C-c m" #'my-custom-command "private/config")
 
-#+END_SRC
+;; Or use standard global-set-key:
+;; (global-set-key (kbd "C-c m") #'my-custom-command)
+#+end_src
 
-** Work-specific Configuration
-#+BEGIN_SRC emacs-lisp
-;;; Work-specific Configuration
+** Custom Functions
 
-;; Example: Set proxy
-;; (setq url-proxy-services
-;;       '(("http" . "proxy.example.com:8080")
-;;         ("https" . "proxy.example.com:8080")))
+自定义函数区域。
 
-;; Example: Set company-specific code style
-;; (mcg-after! (:lang . typescript)
-;;   (setq typescript-indent-level 2))
+#+begin_src emacs-lisp
+;; Add your custom functions here
+;; Example:
+;; (defun my-custom-function ()
+;;   "My custom function."
+;;   (interactive)
+;;   (message "Hello from private config!"))
+#+end_src
 
-#+END_SRC
+** Module Overrides
 
-** Debug Settings
-#+BEGIN_SRC emacs-lisp
-;;; Debug Settings
+模块覆盖配置，由于私有配置最后加载，这些设置将优先生效。
 
-;; Enable debug mode (show verbose logs)
-;; (setq mcg-debug-mode t)
+#+begin_src emacs-lisp
+;; Override module settings here
+;; Since private config loads last, these will take precedence
 
-;; Enable Emacs debugging
-;; (setq debug-on-error t)
+;; Example: Override theme after UI module loads
+;; (with-eval-after-load 'init-theme
+;;   (load-theme 'modus-vivendi t))
 
-#+END_SRC
+;; Example: Add extra hooks after a module loads
+;; (with-eval-after-load 'init-rust
+;;   (add-hook 'rust-mode-hook #'my-rust-setup))
+#+end_src
 
-** Provide
-#+BEGIN_SRC emacs-lisp
+** Startup Message
+
+启动消息配置。
+
+#+begin_src emacs-lisp
+;; Uncomment to show a message when private config loads
+;; (mcg-log "Private configuration loaded")
+#+end_src
+
+** Provide Feature
+
+#+begin_src emacs-lisp
 (provide 'config)
 ;;; config.el ends here
-#+END_SRC
+#+end_src
