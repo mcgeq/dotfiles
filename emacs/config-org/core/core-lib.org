@@ -681,6 +681,25 @@ Usage examples:
       (posframe-hide buffer-name))))
 #+end_src
 
+*** Popup or Buffer Helper
+
+统一的弹窗/缓冲区显示函数。
+
+#+begin_src emacs-lisp
+(defun mcg-show-popup-or-buffer (buffer-name content &optional width height)
+  "Show CONTENT in popup (GUI) or help buffer (terminal).
+BUFFER-NAME is the buffer name.
+WIDTH and HEIGHT are optional dimensions for popup.
+
+This is a convenience wrapper that automatically chooses between
+posframe popup (in GUI mode) and help buffer (in terminal mode)."
+  (if (and (display-graphic-p)
+           (require 'posframe nil t))
+      (mcg-popup-show buffer-name content width height)
+    (with-help-window buffer-name
+      (princ content))))
+#+end_src
+
 ** Initialization
 
 模块初始化函数，设置缓存和注册表。
