@@ -68,9 +68,8 @@ config-org/
 │   ├── writing/                  # Writing tools (2 modules)
 │   │   ├── init-markdown.org
 │   │   └── init-vale.org
-│   └── lang/                     # Programming languages (9 modules)
+│   └── lang/                     # Programming languages (8 modules)
 │       ├── init-lsp.org
-│       ├── init-lsp-common.org
 │       ├── init-rust.org
 │       ├── init-python.org
 │       ├── init-typescript.org
@@ -130,7 +129,7 @@ Use =mcg!= macro in =init.org= to declare enabled modules:
       markdown vale
 
       :lang
-      lsp lsp-common rust python typescript web cpp lua zig)
+      lsp rust python typescript web cpp lua zig)
 #+end_src
 
 * Module Categories

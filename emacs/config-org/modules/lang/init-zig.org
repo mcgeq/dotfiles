@@ -70,9 +70,8 @@
 
 (defun mcg--zig-mode-hook ()
   "Zig mode hook."
-  ;; Enable LSP
-  (when (fboundp 'lsp-bridge-mode)
-    (lsp-bridge-mode 1)))
+  ;; LSP is handled by global-lsp-bridge-mode, no need to enable manually
+  )
 
 #+END_SRC
 

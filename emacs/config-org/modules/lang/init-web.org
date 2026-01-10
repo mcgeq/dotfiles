@@ -115,15 +115,13 @@
 ;;; LSP Configuration
 
 (defun mcg-web-mode-lsp-setup ()
-  "Enable lsp-bridge for web-mode."
+  "Setup web-mode specific LSP settings."
   (when buffer-file-name
     (let ((ext (file-name-extension buffer-file-name)))
-      (when (member ext '("vue" "html" "jsx" "tsx"))
-        (when (fboundp 'lsp-bridge-mode)
-          (lsp-bridge-mode 1))
-        ;; Vue specific settings
-        (when (string= ext "vue")
-          (setq-local lsp-bridge-enable-completion-in-string t))))))
+      ;; LSP is handled by global-lsp-bridge-mode, no need to enable manually
+      ;; Vue specific settings
+      (when (string= ext "vue")
+        (setq-local lsp-bridge-enable-completion-in-string t)))))
 
 (add-hook 'web-mode-hook #'mcg-web-mode-lsp-setup)
 (add-hook 'html-mode-hook #'mcg-web-mode-lsp-setup)
@@ -152,14 +150,14 @@
 
 (defun mcg--vue-extract-block (block-name)
   "Extract Vue block content, return string or nil."
-  (when-let ((bounds (mcg--vue-find-block-bounds block-name)))
+  (when-let* ((bounds (mcg--vue-find-block-bounds block-name)))
     (buffer-substring-no-properties (car bounds) (cdr bounds))))
 
 (defun mcg--vue-get-block-positions ()
   "Get all block positions, return ((name . start-pos) ...) sorted by position."
   (let (positions)
     (dolist (name mcg-vue-block-order)
-      (when-let ((bounds (mcg--vue-find-block-bounds name)))
+      (when-let* ((bounds (mcg--vue-find-block-bounds name)))
         (push (cons name (car bounds)) positions)))
     (sort positions (lambda (a b) (< (cdr a) (cdr b))))))
 

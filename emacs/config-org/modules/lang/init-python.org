@@ -270,8 +270,8 @@
 
 (defun mcg-python-project-p ()
   "Detect if current project is a Python project."
-  (when-let ((project-root (when (project-current)
-                             (project-root (project-current)))))
+  (when-let* ((project-root (when (project-current)
+                              (project-root (project-current)))))
     (or (file-exists-p (expand-file-name "setup.py" project-root))
         (file-exists-p (expand-file-name "pyproject.toml" project-root))
         (file-exists-p (expand-file-name "requirements.txt" project-root))

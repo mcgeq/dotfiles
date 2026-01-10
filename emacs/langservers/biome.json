@@ -1,6 +1,6 @@
 {
   "name": "biome",
-  "languageId": "javascript",
+  "languageId": "typescript",
   "command": ["biome", "lsp-proxy"],
   "support_features": [
     "diagnostics",

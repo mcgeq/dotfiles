@@ -662,25 +662,29 @@ Format is alist of ((CATEGORY . MODULE) . TRIGGER).
 TRIGGER can be:
 - hook name (symbol)
 - auto-mode-alist entry
-- file extension string")
+- file extension string
+- list of hooks (for multiple mode support)")
 
 (defvar mcg-module-triggers
-  '(;; Language module triggers
-    ((:lang . rust) . ("\\.rs\\'" . rust-mode))
-    ((:lang . python) . ("\\.py\\'" . python-mode))
-    ((:lang . typescript) . ("\\.tsx?\\'" . typescript-mode))
+  '(;; Language module triggers (using tree-sitter mode hooks)
+    ((:lang . rust) . (rust-mode-hook rust-ts-mode-hook))
+    ((:lang . python) . (python-mode-hook python-ts-mode-hook))
+    ((:lang . typescript) . (typescript-mode-hook typescript-ts-mode-hook tsx-ts-mode-hook js-mode-hook js-ts-mode-hook))
     ((:lang . web) . ("\\.vue\\'" . web-mode))
-    ((:lang . lua) . ("\\.lua\\'" . lua-mode))
-    ((:lang . zig) . ("\\.zig\\'" . zig-mode))
-    ((:lang . cpp) . ("\\.\\(cpp\\|cc\\|cxx\\|h\\|hpp\\)\\'" . c++-mode))
-    ((:lang . clojure) . ("\\.clj[sc]?\\'" . clojure-mode))
+    ((:lang . lua) . (lua-mode-hook lua-ts-mode-hook))
+    ((:lang . zig) . (zig-mode-hook zig-ts-mode-hook))
+    ((:lang . cpp) . (c-mode-hook c++-mode-hook c-ts-mode-hook c++-ts-mode-hook))
+    ((:lang . clojure) . (clojure-mode-hook clojurescript-mode-hook clojurec-mode-hook))
     ;; Writing module triggers
-    ((:writing . markdown) . ("\\.md\\'" . markdown-ts-mode))
-    ((:writing . vale) . ("\\.md\\'" . markdown-ts-mode)))
+    ((:writing . markdown) . (markdown-mode-hook gfm-mode-hook))
+    ((:writing . vale) . (markdown-mode-hook)))
   "Module trigger mapping.
 
-Format is alist of ((CATEGORY . MODULE) . (PATTERN . MODE)).
-When opening a file matching PATTERN, automatically load the corresponding module.")
+Format is alist of ((CATEGORY . MODULE) . TRIGGER).
+TRIGGER can be:
+- (PATTERN . MODE) - auto-mode-alist entry
+- HOOK-SYMBOL - single hook
+- (HOOK1 HOOK2 ...) - list of hooks for multiple mode support")
 
 (defun mcg--find-mode-extension-path (mode)
   "Automatically find extension path for MODE.
@@ -735,7 +739,11 @@ Arguments:
 - MODULE: Module name
 - TRIGGER: Trigger condition (optional)
 
-If TRIGGER is not specified, uses default trigger from mcg-module-triggers."
+If TRIGGER is not specified, uses default trigger from mcg-module-triggers.
+TRIGGER can be:
+- (PATTERN . MODE) - auto-mode-alist entry
+- HOOK-SYMBOL - single hook
+- (HOOK1 HOOK2 ...) - list of hooks"
   (let* ((cat-key (if (keywordp category) category
                     (intern (concat ":" (symbol-name category)))))
          (mod-sym (if (symbolp module) module (intern module)))
@@ -749,26 +757,44 @@ If TRIGGER is not specified, uses default trigger from mcg-module-triggers."
     ;; Set up trigger
     (when trig
       (cond
-       ;; auto-mode-alist trigger
+       ;; List of hooks (for multiple mode support)
+       ((and (listp trig) (symbolp (car trig)) (string-suffix-p "-hook" (symbol-name (car trig))))
+        (let ((category cat-key)
+              (module mod-sym))
+          (dolist (hook trig)
+            ;; Use depth -90 to run before lsp-bridge (which uses default depth 0)
+            (add-hook hook
+                      (lambda ()
+                        (mcg--trigger-deferred-load category module))
+                      -90))))
+       
+       ;; auto-mode-alist trigger (PATTERN . MODE)
        ((and (consp trig) (stringp (car trig)))
         (let ((pattern (car trig))
-              (mode (cdr trig)))
+              (mode (cdr trig))
+              (category cat-key)
+              (module mod-sym))
           ;; Set up autoload first to ensure mode function exists
           (mcg--setup-mode-autoload mode)
           ;; Add auto-mode-alist entry
           (add-to-list 'auto-mode-alist (cons pattern mode))
           ;; Set up mode hook to load module configuration
           (let ((hook-name (intern (format "%s-hook" mode))))
+            ;; Use depth -90 to run before lsp-bridge (which uses default depth 0)
             (add-hook hook-name
                       (lambda ()
-                        (mcg--trigger-deferred-load cat-key mod-sym))
-                      nil t))))
+                        (mcg--trigger-deferred-load category module))
+                      -90))))
        
-       ;; hook trigger
+       ;; Single hook trigger
        ((symbolp trig)
-        (add-hook trig
-                  (lambda ()
-                    (mcg--trigger-deferred-load cat-key mod-sym))))))
+        (let ((category cat-key)
+              (module mod-sym))
+          ;; Use depth -90 to run before lsp-bridge (which uses default depth 0)
+          (add-hook trig
+                    (lambda ()
+                      (mcg--trigger-deferred-load category module))
+                    -90)))))
     
     (mcg-log "Deferred module: %s/%s (trigger: %s)" cat-key mod-sym trig)))
 

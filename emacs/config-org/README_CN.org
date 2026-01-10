@@ -68,9 +68,8 @@ config-org/
 │   ├── writing/                  # 写作工具（2 模块）
 │   │   ├── init-markdown.org         # Markdown 支持
 │   │   └── init-vale.org             # 语法检查
-│   └── lang/                     # 编程语言（9 模块）
+│   └── lang/                     # 编程语言（8 模块）
 │       ├── init-lsp.org              # LSP 配置
-│       ├── init-lsp-common.org       # LSP 通用工具
 │       ├── init-rust.org             # Rust
 │       ├── init-python.org           # Python
 │       ├── init-typescript.org       # TypeScript
@@ -130,7 +129,7 @@ emacs -Q -l site-lisp/config/init.el
       markdown vale
 
       :lang
-      lsp lsp-common rust python typescript web cpp lua zig)
+      lsp rust python typescript web cpp lua zig)
 #+end_src
 
 * 模块类别

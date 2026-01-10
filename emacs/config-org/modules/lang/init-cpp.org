@@ -88,10 +88,8 @@
 (defun mcg--c-mode-hook ()
   "C/C++ mode hook."
   (mcg--c-mode-style-setup)
-  
-  ;; Enable LSP
-  (when (fboundp 'lsp-bridge-mode)
-    (lsp-bridge-mode 1)))
+  ;; LSP is handled by global-lsp-bridge-mode, no need to enable manually
+  )
 
 #+END_SRC
 

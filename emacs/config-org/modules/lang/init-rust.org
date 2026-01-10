@@ -59,7 +59,7 @@
   (add-to-list 'major-mode-remap-alist '(rust-mode . rust-ts-mode)))
 
 ;; File associations
-(add-to-list 'auto-mode-alist '("\\.rs\\'" . rust-mode))
+;; (add-to-list 'auto-mode-alist '("\\.rs\\'" . rust-mode))
 (add-to-list 'auto-mode-alist '("Cargo\\.toml\\'" . toml-ts-mode))
 
 ;; Rust indentation settings
@@ -228,8 +228,8 @@
 
 (defun mcg-rust-project-p ()
   "Detect if current project is a Rust project."
-  (when-let ((project-root (when (project-current)
-                             (project-root (project-current)))))
+  (when-let* ((project-root (when (project-current)
+                              (project-root (project-current)))))
     (file-exists-p (expand-file-name "Cargo.toml" project-root))))
 
 (defun mcg/rust-project-info ()

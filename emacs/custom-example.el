@@ -89,7 +89,7 @@
       
       :lang                             ; 语言支持
       lsp-bridge
-      (rust lua cpp typescript web-mode)
+      (rust lua cpp typescript web)
       
       :org                              ; Org Mode
       org

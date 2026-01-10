@@ -194,7 +194,7 @@ emacs/
       markdown vale
       
       :lang
-      lsp lsp-common rust python typescript web cpp lua zig)
+      lsp rust python typescript web cpp lua zig)
 #+end_src
 
 ** 迁移指南 ⭐

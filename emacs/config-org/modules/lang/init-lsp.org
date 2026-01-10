@@ -36,6 +36,7 @@
 #+BEGIN_SRC emacs-lisp
 ;;; Dependencies
 
+(require 'cl-lib)
 (require 'core-lib)
 
 #+END_SRC
@@ -132,7 +133,7 @@ setting up keybindings defined in mcg-lsp-keymap for current buffer."
 (setq mcg-lsp-user-langserver-dir (expand-file-name "langservers" mcg-emacs-dir))
 (setq mcg-lsp-user-multiserver-dir (expand-file-name "multiservers" mcg-emacs-dir))
 
-(defun mcg-lsp-setup ()
+(cl-defun mcg-lsp-setup ()
   "Setup LSP Bridge general configuration.
 
 This function configures lsp-bridge core options, including:
@@ -172,7 +173,7 @@ This function configures lsp-bridge core options, including:
   ;; ===== Completion Settings =====
   (setq lsp-bridge-enable-search-words t)
   (setq lsp-bridge-enable-auto-import t)
-  (setq lsp-bridge-enable-auto-format-code nil)  ; Manual format control
+  (setq lsp-bridge-enable-auto-format-code t)  ; Enable LSP auto-format
   (setq lsp-bridge-find-def-select-in-open-windows t)
   (setq lsp-bridge-enable-rename-file t)
   
@@ -202,19 +203,21 @@ This function configures lsp-bridge core options, including:
   (setq acm-backend-search-file-words-candidate-min-length 2)
   
   ;; ===== Multi-server Configuration =====
-  (with-eval-after-load 'lsp-bridge
-    ;; TypeScript/JavaScript with Biome
-    (add-to-list 'lsp-bridge-multi-lang-server-extension-list '(("ts") . "typescript-biome"))
-    (add-to-list 'lsp-bridge-multi-lang-server-extension-list '(("tsx") . "typescript-biome"))
-    (add-to-list 'lsp-bridge-multi-lang-server-extension-list '(("js") . "typescript-biome"))
-    (add-to-list 'lsp-bridge-multi-lang-server-extension-list '(("jsx") . "typescript-biome"))
-    
-    ;; Vue with volar + emmet-ls + biome
-    (add-to-list 'lsp-bridge-multi-lang-server-extension-list '(("vue") . "vue-full"))
-    
-    ;; Python with ty + ruff (use official lsp-bridge config)
-    (add-to-list 'lsp-bridge-multi-lang-server-extension-list '(("py") . "ty_ruff"))
-    (add-to-list 'lsp-bridge-multi-lang-server-extension-list '(("pyi") . "ty_ruff")))
+  ;; Override default lsp-bridge multi-server config (must use setq to replace defaults)
+  (setq lsp-bridge-multi-lang-server-extension-list
+        '(;; TypeScript/JavaScript with Biome (replaces default typescript_eslint)
+          (("ts") . "typescript-biome")
+          (("tsx") . "typescript-biome")
+          (("js") . "typescript-biome")
+          (("jsx") . "typescript-biome")
+          ;; Vue with volar + emmet-ls + biome
+          (("vue") . "vue-full")
+          ;; Python with ty + ruff
+          (("py") . "ty_ruff")
+          (("pyi") . "ty_ruff")
+          ;; Keep some useful defaults
+          (("component.html") . "angular_template_html")
+          (("component.ts") . "angular_template_typescript")))
   
   ;; Setup keybindings hook
   (add-hook 'lsp-bridge-mode-hook #'mcg-lsp-setup-keybindings)
@@ -226,37 +229,107 @@ This function configures lsp-bridge core options, including:
 
 #+END_SRC
 
+** Biome Formatting
+#+BEGIN_SRC emacs-lisp
+;;; Biome Formatting (for TypeScript/JavaScript/Vue)
+
+(defun mcg-ts-format-with-biome ()
+  "Format and fix code using Biome (same as nvim conform config)."
+  (interactive)
+  (if (executable-find "biome")
+      (let ((file (buffer-file-name)))
+        (when file
+          (save-buffer)
+          ;; 使用 check --write --unsafe，与 nvim conform 配置一致
+          (let ((exit-code (call-process "biome" nil "*biome*" nil
+                                         "check" "--write" "--unsafe" file)))
+            (if (zerop exit-code)
+                (progn
+                  (revert-buffer t t t)
+                  (message "Formatted with Biome"))
+              ;; exit code 1 表示有修复，也算成功
+              (if (= exit-code 1)
+                  (progn
+                    (revert-buffer t t t)
+                    (message "Biome applied fixes"))
+                (message "Biome failed (exit %d). Check *biome* buffer" exit-code))))))
+    (message "Biome not found. Install with: npm install -g @biomejs/biome")))
+
+(defun mcg/biome-check ()
+  "Check code using Biome (lint + format)."
+  (interactive)
+  (if (executable-find "biome")
+      (let ((compilation-scroll-output t))
+        (compile (format "biome check %s" (shell-quote-argument (buffer-file-name)))))
+    (message "Biome not found. Install with: npm install -g @biomejs/biome")))
+
+(defun mcg/biome-fix ()
+  "Auto-fix code using Biome (same as format)."
+  (interactive)
+  (mcg-ts-format-with-biome))
+
+(defun mcg-ts-format-with-prettier ()
+  "Format code using Prettier (fallback)."
+  (interactive)
+  (if (executable-find "prettier")
+      (let* ((temp-file (make-temp-file "prettier" nil
+                                        (concat "." (file-name-extension (buffer-file-name)))))
+             (output-buffer (get-buffer-create "*prettier*")))
+        (write-region (point-min) (point-max) temp-file)
+        (if (zerop (call-process "prettier" nil output-buffer nil
+                                 "--write" temp-file))
+            (progn
+              (erase-buffer)
+              (insert-file-contents temp-file)
+              (delete-file temp-file)
+              (message "Formatted with Prettier"))
+          (message "Prettier formatting failed")))
+    (message "Prettier not found. Install with: npm install -g prettier")))
+
+(defun mcg-ts-format-buffer ()
+  "Format TypeScript/JavaScript/Vue code (prefer Biome)."
+  (interactive)
+  (cond
+   ((executable-find "biome") (mcg-ts-format-with-biome))
+   ((executable-find "prettier") (mcg-ts-format-with-prettier))
+   (t (message "No formatter found. Install biome or prettier"))))
+
+#+END_SRC
+
 ** Format on Save
 #+BEGIN_SRC emacs-lisp
 ;;; Format on Save
 
 (defvar mcg-lsp-format-on-save-modes
-  '(python-mode
-    python-ts-mode
+  '(;; Rust
     rust-mode
     rust-ts-mode
+    ;; Zig
     zig-mode
     zig-ts-mode
+    ;; C/C++
     c-mode
     c-ts-mode
     c++-mode
-    c++-ts-mode
+    c++-ts-mode)
+  "List of modes with LSP format-on-save enabled.
+Note: TypeScript/Vue use mcg-ts-format-buffer (biome CLI), Python uses lsp-bridge.")
+
+(defvar mcg-biome-format-on-save-modes
+  '(;; TypeScript/JavaScript
     typescript-mode
     typescript-ts-mode
     tsx-ts-mode
     js-mode
-    js-ts-mode)
-  "List of modes with format-on-save enabled.")
+    js-ts-mode
+    ;; Vue
+    web-mode)
+  "List of modes with Biome CLI format-on-save enabled.")
 
 (defvar mcg-lsp-organize-imports-modes
-  '(python-mode
-    python-ts-mode
-    typescript-mode
-    typescript-ts-mode
-    tsx-ts-mode
-    js-mode
-    js-ts-mode)
-  "List of modes with organize-imports-on-save enabled.")
+  '()  ; Disabled - biome handles imports for TypeScript, ruff for Python
+  "List of modes with organize-imports-on-save enabled.
+Note: Biome handles imports for TypeScript, ruff LSP handles Python imports.")
 
 (defvar mcg-lsp-format-on-save-enabled t
   "Whether format-on-save is enabled.")
@@ -264,50 +337,46 @@ This function configures lsp-bridge core options, including:
 (defvar mcg-lsp-organize-imports-on-save-enabled t
   "Whether organize-imports-on-save is enabled.")
 
-(defun mcg-lsp-format-on-save ()
-  "Format buffer on save.
+(defvar mcg--formatting-in-progress nil
+  "Flag to prevent recursive formatting.")
 
-If `mcg-lsp-format-on-save-enabled' is t,
-and current mode is in `mcg-lsp-format-on-save-modes',
-call lsp-bridge-code-format.
+(defun mcg-lsp-format-on-save-before ()
+  "Format buffer before save (for LSP-based formatters).
 
-Also organize imports if mode is in `mcg-lsp-organize-imports-modes'."
+Only handles modes that use lsp-bridge-code-format."
   (when (and mcg-lsp-format-on-save-enabled
-             (bound-and-true-p lsp-bridge-mode))
-    ;; First organize imports (for supported modes)
-    (when (and mcg-lsp-organize-imports-on-save-enabled
-               (member major-mode mcg-lsp-organize-imports-modes))
-      (mcg-lsp-organize-imports-silent))
-    ;; Then format code
-    (when (member major-mode mcg-lsp-format-on-save-modes)
+             (not mcg--formatting-in-progress)
+             (member major-mode mcg-lsp-format-on-save-modes))
+    (when (and (fboundp 'lsp-bridge-mode)
+               (bound-and-true-p lsp-bridge-mode))
       (lsp-bridge-code-format))))
 
-(defun mcg-lsp-organize-imports-silent ()
-  "Organize imports silently (no message output).
-Used internally by format-on-save."
-  (cond
-   ;; Python: Use ruff (process buffer content directly)
-   ((member major-mode '(python-mode python-ts-mode))
-    (when (and (executable-find "ruff") (buffer-file-name))
-      (let ((temp-file (make-temp-file "ruff-isort" nil ".py")))
-        (unwind-protect
-            (progn
-              (write-region (point-min) (point-max) temp-file nil 'silent)
-              (when (zerop (call-process "ruff" nil nil nil
-                                         "check" "--select" "I" "--fix" temp-file))
-                (let ((formatted (with-temp-buffer
-                                   (insert-file-contents temp-file)
-                                   (buffer-string))))
-                  (unless (string= formatted (buffer-string))
-                    (erase-buffer)
-                    (insert formatted)))))
-          (delete-file temp-file)))))
-   
-   ;; TypeScript/JavaScript: Use LSP code action
-   ((member major-mode '(typescript-mode typescript-ts-mode tsx-ts-mode js-mode js-ts-mode))
-    (when (fboundp 'lsp-bridge-code-action)
-      (ignore-errors
-        (lsp-bridge-code-action "source.organizeImports"))))))
+(defun mcg-lsp-format-on-save-after ()
+  "Format buffer after save (for CLI-based formatters like biome).
+
+Handles TypeScript/JavaScript/Vue files using biome CLI."
+  (when (and mcg-lsp-format-on-save-enabled
+             (not mcg--formatting-in-progress)
+             (member major-mode mcg-biome-format-on-save-modes))
+    (let ((mcg--formatting-in-progress t))
+      (mcg-ts-format-after-save))))
+
+(defun mcg-ts-format-after-save ()
+  "Format current file with biome after save (no recursive save)."
+  (when-let* ((file (buffer-file-name)))
+    (if (executable-find "biome")
+        (let ((exit-code (call-process "biome" nil "*biome*" nil
+                                       "check" "--write" "--unsafe" file)))
+          (cond
+           ((zerop exit-code)
+            (revert-buffer t t t)
+            (message "Formatted with Biome"))
+           ((= exit-code 1)
+            (revert-buffer t t t)
+            (message "Biome applied fixes"))
+           (t
+            (message "Biome failed (exit %d). Check *biome* buffer" exit-code))))
+      (message "Biome not found"))))
 
 (defun mcg/toggle-format-on-save ()
   "Toggle format-on-save."
@@ -324,7 +393,10 @@ Used internally by format-on-save."
            (if mcg-lsp-organize-imports-on-save-enabled "enabled" "disabled")))
 
 ;; Enable format-on-save
-(add-hook 'before-save-hook #'mcg-lsp-format-on-save)
+;; before-save-hook: LSP-based formatters (Rust, Zig, C/C++)
+;; after-save-hook: CLI-based formatters (biome for TypeScript/Vue)
+(add-hook 'before-save-hook #'mcg-lsp-format-on-save-before)
+(add-hook 'after-save-hook #'mcg-lsp-format-on-save-after)
 
 #+END_SRC
 
@@ -333,12 +405,21 @@ Used internally by format-on-save."
 ;;; Utility Functions
 
 (defun mcg-lsp-format-buffer ()
-  "Format current buffer."
+  "Format current buffer based on major-mode.
+
+TypeScript/JavaScript/Vue: Use biome CLI (mcg-ts-format-buffer)
+Other languages: Use lsp-bridge-code-format"
   (interactive)
-  (if (and (fboundp 'lsp-bridge-mode)
-           (bound-and-true-p lsp-bridge-mode))
-      (lsp-bridge-code-format)
-    (message "LSP not active in current buffer")))
+  (cond
+   ;; TypeScript/JavaScript/Vue: Use biome CLI
+   ((member major-mode mcg-biome-format-on-save-modes)
+    (mcg-ts-format-buffer))
+   ;; Other languages: Use lsp-bridge
+   ((and (fboundp 'lsp-bridge-mode)
+         (bound-and-true-p lsp-bridge-mode))
+    (lsp-bridge-code-format))
+   (t
+    (message "No formatter available for this buffer"))))
 
 (defun mcg-lsp-organize-imports ()
   "Organize imports in current buffer.
@@ -584,8 +665,13 @@ Current status:
 #+BEGIN_SRC emacs-lisp
 ;;; Initialize
 
-;; 设置 LSP
-(mcg-lsp-setup)
+;; 设置 LSP (只执行一次)
+(defvar mcg-lsp-setup-done nil
+  "Flag to prevent duplicate LSP setup.")
+
+(unless mcg-lsp-setup-done
+  (mcg-lsp-setup)
+  (setq mcg-lsp-setup-done t))
 
 #+END_SRC
 

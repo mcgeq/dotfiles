@@ -12,7 +12,7 @@
   "find_references": "volar",
   "peek_find_definition": "volar",
   "peek_find_references": "volar",
-  "formatting": "biome",
+  "formatting": "volar",
   "hover": ["volar", "vtsls", "tailwindcss"],
   "signature_help": "volar",
   "prepare_rename": "volar",

@@ -118,7 +118,6 @@
 
       :lang
       lsp             ; LSP unified configuration (lsp-bridge)
-      lsp-common      ; LSP common tools
       rust            ; Rust development
       python          ; Python development
       typescript      ; TypeScript development
@@ -160,7 +159,6 @@
 ;; Setup lazy loading for language modules
 ;; LSP module loads immediately (other language modules depend on it)
 (mcg-load-module :lang 'lsp)
-(mcg-load-module :lang 'lsp-common)
 
 ;; Setup deferred loading for language modules
 (mcg-setup-deferred-loading)

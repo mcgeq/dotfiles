@@ -196,7 +196,7 @@ Use =mcg!= macro in =init.org= to declare enabled modules:
       markdown vale
       
       :lang
-      lsp lsp-common rust python typescript web cpp lua zig)
+      lsp rust python typescript web cpp lua zig)
 #+end_src
 
 ** Migration Guide
