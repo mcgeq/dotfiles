@@ -259,7 +259,7 @@ Yasnippet 快捷键。
   (autoload 'consult-project-buffer "consult" nil t)
   
   (mcg-bind-key "C-c s l" 'consult-line "init-keybindings")
-  (mcg-bind-key "C-c s i" 'consult-imenu "init-keybindings")
+  (mcg-bind-key "C-c s i" 'consult-ripgrep "init-keybindings")
   (mcg-bind-key "C-c s m" 'consult-mark "init-keybindings")
   (mcg-bind-key "C-c s b" 'consult-buffer "init-keybindings")
   (mcg-bind-key "C-c s r" 'consult-recent-file "init-keybindings")
@@ -424,7 +424,7 @@ Transient 菜单配置。
       "Search commands menu"
       [["Buffer"
         ("l" "Line" consult-line)
-        ("i" "Imenu" consult-imenu)
+        ("i" "Ripgrep" consult-ripgrep)
         ("m" "Mark" consult-mark)]
        ["Project"
         ("g" "Grep" color-rg-search-input-in-project)
@@ -598,7 +598,7 @@ Returns an alist of (CATEGORY . BINDINGS)."
     C-c s l         搜索行 (consult-line)                 
     C-c s g         搜索内容 (color-rg)                   
     C-c s G         项目内搜索                            
-    C-c s i         Imenu 导航                            
+    C-c s i         ripgrep 搜索                            
 
     【标签页】 C-c t                                      
     C-c t n/p       下一个/上一个标签                     

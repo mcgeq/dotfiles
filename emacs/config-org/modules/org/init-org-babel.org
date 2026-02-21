@@ -82,20 +82,21 @@
 
 (defun mcg-org-babel-setup-languages ()
   "Setup Org Babel language support."
-  (org-babel-do-load-languages
-   'org-babel-load-languages
-   '((emacs-lisp . t)
-     (shell . t)
-     (python . t)
-     (js . t)
-     (C . t)
-     (css . t)
-     (dot . t)
-     (org . t)
-     (plantuml . t)
-     (sql . t)))
-  
-  (mcg-log "Configured org-babel languages"))
+  (with-eval-after-load 'org
+    (org-babel-do-load-languages
+     'org-babel-load-languages
+     '((emacs-lisp . t)
+       (shell . t)
+       (python . t)
+       (js . t)
+       (C . t)
+       (css . t)
+       (dot . t)
+       (org . t)
+       (plantuml . t)
+       (sql . t)))
+
+    (mcg-log "Configured org-babel languages")))
 #+end_src
 
 ** Default Code Block Arguments
@@ -152,15 +153,15 @@ BODY is the code content, PARAMS are the parameters."
          (cmdline (cdr (assq :cmdline params)))
          (flags (cdr (assq :flags params)))
          (full-body (org-babel-expand-body:generic body params)))
-    
+
     ;; Check if Zig is installed
     (unless (executable-find "zig")
       (error "Zig compiler not found"))
-    
+
     ;; Write source file
     (with-temp-file tmp-src-file
       (insert full-body))
-    
+
     ;; Compile and run
     (let ((compile-command
            (format "zig build-exe %s %s -femit-bin=%s"
@@ -171,7 +172,7 @@ BODY is the code content, PARAMS are the parameters."
            (format "%s %s"
                    (org-babel-process-file-name tmp-bin-file)
                    (or cmdline ""))))
-      
+
       (let ((compile-result (org-babel-eval compile-command "")))
         (if (string-match-p "error" compile-result)
             (concat "Compilation failed:\n" compile-result)
@@ -183,15 +184,16 @@ BODY is the code content, PARAMS are the parameters."
 #+begin_src emacs-lisp
 (defun mcg-org-babel-setup-zig ()
   "Setup Zig language support."
-  ;; Register Zig language
-  (add-to-list 'org-babel-load-languages '(zig . t))
-  
-  ;; Zig default arguments
-  (setq org-babel-default-header-args:zig
-        '((:results . "output")
-          (:exports . "both")))
-  
-  (mcg-log "Configured org-babel Zig support"))
+  (with-eval-after-load 'org
+    ;; Register Zig language
+    (add-to-list 'org-babel-load-languages '(zig . t))
+
+    ;; Zig default arguments
+    (setq org-babel-default-header-args:zig
+          '((:results . "output")
+            (:exports . "both")))
+
+    (mcg-log "Configured org-babel Zig support")))
 #+end_src
 
 ** Helper Functions
@@ -255,9 +257,14 @@ Org Babel 快捷键配置。
 ;;; Initialize
 
 (mcg-org-babel-setup-basic)
-(mcg-org-babel-setup-languages)
 (mcg-org-babel-setup-defaults)
-(mcg-org-babel-setup-zig)
+
+;; Delay language loading until org is loaded
+(add-hook 'org-mode-hook
+          (lambda ()
+            (mcg-org-babel-setup-languages)
+            (mcg-org-babel-setup-zig)))
+
 (mcg-org-babel-setup-keybindings)
 #+end_src
 

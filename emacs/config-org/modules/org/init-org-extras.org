@@ -52,15 +52,16 @@ Org-download 图片下载配置。
 
 (defun mcg--setup-org-download ()
   "Setup Org-download image downloading."
-  (when (mcg-require-extension "org-download" 'org-download)
-    ;; Drag-and-drop support
-    (add-hook 'dired-mode-hook 'org-download-enable)
-    (add-hook 'org-mode-hook 'org-download-enable)
-    
-    ;; Display settings
-    (setq org-download-display-inline-images 'posframe)
-    
-    (mcg-log "Org-download configured")))
+  (with-eval-after-load 'org
+    (when (mcg-require-extension "org-download" 'org-download)
+      ;; Drag-and-drop support
+      (add-hook 'dired-mode-hook 'org-download-enable)
+      (add-hook 'org-mode-hook 'org-download-enable)
+
+      ;; Display settings
+      (setq org-download-display-inline-images 'posframe)
+
+      (mcg-log "Org-download configured")))
 #+end_src
 
 ** Clipboard Image Function
@@ -130,40 +131,41 @@ Images are saved in a .assets directory named after the Org file."
 
 (defun mcg--setup-cal-china-x ()
   "Setup Chinese calendar (cal-china-x)."
-  (when (mcg-require-extension "cal-china-x" 'cal-china-x)
-    (with-eval-after-load 'calendar
-      ;; Mark today
-      (add-hook 'calendar-today-visible-hook 'calendar-mark-today)
+  (with-eval-after-load 'org-agenda
+    (when (mcg-require-extension "cal-china-x" 'cal-china-x)
+      (with-eval-after-load 'calendar
+        ;; Mark today
+        (add-hook 'calendar-today-visible-hook 'calendar-mark-today)
 
-      ;; Calendar basic settings
-      (setq calendar-chinese-all-holidays-flag nil
-            calendar-mark-holidays-flag t
-            calendar-mark-diary-entries-flag nil
-            calendar-time-zone-style 'numeric
-            calendar-date-style 'iso)
+        ;; Calendar basic settings
+        (setq calendar-chinese-all-holidays-flag nil
+              calendar-mark-holidays-flag t
+              calendar-mark-diary-entries-flag nil
+              calendar-time-zone-style 'numeric
+              calendar-date-style 'iso)
 
-      ;; Set Chinese celestial stems and terrestrial branches
-      (setq calendar-chinese-celestial-stem
-            ["甲" "乙" "丙" "丁" "戊" "己" "庚" "辛" "壬" "癸"])
-      (setq calendar-chinese-terrestrial-branch
-            ["子" "丑" "寅" "卯" "辰" "巳" "午" "未" "申" "酉" "戌" "亥"])
+        ;; Set Chinese celestial stems and terrestrial branches
+        (setq calendar-chinese-celestial-stem
+              ["甲" "乙" "丙" "丁" "戊" "己" "庚" "辛" "壬" "癸"])
+        (setq calendar-chinese-terrestrial-branch
+              ["子" "丑" "寅" "卯" "辰" "巳" "午" "未" "申" "酉" "戌" "亥"])
 
-      ;; Set Chinese month names
-      (setq calendar-month-name-array
-            ["一月" "二月" "三月" "四月" "五月" "六月"
-             "七月" "八月" "九月" "十月" "十一月" "十二月"])
+        ;; Set Chinese month names
+        (setq calendar-month-name-array
+              ["一月" "二月" "三月" "四月" "五月" "六月"
+               "七月" "八月" "九月" "十月" "十一月" "十二月"])
 
-      ;; Set weekday header display
-      (setq calendar-day-name-array
-            ["日" "一" "二" "三" "四" "五" "六"])
+        ;; Set weekday header display
+        (setq calendar-day-name-array
+              ["日" "一" "二" "三" "四" "五" "六"])
 
-      ;; Set Monday as first day of week
-      (setq calendar-week-start-day 1))
+        ;; Set Monday as first day of week
+        (setq calendar-week-start-day 1))
 
-    ;; Auto-initialize cal-china-x
-    (add-hook 'after-init-hook 'cal-china-x-setup)
+      ;; Auto-initialize cal-china-x
+      (add-hook 'after-init-hook 'cal-china-x-setup)
 
-    (mcg-log "Chinese calendar (cal-china-x) configured")))
+      (mcg-log "Chinese calendar (cal-china-x) configured"))))
 #+end_src
 
 ** Consult-Todo Configuration
@@ -175,11 +177,12 @@ Consult-todo 集成配置。
 
 (defun mcg--setup-consult-todo ()
   "Setup Consult-todo integration."
-  (when (mcg-require-extension "consult-todo" 'consult-todo)
-    ;; Bind keybindings
-    (global-set-key (kbd "C-c n T") 'consult-todo)
-    
-    (mcg-log "Consult-todo configured")))
+  (with-eval-after-load 'org
+    (when (mcg-require-extension "consult-todo" 'consult-todo)
+      ;; Bind keybindings
+      (global-set-key (kbd "C-c n T") 'consult-todo)
+
+      (mcg-log "Consult-todo configured"))))
 #+end_src
 
 ** Org Mode Keybindings
@@ -206,9 +209,10 @@ Org 扩展快捷键配置。
 #+begin_src emacs-lisp
 ;;; Initialize
 
-(mcg--setup-org-download)
-(mcg--setup-cal-china-x)
-(mcg--setup-consult-todo)
+;; Setup hooks instead of immediate loading
+(add-hook 'org-mode-hook #'mcg--setup-org-download)
+(add-hook 'org-agenda-mode-hook #'mcg--setup-cal-china-x)
+(add-hook 'org-mode-hook #'mcg--setup-consult-todo)
 (mcg--setup-org-extras-keybindings)
 #+end_src
 

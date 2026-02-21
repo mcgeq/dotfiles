@@ -7,37 +7,31 @@ gui:
   scrollHeight: 2 # 每次滚动的行数
   sidePanelWidth: 0.3333 # 侧边栏宽度比例 (0-1之间)
   mainPanelSplitMode: "flexible" # 主面板分割模式: "horizontal" / "vertical" / "flexible"
-  
   # Nerd Font 图标配置（用于 commit 区域等图标显示）
   nerdFontsVersion: "3" # Nerd Font 版本，设置为 "3" 以正确显示 commit 图标
-  
   # 界面美化增强选项
   showCommandLog: true # 显示命令日志
   showListFooter: true # 显示列表页脚信息
   showPanelJumps: true # 显示面板跳转提示
-  
   theme:
     # 活动边框颜色 - 使用柔和的粉色/紫色，匹配美观界面风格
     activeBorderColor:
       - "#d4a5ff" # 浅紫色，与面板标题色协调
       - "bold"
-    
     # 非活动边框颜色 - 使用深灰色，更加柔和低调
     inactiveBorderColor:
       - "#3a3a3a" # 深灰色，不会过于突兀
       - "dim"
-    
     # 选项文本颜色 - 使用浅蓝色，提升可读性
     optionsTextColor:
       - "#7dd3fc" # 浅蓝色，清新明亮
-    
     # 背景色 - 设为默认以保持终端背景透明（显示背景图）
     bgColor: "default"
 git:
   parseEmoji: true
-  paging:
-    useConfig: true # 是否使用 Git 本身配置的分页工具
-    colorArg: "always" # 例如 "always" 表示强制彩色输出
+  pagers:
+    - useConfig: true # 是否使用 Git 本身配置的分页工具
+      colorArg: "always" # 例如 "always" 表示强制彩色输出
   showIcons: true # Git 相关视图是否显示图标
   commitPrefix:
     - pattern: "" # 用于匹配分支名等，从分支名提取前缀

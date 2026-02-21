@@ -313,17 +313,18 @@ org-superstar 标题美化配置。
 
 (defun mcg-org-setup-superstar ()
   "Setup org-superstar heading beautification."
-  (when (mcg-require-extension "org-superstar-mode" 'org-superstar)
-    (setq org-superstar-leading-bullet ?\s
-          org-superstar-special-todo-items t
-          org-superstar-item-bullet-alist '((43 . "◆") (45 . "▸"))
-          org-superstar-headline-bullets-list '("◉" "○" "✸" "✿" "✤" "✜" "◆" "▶"))
+  (with-eval-after-load 'org
+    (when (mcg-require-extension "org-superstar-mode" 'org-superstar)
+      (setq org-superstar-leading-bullet ?\s
+            org-superstar-special-todo-items t
+            org-superstar-item-bullet-alist '((43 . "◆") (45 . "▸"))
+            org-superstar-headline-bullets-list '("◉" "○" "✸" "✿" "✤" "✜" "◆" "▶"))
 
-    (custom-set-faces
-     '(org-superstar-item ((t (:inherit 'fixed-pitch))))
-     '(org-superstar-header-bullet ((t (:height 232 :inherit 'fixed-pitch)))))
+      (custom-set-faces
+       '(org-superstar-item ((t (:inherit 'fixed-pitch))))
+       '(org-superstar-header-bullet ((t (:height 232 :inherit 'fixed-pitch)))))
 
-    (mcg-log "Configured org-superstar")))
+      (mcg-log "Configured org-superstar"))))
 #+end_src
 
 ** Org Appear
@@ -335,8 +336,9 @@ org-appear 自动显示标记配置。
 
 (defun mcg-org-setup-appear ()
   "Setup org-appear auto-show markers."
-  (when (mcg-require-extension "org-appear" 'org-appear)
-    (mcg-log "Configured org-appear")))
+  (with-eval-after-load 'org
+    (when (mcg-require-extension "org-appear" 'org-appear)
+      (mcg-log "Configured org-appear")))
 #+end_src
 
 ** Org Modern
@@ -348,32 +350,33 @@ org-modern 现代界面配置。
 
 (defun mcg-org-setup-modern ()
   "Setup org-modern modern interface."
-  (when (and mcg-org-enable-org-modern
-             (mcg-require-extension "org-modern" 'org-modern))
-    ;; org-modern configuration
-    (setq org-modern-star '("◉" "○" "✸" "✿" "✤" "✜" "◆" "▶")
-          org-modern-table-vertical 1
-          org-modern-table-horizontal 0.2
-          org-modern-list '((43 . "◆") (45 . "▸") (42 . "•"))
-          org-modern-todo-faces
-          '(("TODO" :inverse-video t :inherit org-todo)
-            ("HOLD" :inverse-video t :inherit +org-todo-onhold)
-            ("WIP" :inverse-video t :inherit +org-todo-active)
-            ("WAIT" :inverse-video t :inherit +org-todo-onhold)
-            ("DONE" :inverse-video t :inherit org-done)
-            ("CANCELLED" :inverse-video t :inherit +org-todo-cancel))
-          org-modern-priority-faces
-          '((?A :inverse-video t :inherit org-priority)
-            (?B :inverse-video t :inherit org-priority)
-            (?C :inverse-video t :inherit org-priority))
-          org-modern-block-fringe nil
-          org-modern-block-name
-          '((t . t)
-            ("src" "»" "«")
-            ("example" "»–" "–«")
-            ("quote" "❝" "❞")))
+  (with-eval-after-load 'org
+    (when (and mcg-org-enable-org-modern
+               (mcg-require-extension "org-modern" 'org-modern))
+      ;; org-modern configuration
+      (setq org-modern-star '("◉" "○" "✸" "✿" "✤" "✜" "◆" "▶")
+            org-modern-table-vertical 1
+            org-modern-table-horizontal 0.2
+            org-modern-list '((43 . "◆") (45 . "▸") (42 . "•"))
+            org-modern-todo-faces
+            '(("TODO" :inverse-video t :inherit org-todo)
+              ("HOLD" :inverse-video t :inherit +org-todo-onhold)
+              ("WIP" :inverse-video t :inherit +org-todo-active)
+              ("WAIT" :inverse-video t :inherit +org-todo-onhold)
+              ("DONE" :inverse-video t :inherit org-done)
+              ("CANCELLED" :inverse-video t :inherit +org-todo-cancel))
+            org-modern-priority-faces
+            '((?A :inverse-video t :inherit org-priority)
+              (?B :inverse-video t :inherit org-priority)
+              (?C :inverse-video t :inherit org-priority))
+            org-modern-block-fringe nil
+            org-modern-block-name
+            '((t . t)
+              ("src" "»" "«")
+              ("example" "»–" "–«")
+              ("quote" "❝" "❞")))
 
-    (mcg-log "Configured org-modern")))
+      (mcg-log "Configured org-modern")))
 #+end_src
 
 ** Visual Fill Column
@@ -385,10 +388,11 @@ visual-fill-column 配置。
 
 (defun mcg-org-setup-visual-fill ()
   "Setup visual-fill-column."
-  (when (and mcg-org-enable-visual-fill
-             (mcg-require-extension "visual-fill-column" 'visual-fill-column))
-    (setq visual-fill-column-width mcg-org-visual-fill-width)
-    (mcg-log "Configured visual-fill-column")))
+  (with-eval-after-load 'org
+    (when (and mcg-org-enable-visual-fill
+               (mcg-require-extension "visual-fill-column" 'visual-fill-column))
+      (setq visual-fill-column-width mcg-org-visual-fill-width)
+      (mcg-log "Configured visual-fill-column"))))
 #+end_src
 
 ** Mixed Pitch
@@ -400,27 +404,28 @@ mixed-pitch 混合字体配置。
 
 (defun mcg-org-setup-mixed-pitch ()
   "Setup mixed-pitch mixed fonts."
-  (when (and mcg-org-enable-mixed-pitch
-             (mcg-require-extension "mixed-pitch" 'mixed-pitch))
-    ;; Font configuration (with availability check)
-    (when (display-graphic-p)
-      (let ((mono-font (cond
-                        ((find-font (font-spec :name "FiraCode Nerd Font Mono"))
-                         "FiraCode Nerd Font Mono")
-                        ((find-font (font-spec :name "Consolas"))
-                         "Consolas")
-                        (t "monospace")))
-            (serif-font (cond
-                         ((find-font (font-spec :name "Noto Serif"))
-                          "Noto Serif")
-                         ((find-font (font-spec :name "Georgia"))
-                          "Georgia")
-                         (t "serif"))))
-        (custom-set-faces
-         `(default ((t (:font ,mono-font))))
-         `(fixed-pitch ((t (:font ,mono-font :height 1.0))))
-         `(variable-pitch ((t (:font ,serif-font :height 1.0)))))))
-    (mcg-log "Configured mixed-pitch")))
+  (with-eval-after-load 'org
+    (when (and mcg-org-enable-mixed-pitch
+               (mcg-require-extension "mixed-pitch" 'mixed-pitch))
+      ;; Font configuration (with availability check)
+      (when (display-graphic-p)
+        (let ((mono-font (cond
+                          ((find-font (font-spec :name "FiraCode Nerd Font Mono"))
+                           "FiraCode Nerd Font Mono")
+                          ((find-font (font-spec :name "Consolas"))
+                           "Consolas")
+                          (t "monospace")))
+              (serif-font (cond
+                           ((find-font (font-spec :name "Noto Serif"))
+                            "Noto Serif")
+                           ((find-font (font-spec :name "Georgia"))
+                            "Georgia")
+                           (t "serif"))))
+          (custom-set-faces
+           `(default ((t (:font ,mono-font))))
+           `(fixed-pitch ((t (:font ,mono-font :height 1.0))))
+           `(variable-pitch ((t (:font ,serif-font :height 1.0)))))))
+      (mcg-log "Configured mixed-pitch")))
 #+end_src
 
 ** Prettify Symbols

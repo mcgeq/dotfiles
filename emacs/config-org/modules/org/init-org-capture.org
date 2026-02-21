@@ -303,24 +303,99 @@ Hugo 博客集成配置。
 (defun mcg--setup-hugo-integration ()
   "Setup Hugo blog integration."
   (when mcg-org-enable-hugo-integration
-    ;; Load ox-hugo
-    (when (mcg-require-extension "ox-hugo" 'ox-hugo)
-      (setq org-hugo-base-dir (concat mcg-blog-base-directory "/")))
+    (with-eval-after-load 'org
+      ;; Load ox-hugo
+      (when (mcg-require-extension "ox-hugo" 'ox-hugo)
+        (setq org-hugo-base-dir (concat mcg-blog-base-directory "/")))
+
+      ;; Hugo capture template generator function
+      (defun mcg/org-hugo-new-subtree-post-capture-template ()
+        "Returns `org-capture' template string for new Hugo post."
+        (let* ((date (format-time-string (org-time-stamp-format :long :inactive) (org-current-time)))
+               (title (read-from-minibuffer "Post Title: "))
+               (fname (org-hugo-slug title)))
+          (mapconcat #'identity
+                     `(,(concat "* TODO " title)
+                       ":PROPERTIES:"
+                       ,(concat ":EXPORT_FILE_NAME: " fname)
+                       ,(concat ":EXPORT_DATE: " date)
+                       ":END:"
+                       "%?\n")
+                     "\n")))))
+#+end_src
+
+*** Hugo Capture Templates
+
+#+begin_src emacs-lisp
+    ;; Hugo blog capture templates
+    (add-to-list 'org-capture-templates '("h" "Hugo Post"))
+    (add-to-list 'org-capture-templates '("hl" "About Development Language"))
     
-    ;; Hugo capture template generator function
-    (defun mcg/org-hugo-new-subtree-post-capture-template ()
-      "Returns `org-capture' template string for new Hugo post."
-      (let* ((date (format-time-string (org-time-stamp-format :long :inactive) (org-current-time)))
-             (title (read-from-minibuffer "Post Title: "))
-             (fname (org-hugo-slug title)))
-        (mapconcat #'identity
-                   `(,(concat "* TODO " title)
-                     ":PROPERTIES:"
-                     ,(concat ":EXPORT_FILE_NAME: " fname)
-                     ,(concat ":EXPORT_DATE: " date)
-                     ":END:"
-                     "%?\n")
-                   "\n")))
+    ;; Programming language related blogs
+    (dolist (topic '(("hla" "ArkTS" "ArkTS")
+                     ("hle" "React" "React")
+                     ("hlm" "Assembly" "Assembly")
+                     ("hlr" "Rust" "Rust")
+                     ("hlc" "C#" "CSharp")
+                     ("hlv" "Vue" "Vue")))
+      (add-to-list 'org-capture-templates
+                   `(,(nth 0 topic)
+                     ,(concat "About " (nth 1 topic))
+                     entry
+                     (file+headline mcg-org-blog-development-file ,(nth 2 topic))
+                     (function mcg/org-hugo-new-subtree-post-capture-template))))
+    
+    ;; MCU related
+    (add-to-list 'org-capture-templates
+                 '("hlu" "About MCU"
+                   entry
+                   (file+headline mcg-org-blog-mcu-file "MCU")
+                   (function mcg/org-hugo-new-subtree-post-capture-template)))
+#+end_src
+
+*** Other Hugo Categories
+
+#+begin_src emacs-lisp
+    ;; Other categories
+    (add-to-list 'org-capture-templates
+                 '("he" "About Emacs"
+                   entry
+                   (file+olp mcg-org-blog-emacs-file "Emacs")
+                   (function mcg/org-hugo-new-subtree-post-capture-template)))
+    
+    (add-to-list 'org-capture-templates
+                 '("hp" "About Prattle"
+                   entry
+                   (file+olp mcg-org-blog-prattle-file "Prattle")
+                   (function mcg/org-hugo-new-subtree-post-capture-template)))
+    
+    (add-to-list 'org-capture-templates
+                 '("hT" "About Tools"
+                   entry
+                   (file+olp mcg-org-blog-tools-file "Tools")
+                   (function mcg/org-hugo-new-subtree-post-capture-template)))
+    
+    (mcg-log "Hugo integration configured"))
+#+end_src
+
+** Easy Hugo Configuration
+
+Easy Hugo 配置。
+
+#+begin_src emacs-lisp
+;;; Easy Hugo Configuration
+
+(defun mcg--setup-easy-hugo ()
+  "Setup Easy Hugo."
+  (with-eval-after-load 'org
+    (when (and mcg-org-enable-hugo-integration
+               (mcg-require-extension "easy-hugo" 'easy-hugo))
+      (setq easy-hugo-postdir "content-org"
+            easy-hugo-default-ext ".org"
+            easy-hugo-url "https://www.gemc.club"
+            easy-hugo-basedir (concat mcg-blog-base-directory "/"))
+
+      (mcg-log "Easy Hugo configured"))))
 #+end_src
 
 *** Hugo Capture Templates
@@ -422,8 +497,14 @@ Capture 相关快捷键配置（C-c n 前缀）。
 
 (mcg--setup-org-capture)
 (mcg--setup-capture-templates)
-(mcg--setup-hugo-integration)
-(mcg--setup-easy-hugo)
+
+;; Delay loading of Hugo integration until needed
+(add-hook 'org-mode-hook
+          (lambda ()
+            (when mcg-org-enable-hugo-integration
+              (mcg--setup-hugo-integration)
+              (mcg--setup-easy-hugo))))
+
 (mcg--setup-capture-keybindings)
 #+end_src
 

@@ -77,11 +77,12 @@ Agenda 文件和基本配置。
 
 (defun mcg-org-agenda-setup-files ()
   "Setup Org Agenda file configuration."
-  (setq org-agenda-files mcg-org-agenda-files)
-  (setq org-agenda-use-time-grid t)
-  (setq org-agenda-current-time-string "⏰------------now")
-  
-  (mcg-log "Configured org-agenda files"))
+  (with-eval-after-load 'org
+    (setq org-agenda-files mcg-org-agenda-files)
+    (setq org-agenda-use-time-grid t)
+    (setq org-agenda-current-time-string "⏰------------now")
+
+    (mcg-log "Configured org-agenda files")))
 #+end_src
 
 ** Date Formatting
@@ -110,7 +111,7 @@ Agenda 文件和基本配置。
          (cn-month (cl-caddr cn-date))
          (cn-day (cl-cadddr cn-date))
          (cn-month-string (if (and (boundp 'cal-china-x-month-name)
-                                   (< (1- (floor cn-month)) 12))
+                                    (< (1- (floor cn-month)) 12))
                               (concat (aref cal-china-x-month-name
                                             (1- (floor cn-month)))
                                       (if (integerp cn-month) "" "（闰月）"))
@@ -134,8 +135,9 @@ Agenda 文件和基本配置。
 
 (defun mcg-org-agenda-setup-date-format ()
   "Setup Agenda date format."
-  (setq org-agenda-format-date 'mcg-org-agenda-format-date-aligned)
-  (mcg-log "Configured org-agenda date format"))
+  (with-eval-after-load 'org
+    (setq org-agenda-format-date 'mcg-org-agenda-format-date-aligned)
+    (mcg-log "Configured org-agenda date format")))
 #+end_src
 
 ** Time Grid Configuration
@@ -147,16 +149,17 @@ Agenda 文件和基本配置。
 
 (defun mcg-org-agenda-setup-time-grid ()
   "Setup Agenda time grid."
-  ;; Eight-part time periods
-  ;; 1: 0-3 midnight  2: 3-6 dawn  3: 6-9 morning  4: 9-12 forenoon
-  ;; 5: 12-15 afternoon  6: 15-18 late afternoon  7: 18-21 evening  8: 21-24 night
-  (setq org-agenda-time-grid
-        '((daily today require-timed)
-          (300 600 900 1200 1500 1800 2100 2400)
-          "......"
-          "-----------------------------------------------------"))
-  
-  (mcg-log "Configured org-agenda time grid"))
+  (with-eval-after-load 'org
+    ;; Eight-part time periods
+    ;; 1: 0-3 midnight  2: 3-6 dawn  3: 6-9 morning  4: 9-12 forenoon
+    ;; 5: 12-15 afternoon  6: 15-18 late afternoon  7: 18-21 evening  8: 21-24 night
+    (setq org-agenda-time-grid
+          '((daily today require-timed)
+            (300 600 900 1200 1500 1800 2100 2400)
+            "......"
+            "-----------------------------------------------------"))
+
+    (mcg-log "Configured org-agenda time grid")))
 #+end_src
 
 ** Display and Format Settings
@@ -168,38 +171,39 @@ Agenda 文件和基本配置。
 
 (defun mcg-org-agenda-setup-display ()
   "Setup Agenda display format."
-  ;; Diary integration
-  (setq org-agenda-include-diary t
-        org-agenda-diary-file mcg-org-agenda-diary-file
-        diary-file mcg-org-agenda-diary-file)
-  
-  ;; Agenda view prefix settings
-  (setq org-agenda-prefix-format
-        '((agenda . " %i %-25:c %5t %s")
-          (todo   . " %i %-25:c ")
-          (tags   . " %i %-25:c ")
-          (search . " %i %-25:c ")))
-  
-  ;; Scheduled task display
-  (setq org-agenda-scheduled-leaders
-        '("Scheduled " "Should have started %02d days ago "))
-  
-  ;; Deadline display
-  (setq org-agenda-deadline-leaders
-        '("Deadline " "%02d days until deadline " "Overdue by %02d days "))
-  
-  ;; Timestamp format
-  (setq org-time-stamp-formats '("<%Y-%m-%d %A>" . "<%Y-%m-%d %A %H:%M>"))
-  
-  ;; Other display settings
-  (setq org-cycle-separator-lines 2
-        org-agenda-insert-diary-extract-time t
-        org-agenda-sticky t
-        org-agenda-time-leading-zero t
-        org-agenda-tags-column -80
-        org-deadline-warning-days 3)
-  
-  (mcg-log "Configured org-agenda display"))
+  (with-eval-after-load 'org
+    ;; Diary integration
+    (setq org-agenda-include-diary t
+          org-agenda-diary-file mcg-org-agenda-diary-file
+          diary-file mcg-org-agenda-diary-file)
+
+    ;; Agenda view prefix settings
+    (setq org-agenda-prefix-format
+          '((agenda . " %i %-25:c %5t %s")
+            (todo   . " %i %-25:c ")
+            (tags   . " %i %-25:c ")
+            (search . " %i %-25:c ")))
+
+    ;; Scheduled task display
+    (setq org-agenda-scheduled-leaders
+          '("Scheduled " "Should have started %02d days ago "))
+
+    ;; Deadline display
+    (setq org-agenda-deadline-leaders
+          '("Deadline " "%02d days until deadline " "Overdue by %02d days "))
+
+    ;; Timestamp format
+    (setq org-time-stamp-formats '("<%Y-%m-%d %A>" . "<%Y-%m-%d %A %H:%M>"))
+
+    ;; Other display settings
+    (setq org-cycle-separator-lines 2
+          org-agenda-insert-diary-extract-time t
+          org-agenda-sticky t
+          org-agenda-time-leading-zero t
+          org-agenda-tags-column -80
+          org-deadline-warning-days 3)
+
+    (mcg-log "Configured org-agenda display")))
 #+end_src
 
 ** Location and Sunrise/Sunset
@@ -211,16 +215,17 @@ Agenda 文件和基本配置。
 
 (defun mcg-org-agenda-setup-location ()
   "Setup geographic location."
-  (setq calendar-longitude mcg-calendar-location-longitude
-        calendar-latitude mcg-calendar-location-latitude)
-  
-  ;; Celestial stems and terrestrial branches configuration
-  (setq calendar-chinese-celestial-stem
-        ["甲" "乙" "丙" "丁" "戊" "己" "庚" "辛" "壬" "癸"]
-        calendar-chinese-terrestrial-branch
-        ["子" "丑" "寅" "卯" "辰" "巳" "午" "未" "申" "酉" "戌" "亥"])
-  
-  (mcg-log "Configured calendar location"))
+  (with-eval-after-load 'calendar
+    (setq calendar-longitude mcg-calendar-location-longitude
+          calendar-latitude mcg-calendar-location-latitude)
+
+    ;; Celestial stems and terrestrial branches configuration
+    (setq calendar-chinese-celestial-stem
+          ["甲" "乙" "丙" "丁" "戊" "己" "庚" "辛" "壬" "癸"]
+          calendar-chinese-terrestrial-branch
+          ["子" "丑" "寅" "卯" "辰" "巳" "午" "未" "申" "酉" "戌" "亥"])
+
+    (mcg-log "Configured calendar location")))
 
 (defun diary-sunrise ()
   "Get sunrise time."
@@ -262,29 +267,30 @@ Agenda 文件和基本配置。
 
 (defun mcg-org-agenda-setup-custom-views ()
   "Setup custom agenda views."
-  (setq org-agenda-custom-commands
-        '(("d" "Daily agenda and all TODOs"
-           ((agenda "" ((org-agenda-span 'day)))
-            (alltodo "" ((org-agenda-overriding-header "All TODOs")))))
-          ("w" "Weekly review"
-           ((agenda "" ((org-agenda-span 'week)))
-            (todo "DONE" ((org-agenda-overriding-header "Completed this week")))
-            (todo "TODO" ((org-agenda-overriding-header "Still to do")))))
-          ("p" "Priority tasks"
-           ((tags-todo "+PRIORITY=\"A\""
-                       ((org-agenda-overriding-header "High Priority")))
-            (tags-todo "+PRIORITY=\"B\""
-                       ((org-agenda-overriding-header "Medium Priority")))
-            (tags-todo "+PRIORITY=\"C\""
-                       ((org-agenda-overriding-header "Low Priority")))))
-          ("W" "Work tasks"
-           ((tags-todo "+work"
-                       ((org-agenda-overriding-header "Work Tasks")))))
-          ("h" "Home tasks"
-           ((tags-todo "+home"
-                       ((org-agenda-overriding-header "Home Tasks")))))))
-  
-  (mcg-log "Configured org-agenda custom views"))
+  (with-eval-after-load 'org
+    (setq org-agenda-custom-commands
+          '(("d" "Daily agenda and all TODOs"
+             ((agenda "" ((org-agenda-span 'day)))
+              (alltodo "" ((org-agenda-overriding-header "All TODOs")))))
+            ("w" "Weekly review"
+             ((agenda "" ((org-agenda-span 'week)))
+              (todo "DONE" ((org-agenda-overriding-header "Completed this week")))
+              (todo "TODO" ((org-agenda-overriding-header "Still to do")))))
+            ("p" "Priority tasks"
+             ((tags-todo "+PRIORITY=\"A\""
+                         ((org-agenda-overriding-header "High Priority")))
+              (tags-todo "+PRIORITY=\"B\""
+                         ((org-agenda-overriding-header "Medium Priority")))
+              (tags-todo "+PRIORITY=\"C\""
+                         ((org-agenda-overriding-header "Low Priority")))))
+            ("W" "Work tasks"
+             ((tags-todo "+work"
+                         ((org-agenda-overriding-header "Work Tasks")))))
+            ("h" "Home tasks"
+             ((tags-todo "+home"
+                         ((org-agenda-overriding-header "Home Tasks"))))))
+
+    (mcg-log "Configured org-agenda custom views")))
 #+end_src
 
 ** Initialize
@@ -294,12 +300,15 @@ Agenda 文件和基本配置。
 #+begin_src emacs-lisp
 ;;; Initialize
 
-(mcg-org-agenda-setup-files)
-(mcg-org-agenda-setup-date-format)
-(mcg-org-agenda-setup-time-grid)
-(mcg-org-agenda-setup-display)
-(mcg-org-agenda-setup-location)
-(mcg-org-agenda-setup-custom-views)
+;; Delay agenda setup until org-agenda is loaded
+(add-hook 'org-agenda-mode-hook
+          (lambda ()
+            (mcg-org-agenda-setup-files)
+            (mcg-org-agenda-setup-date-format)
+            (mcg-org-agenda-setup-time-grid)
+            (mcg-org-agenda-setup-display)
+            (mcg-org-agenda-setup-location)
+            (mcg-org-agenda-setup-custom-views)))
 #+end_src
 
 ** Provide Feature
