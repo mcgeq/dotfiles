@@ -121,6 +121,7 @@
  ;; Editor modules - loaded immediately
  :editor
  defaults
+ indent
  treesit
  navigation
  keybindings

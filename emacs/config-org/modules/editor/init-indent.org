@@ -1,0 +1,144 @@
+#+TITLE: Indent Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-indent.el :lexical t
+
+* Indent Module
+
+本模块负责 MCG Emacs 的统一缩进配置：
+- 4 空格缩进语言
+- 2 空格缩进语言
+- Tab 缩进语言
+- 语言特定的 fill-column
+
+** File Header
+
+#+begin_src emacs-lisp
+;;; init-indent.el --- Unified indentation for MCG Emacs -*- lexical-binding: t; -*-
+
+;; Copyright (C) 2024-2026 MCG
+;; Author: mcge <mcgeq@outlook.com>
+;; Keywords: indentation, editor
+;; Compatibility: GNU Emacs 29.0+
+
+;;; Commentary:
+;; Unified indentation module for MCG Emacs configuration.
+;; Centralizes indentation settings for all languages.
+;;
+;; This module consolidates indentation settings that were previously
+;; duplicated across multiple language modules.
+;;
+;; Module metadata:
+;; :depends ()
+;; :defer nil
+;;
+#+end_src
+
+** Require
+
+#+begin_src emacs-lisp
+;;; Code:
+
+(require 'core-lib)
+#+end_src
+
+** Variables
+
+统一缩进配置的变量定义。
+
+#+begin_src emacs-lisp
+;;; Variables
+
+(defvar mcg-indent-4-spaces-modes
+  '(c-mode c++-mode rust-mode python-mode zig-mode)
+  "Modes that use 4-space indentation.")
+
+(defvar mcg-indent-2-spaces-modes
+  '(js-mode js-ts-mode typescript-ts-mode tsx-ts-mode
+    web-mode markdown-mode json-mode css-mode scss-mode
+    yaml-mode toml-mode lua-mode)
+  "Modes that use 2-space indentation.")
+
+(defvar mcg-indent-tabs-modes
+  '(makefile-mode makefile-gmake-mode)
+  "Modes that use tab indentation.")
+
+(defvar mcg-indent-fill-columns
+  '((python-mode . 88)
+    (markdown-mode . 80))
+  "Modes with specific fill-column settings.
+Each entry is (MODE . FILL-COLUMN).")
+#+end_src
+
+** Setup Functions
+
+统一缩进配置函数。
+
+#+begin_src emacs-lisp
+;;; Setup
+
+(defun mcg-indent-setup-4-spaces ()
+  "Setup 4-space indentation for languages."
+  (dolist (mode mcg-indent-4-spaces-modes)
+    (add-hook (intern (format "%s-hook" mode))
+              (lambda ()
+                (setq indent-tabs-mode nil)
+                (setq tab-width 4)))
+    (mcg-log "Configured 4-space indent for %s" mode)))
+
+(defun mcg-indent-setup-2-spaces ()
+  "Setup 2-space indentation for languages."
+  (dolist (mode mcg-indent-2-spaces-modes)
+    (add-hook (intern (format "%s-hook" mode))
+              (lambda ()
+                (setq indent-tabs-mode nil)
+                (setq tab-width 2)))
+    (mcg-log "Configured 2-space indent for %s" mode)))
+
+(defun mcg-indent-setup-tabs ()
+  "Setup tab indentation for languages."
+  (dolist (mode mcg-indent-tabs-modes)
+    (add-hook (intern (format "%s-hook" mode))
+              (lambda ()
+                (setq indent-tabs-mode t)))
+    (mcg-log "Configured tab indent for %s" mode)))
+
+(defun mcg-indent-setup-fill-column ()
+  "Setup fill-column for specific modes."
+  (dolist (pair mcg-indent-fill-columns)
+    (let ((mode (car pair))
+          (column (cdr pair)))
+      (add-hook (intern (format "%s-hook" mode))
+                (lambda () (setq fill-column column)))
+      (mcg-log "Configured fill-column %d for %s" column mode))))
+
+(defun mcg-indent-setup ()
+  "Setup unified indentation for all languages."
+  ;; Set defaults
+  (setq-default indent-tabs-mode nil)
+  (setq-default tab-width 4)
+  
+  ;; Setup indentation per category
+  (mcg-indent-setup-4-spaces)
+  (mcg-indent-setup-2-spaces)
+  (mcg-indent-setup-tabs)
+  (mcg-indent-setup-fill-column)
+  
+  (mcg-log "Unified indentation setup complete"))
+#+end_src
+
+** Initialize
+
+模块初始化。
+
+#+begin_src emacs-lisp
+;;; Initialize
+
+(mcg-indent-setup)
+#+end_src
+
+** Provide Feature
+
+#+begin_src emacs-lisp
+(provide 'init-indent)
+;;; init-indent.el ends here
+#+end_src
