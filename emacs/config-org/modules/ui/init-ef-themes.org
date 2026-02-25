@@ -1,0 +1,61 @@
+#+TITLE: EF Themes Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-ef-themes.el :lexical t
+
+* EF Themes Module
+
+配置 ef-themes 主题。
+
+** File Header
+
+#+begin_src emacs-lisp
+;;; init-ef-themes.el --- ef-themes configuration -*- lexical-binding: t; -*-
+
+;;; Commentary:
+;; Configure ef-themes from:
+;; emacs/site-lisp/extensions/ui/themes/ef-themes
+
+;;; Code:
+
+(require 'core-lib)
+#+end_src
+
+** Custom Options
+
+#+begin_src emacs-lisp
+(defcustom mcg-ui-theme 'ef-bio
+  "Default theme from ef-themes."
+  :type 'symbol
+  :group 'mcg)
+#+end_src
+
+** Setup
+
+#+begin_src emacs-lisp
+(defun mcg--setup-ef-themes ()
+  "Setup ef-themes."
+  (let ((has-modus (mcg-require-extension "modus-themes" t))
+        (has-ef (mcg-require-extension "ef-themes" t)))
+    (cond
+     ((not has-modus)
+      (mcg-log-error "Missing dependency: modus-themes (required by ef-themes)"))
+     ((not has-ef)
+      (mcg-log-error "Missing extension: ef-themes"))
+     (t
+      (mapc #'disable-theme custom-enabled-themes)
+      (load-theme mcg-ui-theme t)
+      (mcg-log "ef-themes configured: %s" mcg-ui-theme)))))
+#+end_src
+
+** Initialize
+
+#+begin_src emacs-lisp
+(mcg--setup-ef-themes)
+#+end_src
+
+** Provide
+
+#+begin_src emacs-lisp
+(provide 'init-ef-themes)
+;;; init-ef-themes.el ends here
+#+end_src

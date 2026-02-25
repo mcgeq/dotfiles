@@ -90,17 +90,28 @@ Located at .data/ under mcg-emacs-dir.")
 垃圾回收优化相关变量，用于提升启动性能。
 
 #+begin_src emacs-lisp
-(defvar mcg-gc-cons-threshold-default (* 16 1024 1024)
+(defgroup mcg nil
+  "MCG Emacs configuration framework."
+  :group 'convenience
+  :prefix "mcg-")
+
+(defcustom mcg-gc-cons-threshold-default (* 16 1024 1024)
   "Default GC threshold after startup (16MB).
-This is restored after Emacs finishes starting up.")
+This is restored after Emacs finishes starting up."
+  :type 'integer
+  :group 'mcg)
 
-(defvar mcg-gc-cons-percentage-default 0.1
+(defcustom mcg-gc-cons-percentage-default 0.1
   "Default GC percentage after startup.
-This is restored after Emacs finishes starting up.")
+This is restored after Emacs finishes starting up."
+  :type 'float
+  :group 'mcg)
 
-(defvar mcg-gc-cons-threshold-startup (* 256 1024 1024)
+(defcustom mcg-gc-cons-threshold-startup (* 256 1024 1024)
   "High GC threshold during startup (256MB).
-This prevents GC during startup for faster loading.")
+This prevents GC during startup for faster loading."
+  :type 'integer
+  :group 'mcg)
 #+end_src
 
 ** Startup Time Tracking
@@ -118,13 +129,17 @@ Populated when `mcg-profile-mode' is enabled.")
 调试和日志相关变量。
 
 #+begin_src emacs-lisp
-(defvar mcg-debug-mode nil
+(defcustom mcg-debug-mode nil
   "Non-nil enables debug logging.
-When enabled, `mcg-log' messages are displayed.")
+When enabled, `mcg-log' messages are displayed."
+  :type 'boolean
+  :group 'mcg)
 
-(defvar mcg-profile-mode nil
+(defcustom mcg-profile-mode nil
   "Non-nil enables performance profiling.
-When enabled, module load times are tracked.")
+When enabled, module load times are tracked."
+  :type 'boolean
+  :group 'mcg)
 
 (defvar mcg--log-buffer-name "*MCG Log*"
   "Name of the log buffer.")
@@ -132,8 +147,10 @@ When enabled, module load times are tracked.")
 (defvar mcg--log-messages nil
   "List of recent log messages for diagnostics.")
 
-(defvar mcg--log-max-messages 100
-  "Maximum number of log messages to keep.")
+(defcustom mcg--log-max-messages 100
+  "Maximum number of log messages to keep."
+  :type 'integer
+  :group 'mcg)
 #+end_src
 
 ** Logging System

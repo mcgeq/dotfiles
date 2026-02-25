@@ -1,0 +1,44 @@
+#+TITLE: Marginalia Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-marginalia.el :lexical t
+
+* Marginalia Module
+
+配置 marginalia 注解增强。
+
+** File Header
+
+#+begin_src emacs-lisp
+;;; init-marginalia.el --- marginalia configuration -*- lexical-binding: t; -*-
+
+;;; Commentary:
+;; Configure marginalia from:
+;; emacs/site-lisp/extensions/completion/marginalia
+
+;;; Code:
+
+(require 'core-lib)
+#+end_src
+
+** Setup
+
+#+begin_src emacs-lisp
+(defun mcg--setup-marginalia ()
+  "Setup marginalia."
+  (when (mcg-require-extension "marginalia" t)
+    (marginalia-mode 1)
+    (mcg-log "marginalia configured")))
+#+end_src
+
+** Initialize
+
+#+begin_src emacs-lisp
+(mcg--setup-marginalia)
+#+end_src
+
+** Provide
+
+#+begin_src emacs-lisp
+(provide 'init-marginalia)
+;;; init-marginalia.el ends here
+#+end_src

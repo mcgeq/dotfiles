@@ -1,0 +1,50 @@
+#+TITLE: Nerd Icons Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-nerd-icons.el :lexical t
+
+* Nerd Icons Module
+
+配置 nerd-icons 图标库。
+
+** File Header
+
+#+begin_src emacs-lisp
+;;; init-nerd-icons.el --- nerd-icons configuration -*- lexical-binding: t; -*-
+
+;;; Commentary:
+;; Configure nerd-icons from:
+;; emacs/site-lisp/extensions/ui/themes/nerd-icons
+
+;;; Code:
+
+(require 'core-lib)
+#+end_src
+
+** Setup
+
+#+begin_src emacs-lisp
+(defun mcg--setup-nerd-icons ()
+  "Setup nerd-icons."
+  (if (mcg-require-extension "nerd-icons" t)
+      (progn
+        (when (boundp 'mcg-ui-icon-font-family)
+          (setq nerd-icons-font-family mcg-ui-icon-font-family))
+        (if (and (boundp 'nerd-icons-font-family)
+                 (find-font (font-spec :family nerd-icons-font-family)))
+            (mcg-log "nerd-icons configured: %s" nerd-icons-font-family)
+          (mcg-log-warning "nerd-icons font missing, run M-x nerd-icons-install-fonts")))
+    (mcg-log-warning "nerd-icons not available")))
+#+end_src
+
+** Initialize
+
+#+begin_src emacs-lisp
+(mcg--setup-nerd-icons)
+#+end_src
+
+** Provide
+
+#+begin_src emacs-lisp
+(provide 'init-nerd-icons)
+;;; init-nerd-icons.el ends here
+#+end_src

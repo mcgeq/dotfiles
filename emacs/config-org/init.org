@@ -107,69 +107,30 @@
 ;;   :lang       - LSP and language-specific modules
 
 (mcg!
- ;; UI modules - loaded immediately
+ ;; UI modules
  :ui
- theme
- modeline
  font
- icons
-
- ;; Editor modules - loaded immediately
- :editor
- defaults
- indent
- treesit
- navigation
- keybindings
- paredit
- format
- undo
- multicursor
-
- ;; Completion modules - loaded on idle
+ ef-themes
+ nerd-icons
+ awesome-tray
+ 
+ ;; Completion modules
  :completion
+ consult
+ marginalia
  vertico
- yasnippet
+ orderless
+ embark
+ pinyinlib
+ nerd-icons-completion
 
- ;; Tools modules - loaded immediately
+ ;; Tools modules
  :tools
- magit
- search
- rime
- tabs
- eshell
- lsp  ; LSP must be loaded before language modules
-
- ;; Enhancement modules - loaded on idle
- :enhance
- autosave
- which-key
- helpful
- recentf
- symbol
-
- ;; Org modules - loaded immediately
- :org
- org
- org-agenda
- org-babel
- org-capture
- org-extras
-
- ;; Writing modules - deferred (loaded on file open)
- :writing
- markdown
- -vale  ; disabled by default
-
- ;; Language modules - deferred (loaded on file open)
- :lang
- rust
- python
- typescript
- web
- cpp
- lua
- zig)
+ posframe
+ sort-tab
+ auto-save
+ lsp-bridge
+)
 #+end_src
 
 ** Module Loading Strategy
@@ -178,13 +139,13 @@
 
 #+begin_src emacs-lisp
 ;; Define which categories use which loading strategy
-(defvar mcg-immediate-categories '(:ui :editor :tools :org)
+(defvar mcg-immediate-categories '(:ui :completion :tools)
   "Categories to load immediately at startup.")
 
-(defvar mcg-idle-categories '(:completion :enhance)
+(defvar mcg-idle-categories '()
   "Categories to load during idle time.")
 
-(defvar mcg-deferred-categories '(:writing :lang)
+(defvar mcg-deferred-categories '()
   "Categories to defer loading until triggered.")
 #+end_src
 
@@ -309,3 +270,4 @@ Emacs 完全启动后的额外设置。
 (provide 'init)
 ;;; init.el ends here
 #+end_src
+

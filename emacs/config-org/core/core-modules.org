@@ -54,7 +54,9 @@ Each entry is (CATEGORY . MODULE) for modules that have been loaded.")
 
 (defvar mcg-module-load-errors nil
   "Alist of module load errors.
-Structure: (((CATEGORY . MODULE) . ERROR-MESSAGE) ...)")
+Structure: (((CATEGORY . MODULE) . ERROR-INFO) ...).
+ERROR-INFO is a plist with keys:
+  :category, :module, :error, :message, :path, :timestamp, :backtrace.")
 
 (defvar mcg-module-load-order nil
   "List of module keys in the order they should be loaded.
@@ -75,8 +77,10 @@ PATTERN is a file pattern, MODE is the major mode.")
   "List of modules to load during idle time.
 Each entry is (CATEGORY . MODULE).")
 
-(defvar mcg-idle-load-delay 2.0
-  "Delay in seconds before loading idle modules.")
+(defcustom mcg-idle-load-delay 2.0
+  "Delay in seconds before loading idle modules."
+  :type 'float
+  :group 'mcg)
 
 (defvar mcg-idle-load-timer nil
   "Timer for idle loading.")
@@ -265,6 +269,21 @@ Example:
   "Alist of detailed error traces for module load failures.
 Structure: (((CATEGORY . MODULE) . ERROR-PLIST) ...)
 ERROR-PLIST contains :message, :path, :timestamp, :backtrace.")
+
+(defun mcg--make-module-error-info (category module path err-msg &optional backtrace)
+  "Build a normalized module error plist."
+  (list :category category
+        :module module
+        :error err-msg
+        :message err-msg
+        :path path
+        :timestamp (current-time-string)
+        :backtrace backtrace))
+
+(defun mcg--record-module-error (mod-key error-info)
+  "Record ERROR-INFO for MOD-KEY in error registries."
+  (setf (alist-get mod-key mcg-module-load-errors nil nil #'equal) error-info)
+  (setf (alist-get mod-key mcg-module-error-traces nil nil #'equal) error-info))
 #+end_src
 
 *** Load Module Function
@@ -274,7 +293,8 @@ ERROR-PLIST contains :message, :path, :timestamp, :backtrace.")
   "Load MODULE from CATEGORY.
 Returns t if successful, nil if failed.
 Errors are recorded in `mcg-module-load-errors'."
-  (let ((mod-key (cons category (if (symbolp module) module (intern module))))
+  (let ((mod-sym (if (symbolp module) module (intern module)))
+        (mod-key (cons category (if (symbolp module) module (intern module))))
         (path (mcg-module-path category module)))
     ;; Skip if already loaded
     (if (member mod-key mcg-loaded-modules)
@@ -283,8 +303,11 @@ Errors are recorded in `mcg-module-load-errors'."
           t)
       ;; Check if file exists
       (if (not (file-exists-p path))
-          (let ((err-msg (format "Module file not found: %s" path)))
-            (push (cons mod-key err-msg) mcg-module-load-errors)
+          (let ((err-msg (format "Module file not found: %s" path))
+                (error-info (mcg--make-module-error-info
+                             category mod-sym path
+                             (format "Module file not found: %s" path))))
+            (mcg--record-module-error mod-key error-info)
             (mcg-log-warning "%s" err-msg)
             nil)
         ;; Load the module with error handling
@@ -296,8 +319,10 @@ Errors are recorded in `mcg-module-load-errors'."
               (mcg-log "Loaded module %s/%s" category module)
               t)
           (error
-           (let ((err-msg (error-message-string err)))
-             (push (cons mod-key err-msg) mcg-module-load-errors)
+           (let* ((err-msg (error-message-string err))
+                  (error-info (mcg--make-module-error-info
+                               category mod-sym path err-msg)))
+             (mcg--record-module-error mod-key error-info)
              (mcg-log-error "Failed to load %s/%s: %s" category module err-msg)
              nil)))))))
 #+end_src
@@ -320,16 +345,9 @@ Errors are recorded with full trace in `mcg-module-error-traces' and `mcg-module
       ;; Check if file exists
       (if (not (file-exists-p path))
           (let* ((err-msg (format "Module file not found: %s" path))
-                 (error-info (list :category category
-                                   :module mod-sym
-                                   :error err-msg
-                                   :message err-msg
-                                   :path path
-                                   :timestamp (current-time-string)
-                                   :backtrace nil)))
-            ;; Store detailed error info in both places
-            (push (cons mod-key error-info) mcg-module-load-errors)
-            (push (cons mod-key error-info) mcg-module-error-traces)
+                 (error-info (mcg--make-module-error-info
+                              category mod-sym path err-msg)))
+            (mcg--record-module-error mod-key error-info)
             (mcg-log-warning "%s" err-msg)
             nil)
         ;; Load the module with error handling
@@ -342,16 +360,10 @@ Errors are recorded with full trace in `mcg-module-error-traces' and `mcg-module
               t)
           (error
            (let* ((err-msg (error-message-string err))
-                  (error-info (list :category category
-                                    :module mod-sym
-                                    :error err-msg
-                                    :message err-msg
-                                    :path path
-                                    :timestamp (current-time-string)
-                                    :backtrace (with-output-to-string (backtrace)))))
-             ;; Store detailed error info in both places
-             (push (cons mod-key error-info) mcg-module-load-errors)
-             (push (cons mod-key error-info) mcg-module-error-traces)
+                  (error-info (mcg--make-module-error-info
+                               category mod-sym path err-msg
+                               (with-output-to-string (backtrace)))))
+             (mcg--record-module-error mod-key error-info)
              (mcg-log-error "Failed to load %s/%s: %s" category module err-msg)
              nil)))))))
 #+end_src
@@ -577,12 +589,11 @@ FEATURE can be a symbol (feature name) or a module key (CATEGORY . MODULE)."
       (insert "    ─────────── 加载错误 ───────────\n\n")
       (dolist (err-entry mcg-module-load-errors)
         (let ((mod-key (car err-entry))
-              (err-msg (cdr err-entry)))
+              (err-info (cdr err-entry)))
           (insert (format "    ✗ %s/%s\n      %s\n"
                           (car mod-key) (cdr mod-key)
-                          (if (listp err-msg)
-                              (plist-get err-msg :error)
-                            err-msg)))))
+                          (or (plist-get err-info :error)
+                              "Unknown error")))))
       (insert "\n"))
 
     (insert "    ───────────────────────────────────\n")
@@ -679,7 +690,11 @@ Shows module status, file path, and any errors."
         (princ (format "  Mode:    %s\n" (cdr (cdr deferred)))))
       (when error-entry
         (princ (format "\nError:\n"))
-        (princ (format "  %s\n" (cdr error-entry)))))))
+        (princ (format "  %s\n"
+                       (or (plist-get (cdr error-entry) :error)
+                           "Unknown error")))
+        (when-let ((trace (plist-get (cdr error-entry) :backtrace)))
+          (princ "  Backtrace: available via `mcg-get-module-error-trace`\n"))))))
 #+end_src
 
 ** Module System Initialization

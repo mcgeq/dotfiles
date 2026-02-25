@@ -1,0 +1,68 @@
+#+TITLE: Auto Save Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-auto-save.el :lexical t
+
+* Auto Save Module
+
+配置 auto-save 插件，启用空闲自动保存。
+
+** File Header
+
+#+begin_src emacs-lisp
+;;; init-auto-save.el --- Auto-save configuration -*- lexical-binding: t; -*-
+
+;;; Commentary:
+;; Configure auto-save from:
+;; emacs/site-lisp/extensions/utils/auto-save
+
+;;; Code:
+
+(require 'core-lib)
+#+end_src
+
+** Custom Options
+
+#+begin_src emacs-lisp
+(defcustom mcg-auto-save-idle 1
+  "Idle seconds before auto-save triggers."
+  :type 'number
+  :group 'mcg)
+
+(defcustom mcg-auto-save-silent t
+  "Whether auto-save should run silently."
+  :type 'boolean
+  :group 'mcg)
+
+(defcustom mcg-auto-save-delete-trailing-whitespace nil
+  "Whether auto-save should delete trailing whitespace on save."
+  :type 'boolean
+  :group 'mcg)
+#+end_src
+
+** Setup
+
+#+begin_src emacs-lisp
+(defun mcg--setup-auto-save ()
+  "Setup auto-save plugin."
+  (when (mcg-require-extension "auto-save" t)
+    (setq auto-save-idle mcg-auto-save-idle)
+    (setq auto-save-silent mcg-auto-save-silent)
+    (setq auto-save-delete-trailing-whitespace
+          mcg-auto-save-delete-trailing-whitespace)
+    (auto-save-enable)
+    (mcg-log "auto-save configured")))
+#+end_src
+
+** Initialize
+
+#+begin_src emacs-lisp
+(mcg--setup-auto-save)
+#+end_src
+
+** Provide
+
+#+begin_src emacs-lisp
+(provide 'init-auto-save)
+;;; init-auto-save.el ends here
+#+end_src
+

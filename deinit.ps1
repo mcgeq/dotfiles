@@ -92,12 +92,11 @@ function Remove-Submodule {
             Write-Gray "  Note: git submodule deinit returned $($process.ExitCode)"
         }
         
-        # 2. 从索引中删除
+        # 2. 从索引中删除（若已不在索引中则继续后续清理）
         Write-Gray "  Running: git rm -f --cached $path"
         $process = Start-Process -FilePath "git" -ArgumentList "rm", "-f", "--cached", $path -NoNewWindow -Wait -PassThru
         if ($process.ExitCode -ne 0) {
-            Write-Red "  Error: failed to remove from index: $path"
-            return $false
+            Write-Gray "  Note: git rm --cached returned $($process.ExitCode), continue cleanup."
         }
         
         # 3. 删除工作目录
@@ -145,7 +144,9 @@ function Remove-Submodule {
         }
         
         # 5. 删除 .git/modules 目录
+        # Git 对嵌套子模块通常按 path 存储：.git/modules/<submodule path>
         $possibleModulesPaths = @(
+            ".git/modules/$path",
             ".git/modules/$name",
             ".git/modules/$($path.Replace('/', '-').Replace('\', '-'))",
             ".git/modules/$($path.Replace('/', '.').Replace('\', '.'))"
@@ -205,23 +206,48 @@ function Update-GitmodulesFile {
         Write-Gray ".gitmodules file is empty, skipping update."
         return
     }
-    
-    $newContent = $content
+
+    $changed = $false
+
+    # 优先用 git config 精准删除 section，避免正则误删
     foreach ($sub in $RemovedSubmodules) {
         $name = $sub.Name
-        # 使用正则表达式匹配子模块部分（从 [submodule "name"] 到下一个子模块或文件结尾）
-        $pattern = '(?s)\[\s*submodule\s*"' + [regex]::Escape($name) + '"\s*\].*?(?=\[\s*submodule\s*"|$)'
-        $newContent = $newContent -replace $pattern, ''
+        Write-Gray "  Removing section from .gitmodules: submodule.$name"
+        $process = Start-Process -FilePath "git" -ArgumentList "config", "-f", $gitmodulesPath, "--remove-section", "submodule.$name" -NoNewWindow -Wait -PassThru
+        if ($process.ExitCode -eq 0) {
+            $changed = $true
+        }
     }
-    
-    # 清理多余空行和首尾空白
-    $newContent = $newContent -replace "(\r?\n){3,}", "`r`n`r`n"
-    $newContent = $newContent.Trim()
-    
-    if ($newContent -ne $content) {
+
+    # 兜底：如果 git config 没删掉，回退到正则删除（按 name 或 path）
+    $newContent = Get-Content -Path $gitmodulesPath -Raw
+    foreach ($sub in $RemovedSubmodules) {
+        $name = $sub.Name
+        $path = $sub.Path
+        $patternByName = '(?ms)^\s*\[submodule\s+"' + [regex]::Escape($name) + '"\]\s*\r?\n(?:^[ \t]+.+\r?\n?)*'
+        $before = $newContent
+        $newContent = [regex]::Replace($newContent, $patternByName, "")
+
+        if ($before -ne $newContent) {
+            $changed = $true
+        } elseif ($path) {
+            # 兼容某些仓库 section name 使用 path 的场景
+            $patternByPath = '(?ms)^\s*\[submodule\s+"' + [regex]::Escape($path) + '"\]\s*\r?\n(?:^[ \t]+.+\r?\n?)*'
+            $before = $newContent
+            $newContent = [regex]::Replace($newContent, $patternByPath, "")
+            if ($before -ne $newContent) {
+                $changed = $true
+            }
+        }
+    }
+
+    if ($changed) {
+        # 规范空行，确保文件以换行结尾
+        $newContent = $newContent -replace "(\r?\n){3,}", "`r`n`r`n"
+        $newContent = $newContent.Trim() + "`r`n"
         Set-Content -Path $gitmodulesPath -Value $newContent -NoNewline
         Write-Green "Updated .gitmodules file"
-        
+
         # 暂存更改到 Git
         $process = Start-Process -FilePath "git" -ArgumentList "add", ".gitmodules" -NoNewWindow -Wait -PassThru
         if ($process.ExitCode -eq 0) {

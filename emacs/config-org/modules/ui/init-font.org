@@ -4,287 +4,94 @@
 
 * Font Module
 
-本模块负责 MCG Emacs 的字体配置，包括：
-- 默认字体设置
-- Unicode 字体
-- Emoji 字体
-- CJK（中日韩）字体
+字体与图标字体配置（解决 Nerd Icons 乱码）。
 
 ** File Header
 
 #+begin_src emacs-lisp
-;;; init-font.el --- Font Configuration for MCG Emacs -*- lexical-binding: t; -*-
-
-;; Filename: init-font.el
-;; Description: Font configuration module
-;; Author: mcge <mcgeq@outlook.com>
-;; Copyright (C) 2024-2026, mcge, all rights reserved.
-;; Create   Date: 2026-01-07
-;; Version: 3.0
-;; Keywords: font, ui
-;; Compatibility: GNU Emacs 29.0+
+;;; init-font.el --- font configuration -*- lexical-binding: t; -*-
 
 ;;; Commentary:
-;;
-;; Font configuration module for MCG Emacs, responsible for:
-;; - Default font settings
-;; - Unicode fonts
-;; - Emoji fonts
-;; - CJK (Chinese/Japanese/Korean) fonts
-;;
-;; Module metadata:
-;; :depends ()
-;; :defer nil
-;;
-#+end_src
+;; Configure default/cjk/emoji/icon fonts.
 
-** Require
-
-#+begin_src emacs-lisp
 ;;; Code:
 
-;;; Dependencies
-
 (require 'cl-lib)
-(require 'core-bootstrap)
+(require 'core-lib)
 #+end_src
 
-** Font Variables
-
-字体相关的配置变量。
+** Variables
 
 #+begin_src emacs-lisp
-;;; Font Variables
+(defcustom mcg-font-default-candidates
+  '("Cascadia Mono" "FiraCode Nerd Font" "Consolas")
+  "Default monospace font candidates."
+  :type '(repeat string)
+  :group 'mcg)
 
-(defvar mcg-fonts-default
-  '("Cascadia Mono" "FiraCode Nerd Font" "DejaVuSansMono Nerd Font Mono"
-    "Consolas" "Source Code Pro" "Hack" "Fira Code")
-  "Default monospace font list, sorted by priority.")
+(defcustom mcg-font-cjk-candidates
+  '("Microsoft YaHei UI" "Microsoft YaHei" "KaiTi")
+  "CJK font candidates."
+  :type '(repeat string)
+  :group 'mcg)
 
-(defvar mcg-fonts-unicode
-  '("Symbola" "Segoe UI Symbol" "Symbol")
-  "Unicode font list.")
+(defcustom mcg-font-emoji-candidates
+  '("Segoe UI Emoji" "Noto Color Emoji")
+  "Emoji font candidates."
+  :type '(repeat string)
+  :group 'mcg)
 
-(defvar mcg-fonts-emoji
-  '("Noto Color Emoji" "Apple Color Emoji")
-  "Emoji font list.")
+(defcustom mcg-ui-icon-font-family "FiraCode Nerd Font"
+  "Nerd icons font family."
+  :type 'string
+  :group 'mcg)
 
-(defvar mcg-fonts-cjk
-  '("KaiTi" "WenQuanYi Micro Hei" "Microsoft Yahei UI"
-    "Microsoft Yahei" "STFangsong")
-  "CJK (Chinese/Japanese/Korean) font list.")
-
-(defvar mcg-font-height-default
-  (cond (mcg-is-mac 150)
-        (mcg-is-windows 110)
-        (mcg-is-linux 130)
-        (t 120))
-  "Default font height (1/10 pt).")
-
-(defvar mcg-font-cjk-scale 1.2
-  "CJK font scale ratio.")
-
-(defvar mcg-icon-font-family "FiraCode Nerd Font"
-  "Icon font.")
+(defcustom mcg-font-height
+  (cond (mcg-is-windows 115)
+        (mcg-is-mac 150)
+        (t 130))
+  "Default font height."
+  :type 'integer
+  :group 'mcg)
 #+end_src
 
-** Font Setup Functions
-
-字体设置的核心函数。
-
-*** Font Availability Check
+** Setup
 
 #+begin_src emacs-lisp
-;;; Font Setup Functions
-
 (defun mcg--font-available-p (font)
-  "Check if FONT is available."
-  (find-font (font-spec :name font)))
+  "Return non-nil when FONT is available."
+  (find-font (font-spec :family font)))
 
-(defun mcg--find-available-font (font-list)
-  "Find the first available font from FONT-LIST."
-  (cl-loop for font in font-list
-           when (mcg--font-available-p font)
-           return font))
-#+end_src
+(defun mcg--pick-font (candidates)
+  "Pick the first available font from CANDIDATES."
+  (cl-loop for f in candidates
+           when (mcg--font-available-p f)
+           return f))
 
-*** Common Font Setup
-
-#+begin_src emacs-lisp
-(defun mcg--setup-font-common (character font-list &optional scale-factor)
-  "Set font for CHARACTER.
-
-Arguments:
-- CHARACTER: Character set (nil for default font, or 'unicode, 'emoji, 'han, etc.)
-- FONT-LIST: Font list
-- SCALE-FACTOR: Scale ratio (optional)"
-  (let ((font (mcg--find-available-font font-list)))
-    (when font
-      (if (not character)
-          ;; Set default font
-          (set-face-attribute 'default nil
-                              :family font
-                              :height mcg-font-height-default)
-        ;; Set font for specific character set
-        (when scale-factor
-          (setq face-font-rescale-alist
-                (cons (cons font scale-factor)
-                      (assoc-delete-all font face-font-rescale-alist))))
-        (set-fontset-font t character (font-spec :family font) nil 'prepend))
-      font)))
-#+end_src
-
-** Main Font Setup
-
-主字体设置函数。
-
-#+begin_src emacs-lisp
-;;; Main Font Setup
-
-(defun mcg/font-setup (&optional default-fonts unicode-fonts emoji-fonts cjk-fonts)
-  "Set up all fonts.
-
-Optional arguments:
-- DEFAULT-FONTS: Default font list
-- UNICODE-FONTS: Unicode font list
-- EMOJI-FONTS: Emoji font list
-- CJK-FONTS: CJK font list"
-  (interactive)
+(defun mcg--setup-fonts ()
+  "Setup default/CJK/emoji fonts."
   (when (display-graphic-p)
-    ;; Default font
-    (mcg--setup-font-common nil (or default-fonts mcg-fonts-default))
-    
-    ;; Unicode font
-    (mcg--setup-font-common 'unicode (or unicode-fonts mcg-fonts-unicode))
-    
-    ;; Emoji font
-    (mcg--setup-font-common 'emoji (or emoji-fonts mcg-fonts-emoji))
-    
-    ;; CJK fonts (multiple character sets)
-    (dolist (charset '(kana han bopomofo cjk-misc))
-      (mcg--setup-font-common charset
-                              (or cjk-fonts mcg-fonts-cjk)
-                              mcg-font-cjk-scale))
-    
-    (mcg-log "Fonts configured")))
-#+end_src
-
-
-** Interactive Commands
-
-交互式字体命令。
-
-*** Increase Font Size
-
-#+begin_src emacs-lisp
-;;; Interactive Commands
-
-(defun mcg/increase-font-size ()
-  "Increase font size."
-  (interactive)
-  (let ((current-height (face-attribute 'default :height)))
-    (set-face-attribute 'default nil :height (+ current-height 10))
-    (message "Font height: %d" (+ current-height 10))))
-#+end_src
-
-*** Decrease Font Size
-
-#+begin_src emacs-lisp
-(defun mcg/decrease-font-size ()
-  "Decrease font size."
-  (interactive)
-  (let ((current-height (face-attribute 'default :height)))
-    (when (> current-height 80)
-      (set-face-attribute 'default nil :height (- current-height 10))
-      (message "Font height: %d" (- current-height 10)))))
-#+end_src
-
-*** Reset Font Size
-
-#+begin_src emacs-lisp
-(defun mcg/reset-font-size ()
-  "Reset font size to default."
-  (interactive)
-  (set-face-attribute 'default nil :height mcg-font-height-default)
-  (message "Font height reset to: %d" mcg-font-height-default))
-#+end_src
-
-*** List Available Fonts
-
-#+begin_src emacs-lisp
-(defun mcg/list-available-fonts ()
-  "List all available fonts."
-  (interactive)
-  (with-current-buffer (get-buffer-create "*Available Fonts*")
-    (erase-buffer)
-    (insert "Available Fonts List\n")
-    (insert "====================\n\n")
-    
-    ;; Check configured fonts
-    (insert "Configured font status:\n\n")
-    
-    (insert "Default fonts:\n")
-    (dolist (font mcg-fonts-default)
-      (insert (format "  %s %s\n" (if (mcg--font-available-p font) "✓" "✗") font)))
-    
-    (insert "\nUnicode fonts:\n")
-    (dolist (font mcg-fonts-unicode)
-      (insert (format "  %s %s\n" (if (mcg--font-available-p font) "✓" "✗") font)))
-    
-    (insert "\nEmoji fonts:\n")
-    (dolist (font mcg-fonts-emoji)
-      (insert (format "  %s %s\n" (if (mcg--font-available-p font) "✓" "✗") font)))
-    
-    (insert "\nCJK fonts:\n")
-    (dolist (font mcg-fonts-cjk)
-      (insert (format "  %s %s\n" (if (mcg--font-available-p font) "✓" "✗") font)))
-    
-    (goto-char (point-min))
-    (display-buffer (current-buffer))))
-#+end_src
-
-
-** Keybindings
-
-字体大小调整快捷键。
-
-#+begin_src emacs-lisp
-;;; Keybindings
-
-;; Font size adjustment keybindings
-(global-set-key (kbd "C-=") #'mcg/increase-font-size)
-(global-set-key (kbd "C--") #'mcg/decrease-font-size)
-(global-set-key (kbd "C-0") #'mcg/reset-font-size)
+    (when-let ((main (mcg--pick-font mcg-font-default-candidates)))
+      (set-face-attribute 'default nil :family main :height mcg-font-height))
+    (when-let ((cjk (mcg--pick-font mcg-font-cjk-candidates)))
+      (dolist (charset '(han kana cjk-misc bopomofo))
+        (set-fontset-font t charset (font-spec :family cjk) nil 'prepend)))
+    (when-let ((emoji (mcg--pick-font mcg-font-emoji-candidates)))
+      (set-fontset-font t 'emoji (font-spec :family emoji) nil 'prepend))
+    (if (mcg--font-available-p mcg-ui-icon-font-family)
+        (mcg-log "font configured, icon font: %s" mcg-ui-icon-font-family)
+      (mcg-log-warning "icon font not found: %s (icons may be garbled)"
+                       mcg-ui-icon-font-family))))
 #+end_src
 
 ** Initialize
 
-模块初始化，设置字体。
-
 #+begin_src emacs-lisp
-;;; Initialize
-
-;; Initialize font settings
-(mcg/font-setup)
-
-;; Ensure fonts are set after GUI startup and re-center frame
-(add-hook 'window-setup-hook
-          (lambda ()
-            (mcg/font-setup)
-            ;; Re-center frame after font setup (font changes may affect frame size)
-            (when (display-graphic-p)
-              (let* ((dw (display-pixel-width))
-                     (dh (display-pixel-height))
-                     (fw (frame-pixel-width))
-                     (fh (frame-pixel-height))
-                     (top-offset 50))
-                (set-frame-position nil
-                                    (/ (- dw fw) 2)
-                                    (max 0 (- (/ (- dh fh) 2) top-offset)))))))
-(add-hook 'server-after-make-frame-hook #'mcg/font-setup)
+(mcg--setup-fonts)
+(add-hook 'server-after-make-frame-hook #'mcg--setup-fonts)
 #+end_src
 
-** Provide Feature
+** Provide
 
 #+begin_src emacs-lisp
 (provide 'init-font)

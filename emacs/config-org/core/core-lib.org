@@ -49,6 +49,16 @@ Set during initialization based on mcg-cache-dir.")
 (defvar mcg-extension-cache-version 1
   "Version number for the cache format.
 Increment when cache format changes to invalidate old caches.")
+
+(defcustom mcg-extension-cache-validate-signature t
+  "Non-nil means validate extension cache signature before using cached entries."
+  :type 'boolean
+  :group 'mcg)
+
+(defcustom mcg-extension-discovery-max-depth 3
+  "Maximum recursive depth when scanning `mcg-extensions-dir' for extensions."
+  :type 'integer
+  :group 'mcg)
 #+end_src
 
 *** Cache Initialization
@@ -131,6 +141,43 @@ Returns VALUE."
        (mcg-cache-clear)))))
 #+end_src
 
+*** Cache Signature
+
+#+begin_src emacs-lisp
+(defun mcg--extensions-signature ()
+  "Build a lightweight signature for extension directory state."
+  (unless mcg-extensions-dir
+    (mcg-init-paths))
+  (when (file-directory-p mcg-extensions-dir)
+    (let* ((entries (directory-files mcg-extensions-dir t "^[^.]"))
+           (dirs (seq-filter #'file-directory-p entries))
+           (count (length dirs))
+           (newest (float-time
+                    (file-attribute-modification-time
+                     (file-attributes mcg-extensions-dir)))))
+      (dolist (dir dirs)
+        (let ((mtime (float-time
+                      (file-attribute-modification-time
+                       (file-attributes dir)))))
+          (when (> mtime newest)
+            (setq newest mtime))))
+      (list :version mcg-extension-cache-version
+            :root (expand-file-name mcg-extensions-dir)
+            :dir-count count
+            :newest newest))))
+
+(defun mcg-cache-valid-p ()
+  "Return non-nil if current cache matches extensions directory signature."
+  (if (not mcg-extension-cache-validate-signature)
+      t
+    (equal (mcg-cache-lookup 'cache-signature)
+           (mcg--extensions-signature))))
+
+(defun mcg-cache-update-signature ()
+  "Persist current extension directory signature into cache."
+  (mcg-cache-store 'cache-signature (mcg--extensions-signature)))
+#+end_src
+
 ** Extension Discovery
 
 扩展发现系统，用于递归查找 extensions 目录中的包。
@@ -148,7 +195,7 @@ Returns t if .el files are found, nil otherwise."
   "Recursively discover extensions under DIR.
 DEPTH limits recursion (default 3).
 Returns a list of (name . path) pairs for directories containing .el files."
-  (let ((depth (or depth 3))
+  (let ((depth (or depth mcg-extension-discovery-max-depth))
         (results nil))
     (when (and (> depth 0) (file-directory-p dir))
       (dolist (entry (directory-files dir t "^[^.]"))
@@ -176,16 +223,20 @@ If FORCE-REFRESH is non-nil, bypass the cache and rediscover extensions."
     (mcg-init-paths))
 
   (let ((cached (and (not force-refresh)
+                     (mcg-cache-valid-p)
                      (mcg-cache-lookup 'all-extensions))))
     (if cached
         cached
       ;; Discover extensions
       (let ((extensions (mcg--discover-extensions-recursive mcg-extensions-dir)))
+        ;; Reset potentially stale entries before rewriting cache.
+        (mcg-cache-clear)
         ;; Cache the result
         (mcg-cache-store 'all-extensions extensions)
         ;; Also cache individual extension paths
         (dolist (ext extensions)
           (mcg-cache-store (car ext) (cdr ext)))
+        (mcg-cache-update-signature)
         (mcg-log "Discovered %d extensions" (length extensions))
         extensions))))
 #+end_src
@@ -198,6 +249,10 @@ If FORCE-REFRESH is non-nil, bypass the cache and rediscover extensions."
 Returns the full directory path or nil if not found."
   (unless mcg-extensions-dir
     (mcg-init-paths))
+
+  (unless (mcg-cache-valid-p)
+    (mcg-cache-clear)
+    (mcg-cache-update-signature))
 
   ;; First check cache
   (let ((cached (mcg-cache-lookup name)))

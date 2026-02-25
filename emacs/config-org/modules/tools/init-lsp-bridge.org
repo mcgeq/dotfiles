@@ -1,0 +1,79 @@
+#+TITLE: LSP Bridge Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-lsp-bridge.el :lexical t
+
+* LSP Bridge Module
+
+使用 lsp-bridge 作为 LSP 前端，并复用 core-lib 的扩展发现与加载能力。
+
+** File Header
+
+#+begin_src emacs-lisp
+;;; init-lsp-bridge.el --- LSP configuration -*- lexical-binding: t; -*-
+
+;;; Commentary:
+;; Configure lsp-bridge from git submodule:
+;; emacs/site-lisp/extensions/lsp/lsp-bridge
+
+;;; Code:
+
+(require 'core-lib)
+#+end_src
+
+** Custom Options
+
+#+begin_src emacs-lisp
+(defcustom mcg-lsp-enable-with-tramp t
+  "Whether lsp-bridge should be enabled for TRAMP buffers."
+  :type 'boolean
+  :group 'mcg)
+
+(defcustom mcg-lsp-enable-inlay-hint nil
+  "Whether lsp-bridge inlay hints are enabled."
+  :type 'boolean
+  :group 'mcg)
+#+end_src
+
+** Setup
+
+#+begin_src emacs-lisp
+(defun mcg--setup-lsp-bridge ()
+  "Setup lsp-bridge with robust fallback."
+  (let ((lsp-bridge-path (or (mcg-extension-path "lsp-bridge")
+                             (expand-file-name
+                              "site-lisp/extensions/lsp/lsp-bridge"
+                              mcg-emacs-dir))))
+    (if (not (file-directory-p lsp-bridge-path))
+        (mcg-log-warning "lsp-bridge path not found: %s" lsp-bridge-path)
+      (add-to-list 'load-path lsp-bridge-path)
+      (let ((acm-path (expand-file-name "acm" lsp-bridge-path)))
+        (when (file-directory-p acm-path)
+          (add-to-list 'load-path acm-path)))
+      ;; lsp-bridge has a hard dependency on markdown-mode.
+      (mcg-require-extension "markdown-mode" t)
+      (if (require 'lsp-bridge nil t)
+          (progn
+            (setq lsp-bridge-enable-with-tramp mcg-lsp-enable-with-tramp)
+            (setq lsp-bridge-enable-inlay-hint mcg-lsp-enable-inlay-hint)
+            ;; Optional snippet backend
+            (when (mcg-require-extension "yasnippet" t)
+              (yas-global-mode 1))
+            (global-lsp-bridge-mode)
+            (mcg-log "lsp-bridge configured"))
+        (mcg-log-error "Failed to load lsp-bridge from %s" lsp-bridge-path)))))
+#+end_src
+
+** Initialize
+
+#+begin_src emacs-lisp
+(mcg--setup-lsp-bridge)
+#+end_src
+
+** Provide
+
+#+begin_src emacs-lisp
+(provide 'init-lsp-bridge)
+;;; init-lsp-bridge.el ends here
+#+end_src
+
+

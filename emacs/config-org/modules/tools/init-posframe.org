@@ -1,0 +1,44 @@
+#+TITLE: Posframe Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-posframe.el :lexical t
+
+* Posframe Module
+
+配置 posframe（弹窗依赖）。
+
+** File Header
+
+#+begin_src emacs-lisp
+;;; init-posframe.el --- posframe configuration -*- lexical-binding: t; -*-
+
+;;; Commentary:
+;; Configure posframe from:
+;; emacs/site-lisp/extensions/input/posframe
+
+;;; Code:
+
+(require 'core-lib)
+#+end_src
+
+** Setup
+
+#+begin_src emacs-lisp
+(defun mcg--setup-posframe ()
+  "Setup posframe."
+  (if (mcg-require-extension "posframe" t)
+      (mcg-log "posframe configured")
+    (mcg-log-warning "posframe not available")))
+#+end_src
+
+** Initialize
+
+#+begin_src emacs-lisp
+(mcg--setup-posframe)
+#+end_src
+
+** Provide
+
+#+begin_src emacs-lisp
+(provide 'init-posframe)
+;;; init-posframe.el ends here
+#+end_src

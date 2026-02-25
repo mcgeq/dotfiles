@@ -1,0 +1,45 @@
+#+TITLE: Sort Tab Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-sort-tab.el :lexical t
+
+* Sort Tab Module
+
+配置 sort-tab 标签页管理。
+
+** File Header
+
+#+begin_src emacs-lisp
+;;; init-sort-tab.el --- sort-tab configuration -*- lexical-binding: t; -*-
+
+;;; Commentary:
+;; Configure sort-tab from:
+;; emacs/site-lisp/extensions/utils/sort-tab
+
+;;; Code:
+
+(require 'core-lib)
+#+end_src
+
+** Setup
+
+#+begin_src emacs-lisp
+(defun mcg--setup-sort-tab ()
+  "Setup sort-tab."
+  (when (mcg-require-extension "sort-tab" t)
+    (when (fboundp 'sort-tab-mode)
+      (sort-tab-mode 1))
+    (mcg-log "sort-tab configured")))
+#+end_src
+
+** Initialize
+
+#+begin_src emacs-lisp
+(mcg--setup-sort-tab)
+#+end_src
+
+** Provide
+
+#+begin_src emacs-lisp
+(provide 'init-sort-tab)
+;;; init-sort-tab.el ends here
+#+end_src
