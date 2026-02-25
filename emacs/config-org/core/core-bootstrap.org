@@ -530,16 +530,16 @@ MCG Emacs 配置系统的引导入口点。
 This function should be called from init.el to initialize the system."
   ;; Initialize paths
   (mcg-init-paths)
-  
+
   ;; Setup load-path
   (mcg-setup-load-path)
-  
+
   ;; Setup GC optimization
   (mcg-setup-gc-optimization)
-  
+
   ;; Setup startup time display
   (mcg-setup-startup-time-display)
-  
+
   (mcg-log "MCG bootstrap complete"))
 #+end_src
 
@@ -599,7 +599,7 @@ and :message describing the result.")
       (push "mcg-modules-dir is not set or doesn't exist" issues))
     (unless (and mcg-extensions-dir (file-directory-p mcg-extensions-dir))
       (push "mcg-extensions-dir is not set or doesn't exist" issues))
-    
+
     (if issues
         (list :status :error
               :message (format "Path issues:\n  - %s" (string-join issues "\n  - ")))
@@ -736,7 +736,7 @@ Displays a report of configuration health and potential issues."
       (insert "║                    MCG Emacs Doctor                          ║\n")
       (insert "╚══════════════════════════════════════════════════════════════╝\n\n")
       (insert (format "Checked at: %s\n\n" (format-time-string "%Y-%m-%d %H:%M:%S")))
-      
+
       ;; Run all checks
       (dolist (check checks)
         (let* ((name (car check))
@@ -756,12 +756,12 @@ Displays a report of configuration health and potential issues."
           ;; Display result
           (insert (format "[%s] %s\n" icon name))
           (insert (format "    %s\n\n" message))))
-      
+
       ;; Summary
       (insert (make-string 64 ?─) "\n")
       (insert (format "Summary: %d OK, %d Warnings, %d Errors\n"
                       ok-count warning-count error-count))
-      
+
       ;; Overall status
       (cond
        ((> error-count 0)
@@ -770,7 +770,7 @@ Displays a report of configuration health and potential issues."
         (insert "\n✓ Configuration is working but has some warnings.\n"))
        (t
         (insert "\n✓ Configuration is healthy!\n")))
-      
+
       ;; Help section
       (insert "\n" (make-string 64 ?─) "\n")
       (insert "Useful commands:\n")

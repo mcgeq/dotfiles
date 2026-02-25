@@ -20,7 +20,6 @@
 ;; It loads core modules in order, sets up the module system,
 ;; and orchestrates the loading of all enabled modules.
 ;;
-;; Requirements: 1.2, 13.2
 
 ;;; Code:
 #+end_src

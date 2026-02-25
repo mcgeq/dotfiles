@@ -165,26 +165,26 @@ If FORCE is non-nil, regenerate even if autoloads are up to date.
 Returns t if autoloads were generated, nil otherwise."
   (interactive "P")
   (mcg-autoload-init)
-  
+
   (let ((files (mcg-list-extension-files))
         (generated-count 0)
         (start-time (current-time)))
-    
+
     (if (null files)
         (progn
           (mcg-log-warning "No extension files found for autoload generation")
           nil)
-      
+
       ;; Check if regeneration is needed
       (if (and (not force)
                (mcg--autoloads-up-to-date-p files))
           (progn
             (mcg-log "Autoloads are up to date")
             nil)
-        
+
         ;; Generate autoloads
         (mcg-log "Generating autoloads for %d files..." (length files))
-        
+
         ;; Create or clear the autoload file
         (with-temp-file mcg-autoload-file
           (insert ";; -*- lexical-binding: t; -*-\n")
@@ -192,7 +192,7 @@ Returns t if autoloads were generated, nil otherwise."
           (insert (format ";; Generated: %s\n" (current-time-string)))
           (insert (format ";; Files scanned: %d\n\n" (length files)))
           (insert "(provide 'mcg-autoloads)\n\n"))
-        
+
         ;; Process each file
         (dolist (file files)
           (when (mcg--file-has-autoloads-p file)
@@ -203,16 +203,16 @@ Returns t if autoloads were generated, nil otherwise."
               (error
                (mcg-log-warning "Failed to generate autoloads for %s: %s"
                                 file (error-message-string err))))))
-        
+
         ;; Update timestamp
         (mcg--update-autoload-timestamp)
-        
+
         (let ((elapsed (float-time (time-subtract (current-time) start-time))))
           (mcg-log "Generated autoloads for %d files in %.2fs"
                    generated-count elapsed)
           (message "MCG: Generated autoloads for %d files in %.2fs"
                    generated-count elapsed))
-        
+
         t))))
 #+end_src
 
@@ -280,12 +280,12 @@ If REGENERATE is non-nil, regenerate autoloads first if needed.
 Returns t if autoloads were loaded successfully."
   (interactive "P")
   (mcg-autoload-init)
-  
+
   ;; Regenerate if requested or if file doesn't exist
   (when (or regenerate
             (not (file-exists-p mcg-autoload-file)))
     (mcg-generate-autoloads))
-  
+
   ;; Load the autoloads
   (if (file-exists-p mcg-autoload-file)
       (condition-case err
@@ -329,7 +329,7 @@ Returns t if autoloads were loaded successfully."
                                                 (file-exists-p mcg-autoload-timestamp-file))
                                            "yes" "no")))
       (insert (format "Autoloads loaded: %s\n\n" (if mcg-autoloads-loaded "yes" "no")))
-      
+
       ;; Show extension files count
       (let ((files (mcg-list-extension-files)))
         (insert (format "Extension files found: %d\n" (length files)))
@@ -338,7 +338,7 @@ Returns t if autoloads were loaded successfully."
             (when (mcg--file-has-autoloads-p file)
               (setq with-autoloads (1+ with-autoloads))))
           (insert (format "Files with autoloads: %d\n\n" with-autoloads))))
-      
+
       ;; Show excluded patterns
       (insert "Excluded directories:\n")
       (dolist (dir mcg-autoload-excluded-dirs)

@@ -82,11 +82,11 @@ Images are saved in a .assets directory named after the Org file."
   (let* ((foldername (concat (file-name-base (buffer-file-name)) ".assets/"))
          (imgName (concat "img_" (format-time-string "%Y%m%d_%H%M%S") ".png"))
          (relativeFilename (concat (file-name-base (buffer-name)) ".assets/" imgName)))
-    
+
     ;; Create directory
     (unless (file-exists-p foldername)
       (mkdir foldername))
-    
+
     ;; Set screenshot command based on operating system
     (cond
      ((eq system-type 'windows-nt)
@@ -98,7 +98,7 @@ Images are saved in a .assets directory named after the Org file."
      ((eq system-type 'darwin)
       (setq org-download-screenshot-method
             (concat "pngpaste " relativeFilename))))
-    
+
     ;; Insert image link
     (insert (concat "\n#+DOWNLOADED: screenshot @ "
                     (format-time-string "%Y-%m-%d %a %H:%M:%S" (current-time))
@@ -112,7 +112,7 @@ Images are saved in a .assets directory named after the Org file."
                     "#+ATTR_HTML: :width "
                     width
                     "\n[[file:" relativeFilename "]]\n"))
-    
+
     ;; Execute screenshot
     (when (fboundp 'org-download-screenshot)
       (org-download-screenshot))))
@@ -198,7 +198,7 @@ Org 扩展快捷键配置。
     (define-key org-mode-map (kbd "C-c n e") 'org-edit-src-code)
     (define-key org-mode-map (kbd "C-c n h") 'org-insert-heading)
     (define-key org-mode-map (kbd "C-c n s") 'org-insert-subheading))
-  
+
   (mcg-log "Org extras keybindings configured"))
 #+end_src
 

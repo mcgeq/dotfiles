@@ -232,7 +232,7 @@ PARSED is the output of `mcg--parse-modules'."
         (push (cons category (nreverse enabled-list)) mcg-modules-alist))
       (when disabled-list
         (push (cons category (nreverse disabled-list)) mcg-disabled-modules))))
-  
+
   ;; Reverse to maintain declaration order
   (setq mcg-modules-alist (nreverse mcg-modules-alist))
   (setq mcg-disabled-modules (nreverse mcg-disabled-modules))
@@ -416,7 +416,7 @@ TRIGGER is (PATTERN . MODE) or looked up from `mcg-module-triggers'."
     (when trigger
       ;; Add to deferred modules list
       (push (cons mod-key trigger) mcg-deferred-modules)
-      
+
       ;; Set up auto-mode-alist entry
       (let ((pattern (car trigger))
             (mode (cdr trigger)))
@@ -425,7 +425,7 @@ TRIGGER is (PATTERN . MODE) or looked up from `mcg-module-triggers'."
                            (lambda ()
                              (mcg--trigger-deferred-load mod-key)
                              (funcall mode)))))
-      
+
       (mcg-log "Deferred module %s/%s with trigger %s" category module trigger))))
 
 (defun mcg--trigger-deferred-load (mod-key)
@@ -534,7 +534,7 @@ FEATURE can be a symbol (feature name) or a module key (CATEGORY . MODULE)."
     (insert "    ╔═══════════════════════════════════════════╗\n")
     (insert "    ║           MCG 模块列表                    ║\n")
     (insert "    ╚═══════════════════════════════════════════╝\n\n")
-    
+
     ;; Summary
     (let ((total-enabled (length (mcg-list-enabled-modules)))
           (total-loaded (length mcg-loaded-modules))
@@ -542,7 +542,7 @@ FEATURE can be a symbol (feature name) or a module key (CATEGORY . MODULE)."
           (total-errors (length mcg-module-load-errors)))
       (insert (format "    已启用: %d | 已加载: %d | 延迟: %d | 错误: %d\n\n"
                       total-enabled total-loaded total-deferred total-errors)))
-    
+
     ;; Enabled modules by category
     (insert "    ─────────── 已启用模块 ───────────\n\n")
     (if mcg-modules-alist
@@ -560,7 +560,7 @@ FEATURE can be a symbol (feature name) or a module key (CATEGORY . MODULE)."
                 (insert (format "      %s %-18s\n" status module))))
             (insert "\n")))
       (insert "    (无已启用模块)\n\n"))
-    
+
     ;; Disabled modules
     (when mcg-disabled-modules
       (insert "    ─────────── 已禁用模块 ───────────\n\n")
@@ -571,7 +571,7 @@ FEATURE can be a symbol (feature name) or a module key (CATEGORY . MODULE)."
                           (substring (symbol-name category) 1)
                           (mapconcat #'symbol-name modules ", ")))))
       (insert "\n"))
-    
+
     ;; Load errors
     (when mcg-module-load-errors
       (insert "    ─────────── 加载错误 ───────────\n\n")
@@ -584,10 +584,10 @@ FEATURE can be a symbol (feature name) or a module key (CATEGORY . MODULE)."
                               (plist-get err-msg :error)
                             err-msg)))))
       (insert "\n"))
-    
+
     (insert "    ───────────────────────────────────\n")
     (insert "    图例: ✓ 已加载  ⏳ 延迟  ○ 待加载\n")
-    
+
     (buffer-string)))
 #+end_src
 
