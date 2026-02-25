@@ -331,3 +331,6 @@
 [submodule "emacs-avy-window"]
 	path = emacs/site-lisp/extensions/editor/avy-window
 	url = https://github.com/abo-abo/ace-window.git
+[submodule "emacs-auto-save"]
+	path = emacs/site-lisp/extensions/utils/auto-save
+	url = https://github.com/manateelazycat/auto-save.git

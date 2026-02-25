@@ -62,9 +62,6 @@
 
 ;; Setup GC optimization
 (mcg-setup-gc-optimization)
-
-;; Setup startup time display
-(mcg-setup-startup-time-display)
 #+end_src
 
 *** Load core-lib

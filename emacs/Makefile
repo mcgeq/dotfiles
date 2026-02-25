@@ -60,7 +60,10 @@ ifndef DIR
 endif
 	@echo Tangling directory: $(SRC_DIR)/$(DIR)
 	@powershell -Command "if (-not (Test-Path '$(DST_DIR)/$(DIR)')) { New-Item -ItemType Directory -Path '$(DST_DIR)/$(DIR)' -Force | Out-Null }"
-	@powershell -Command "Get-ChildItem -Path '$(SRC_DIR)/$(DIR)' -Filter '*.org' | ForEach-Object { Write-Host ('Tangling: ' + $$_.Name); & $(EM) -Q --batch --eval \"(progn (require 'ob-tangle) (setq org-confirm-babel-evaluate nil))\" --eval \"(org-babel-tangle-file `\"$$($_.FullName)`\" nil 'emacs-lisp)\" }"
+	@for file in $(SRC_DIR)/$(DIR)/*.org; do \
+		echo "Tangling: $$file"; \
+		$(EM) -Q --batch --eval "(progn (require 'ob-tangle) (setq org-confirm-babel-evaluate nil))" --eval "(org-babel-tangle-file \"$$file\")"; \
+	done
 	@echo [OK] Tangled $(DIR)
 
 # Tangle 单个文件 (手动指定)

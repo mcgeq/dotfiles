@@ -105,17 +105,9 @@ This prevents GC during startup for faster loading.")
 
 ** Startup Time Tracking
 
-启动时间追踪变量。
+启动时间追踪变量（用于性能分析）。
 
 #+begin_src emacs-lisp
-(defvar mcg--startup-start-time (current-time)
-  "Time when Emacs started loading.
-Used to calculate total startup time.")
-
-(defvar mcg-startup-time nil
-  "Total startup time in seconds.
-Set after emacs-startup-hook runs.")
-
 (defvar mcg-load-times nil
   "Alist of (module . load-time-ms) for profiling.
 Populated when `mcg-profile-mode' is enabled.")
@@ -359,167 +351,6 @@ Sets high GC threshold during startup and restores it after."
            mcg-gc-cons-percentage-default))
 #+end_src
 
-** Startup Time Display
-
-启动时间显示功能，使用 posframe 或消息显示启动信息。
-
-*** Variables
-
-#+begin_src emacs-lisp
-(defvar mcg--startup-message-displayed nil
-  "Non-nil if startup message has been displayed.")
-
-(defvar mcg-startup-posframe-timeout 3
-  "Seconds to display startup posframe before auto-hiding.")
-#+end_src
-
-*** Helper Functions
-
-#+begin_src emacs-lisp
-(defun mcg--all-idle-modules-loaded-p ()
-  "Check if all idle modules have been loaded."
-  (and (boundp 'mcg-idle-load-modules)
-       (null mcg-idle-load-modules)))
-
-(defun mcg-display-startup-time ()
-  "Display startup time, loaded modules count and GC statistics.
-Waits until all idle modules are loaded before displaying."
-  (if (mcg--all-idle-modules-loaded-p)
-      ;; All modules loaded, display now
-      (mcg--do-display-startup-time)
-    ;; Wait for idle modules to finish loading
-    (run-with-timer 0.5 nil #'mcg-display-startup-time)))
-#+end_src
-
-*** Display Implementation
-
-#+begin_src emacs-lisp
-(defun mcg--do-display-startup-time ()
-  "Actually display the startup time message using posframe."
-  (unless mcg--startup-message-displayed
-    (setq mcg--startup-message-displayed t)
-    (setq mcg-startup-time
-          (float-time (time-subtract (current-time) mcg--startup-start-time)))
-    (let ((loaded-count (if (boundp 'mcg-loaded-modules)
-                            (length mcg-loaded-modules)
-                          0))
-          (error-count (if (boundp 'mcg-module-load-errors)
-                           (length mcg-module-load-errors)
-                         0))
-          (gc-count gcs-done))
-      ;; Try posframe first, fallback to message
-      (if (and (display-graphic-p)
-               (require 'posframe nil t))
-          (mcg--show-startup-posframe mcg-startup-time loaded-count error-count gc-count)
-        ;; Fallback to message
-        (if (> error-count 0)
-            (message "MCG Emacs loaded in %.2fs | %d modules | %d errors | %d GCs"
-                     mcg-startup-time loaded-count error-count gc-count)
-          (message "MCG Emacs loaded in %.2fs | %d modules | %d GCs"
-                   mcg-startup-time loaded-count gc-count))))))
-#+end_src
-
-*** Posframe Display
-
-#+begin_src emacs-lisp
-(defun mcg--show-startup-posframe (time modules errors gcs)
-  "Show startup info in a posframe.
-TIME is startup time, MODULES is module count, ERRORS is error count, GCS is GC count."
-  (let* ((buf-name " *mcg-startup*")
-         (content (mcg--format-startup-content time modules errors gcs))
-         (border-color (mcg--startup-get-border-color))
-         (bg-color (mcg--startup-get-background-color))
-         (fg-color (mcg--startup-get-foreground-color)))
-    ;; Create buffer with content
-    (with-current-buffer (get-buffer-create buf-name)
-      (let ((inhibit-read-only t))
-        (erase-buffer)
-        (insert content))
-      (setq-local buffer-read-only t)
-      (setq-local cursor-type nil)
-      (goto-char (point-min)))
-    ;; Show posframe
-    (posframe-show buf-name
-                   :position (point)
-                   :poshandler #'posframe-poshandler-frame-bottom-right-corner
-                   :internal-border-width 2
-                   :internal-border-color border-color
-                   :background-color bg-color
-                   :foreground-color fg-color
-                   :width 28
-                   :height 7
-                   :accept-focus nil)
-    ;; Auto-hide after timeout
-    (run-with-timer mcg-startup-posframe-timeout nil
-                    (lambda ()
-                      (when (get-buffer buf-name)
-                        (posframe-hide buf-name))))))
-#+end_src
-
-*** Content Formatting
-
-#+begin_src emacs-lisp
-(defun mcg--format-startup-content (time modules errors gcs)
-  "Format startup content for posframe display.
-TIME is startup time, MODULES is module count, ERRORS is error count, GCS is GC count."
-  (concat
-   "\n"
-   "       MCG Emacs Ready\n"
-   "  ─────────────────────────\n"
-   (format "   ⏱️  %.2fs\n" time)
-   (format "   📦  %d\n" modules)
-   (if (> errors 0)
-       (format "   ❌  %d\n" errors)
-     "")
-   (format "   🔄  %d\n" gcs)))
-#+end_src
-
-*** Color Helpers
-
-#+begin_src emacs-lisp
-(defun mcg--color-valid-p (color)
-  "Check if COLOR is a valid, usable color."
-  (and color
-       (stringp color)
-       (not (string-prefix-p "unspecified" color))
-       (or (string-match-p "^#[0-9A-Fa-f]\\{6\\}$" color)
-           (color-defined-p color))))
-
-(defun mcg--startup-get-border-color ()
-  "Get border color from current theme."
-  (let ((keyword-fg (face-foreground 'font-lock-keyword-face nil t))
-        (link-fg (face-foreground 'link nil t)))
-    (cond
-     ((mcg--color-valid-p keyword-fg) keyword-fg)
-     ((mcg--color-valid-p link-fg) link-fg)
-     (t "#61AFEF"))))
-
-(defun mcg--startup-get-background-color ()
-  "Get background color from current theme."
-  (let ((tooltip-bg (face-background 'tooltip nil t))
-        (default-bg (face-background 'default nil t)))
-    (cond
-     ((mcg--color-valid-p tooltip-bg) tooltip-bg)
-     ((mcg--color-valid-p default-bg) default-bg)
-     (t "#282C34"))))
-
-(defun mcg--startup-get-foreground-color ()
-  "Get foreground color from current theme."
-  (let ((default-fg (face-foreground 'default nil t)))
-    (if (mcg--color-valid-p default-fg)
-        default-fg
-      "#ABB2BF")))
-#+end_src
-
-*** Setup Function
-
-#+begin_src emacs-lisp
-(defun mcg-setup-startup-time-display ()
-  "Set up startup time display after Emacs starts."
-  ;; Use window-setup-hook which runs after all windows are set up
-  (add-hook 'window-setup-hook #'mcg-display-startup-time))
-#+end_src
-
 ** Bootstrap Entry Point
 
 MCG Emacs 配置系统的引导入口点。
@@ -536,9 +367,6 @@ This function should be called from init.el to initialize the system."
 
   ;; Setup GC optimization
   (mcg-setup-gc-optimization)
-
-  ;; Setup startup time display
-  (mcg-setup-startup-time-display)
 
   (mcg-log "MCG bootstrap complete"))
 #+end_src
@@ -650,11 +478,7 @@ and :message describing the result.")
   (let ((threshold gc-cons-threshold)
         (expected mcg-gc-cons-threshold-default))
     (cond
-     ;; During startup, threshold should be high
-     ((not (boundp 'mcg-startup-time))
-      (list :status :ok
-            :message "GC threshold is high (startup in progress)"))
-     ;; After startup, should be restored
+     ;; After startup, should be restored to default
      ((= threshold expected)
       (list :status :ok
             :message (format "GC threshold restored to %s bytes" expected)))
@@ -687,28 +511,8 @@ and :message describing the result.")
     (list :status :ok
           :message (format "Emacs %s (supported)" emacs-version)))
    (t
-    (list :status :warning
-          :message (format "Emacs %s (version 29+ recommended)" emacs-version)))))
-
-(defun mcg-doctor--check-startup-time ()
-  "Check startup time."
-  (if (and (boundp 'mcg-startup-time) mcg-startup-time)
-      (cond
-       ((< mcg-startup-time 1.0)
-        (list :status :ok
-              :message (format "Startup time: %.2fs (excellent)" mcg-startup-time)))
-       ((< mcg-startup-time 2.0)
-        (list :status :ok
-              :message (format "Startup time: %.2fs (good)" mcg-startup-time)))
-       ((< mcg-startup-time 5.0)
-        (list :status :warning
-              :message (format "Startup time: %.2fs (could be improved)" mcg-startup-time)))
-       (t
-        (list :status :warning
-              :message (format "Startup time: %.2fs (slow, consider profiling)" mcg-startup-time))))
-    (list :status :ok
-          :message "Startup time not yet recorded")))
-#+end_src
+     (list :status :warning
+           :message (format "Emacs %s (version 29+ recommended)" emacs-version)))))
 
 *** Doctor Main Function
 
@@ -725,8 +529,7 @@ Displays a report of configuration health and potential issues."
                  (cons "Module Errors" #'mcg-doctor--check-module-errors)
                  (cons "Extensions" #'mcg-doctor--check-extensions)
                  (cons "GC Settings" #'mcg-doctor--check-gc-settings)
-                 (cons "Native Compilation" #'mcg-doctor--check-native-comp)
-                 (cons "Startup Time" #'mcg-doctor--check-startup-time)))
+                 (cons "Native Compilation" #'mcg-doctor--check-native-comp)))
         (ok-count 0)
         (warning-count 0)
         (error-count 0))
