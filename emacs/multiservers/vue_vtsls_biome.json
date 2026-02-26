@@ -1,4 +1,6 @@
 {
+  "default": "volar",
+  "servers": ["volar", "emmet-ls", "tailwindcss", "vscode-css-language-server", "biome"],
   "completion": ["volar", "emmet-ls", "tailwindcss", "vscode-css-language-server"],
   "completion_item_resolve": ["volar"],
   "diagnostics": ["volar", "biome"],

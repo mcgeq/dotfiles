@@ -4,13 +4,6 @@
 
 * Early Init Module
 
-本模块在 init.el 和包系统、GUI 初始化之前加载。用于：
-- 在帧创建前禁用 UI 元素（加快启动速度）
-- 启动期间设置高 GC 阈值
-- 配置原生编译设置
-
-生成后需要复制到 ~/.emacs.d/early-init.el
-
 ** File Header
 
 #+begin_src emacs-lisp
@@ -41,15 +34,6 @@
 #+end_src
 
 ** Package Initialization
-
-禁用 package.el，因为我们使用 Borg 进行包管理。
-
-#+begin_src emacs-lisp
-;;; Package Initialization
-
-;; Prevent package.el from loading packages before init.el
-(setq package-enable-at-startup nil)
-#+end_src
 
 ** Performance Optimization
 

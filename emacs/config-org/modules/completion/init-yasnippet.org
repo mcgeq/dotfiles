@@ -1,0 +1,181 @@
+#+TITLE: YASnippet Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-yasnippet.el :lexical t
+
+* YASnippet Module
+
+本模块负责 MCG Emacs 的代码片段系统配置，包括：
+- YASnippet 配置
+- 自定义代码片段目录
+- Git 用户信息集成
+
+** File Header
+
+#+begin_src emacs-lisp
+;;; init-yasnippet.el --- Snippet System for MCG Emacs -*- lexical-binding: t; -*-
+
+;; Copyright (C) 2024-2026 MCG
+;; Author: mcge <mcgeq@outlook.com>
+;; Keywords: snippets, yasnippet
+;; Compatibility: GNU Emacs 29.0+
+
+;;; Commentary:
+;; Code snippet module for MCG Emacs configuration, responsible for:
+;; - YASnippet configuration
+;; - Custom snippet directories
+;; - Git user info integration
+#+end_src
+
+** Require
+
+#+begin_src emacs-lisp
+;;; Code:
+
+(require 'core-lib)
+#+end_src
+
+** Variables
+
+代码片段系统相关的配置变量。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Variables
+;;; ============================================================
+
+(defvar mcg-snippet-dirs nil
+  "Custom code snippet directory list.")
+#+end_src
+
+** Git User Functions
+
+Git 用户信息获取函数。
+
+*** Get Git User Name
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Git User Functions
+;;; ============================================================
+
+(defun mcg/get-git-user-name ()
+  "Get Git configured username."
+  (interactive)
+  (replace-regexp-in-string
+   "\n$" ""
+   (shell-command-to-string "git config --get user.name")))
+#+end_src
+
+*** Get Git User Email
+
+#+begin_src emacs-lisp
+(defun mcg/get-git-user-email ()
+  "Get Git configured email."
+  (interactive)
+  (replace-regexp-in-string
+   "\n$" ""
+   (shell-command-to-string "git config --get user.email")))
+#+end_src
+
+** YASnippet Configuration
+
+YASnippet 代码片段系统配置。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; YASnippet Configuration
+;;; ============================================================
+
+(defun mcg--setup-yasnippet ()
+  "Set up YASnippet code snippet system."
+  (when (mcg-require-extension "yasnippet" t)
+    ;; Set custom snippet directories
+    (let ((custom-dirs
+           (list (expand-file-name "site-lisp/snippets" mcg-emacs-dir)
+                 (expand-file-name "site-lisp/extensions/snippets/yasnippet-snippets"
+                                   mcg-emacs-dir))))
+      (dolist (dir custom-dirs)
+        (when (file-directory-p dir)
+          (add-to-list 'yas-snippet-dirs dir))))
+    
+    ;; Reload snippets
+    (yas-reload-all)
+    
+    ;; Enable globally
+    (yas-global-mode 1)
+    
+    ;; Disable in certain modes
+    (dolist (hook '(term-mode-hook eshell-mode-hook))
+      (add-hook hook (lambda () (yas-minor-mode -1))))
+    
+    (mcg-log "YASnippet configured")))
+#+end_src
+
+** YASnippet Keybindings
+
+YASnippet 快捷键配置。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; YASnippet Keybindings
+;;; ============================================================
+
+(defun mcg--setup-yasnippet-keybindings ()
+  "Setup YASnippet keybindings."
+  (when (featurep 'yasnippet)
+    ;; Snippet expansion and navigation
+    (define-key yas-minor-mode-map (kbd "<tab>") nil)
+    (define-key yas-minor-mode-map (kbd "TAB") nil)
+    (define-key yas-minor-mode-map (kbd "C-c y n") #'yas-new-snippet)
+    (define-key yas-minor-mode-map (kbd "C-c y v") #'yas-visit-snippet-file)
+    (define-key yas-minor-mode-map (kbd "C-c y i") #'yas-insert-snippet)
+    (define-key yas-minor-mode-map (kbd "C-c y e") #'yas-expand)
+    (mcg-log "YASnippet keybindings configured")))
+#+end_src
+
+** YASnippet Custom Functions
+
+YASnippet 自定义函数。
+
+*** Reload All Snippets
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; YASnippet Custom Functions
+;;; ============================================================
+
+(defun mcg/yas-reload-all ()
+  "Reload all snippets."
+  (interactive)
+  (yas-reload-all)
+  (message "YASnippet: All snippets reloaded"))
+#+end_src
+
+*** Describe Snippet Tables
+
+#+begin_src emacs-lisp
+(defun mcg/yas-describe-tables ()
+  "Display snippet tables for current mode."
+  (interactive)
+  (yas-describe-tables))
+#+end_src
+
+** Initialize
+
+模块初始化。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Initialize
+;;; ============================================================
+
+(mcg--setup-yasnippet)
+(mcg--setup-yasnippet-keybindings)
+#+end_src
+
+** Provide Feature
+
+#+begin_src emacs-lisp
+(provide 'init-yasnippet)
+;;; init-yasnippet.el ends here
+#+end_src

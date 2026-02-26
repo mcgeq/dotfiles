@@ -1,0 +1,75 @@
+#+TITLE: Mixed Pitch Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-mixed-pitch.el :lexical t
+
+* Mixed Pitch Module
+
+Mixed pitch mode for org.
+
+** File Header
+
+#+begin_src emacs-lisp
+;;; init-mixed-pitch.el --- Mixed Pitch for MCG Emacs -*- lexical-binding: t; -*-
+
+;; Copyright (C) 2024-2026 MCG
+;; Author: mcge <mcgeq@outlook.com>
+;; Keywords: org, mixed-pitch
+#+end_src
+
+** Require
+
+#+begin_src emacs-lisp
+;;; Code:
+
+(require 'core-lib)
+#+end_src
+
+** Configuration
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Configuration
+;;; ============================================================
+
+(defcustom mcg-org-enable-mixed-pitch nil
+  "Whether to enable mixed fonts (serif + monospace)."
+  :type 'boolean
+  :group 'mcg-org)
+
+(defun mcg--setup-mixed-pitch ()
+  "Set up mixed-pitch mode."
+  (with-eval-after-load 'org
+    (when (and mcg-org-enable-mixed-pitch
+               (mcg-require-extension "mixed-pitch" t))
+      (when (display-graphic-p)
+        (let ((mono-font (cond
+                          ((find-font (font-spec :name "FiraCode Nerd Font Mono"))
+                           "FiraCode Nerd Font Mono")
+                          ((find-font (font-spec :name "Consolas"))
+                           "Consolas")
+                          (t "monospace")))
+              (serif-font (cond
+                           ((find-font (font-spec :name "Noto Serif"))
+                            "Noto Serif")
+                           ((find-font (font-spec :name "Georgia"))
+                            "Georgia")
+                           (t "serif"))))
+          (custom-set-faces
+           `(default ((t (:font ,mono-font))))
+           `(fixed-pitch ((t (:font ,mono-font :height 1.0))))
+           `(variable-pitch ((t (:font ,serif-font :height 1.0)))))))
+      (mcg-log "Mixed pitch configured"))))
+#+end_src
+
+** Initialize
+
+#+begin_src emacs-lisp
+(mcg--setup-mixed-pitch)
+#+end_src
+
+** Provide
+
+#+begin_src emacs-lisp
+(provide 'init-mixed-pitch)
+;;; init-mixed-pitch.el ends here
+#+end_src

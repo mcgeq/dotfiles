@@ -133,3 +133,69 @@
 [submodule "emacs-magit-with-editor"]
 	path = emacs/site-lisp/extensions/git/with-editor
 	url = https://github.com/magit/with-editor.git
+[submodule "emacs-holo-layer"]
+	path = emacs/site-lisp/extensions/ui/holo-layer
+	url = https://github.com/manateelazycat/holo-layer.git
+[submodule "emacs-hydra"]
+	path = emacs/site-lisp/extensions/utils/hydra
+	url = https://github.com/abo-abo/hydra.git
+[submodule "emacs-compat"]
+	path = emacs/site-lisp/extensions/git/compat
+	url = https://github.com/emacs-compat/compat.git
+[submodule "emacs-cond-let"]
+	path = emacs/site-lisp/extensions/git/cond-let
+	url = https://github.com/tarsius/cond-let.git
+[submodule "emacs-llama"]
+	path = emacs/site-lisp/extensions/git/llama
+	url = https://github.com/tarsius/llama.git
+[submodule "emacs-transient"]
+	path = emacs/site-lisp/extensions/git/transient
+	url = https://github.com/magit/transient.git
+[submodule "emacs-ox-hugo"]
+	path = emacs/site-lisp/extensions/org/ox-hugo
+	url = https://github.com/kaushalmodi/ox-hugo.git
+[submodule "emacs-tomelr"]
+	path = emacs/site-lisp/extensions/org/tomelr
+	url = https://github.com/kaushalmodi/tomelr.git
+[submodule "emacs-easy-hugo"]
+	path = emacs/site-lisp/extensions/org/easy-hugo
+	url = https://github.com/masasam/emacs-easy-hugo.git
+[submodule "emacs-request"]
+	path = emacs/site-lisp/extensions/org/emacs-request
+	url = https://github.com/tkf/emacs-request.git
+[submodule "emacs-org-modern"]
+	path = emacs/site-lisp/extensions/org/org-modern
+	url = https://github.com/minad/org-modern.git
+[submodule "emacs-visual-fill-column"]
+	path = emacs/site-lisp/extensions/org/visual-fill-column
+	url = https://codeberg.org/joostkremers/visual-fill-column.git
+[submodule "emacs-mixed-pitch"]
+	path = emacs/site-lisp/extensions/org/mixed-pitch
+	url = https://gitlab.com/jabranham/mixed-pitch.git
+[submodule "emacs-org-appear"]
+	path = emacs/site-lisp/extensions/org/org-appear
+	url = https://github.com/awth13/org-appear.git
+[submodule "emacs-org-superstar-mode"]
+	path = emacs/site-lisp/extensions/org/org-superstar-mode
+	url = https://github.com/integral-dw/org-superstar-mode.git
+[submodule "emacs-org-supertag"]
+	path = emacs/site-lisp/extensions/org/org-supertag
+	url = https://github.com/yibie/org-supertag.git
+[submodule "emacs-ht"]
+	path = emacs/site-lisp/extensions/org/ht
+	url = https://github.com/Wilfred/ht.el.git
+[submodule "emacs-org-download"]
+	path = emacs/site-lisp/extensions/org/org-download
+	url = https://github.com/abo-abo/org-download.git
+[submodule "emacs-async"]
+	path = emacs/site-lisp/extensions/org/emacs-async
+	url = https://github.com/jwiegley/emacs-async.git
+[submodule "emacs-cal-china-x"]
+	path = emacs/site-lisp/extensions/org/cal-china-x
+	url = https://github.com/mcgeq/cal-china-x.git
+[submodule "emacs-org-numbering"]
+	path = emacs/site-lisp/extensions/org/org-numbering
+	url = https://github.com/yibie/org-numbering.git
+[submodule "emacs-ox-gfm"]
+	path = emacs/site-lisp/extensions/org/ox-gfm
+	url = https://github.com/larstvei/ox-gfm.git

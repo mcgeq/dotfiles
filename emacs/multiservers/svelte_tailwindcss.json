@@ -1,15 +1,10 @@
 {
-  "name": "svelte_tailwindcss",
-  "languageId": "svelte",
-  "support_features": [
-    "completion",
-    "hover",
-    "definition",
-    "references",
-    "rename",
-    "formatting",
-    "diagnostics"
-  ],
-  "command": ["svelteserver", "--stdio"],
-  "command1": ["tailwindcss-language-server", "--stdio"]
+  "default": "svelte",
+  "servers": ["svelte", "tailwindcss"],
+  "completion": ["svelte", "tailwindcss"],
+  "hover": ["svelte", "tailwindcss"],
+  "find_references": "svelte",
+  "rename": "svelte",
+  "formatting": "svelte",
+  "diagnostics": ["svelte", "tailwindcss"]
 }

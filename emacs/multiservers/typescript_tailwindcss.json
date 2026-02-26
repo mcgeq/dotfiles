@@ -1,15 +1,10 @@
 {
-  "name": "typescript_tailwindcss",
-  "languageId": "typescript",
-  "support_features": [
-    "completion",
-    "hover",
-    "definition",
-    "references",
-    "rename",
-    "formatting",
-    "diagnostics"
-  ],
-  "command": ["typescript-language-server", "--stdio"],
-  "command1": ["tailwindcss-language-server", "--stdio"]
+  "default": "typescript",
+  "servers": ["typescript", "tailwindcss"],
+  "completion": ["typescript", "tailwindcss"],
+  "hover": ["typescript", "tailwindcss"],
+  "find_references": "typescript",
+  "rename": "typescript",
+  "formatting": "typescript",
+  "diagnostics": ["typescript", "tailwindcss"]
 }

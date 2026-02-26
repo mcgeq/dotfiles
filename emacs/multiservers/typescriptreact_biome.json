@@ -1,0 +1,8 @@
+{
+  "default": "typescriptreact",
+  "servers": ["typescriptreact", "biome"],
+  "diagnostics": ["typescriptreact", "biome"],
+  "code_action": ["typescriptreact", "biome"],
+  "execute_command": ["typescriptreact", "biome"],
+  "formatting": "biome"
+}

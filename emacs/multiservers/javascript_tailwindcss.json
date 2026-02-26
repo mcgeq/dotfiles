@@ -1,15 +1,10 @@
 {
-  "name": "javascript_tailwindcss",
-  "languageId": "javascript",
-  "support_features": [
-    "completion",
-    "hover",
-    "definition",
-    "references",
-    "rename",
-    "formatting",
-    "diagnostics"
-  ],
-  "command": ["typescript-language-server", "--stdio"],
-  "command1": ["tailwindcss-language-server", "--stdio"]
+  "default": "javascript",
+  "servers": ["javascript", "tailwindcss"],
+  "completion": ["javascript", "tailwindcss"],
+  "hover": ["javascript", "tailwindcss"],
+  "find_references": "javascript",
+  "rename": "javascript",
+  "formatting": "javascript",
+  "diagnostics": ["javascript", "tailwindcss"]
 }

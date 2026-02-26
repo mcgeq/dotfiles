@@ -1,0 +1,62 @@
+#+TITLE: Org Superstar Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-org-superstar.el :lexical t
+
+* Org Superstar Module
+
+Org Superstar - fancy bullets and checkboxes.
+
+** File Header
+
+#+begin_src emacs-lisp
+;;; init-org-superstar.el --- Org Superstar for MCG Emacs -*- lexical-binding: t; -*-
+
+;; Copyright (C) 2024-2026 MCG
+;; Author: mcge <mcgeq@outlook.com>
+;; Keywords: org, org-superstar
+#+end_src
+
+** Require
+
+#+begin_src emacs-lisp
+;;; Code:
+
+(require 'core-lib)
+#+end_src
+
+** Configuration
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Configuration
+;;; ============================================================
+
+(defun mcg--setup-org-superstar ()
+  "Set up org-superstar-mode."
+  (with-eval-after-load 'org
+    (when (mcg-require-extension "org-superstar-mode" t)
+      (setq org-superstar-leading-bullet ?\s
+            org-superstar-special-todo-items t
+            org-superstar-item-bullet-alist '((43 . "◆") (45 . "▸"))
+            org-superstar-headline-bullets-list '("◉" "○" "✸" "✿" "✤" "✜" "◆" "▶"))
+
+      (custom-set-faces
+       '(org-superstar-item ((t (:inherit 'fixed-pitch))))
+       '(org-superstar-header-bullet ((t (:height 232 :inherit 'fixed-pitch)))))
+
+      (org-superstar-mode 1)
+      (mcg-log "Org superstar configured"))))
+#+end_src
+
+** Initialize
+
+#+begin_src emacs-lisp
+(mcg--setup-org-superstar)
+#+end_src
+
+** Provide
+
+#+begin_src emacs-lisp
+(provide 'init-org-superstar)
+;;; init-org-superstar.el ends here
+#+end_src

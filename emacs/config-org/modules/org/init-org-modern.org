@@ -1,0 +1,94 @@
+#+TITLE: Org Modern Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-org-modern.el :lexical t
+
+* Org Modern Module
+
+Org Modern - Modern visual style for Org mode.
+
+** File Header
+
+#+begin_src emacs-lisp
+;;; init-org-modern.el --- Org Modern for MCG Emacs -*- lexical-binding: t; -*-
+
+;; Copyright (C) 2024-2026 MCG
+;; Author: mcge <mcgeq@outlook.com>
+;; Keywords: org, org-modern
+#+end_src
+
+** Require
+
+#+begin_src emacs-lisp
+;;; Code:
+
+(require 'core-lib)
+#+end_src
+
+** Configuration
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Configuration
+;;; ============================================================
+
+(defcustom mcg-org-enable-org-modern t
+  "Whether to enable org-modern modern interface."
+  :type 'boolean
+  :group 'mcg-org)
+
+(defun mcg--setup-org-modern ()
+  "Set up org-modern."
+  (with-eval-after-load 'org
+    (when (and mcg-org-enable-org-modern
+               (mcg-require-extension "org-modern" t))
+      (setq org-modern-star '("◉" "○" "✸" "✿" "✤" "✜" "◆" "▶")
+            org-modern-table-vertical 1
+            org-modern-table-horizontal 0.2
+            org-modern-list '((43 . "◆") (45 . "▸") (42 . "•"))
+            org-modern-todo-faces
+            '(("TODO" :inverse-video t :inherit org-todo)
+              ("HOLD" :inverse-video t)
+              ("WIP" :inverse-video t)
+              ("WAIT" :inverse-video t)
+              ("DONE" :inverse-video t :inherit org-done)
+              ("CANCELLED" :inverse-video t))
+            org-modern-priority-faces
+            '((?A :inverse-video t :inherit org-priority)
+              (?B :inverse-video t :inherit org-priority)
+              (?C :inverse-video t :inherit org-priority))
+            org-modern-block-fringe nil
+            org-modern-block-name
+            '((t . t)
+              ("src" "»" "«")
+              ("example" "»–" "–«")
+              ("quote" "❝" "❞")))
+
+      (global-org-modern-mode 1)
+      (mcg-log "Org modern configured"))))
+#+end_src
+
+** Toggle Command
+
+#+begin_src emacs-lisp
+(defun mcg/org-toggle-modern ()
+  "Toggle org-modern mode."
+  (interactive)
+  (if (bound-and-true-p org-modern-mode)
+      (org-modern-mode -1)
+    (org-modern-mode 1))
+  (message "Org-modern mode: %s"
+           (if (bound-and-true-p org-modern-mode) "enabled" "disabled")))
+#+end_src
+
+** Initialize
+
+#+begin_src emacs-lisp
+(mcg--setup-org-modern)
+#+end_src
+
+** Provide
+
+#+begin_src emacs-lisp
+(provide 'init-org-modern)
+;;; init-org-modern.el ends here
+#+end_src

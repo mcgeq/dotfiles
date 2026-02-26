@@ -1,0 +1,10 @@
+{
+  "default": "javascript",
+  "servers": ["javascript", "tailwindcss", "biome"],
+  "completion": ["javascript", "tailwindcss"],
+  "hover": ["javascript", "tailwindcss"],
+  "formatting": "biome",
+  "diagnostics": ["javascript", "tailwindcss", "biome"],
+  "code_action": ["javascript", "biome"],
+  "execute_command": ["javascript", "biome"]
+}

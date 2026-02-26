@@ -1,0 +1,568 @@
+#+TITLE: Editor Defaults Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-defaults.el :lexical t
+
+* Editor Defaults Module
+
+本模块负责 MCG Emacs 的编辑器默认配置，包括：
+- savehist 历史记录
+- saveplace 位置记忆
+- whitespace 空白字符显示
+- autorevert 自动刷新
+- hideshow 代码折叠
+- newcomment 注释功能
+- delete-selection 选择删除
+- 行号显示
+
+** File Header
+
+#+begin_src emacs-lisp
+;;; init-defaults.el --- Editor Defaults for MCG Emacs -*- lexical-binding: t; -*-
+
+;; Copyright (C) 2024-2026 MCG
+;; Author: mcge <mcgeq@outlook.com>
+;; Keywords: editor, defaults, builtin
+;; Compatibility: GNU Emacs 29.0+
+
+;;; Commentary:
+;; Editor defaults module for MCG Emacs configuration, responsible for:
+;; - savehist history records
+;; - saveplace position memory
+;; - whitespace character display
+;; - autorevert auto refresh
+;; - hideshow code folding
+;; - newcomment commenting
+;; - delete-selection selection deletion
+;; - line number display
+#+end_src
+
+** Require
+
+#+begin_src emacs-lisp
+;;; Code:
+
+(require 'core-lib)
+(require 'savehist)
+(require 'saveplace)
+(require 'whitespace)
+(require 'autorevert)
+(require 'hideshow)
+(require 'newcomment)
+(require 'delsel)
+(require 'display-line-numbers)
+#+end_src
+
+** Basic Settings
+
+基础编辑器设置，包括系统时间、编码、性能优化、UI 设置等。
+
+*** System Time Settings
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Basic Settings
+;;; ============================================================
+
+;; Windows system time settings
+(when (eq system-type 'windows-nt)
+  (setq system-time-locale "C"))
+#+end_src
+
+*** UTF-8 Encoding Settings
+
+#+begin_src emacs-lisp
+;; UTF-8 encoding settings
+(unless (memq system-type '(cygwin windows-nt ms-dos))
+  (set-selection-coding-system 'utf-8))
+(prefer-coding-system 'utf-8)
+(set-default-coding-systems 'utf-8)
+(set-terminal-coding-system 'utf-8)
+(set-keyboard-coding-system 'utf-8)
+(set-buffer-file-coding-system 'utf-8)
+#+end_src
+
+*** Performance Optimization
+
+#+begin_src emacs-lisp
+;; Performance optimization
+(setq bidi-inhibit-bpa t)
+(setq-default bidi-paragraph-direction 'left-to-right)
+(setq process-adaptive-read-buffering nil)
+(setq read-process-output-max (* 1024 1024))
+#+end_src
+
+*** Basic UI Settings
+
+#+begin_src emacs-lisp
+;; Basic UI settings
+(setq use-short-answers t)
+(blink-cursor-mode -1)
+(transient-mark-mode 1)
+(global-subword-mode 1)
+(setq use-dialog-box nil)
+(setq initial-scratch-message
+      (concat ";; Happy hacking, "
+              (capitalize user-login-name)
+              " - Emacs ❤ you!\n\n"))
+#+end_src
+
+*** Editing Settings
+
+#+begin_src emacs-lisp
+;; Editing settings
+(setq-default comment-style 'indent)
+(setq ring-bell-function 'ignore)
+(setq-default major-mode 'text-mode)
+(setq mouse-yank-at-point t)
+(setq select-enable-clipboard t)
+(setq split-width-threshold nil)
+(setq inhibit-compacting-font-caches t)
+(setq confirm-kill-processes nil)
+(setq word-wrap-by-category t)
+(setq column-number-mode t)
+(setq completion-auto-select nil)
+(setq ad-redefinition-action 'accept)
+#+end_src
+
+*** Smooth Scrolling
+
+#+begin_src emacs-lisp
+;; Smooth scrolling
+(setq scroll-step 1)
+(setq scroll-conservatively 10000)
+#+end_src
+
+*** Cursor Style
+
+#+begin_src emacs-lisp
+;; Cursor style
+(setq-default cursor-type '(bar . 5))
+#+end_src
+
+*** Auto Line Wrap
+
+#+begin_src emacs-lisp
+;; Auto line wrap
+(global-visual-line-mode t)
+#+end_src
+
+*** Bracket Matching
+
+#+begin_src emacs-lisp
+;; Bracket matching
+(setq electric-pair-inhibit-predicate 'electric-pair-conservative-inhibit)
+(electric-pair-mode 1)
+#+end_src
+
+** Variables
+
+编辑器相关的配置变量。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Variables
+;;; ============================================================
+
+(defvar mcg-editor-history-length 1000
+  "Maximum number of history entries to save.")
+
+(defvar mcg-editor-savehist-interval 300
+  "Savehist auto-save interval in seconds.")
+
+(defvar mcg-editor-line-numbers-type 'relative
+  "Line number display type.
+Options: t (absolute), 'relative (relative), 'visual (visual), nil (disabled)")
+
+(defvar mcg-editor-default-fill-column 100
+  "Default fill column for line wrapping.")
+
+(defvar mcg-editor-indent-tabs-modes
+  '(makefile-gmake-mode makefile-mode)
+  "List of modes that use tab indentation.")
+
+#+end_src
+
+** Warning Suppression
+
+警告抑制配置。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Warning Suppression
+;;; ============================================================
+
+(setq warning-suppress-types
+      '((lexical-binding)
+        (files)))
+#+end_src
+
+** Savehist Configuration
+
+历史记录配置。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Savehist Configuration
+;;; ============================================================
+
+(defun mcg-editor-setup-savehist ()
+  "Setup savehist history records."
+  (setq enable-recursive-minibuffers t)
+  (setq history-length mcg-editor-history-length)
+  (setq savehist-additional-variables
+        '(mark-ring
+          global-mark-ring
+          search-ring
+          regexp-search-ring
+          extended-command-history))
+  (setq savehist-autosave-interval mcg-editor-savehist-interval)
+  (savehist-mode 1)
+  (mcg-log "Enabled savehist-mode"))
+#+end_src
+
+** Saveplace Configuration
+
+位置记忆配置。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Saveplace Configuration
+;;; ============================================================
+
+(defun mcg-editor-setup-saveplace ()
+  "Setup saveplace position memory."
+  (save-place-mode 1)
+  (mcg-log "Enabled save-place-mode"))
+#+end_src
+
+** Whitespace Configuration
+
+空白字符显示配置。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Whitespace Configuration
+;;; ============================================================
+
+(defun mcg-editor-setup-whitespace ()
+  "Setup whitespace character display."
+  ;; Custom faces
+  (face-spec-set 'whitespace-tab
+                 '((t :background unspecified)))
+  (face-spec-set 'whitespace-line
+                 '((((background light))
+                    :background "#d8d8d8" :foreground unspecified
+                    :underline t :weight unspecified)
+                   (t
+                    :background "#404040" :foreground unspecified
+                    :underline t :weight unspecified)))
+  (face-spec-set 'whitespace-space-before-tab
+                 '((((background light))
+                    :background "#d8d8d8" :foreground "#de4da1")
+                   (t
+                    :inherit warning
+                    :background "#404040" :foreground "#ee6aa7")))
+  
+  ;; Configure display style
+  (setq whitespace-line-column nil)
+  (setq whitespace-style
+        '(face
+          empty
+          lines-tail
+          space-before-tab
+          trailing
+          tabs
+          tab-mark))
+  
+  (global-whitespace-mode 1)
+  (mcg-log "Enabled global-whitespace-mode"))
+#+end_src
+
+** Autorevert Configuration
+
+自动刷新配置。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Autorevert Configuration
+;;; ============================================================
+
+(defun mcg-editor-setup-autorevert ()
+  "Setup autorevert auto refresh."
+  (global-auto-revert-mode 1)
+  (mcg-log "Enabled global-auto-revert-mode"))
+#+end_src
+
+** Hideshow Configuration
+
+代码折叠配置。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Hideshow Configuration
+;;; ============================================================
+
+(defconst mcg-editor-hideshow-folded-face
+  '((t (:inherit 'font-lock-comment-face :box t)))
+  "Face for code folding indicator.")
+
+(defun mcg-editor--hideshow-overlay-fn (ov)
+  "Custom hideshow folding display.
+OV is the overlay object."
+  (when (eq 'code (overlay-get ov 'hs))
+    (let* ((nlines (count-lines (overlay-start ov) (overlay-end ov)))
+           (info (format " ... #%d " nlines)))
+      (overlay-put ov 'display
+                   (propertize info 'face mcg-editor-hideshow-folded-face)))))
+
+(defun mcg-editor-setup-hideshow ()
+  "Setup hideshow code folding."
+  (setq hs-set-up-overlay 'mcg-editor--hideshow-overlay-fn)
+  (add-hook 'prog-mode-hook #'hs-minor-mode)
+  (mcg-log "Configured hideshow for prog-mode"))
+#+end_src
+
+** Newcomment Configuration
+
+注释功能配置。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Newcomment Configuration
+;;; ============================================================
+
+(defun mcg/comment-or-uncomment ()
+  "Toggle comment state of selected region or current line."
+  (interactive)
+  (if (region-active-p)
+      (comment-or-uncomment-region (region-beginning) (region-end))
+    (if (save-excursion
+          (beginning-of-line)
+          (looking-at "\\s-*$"))
+        (call-interactively 'comment-dwim)
+      (comment-or-uncomment-region (line-beginning-position)
+                                   (line-end-position)))))
+
+(defun mcg-editor-setup-newcomment ()
+  "Setup newcomment commenting functionality."
+  (global-set-key [remap comment-dwim] #'mcg/comment-or-uncomment)
+  (setq comment-auto-fill-only-comments t)
+  (mcg-log "Configured newcomment"))
+#+end_src
+
+** Delete Selection Configuration
+
+选择删除配置。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Delete Selection Configuration
+;;; ============================================================
+
+(defun mcg-editor-setup-delete-selection ()
+  "Setup delete-selection mode."
+  (delete-selection-mode 1)
+  (mcg-log "Enabled delete-selection-mode"))
+#+end_src
+
+** Indent Tabs Configuration
+
+缩进制表符配置。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Indent Tabs Configuration
+;;; ============================================================
+
+(defun mcg-editor--toggle-indent-tabs-mode ()
+  "Toggle indent-tabs-mode based on major-mode."
+  (setq indent-tabs-mode
+        (if (member major-mode mcg-editor-indent-tabs-modes)
+            t
+          nil)))
+
+(defun mcg-editor-setup-indent-tabs ()
+  "Setup indent-tabs-mode auto-toggle."
+  (add-hook 'after-change-major-mode-hook #'mcg-editor--toggle-indent-tabs-mode)
+  (mcg-log "Configured indent-tabs-mode auto-toggle"))
+#+end_src
+
+** Language Indent Configuration
+
+语言特定缩进配置。
+
+*** Default Indentation Settings
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Language Indent Configuration
+;;; ============================================================
+
+;; Default indentation settings
+(setq-default indent-tabs-mode nil)
+(setq-default tab-width 4)
+#+end_src
+
+*** Adjust Languages Indent Function
+
+#+begin_src emacs-lisp
+(defun mcg-editor--adjust-languages-indent (n)
+  "Set indentation for various languages to N spaces."
+  ;; C/C++
+  (setq-local c-basic-offset n)
+  ;; JavaScript
+  (setq-local coffee-tab-width n)
+  (setq-local javascript-indent-level n)
+  (setq-local js-indent-level n)
+  (setq-local js2-basic-offset n)
+  ;; Web mode
+  (setq-local web-mode-attr-indent-offset n)
+  (setq-local web-mode-attr-value-indent-offset n)
+  (setq-local web-mode-code-indent-offset n)
+  (setq-local web-mode-css-indent-offset n)
+  (setq-local web-mode-markup-indent-offset n)
+  (setq-local web-mode-sql-indent-offset n)
+  ;; CSS
+  (setq-local css-indent-offset n)
+  ;; TypeScript
+  (setq-local typescript-indent-level n))
+#+end_src
+
+*** Setup Language Indent
+
+#+begin_src emacs-lisp
+(defun mcg-editor-setup-language-indent ()
+  "Setup language-specific indentation."
+  ;; Languages with 4-space indentation
+  (dolist (hook '(c-mode-hook c++-mode-hook java-mode-hook
+                  haskell-mode-hook asm-mode-hook sh-mode-hook
+                  ruby-mode-hook rust-mode-hook python-mode-hook))
+    (add-hook hook (lambda ()
+                     (setq indent-tabs-mode nil)
+                     (mcg-editor--adjust-languages-indent 4))))
+  ;; Languages with 2-space indentation
+  (dolist (hook '(web-mode-hook js-mode-hook js-ts-mode-hook
+                  typescript-ts-mode-hook tsx-ts-mode-hook
+                  json-mode-hook css-mode-hook scss-mode-hook))
+    (add-hook hook (lambda ()
+                     (setq indent-tabs-mode nil)
+                     (mcg-editor--adjust-languages-indent 2))))
+  (mcg-log "Configured language-specific indentation"))
+#+end_src
+
+** Line Numbers Configuration
+
+行号显示配置。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Line Numbers Configuration
+;;; ============================================================
+
+(defun mcg-editor-setup-line-numbers ()
+  "Setup line number display."
+  (setq display-line-numbers-type mcg-editor-line-numbers-type)
+  (setq display-line-numbers-width-start t)
+  ;; Enable line numbers in specific modes
+  (dolist (hook '(prog-mode-hook yaml-mode-hook conf-mode-hook markdown-mode-hook))
+    (add-hook hook #'display-line-numbers-mode))
+  (mcg-log "Configured line numbers display"))
+#+end_src
+
+** Auto Fill Configuration
+
+自动换行配置。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Auto Fill Configuration
+;;; ============================================================
+
+(defun mcg-editor-setup-auto-fill ()
+  "Setup auto line wrap."
+  (setq-default fill-column mcg-editor-default-fill-column)
+  (dolist (hook '(text-mode-hook message-mode-hook))
+    (add-hook hook #'auto-fill-mode))
+  (mcg-log "Configured auto-fill"))
+#+end_src
+
+** Commands
+
+交互式命令。
+
+*** Toggle Line Numbers
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Commands
+;;; ============================================================
+
+(defun mcg/toggle-line-numbers ()
+  "Toggle line number display."
+  (interactive)
+  (if display-line-numbers-mode
+      (display-line-numbers-mode -1)
+    (display-line-numbers-mode 1)))
+#+end_src
+
+*** Cycle Line Numbers Type
+
+#+begin_src emacs-lisp
+(defun mcg/cycle-line-numbers-type ()
+  "Cycle line number type: absolute -> relative -> visual -> disabled."
+  (interactive)
+  (setq display-line-numbers-type
+        (pcase display-line-numbers-type
+          ('nil t)
+          ('t 'relative)
+          ('relative 'visual)
+          ('visual nil)))
+  (when display-line-numbers-mode
+    (display-line-numbers-mode -1)
+    (display-line-numbers-mode 1))
+  (message "Line numbers: %s"
+           (or display-line-numbers-type "disabled")))
+#+end_src
+
+*** Toggle Whitespace
+
+#+begin_src emacs-lisp
+(defun mcg/toggle-whitespace ()
+  "Toggle whitespace character display."
+  (interactive)
+  (if global-whitespace-mode
+      (global-whitespace-mode -1)
+    (global-whitespace-mode 1))
+   (message "Whitespace mode: %s"
+            (if global-whitespace-mode "enabled" "disabled")))
+#+end_src
+
+** Initialize
+
+模块初始化。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Initialize
+;;; ============================================================
+
+;; Setup built-in features
+(mcg-editor-setup-savehist)
+(mcg-editor-setup-saveplace)
+(mcg-editor-setup-whitespace)
+(mcg-editor-setup-autorevert)
+(mcg-editor-setup-hideshow)
+(mcg-editor-setup-newcomment)
+(mcg-editor-setup-delete-selection)
+(mcg-editor-setup-indent-tabs)
+(mcg-editor-setup-language-indent)
+(mcg-editor-setup-line-numbers)
+(mcg-editor-setup-auto-fill)
+#+end_src
+
+** Provide Feature
+
+#+begin_src emacs-lisp
+(provide 'init-defaults)
+;;; init-defaults.el ends here
+#+end_src

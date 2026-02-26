@@ -1,0 +1,279 @@
+#+TITLE: Org Capture Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-org-capture.el :lexical t
+
+* Org Capture Module
+
+Org Capture templates and Hugo blog integration.
+
+** File Header
+
+#+begin_src emacs-lisp
+;;; init-org-capture.el --- Org Capture for MCG Emacs -*- lexical-binding: t; -*-
+
+;; Copyright (C) 2024-2026 MCG
+;; Author: mcge <mcgeq@outlook.com>
+;; Keywords: org, capture, hugo
+#+end_src
+
+** Require
+
+#+begin_src emacs-lisp
+;;; Code:
+
+(require 'core-lib)
+(require 'org-capture)
+#+end_src
+
+** Variables
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Variables
+;;; ============================================================
+
+(defcustom mcg-org-diary-file
+  (expand-file-name "diary.org" mcg-org-agenda-directory)
+  "Diary file."
+  :type 'file
+  :group 'mcg-org)
+
+(defcustom mcg-org-journal-file
+  (expand-file-name "journal.org" mcg-org-notes-directory)
+  "Journal file."
+  :type 'file
+  :group 'mcg-org)
+
+(defcustom mcg-org-billing-file
+  (expand-file-name "billing.org" mcg-org-notes-directory)
+  "Billing file."
+  :type 'file
+  :group 'mcg-org)
+
+(defcustom mcg-org-password-file
+  (expand-file-name "passwords.org" mcg-org-notes-directory)
+  "Password management file."
+  :type 'file
+  :group 'mcg-org)
+#+end_src
+
+** Password Helper Functions
+
+#+begin_src emacs-lisp
+;;; Password Helper Functions
+
+(defun mcg/random-alphanum ()
+  "Generate a random alphanumeric character."
+  (let* ((charset "abcdefghijklmnopqurstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
+         (x (random 62)))
+    (char-to-string (elt charset x))))
+
+(defun mcg/create-password ()
+  "Generate a 16-character random password."
+  (let ((value ""))
+    (dotimes (_ 16 value)
+      (setq value (concat value (mcg/random-alphanum))))))
+
+(defun mcg/get-or-create-password ()
+  "Get or create password."
+  (let ((password (read-string "Password: ")))
+    (if (string= password "")
+        (mcg/create-password)
+      password)))
+#+end_src
+
+** Billing Helper Functions
+
+#+begin_src emacs-lisp
+;;; Billing Helper Functions
+
+(defun mcg/get-year-and-month ()
+  "Get current year and month (Chinese format)."
+  (list (format-time-string "%Y 年") (format-time-string "%m 月")))
+
+(defun mcg/find-month-tree ()
+  "Find or create year-month tree structure in Org file."
+  (let* ((path (mcg/get-year-and-month))
+         (level 1)
+         end)
+    (unless (derived-mode-p 'org-mode)
+      (error "Target buffer should be in Org mode"))
+    (goto-char (point-min))
+    (dolist (heading path)
+      (let ((re (format org-complex-heading-regexp-format
+                        (regexp-quote heading))))
+        (if (re-search-forward re end t)
+            (goto-char (line-beginning-position))
+          (progn
+            (or (bolp) (insert "\n"))
+            (if (/= (point) (point-min)) (org-end-of-subtree t t))
+            (insert (make-string level ?*) " " heading "\n"))))
+      (setq level (1+ level))
+      (setq end (save-excursion (org-end-of-subtree t t))))
+    (org-end-of-subtree)))
+#+end_src
+
+** Basic Configuration
+
+#+begin_src emacs-lisp
+;;; Basic Configuration
+
+(defun mcg--setup-org-capture ()
+  "Setup Org Capture basic configuration."
+  (add-hook 'org-capture-mode-hook
+            (lambda ()
+              (setq-local org-complete-tags-always-offer-all-agenda-tags t)))
+  (add-hook 'org-capture-mode-hook 'delete-other-windows)
+  (setq org-capture-use-agenda-date nil)
+  (mcg-log "Org capture basic configuration done"))
+#+end_src
+
+** Capture Templates
+
+#+begin_src emacs-lisp
+;;; Capture Templates
+
+(defun mcg--setup-capture-templates ()
+  "Setup Capture templates."
+  (setq org-capture-templates nil)
+
+  (add-to-list 'org-capture-templates '("t" "Tasks"))
+  (add-to-list 'org-capture-templates
+               '("tr" "Book Reading Task"
+                 entry (file+olp mcg-org-task-file "Reading Book")
+                 "* TODO %^{书名}\n%u\n%a\n"
+                 :clock-in t))
+  (add-to-list 'org-capture-templates
+               '("tw" "Work Task"
+                 entry (file+headline mcg-org-task-file "Work")
+                 "* TODO %^{任务名}\n%u\n%a\n"
+                 :clock-in t :clock-resume t))
+
+  (add-to-list 'org-capture-templates '("d" "Diary"))
+  (add-to-list 'org-capture-templates
+               '("dt" "Today's TODO List"
+                 entry (file+olp+datetree mcg-org-diary-file)
+                 "* Today's TODO List [/]\n%T\n\n** TODO %?"
+                 :empty-lines 1
+                 :jump-to-captured t))
+  (add-to-list 'org-capture-templates
+               '("do" "Other stuff"
+                 entry (file+olp+datetree mcg-org-diary-file)
+                 "* %?\n%T\n\n%i"
+                 :empty-lines 1
+                 :jump-to-captured t))
+
+  (add-to-list 'org-capture-templates
+               '("n" "Notes"
+                 entry (file mcg-org-default-notes-file)
+                 "* %^{heading} %t %^g\n %?\n"
+                 :empty-lines 1))
+
+  (add-to-list 'org-capture-templates
+               '("j" "Journal"
+                 entry (file+datetree mcg-org-journal-file)
+                 "* %U - %^{heading} %^g\n %?\n"
+                 :empty-lines 1))
+
+  (add-to-list 'org-capture-templates
+               '("b" "Billing"
+                 plain (file+function mcg-org-billing-file mcg/find-month-tree)
+                 " | %U | %^{Category} | %^{Description} | %^{Amount} |"
+                 :kill-buffer t))
+
+  (add-to-list 'org-capture-templates
+               '("p" "Passwords"
+                 entry (file mcg-org-password-file)
+                 "* %U - %^{title} %^G\n\n - Username: %^{Username}\n - Password: %(mcg/get-or-create-password)"
+                 :empty-lines 1
+                 :kill-buffer t))
+
+  (mcg-log "Capture templates configured"))
+#+end_src
+
+** Hugo Integration
+
+#+begin_src emacs-lisp
+;;; Hugo Integration
+
+(defun mcg--setup-hugo-integration ()
+  "Setup Hugo blog integration."
+  (when mcg-org-enable-hugo-integration
+    (with-eval-after-load 'org
+      (when (mcg-require-extension "ox-hugo" t)
+        (setq org-hugo-base-dir (concat mcg-blog-base-directory "/")))
+
+      (defun mcg/org-hugo-new-subtree-post-capture-template ()
+        "Returns org-capture template string for new Hugo post."
+        (let* ((date (format-time-string (org-time-stamp-format :long :inactive) (org-current-time)))
+               (title (read-from-minibuffer "Post Title: "))
+               (fname (org-hugo-slug title)))
+          (mapconcat #'identity
+                     `(,(concat "* TODO " title)
+                       ":PROPERTIES:"
+                       ,(concat ":EXPORT_FILE_NAME: " fname)
+                       ,(concat ":EXPORT_DATE: " date)
+                       ":END:"
+                       "%?\n")
+                     "\n")))))
+
+  (when mcg-org-enable-hugo-integration
+    (add-to-list 'org-capture-templates '("h" "Hugo Post"))
+    (add-to-list 'org-capture-templates '("hl" "About Development Language"))
+
+    (dolist (topic '(("hla" "ArkTS" "ArkTS")
+                     ("hle" "React" "React")
+                     ("hlr" "Rust" "Rust")
+                     ("hlv" "Vue" "Vue")))
+      (add-to-list 'org-capture-templates
+                   `(,(nth 0 topic)
+                     ,(concat "About " (nth 1 topic))
+                     entry
+                     (file+headline mcg-org-blog-development-file ,(nth 2 topic))
+                     (function mcg/org-hugo-new-subtree-post-capture-template))))
+
+    (add-to-list 'org-capture-templates
+                 '("he" "About Emacs"
+                   entry
+                   (file+olp mcg-org-blog-emacs-file "Emacs")
+                   (function mcg/org-hugo-new-subtree-post-capture-template)))
+
+    (mcg-log "Hugo integration configured")))
+#+end_src
+
+** Keybindings
+
+#+begin_src emacs-lisp
+;;; Keybindings
+
+(defun mcg--setup-capture-keybindings ()
+  "Setup Capture related keybindings."
+  (global-set-key (kbd "C-c n c") 'org-capture)
+  (global-set-key (kbd "C-c n a") 'org-agenda)
+  (global-set-key (kbd "C-c n l") 'org-store-link)
+  (global-set-key (kbd "C-c n t") 'org-todo-list)
+  (mcg-log "Capture keybindings configured"))
+#+end_src
+
+** Initialize
+
+#+begin_src emacs-lisp
+;;; Initialize
+
+(mcg--setup-org-capture)
+(mcg--setup-capture-templates)
+
+(add-hook 'org-mode-hook
+          (lambda ()
+            (when mcg-org-enable-hugo-integration
+              (mcg--setup-hugo-integration))))
+
+(mcg--setup-capture-keybindings)
+#+end_src
+
+** Provide
+
+#+begin_src emacs-lisp
+(provide 'init-org-capture)
+;;; init-org-capture.el ends here
+#+end_src

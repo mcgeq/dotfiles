@@ -1,0 +1,278 @@
+#+TITLE: Org Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-org.el :lexical t
+
+* Org Module
+
+本模块负责 MCG Emacs 的 Org 模式配置，包括：
+- Org 核心配置
+- Org 扩展包配置
+
+** File Header
+
+#+begin_src emacs-lisp
+;;; init-org.el --- Org Mode Configuration for MCG Emacs -*- lexical-binding: t; -*-
+
+;; Copyright (C) 2024-2026 MCG
+;; Author: mcge <mcgeq@outlook.com>
+;; Keywords: org, outlines, planning
+;; Compatibility: GNU Emacs 29.0+
+
+;;; Commentary:
+;; Org mode configuration module for MCG Emacs, responsible for:
+;; - Core org configuration
+;; - Org extensions configuration
+;; - Various org add-ons
+#+end_src
+
+** Require
+
+#+begin_src emacs-lisp
+;;; Code:
+
+(require 'core-lib)
+(require 'org)
+(require 'ox)
+
+(add-to-list 'load-path (expand-file-name "modules/org" mcg-emacs-dir))
+#+end_src
+
+** Variables
+
+Org 模式相关的配置变量。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Variables
+;;; ============================================================
+
+(defgroup mcg-org nil
+  "Org mode configuration variables."
+  :group 'org
+  :prefix "mcg-org-")
+
+(defcustom mcg-org-directory
+  (expand-file-name "~/org")
+  "Root directory for Org mode files."
+  :type 'directory
+  :group 'mcg-org)
+
+(defcustom mcg-org-agenda-directory
+  (expand-file-name "agenda" mcg-org-directory)
+  "Org agenda files directory."
+  :type 'directory
+  :group 'mcg-org)
+
+(defcustom mcg-org-notes-directory
+  (expand-file-name "notes" mcg-org-directory)
+  "Org notes files directory."
+  :type 'directory
+  :group 'mcg-org)
+
+(defcustom mcg-org-blog-directory
+  (expand-file-name "blog" mcg-org-directory)
+  "Blog related Org files directory."
+  :type 'directory
+  :group 'mcg-org)
+
+(defcustom mcg-org-default-notes-file
+  (expand-file-name "notes.org" mcg-org-notes-directory)
+  "Default notes file."
+  :type 'file
+  :group 'mcg-org)
+
+(defcustom mcg-org-task-file
+  (expand-file-name "tasks.org" mcg-org-agenda-directory)
+  "Task file."
+  :type 'file
+  :group 'mcg-org)
+
+(defcustom mcg-org-enable-pretty-symbols t
+  "Whether to enable Org mode symbol beautification."
+  :type 'boolean
+  :group 'mcg-org)
+#+end_src
+
+** Org Core Configuration
+
+Org 核心配置。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Org Core Configuration
+;;; ============================================================
+
+(defun mcg-org-ensure-directory (dir)
+  "Ensure directory DIR exists, create if not."
+  (unless (file-exists-p dir)
+    (make-directory dir t)
+    (mcg-log "Created directory: %s" dir)))
+
+(defun mcg-org-initialize-directories ()
+  "Initialize all Org mode directories."
+  (interactive)
+  (mapc #'mcg-org-ensure-directory
+        (list mcg-org-directory
+              mcg-org-agenda-directory
+              mcg-org-notes-directory
+              mcg-org-blog-directory)))
+
+(defun mcg--setup-org-core ()
+  "Set up org mode core configuration."
+  (setq org-ellipsis " ⭍"
+        org-tags-column 0
+        org-log-into-drawer t
+        org-pretty-entities t
+        org-startup-indented t
+        org-hide-leading-stars nil
+        org-hide-emphasis-markers t
+        org-image-actual-width '(800)
+        org-startup-with-inline-images t
+        org-indent-mode-turns-on-hiding-stars nil
+        org-log-done 'time
+        org-log-repeat 'time
+        org-log-redeadline 'note
+        org-log-reschedule 'note
+        org-log-state-notes-insert-after-drawers nil)
+
+  (setq org-todo-keywords '((sequence
+                             "TODO(t)"
+                             "HOLD(h!)"
+                             "WIP(i!)"
+                             "WAIT(w!)"
+                             "|"
+                             "DONE(d!)"
+                             "CANCELLED(c@/!)")
+                            (sequence
+                             "REPORT(r)"
+                             "BUG(b)"
+                             "KNOWNCAUSE(k)"
+                             "|"
+                             "FIXED(f!)")))
+
+  (setq org-todo-keyword-faces '(("TODO"       :foreground "#7c7c75" :weight bold)
+                                 ("HOLD"       :foreground "#feb24c" :weight bold)
+                                 ("WIP"        :foreground "#0098dd" :weight bold)
+                                 ("WAIT"       :foreground "#9f7efe" :weight bold)
+                                 ("DONE"       :foreground "#50a14f" :weight bold)
+                                 ("CANCELLED"  :foreground "#ff6480" :weight bold)))
+
+  (custom-set-faces
+   '(org-level-1 ((t (:height 1.15))))
+   '(org-level-2 ((t (:height 1.13))))
+   '(org-level-3 ((t (:height 1.11))))
+   '(org-level-4 ((t (:height 1.09))))
+   '(org-level-5 ((t (:height 1.07))))
+   '(org-level-6 ((t (:height 1.05))))
+   '(org-level-7 ((t (:height 1.03))))
+   '(org-level-8 ((t (:height 1.01))))
+   '(org-tag ((t (:inherit 'fixed-pitch))))
+   '(org-date ((t (:inherit 'fixed-pitch))))
+   '(org-todo ((t (:inherit 'fixed-pitch))))
+   '(org-done ((t (:inherit 'fixed-pitch))))
+   '(org-drawer ((t (:inherit 'fixed-pitch))))
+   '(org-ellipsis ((t (:inherit 'fixed-pitch))))
+   '(org-headline-done ((t (:inherit 'variable-pitch)))))
+
+  (setq line-spacing 0.25
+        org-list-demote-modify-bullet '(("+" . "-") ("-" . "+") ("*" . "+") ("1." . "a.")))
+
+  (font-lock-add-keywords
+   'org-mode
+   '(("^ +\\([-*]\\) "
+      (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "▻"))))))
+
+  (setq prettify-symbols-alist
+        (mapcan (lambda (x) (list x (cons (upcase (car x)) (cdr x))))
+                '(("#+begin_src" . "↪")
+                  ("#+end_src" . "↩")
+                  (":PROPERTIES:" . "⥼")
+                  (":END:" . "⥽"))))
+  (setq prettify-symbols-unprettify-at-point t)
+
+  (setq org-time-stamp-custom-formats
+        '("<%Y-%m-%d %A %H:%M:%S>" . "<%Y-%m-%d %A %H:%M:%S>"))
+  (setq system-time-locale "zh_CN.UTF-8")
+  (setq org-display-custom-times t)
+
+  (require 'ox-gfm nil t)
+  (add-to-list 'org-export-backends 'md)
+
+  (mcg-log "Org core configured"))
+#+end_src
+
+** Load Org Extensions
+
+加载 org 相关的子模块配置。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Load Org Extensions
+;;; ============================================================
+
+(require 'init-org-modern)
+(require 'init-org-appear)
+(require 'init-org-superstar)
+(require 'init-visual-fill-column)
+(require 'init-org-download)
+(require 'init-mixed-pitch)
+(require 'init-ox-hugo)
+(require 'init-ox-gfm)
+(require 'init-easy-hugo)
+(require 'init-org-numbering)
+(require 'init-org-agenda)
+(require 'init-org-babel)
+(require 'init-org-capture)
+(require 'init-org-extras)
+#+end_src
+
+** Org Mode Hook
+
+#+begin_src emacs-lisp
+;;; Org Mode Hook
+
+(defun mcg-org-mode-setup ()
+  "Org mode initialization setup."
+  (setq-local line-spacing 2)
+  (visual-line-mode 1)
+
+  (when mcg-org-enable-pretty-symbols
+    (prettify-symbols-mode 1)))
+#+end_src
+
+** Commands
+
+#+begin_src emacs-lisp
+;;; Commands
+
+(defun mcg/org-open-notes ()
+  "Open notes directory."
+  (interactive)
+  (find-file mcg-org-notes-directory))
+
+(defun mcg/org-open-agenda-dir ()
+  "Open agenda directory."
+  (interactive)
+  (find-file mcg-org-agenda-directory))
+#+end_src
+
+** Initialize
+
+模块初始化。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Initialize
+;;; ============================================================
+
+(mcg-org-initialize-directories)
+(mcg--setup-org-core)
+(add-hook 'org-mode-hook #'mcg-org-mode-setup)
+#+end_src
+
+** Provide Feature
+
+#+begin_src emacs-lisp
+(provide 'init-org)
+;;; init-org.el ends here
+#+end_src

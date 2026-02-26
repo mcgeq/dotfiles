@@ -1,0 +1,263 @@
+#+TITLE: Org Agenda Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-org-agenda.el :lexical t
+
+* Org Agenda Module
+
+Org Agenda configuration with time grid, lunar calendar support, and custom views.
+
+** File Header
+
+#+begin_src emacs-lisp
+;;; init-org-agenda.el --- Org Agenda for MCG Emacs -*- lexical-binding: t; -*-
+
+;; Copyright (C) 2024-2026 MCG
+;; Author: mcge <mcgeq@outlook.com>
+;; Keywords: org, agenda, calendar
+#+end_src
+
+** Require
+
+#+begin_src emacs-lisp
+;;; Code:
+
+(require 'core-lib)
+(require 'org-agenda)
+(require 'cal-china-x nil t)
+#+end_src
+
+** Variables
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Variables
+;;; ============================================================
+
+(defvar mcg-org-agenda-files
+  (list (expand-file-name "agenda" mcg-org-directory))
+  "Org agenda file list or directories to scan.")
+
+(defvar mcg-org-agenda-diary-file
+  (expand-file-name "diary.org" (expand-file-name "agenda" mcg-org-directory))
+  "Org agenda diary file.")
+
+(defvar mcg-calendar-location-longitude 116.9962
+  "Current location longitude (for sunrise/sunset calculation).")
+
+(defvar mcg-calendar-location-latitude 39.91
+  "Current location latitude (for sunrise/sunset calculation).")
+#+end_src
+
+** Agenda Files Configuration
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Agenda Files Configuration
+;;; ============================================================
+
+(defun mcg-org-agenda-setup-files ()
+  "Setup Org Agenda file configuration."
+  (with-eval-after-load 'org
+    (setq org-agenda-files mcg-org-agenda-files)
+    (setq org-agenda-use-time-grid t)
+    (setq org-agenda-current-time-string "⏰------------now")
+    (mcg-log "Configured org-agenda files")))
+#+end_src
+
+** Date Formatting with Lunar Calendar
+
+#+begin_src emacs-lisp
+;;; Date Formatting (with lunar calendar)
+
+(defun mcg-org-agenda-format-date-aligned (date)
+  "Format DATE for agenda display, including lunar calendar info."
+  (require 'cal-iso)
+  (let* ((dayname (if (boundp 'cal-china-x-days)
+                      (aref cal-china-x-days (calendar-day-of-week date))
+                    (aref ["日" "一" "二" "三" "四" "五" "六"]
+                          (calendar-day-of-week date))))
+         (day (cadr date))
+         (month (car date))
+         (year (nth 2 date))
+         (day-of-week (calendar-day-of-week date))
+         (iso-week (org-days-to-iso-week
+                    (calendar-absolute-from-gregorian date)))
+         (cn-date (calendar-chinese-from-absolute
+                   (calendar-absolute-from-gregorian date)))
+         (cn-month (cl-caddr cn-date))
+         (cn-day (cl-cadddr cn-date))
+         (cn-month-string (if (and (boundp 'cal-china-x-month-name)
+                                    (< (1- (floor cn-month)) 12))
+                              (concat (aref cal-china-x-month-name
+                                            (1- (floor cn-month)))
+                                      (if (integerp cn-month) "" "（闰月）"))
+                            ""))
+         (cn-day-string (if (and (boundp 'cal-china-x-day-name)
+                                 (< (1- cn-day) 30))
+                            (aref cal-china-x-day-name (1- cn-day))
+                          ""))
+         (absolute-date (calendar-absolute-from-gregorian date))
+         (start-of-year (calendar-absolute-from-gregorian (list 1 1 year)))
+         (day-of-year (+ 1 (- absolute-date start-of-year)))
+         (extra (format " 农历%s%s%s 今年第 %02d 周 第%03d 天"
+                        cn-month-string
+                        cn-day-string
+                        (if (integerp cn-month) "" "[闰]")
+                        iso-week
+                        day-of-year)))
+    (format "%04d-%02d-%02d 星期%s%s\n"
+            year month day dayname extra)))
+
+(defun mcg-org-agenda-setup-date-format ()
+  "Setup Agenda date format."
+  (with-eval-after-load 'org
+    (setq org-agenda-format-date 'mcg-org-agenda-format-date-aligned)
+    (mcg-log "Configured org-agenda date format")))
+#+end_src
+
+** Time Grid Configuration
+
+#+begin_src emacs-lisp
+;;; Time grid configuration
+
+(defun mcg-org-agenda-setup-time-grid ()
+  "Setup Agenda time grid."
+  (with-eval-after-load 'org
+    (setq org-agenda-time-grid
+          '((daily today require-timed)
+            (300 600 900 1200 1500 1800 2100 2400)
+            "......"
+            "-----------------------------------------------------"))
+    (mcg-log "Configured org-agenda time grid")))
+#+end_src
+
+** Display Settings
+
+#+begin_src emacs-lisp
+;;; Display and format settings
+
+(defun mcg-org-agenda-setup-display ()
+  "Setup Agenda display format."
+  (with-eval-after-load 'org
+    (setq org-agenda-include-diary t
+          org-agenda-diary-file mcg-org-agenda-diary-file
+          diary-file mcg-org-agenda-diary-file)
+    (setq org-agenda-prefix-format
+          '((agenda . " %i %-25:c %5t %s")
+            (todo   . " %i %-25:c ")
+            (tags   . " %i %-25:c ")
+            (search . " %i %-25:c ")))
+    (setq org-agenda-scheduled-leaders
+          '("Scheduled " "Should have started %02d days ago "))
+    (setq org-agenda-deadline-leaders
+          '("Deadline " "%02d days until deadline " "Overdue by %02d days "))
+    (setq org-time-stamp-formats '("<%Y-%m-%d %A>" . "<%Y-%m-%d %A %H:%M>"))
+    (setq org-cycle-separator-lines 2
+          org-agenda-insert-diary-extract-time t
+          org-agenda-sticky t
+          org-agenda-time-leading-zero t
+          org-agenda-tags-column -80
+          org-deadline-warning-days 3)
+    (mcg-log "Configured org-agenda display")))
+#+end_src
+
+** Location and Sunrise/Sunset
+
+#+begin_src emacs-lisp
+;;; Location and sunrise/sunset
+
+(defun mcg-org-agenda-setup-location ()
+  "Setup geographic location."
+  (with-eval-after-load 'calendar
+    (setq calendar-longitude mcg-calendar-location-longitude
+          calendar-latitude mcg-calendar-location-latitude)
+    (setq calendar-chinese-celestial-stem
+          ["甲" "乙" "丙" "丁" "戊" "己" "庚" "辛" "壬" "癸"]
+          calendar-chinese-terrestrial-branch
+          ["子" "丑" "寅" "卯" "辰" "巳" "午" "未" "申" "酉" "戌" "亥"])
+    (mcg-log "Configured calendar location")))
+
+(defun diary-sunrise ()
+  "Get sunrise time."
+  (let ((dss (diary-sunrise-sunset)))
+    (with-temp-buffer
+      (insert dss)
+      (goto-char (point-min))
+      (while (re-search-forward " ([^)]*)" nil t)
+        (replace-match "" nil nil))
+      (goto-char (point-min))
+      (search-forward ",")
+      (buffer-substring (point-min) (match-beginning 0))))
+
+(defun diary-sunset ()
+  "Get sunset time."
+  (let ((dss (diary-sunrise-sunset))
+        start end)
+    (with-temp-buffer
+      (insert dss)
+      (goto-char (point-min))
+      (while (re-search-forward " ([^)]*)" nil t)
+        (replace-match "" nil nil))
+      (goto-char (point-min))
+      (search-forward ", ")
+      (setq start (match-end 0))
+      (search-forward " at")
+      (setq end (match-beginning 0))
+      (goto-char start)
+      (capitalize-word 1)
+      (buffer-substring start end)))
+#+end_src
+
+** Custom Agenda Views
+
+#+begin_src emacs-lisp
+;;; Custom Agenda Views
+
+(defun mcg-org-agenda-setup-custom-views ()
+  "Setup custom agenda views."
+  (with-eval-after-load 'org
+    (setq org-agenda-custom-commands
+          '(("d" "Daily agenda and all TODOs"
+             ((agenda "" ((org-agenda-span 'day)))
+              (alltodo "" ((org-agenda-overriding-header "All TODOs")))))
+            ("w" "Weekly review"
+             ((agenda "" ((org-agenda-span 'week)))
+              (todo "DONE" ((org-agenda-overriding-header "Completed this week")))
+              (todo "TODO" ((org-agenda-overriding-header "Still to do")))))
+            ("p" "Priority tasks"
+             ((tags-todo "+PRIORITY=\"A\""
+                         ((org-agenda-overriding-header "High Priority")))
+              (tags-todo "+PRIORITY=\"B\""
+                         ((org-agenda-overriding-header "Medium Priority")))
+              (tags-todo "+PRIORITY=\"C\""
+                         ((org-agenda-overriding-header "Low Priority")))))
+            ("W" "Work tasks"
+             ((tags-todo "+work"
+                         ((org-agenda-overriding-header "Work Tasks")))))
+            ("h" "Home tasks"
+             ((tags-todo "+home"
+                         ((org-agenda-overriding-header "Home Tasks"))))))
+    (mcg-log "Configured org-agenda custom views"))))
+#+end_src
+
+** Initialize
+
+#+begin_src emacs-lisp
+;;; Initialize
+
+(add-hook 'org-agenda-mode-hook
+          (lambda ()
+            (mcg-org-agenda-setup-files)
+            (mcg-org-agenda-setup-date-format)
+            (mcg-org-agenda-setup-time-grid)
+            (mcg-org-agenda-setup-display)
+            (mcg-org-agenda-setup-location)
+            (mcg-org-agenda-setup-custom-views)))
+#+end_src
+
+** Provide
+
+#+begin_src emacs-lisp
+(provide 'init-org-agenda)
+;;; init-org-agenda.el ends here
+#+end_src

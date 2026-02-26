@@ -89,7 +89,7 @@
 #+begin_src emacs-lisp
   ;; Declare which modules to enable using mcg! macro
   ;; Modules prefixed with `-' are disabled
-  ;; 
+  ;;
   ;; Categories:
   ;;   :ui         - Theme, modeline, fonts, icons
   ;;   :editor     - Editor defaults, navigation, editing tools
@@ -98,7 +98,8 @@
   ;;   :enhance    - Auto-save, which-key, helpful, recentf
   ;;   :org        - Org-mode configuration
   ;;   :writing    - Markdown, grammar checking
-  ;;   :lang       - LSP and language-specific modules
+   ;;   :lang       - LSP and language-specific modules
+   ;;   :org        - Org-mode configuration
 
   (mcg!
    ;; UI modules
@@ -107,7 +108,13 @@
    ef-themes
    nerd-icons
    awesome-tray
-   
+   holo-layer
+
+   ;; Editor modules
+   :editor
+   defaults
+   vundo
+
    ;; Completion modules
    :completion
    consult
@@ -117,6 +124,7 @@
    embark
    pinyinlib
    nerd-icons-completion
+   yasnippet
 
    ;; Tools modules
    :tools
@@ -126,17 +134,23 @@
    lsp-bridge
    blink-search
    color-rg
+   magit
+
    ;; Enhance
    :enhance
    recentf
-  )
+
+   ;; Org
+   :org
+   org
+   )
 #+end_src
 
 ** Module Loading Strategy
 
 #+begin_src emacs-lisp
 ;; Define which categories use which loading strategy
-(defvar mcg-immediate-categories '(:ui :completion :tools :enhance)
+(defvar mcg-immediate-categories '(:ui :editor :completion :tools :enhance :org)
   "Categories to load immediately at startup.")
 
 (defvar mcg-idle-categories '()
@@ -216,16 +230,16 @@ Private config is loaded after all other modules to allow overrides."
 Called to set up the complete MCG Emacs configuration."
   ;; Load immediate modules (UI, editor, tools, org)
   (mcg-load-immediate-modules)
-  
+
   ;; Setup idle loading for completion and enhance modules
   (mcg-setup-idle-modules)
-  
+
   ;; Setup deferred loading for writing and language modules
   (mcg-setup-deferred-modules)
-  
+
   ;; Load private configuration last
   (mcg-load-private-config)
-  
+
   ;; Display startup statistics
   (add-hook 'emacs-startup-hook #'mcg-display-startup-stats 95))
 
@@ -241,7 +255,7 @@ Called to set up the complete MCG Emacs configuration."
           (lambda ()
             ;; Restore GC settings (handled by core-bootstrap)
             ;; Display startup time (handled by core-bootstrap)
-            
+
             ;; Any additional post-startup setup can go here
             (mcg-log "MCG Emacs ready"))
           100)

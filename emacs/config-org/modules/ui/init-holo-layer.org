@@ -1,0 +1,158 @@
+#+TITLE: Holo-Layer Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-holo-layer.el :lexical t
+
+* Holo-Layer Module
+
+本模块负责 Holo-Layer 视觉增强配置，包括窗口边框、光标动画、缩进彩虹等。
+
+** File Header
+
+#+begin_src emacs-lisp
+;;; init-holo-layer.el --- Holo-Layer for MCG Emacs -*- lexical-binding: t; -*-
+
+;; Copyright (C) 2024-2026 MCG
+;; Author: mcge <mcgeq@outlook.com>
+;; Keywords: holo-layer, ui, visual
+;; Compatibility: GNU Emacs 28.0+
+;;; Commentary:
+;; Holo-Layer module for MCG Emacs configuration, provides window border, cursor animation, etc.
+#+end_src
+
+** Require
+
+#+begin_src emacs-lisp
+;;; Code:
+
+(require 'core-lib)
+#+end_src
+
+** Variables
+
+#+begin_src emacs-lisp
+(defvar mcg-holo-layer-enabled t
+  "Whether to enable holo-layer.")
+
+(defvar mcg-holo-layer-enable-window-border t
+  "Whether to enable window border.")
+
+(defvar mcg-holo-layer-enable-cursor-animation t
+  "Whether to enable cursor animation (jelly cursor).")
+
+(defvar mcg-holo-layer-enable-type-animation t
+  "Whether to enable type animation.")
+
+(defvar mcg-holo-layer-enable-indent-rainbow t
+  "Whether to enable indent rainbow.")
+
+(defvar mcg-holo-layer-enable-sort-tab t
+  "Whether to enable modern tab bar (require sort-tab).")
+#+end_src
+
+** Configuration
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Holo-Layer Configuration
+;;; ============================================================
+
+(defun mcg-holo-layer-setup ()
+  "Setup holo-layer."
+  (when (and mcg-holo-layer-enabled
+             (mcg-require-extension "holo-layer" t))
+    (setq holo-layer-enable-window-border mcg-holo-layer-enable-window-border)
+    (setq holo-layer-active-window-color "#cc2444")
+    (setq holo-layer-inactive-window-color "#000000")
+
+    (setq holo-layer-enable-cursor-animation mcg-holo-layer-enable-cursor-animation)
+    (setq holo-layer-cursor-animation-type "jelly")
+    (setq holo-layer-cursor-color nil)
+    (setq holo-layer-cursor-alpha 200)
+    (setq holo-layer-cursor-animation-color-gradient t)
+    (setq holo-layer-cursor-animation-duration 200)
+    (setq holo-layer-cursor-animation-interval 10)
+
+    (setq holo-layer-enable-type-animation mcg-holo-layer-enable-type-animation)
+    (setq holo-layer-type-animation-style "flame")
+
+    (setq holo-layer-enable-indent-rainbow mcg-holo-layer-enable-indent-rainbow)
+
+    (setq holo-layer-enable-sort-tab mcg-holo-layer-enable-sort-tab)
+
+    (holo-layer-enable)
+    (mcg-log "Enabled holo-layer")))
+#+end_src
+
+** Commands
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Commands
+;;; ============================================================
+
+(defun mcg/toggle-holo-layer ()
+  "Toggle holo-layer."
+  (interactive)
+  (if (bound-and-true-p holo-layer-mode)
+      (progn
+        (holo-layer-stop-process)
+        (mcg-log "Disabled holo-layer"))
+    (holo-layer-enable)
+    (mcg-log "Enabled holo-layer"))
+  (message "Holo-layer: %s"
+           (if (bound-and-true-p holo-layer-mode) "enabled" "disabled")))
+
+(defun mcg/toggle-holo-layer-window-border ()
+  "Toggle holo-layer window border."
+  (interactive)
+  (setq holo-layer-enable-window-border (not holo-layer-enable-window-border))
+  (holo-layer-call-async "toggle_window_border")
+  (message "Holo-layer window border: %s"
+           (if holo-layer-enable-window-border "enabled" "disabled")))
+
+(defun mcg/toggle-holo-layer-cursor-animation ()
+  "Toggle holo-layer cursor animation."
+  (interactive)
+  (setq holo-layer-enable-cursor-animation (not holo-layer-enable-cursor-animation))
+  (holo-layer-call-async "toggle_cursor_animation")
+  (message "Holo-layer cursor animation: %s"
+           (if holo-layer-enable-cursor-animation "enabled" "disabled")))
+
+(defun mcg/toggle-holo-layer-type-animation ()
+  "Toggle holo-layer type animation."
+  (interactive)
+  (setq holo-layer-enable-type-animation (not holo-layer-enable-type-animation))
+  (holo-layer-call-async "toggle_type_animation")
+  (message "Holo-layer type animation: %s"
+           (if holo-layer-enable-type-animation "enabled" "disabled")))
+
+(defun mcg/toggle-holo-layer-indent-rainbow ()
+  "Toggle holo-layer indent rainbow."
+  (interactive)
+  (setq holo-layer-enable-indent-rainbow (not holo-layer-enable-indent-rainbow))
+  (holo-layer-call-async "toggle_indent_rainbow")
+  (message "Holo-layer indent rainbow: %s"
+           (if holo-layer-enable-indent-rainbow "enabled" "disabled")))
+
+(defun mcg/holo-layer-jump-to-window (num)
+  "Jump to window NUM using holo-layer."
+  (interactive "p")
+  (holo-layer-call-async "jump_to_window" num))
+#+end_src
+
+** Initialize
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Initialize
+;;; ============================================================
+
+(mcg-holo-layer-setup)
+#+end_src
+
+** Provide Feature
+
+#+begin_src emacs-lisp
+(provide 'init-holo-layer)
+;;; init-holo-layer.el ends here
+#+end_src

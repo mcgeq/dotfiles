@@ -147,6 +147,18 @@
   	    (setq acm-enable-lsp-workspace-symbol t)
   	    (setq acm-candidate-match-function 'orderless-regexp)
   	    (setq acm-enable-preview t)
+
+  	    ;; Multi-server configuration for TypeScript/JavaScript
+  	    ;; 先移除原有的 ts/tsx 映射，再添加新的
+  	    (setq lsp-bridge-multi-lang-server-extension-list
+  		  (cl-remove-if (lambda (item)
+  				  (member (car item) '(("ts") ("tsx") ("js") ("jsx"))))
+  				lsp-bridge-multi-lang-server-extension-list))
+  	    (add-to-list 'lsp-bridge-multi-lang-server-extension-list '("ts" . "typescript_biome"))
+  	    (add-to-list 'lsp-bridge-multi-lang-server-extension-list '("tsx" . "typescriptreact_biome"))
+  	    (add-to-list 'lsp-bridge-multi-lang-server-extension-list '("js" . "javascript_biome"))
+  	    (add-to-list 'lsp-bridge-multi-lang-server-extension-list '("jsx" . "javascript_biome"))
+
   	    ;; Setup keybindings hook
   	    (add-hook 'lsp-bridge-mode-hook #'mcg-lsp-setup-keybindings)
   	    

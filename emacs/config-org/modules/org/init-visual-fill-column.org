@@ -1,0 +1,65 @@
+#+TITLE: Visual Fill Column Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-visual-fill-column.el :lexical t
+
+* Visual Fill Column Module
+
+Visual fill column for org mode.
+
+** File Header
+
+#+begin_src emacs-lisp
+;;; init-visual-fill-column.el --- Visual Fill Column for MCG Emacs -*- lexical-binding: t; -*-
+
+;; Copyright (C) 2024-2026 MCG
+;; Author: mcge <mcgeq@outlook.com>
+;; Keywords: org, visual-fill-column
+#+end_src
+
+** Require
+
+#+begin_src emacs-lisp
+;;; Code:
+
+(require 'core-lib)
+#+end_src
+
+** Configuration
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Configuration
+;;; ============================================================
+
+(defcustom mcg-org-enable-visual-fill nil
+  "Whether to enable visual fill column."
+  :type 'boolean
+  :group 'mcg-org)
+
+(defcustom mcg-org-visual-fill-width 88
+  "Visual fill column width."
+  :type 'integer
+  :group 'mcg-org)
+
+(defun mcg--setup-visual-fill-column ()
+  "Set up visual-fill-column for org mode."
+  (with-eval-after-load 'org
+    (when (and mcg-org-enable-visual-fill
+               (mcg-require-extension "visual-fill-column" t))
+      (setq visual-fill-column-width mcg-org-visual-fill-width)
+      (add-hook 'org-mode-hook #'visual-fill-column-mode)
+      (mcg-log "Visual fill column configured"))))
+#+end_src
+
+** Initialize
+
+#+begin_src emacs-lisp
+(mcg--setup-visual-fill-column)
+#+end_src
+
+** Provide
+
+#+begin_src emacs-lisp
+(provide 'init-visual-fill-column)
+;;; init-visual-fill-column.el ends here
+#+end_src

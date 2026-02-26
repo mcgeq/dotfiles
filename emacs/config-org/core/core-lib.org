@@ -204,10 +204,14 @@ Returns a list of (name . path) pairs for directories containing .el files."
             ;; If this directory contains .el files, add it
             (if (mcg--find-el-files-in-dir entry)
                 (push (cons name entry) results)
-              ;; Otherwise, recurse into subdirectories
-              (setq results
-                    (append results
-                            (mcg--discover-extensions-recursive entry (1- depth)))))))))
+              ;; Check for lisp subdirectory with .el files
+              (let ((lisp-dir (expand-file-name "lisp" entry)))
+                (if (mcg--find-el-files-in-dir lisp-dir)
+                    (push (cons name lisp-dir) results)
+                  ;; Otherwise, recurse into subdirectories
+                  (setq results
+                        (append results
+                                (mcg--discover-extensions-recursive entry (1- depth)))))))))))
     results))
 #+end_src
 
@@ -262,10 +266,53 @@ Returns the full directory path or nil if not found."
       (let ((extensions (mcg-list-extensions)))
         (cdr (assoc name extensions))))))
 
+(defun mcg-extension-direct-path (name)
+  "Try to find extension NAME by direct path lookup.
+Checks common locations like extensions/NAME, extensions/git/NAME, etc.
+Returns the path if found, nil otherwise."
+  (unless mcg-extensions-dir
+    (mcg-init-paths))
+  
+  (let ((name-str (if (symbolp name) (symbol-name name) name))
+        (result nil))
+    
+    ;; Try direct path: extensions/name
+    (let ((direct-path (expand-file-name name-str mcg-extensions-dir)))
+      (when (file-directory-p direct-path)
+        ;; Check for lisp/ subdir first (priority)
+        (let ((lisp-path (expand-file-name "lisp" direct-path)))
+          (if (mcg--find-el-files-in-dir lisp-path)
+              (setq result lisp-path)
+            ;; Then check if it has .el files directly
+            (when (mcg--find-el-files-in-dir direct-path)
+              (setq result direct-path))))))
+    
+    ;; If not found yet, try subdirectory pattern: extensions/*/name
+    ;; (e.g., extensions/git/name)
+    (unless result
+      (unless (file-directory-p (expand-file-name name-str mcg-extensions-dir))
+        (catch 'found
+          (dolist (subdir (directory-files mcg-extensions-dir t "^[^.]"))
+            (when (file-directory-p subdir)
+              (let ((ext-path (expand-file-name name-str subdir)))
+                (when (file-directory-p ext-path)
+                  ;; Check for lisp/ subdir first (priority)
+                  (let ((lisp-path (expand-file-name "lisp" ext-path)))
+                    (if (mcg--find-el-files-in-dir lisp-path)
+                        (setq result lisp-path)
+                      ;; Then check if it has .el files directly
+                      (when (mcg--find-el-files-in-dir ext-path)
+                        (setq result ext-path))))
+                  (when result
+                    (throw 'found nil))))))
+          nil)))
+    result))
+
 (defun mcg-extension-exists-p (name)
   "Check if extension NAME exists.
 Returns non-nil if the extension is found."
-  (not (null (mcg-extension-path name))))
+  (not (null (or (mcg-extension-path name)
+                 (mcg-extension-direct-path name)))))
 #+end_src
 
 *** Extension Require
@@ -273,13 +320,17 @@ Returns non-nil if the extension is found."
 #+begin_src emacs-lisp
 (defun mcg-require-extension (name &optional noerror)
   "Require extension NAME, adding its path to load-path first.
+Supports extensions in any location (direct or nested in subdirectories).
 If NOERROR is non-nil, return nil instead of signaling an error
 if the extension is not found."
-  (let ((path (mcg-extension-path name)))
+  ;; Try cache first, then direct lookup
+  (let ((path (or (mcg-extension-path name)
+                  (mcg-extension-direct-path name))))
     (if path
         (progn
           (add-to-list 'load-path path)
-          (require (intern name) nil noerror))
+          (require (intern (if (symbolp name) (symbol-name name) name)) 
+                   nil noerror))
       (if noerror
           (progn
             (mcg-log-warning "Extension not found: %s" name)
