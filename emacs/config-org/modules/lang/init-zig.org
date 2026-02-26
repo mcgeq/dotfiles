@@ -1,0 +1,309 @@
+#+TITLE: Zig Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-zig.el :lexical t
+
+* Zig Module
+
+本模块负责 MCG Emacs 的 Zig 语言支持，包括：
+- zig-mode / zig-ts-mode 配置
+- zls (Zig Language Server) LSP 集成（通过 lsp-bridge）
+- Zig 构建集成
+- 使用 zig fmt 保存时格式化
+
+** File Header
+
+#+begin_src emacs-lisp
+;;; init-zig.el --- Zig language support for MCG Emacs -*- lexical-binding: t; -*-
+
+;; Copyright (C) 2024-2026 MCG
+;; Author: mcge <mcgeq@outlook.com>
+;; Keywords: languages, zig
+;; Compatibility: GNU Emacs 29.0+
+
+;;; Commentary:
+;; Zig language support module for MCG Emacs:
+;; - zig-mode / zig-ts-mode configuration
+;; - zls (Zig Language Server) LSP integration (via lsp-bridge)
+;; - zig build integration
+;; - Format on save with zig fmt
+;;
+#+end_src
+
+** Require
+
+#+begin_src emacs-lisp
+;;; Code:
+
+(require 'core-lib)
+#+end_src
+
+** Variables
+
+Zig 模块的配置变量。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Variables
+;;; ============================================================
+
+(defvar mcg-zig-format-on-save t
+  "Whether to format Zig files on save using zig fmt.")
+#+end_src
+
+** zig-mode / zig-ts-mode Configuration
+
+zig-mode 和 zig-ts-mode 的配置，包括缩进和子词模式。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; zig-mode / zig-ts-mode Configuration
+;;; ============================================================
+
+(defun mcg-zig-mode-setup ()
+  "Setup function for zig-mode and zig-ts-mode."
+  ;; Indentation
+  (setq-local indent-tabs-mode nil)
+  (setq-local tab-width 4)
+  
+  ;; Enable subword mode for camelCase navigation
+  (subword-mode 1)
+  
+  (mcg-log "Zig mode setup complete"))
+
+;; Setup Zig mode hooks (auto-mode-alist is managed in init-treesit.el)
+(mcg-setup-lang-mode
+ '(:ts-mode zig-ts-mode
+   :fallback-mode zig-mode
+   :setup-fn mcg-zig-mode-setup))
+
+;; zig-mode extension
+(let ((zig-mode-path (mcg-extension-path "zig-mode")))
+  (when zig-mode-path
+    (add-to-list 'load-path zig-mode-path)))
+
+(with-eval-after-load 'zig-mode
+  (setq zig-format-on-save mcg-zig-format-on-save)
+  (setq zig-format-show-buffer nil))
+#+end_src
+
+** zig fmt Integration
+
+zig fmt 格式化集成。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; zig fmt Integration
+;;; ============================================================
+
+(defun mcg/zig-format ()
+  "Format current buffer with zig fmt."
+  (interactive)
+  (if (executable-find "zig")
+      (let ((file (buffer-file-name)))
+        (when file
+          (save-buffer)
+          (if (zerop (call-process "zig" nil nil nil "fmt" file))
+              (progn
+                (revert-buffer t t t)
+                (message "Formatted with zig fmt"))
+            (message "zig fmt failed"))))
+    (message "zig not found. Install Zig.")))
+#+end_src
+
+** Zig Build Integration
+
+Zig 构建命令集成，提供构建、运行、测试等功能。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Zig Build Integration
+;;; ============================================================
+
+(defun mcg--zig-find-build-root ()
+  "Find the root directory containing build.zig."
+  (or (locate-dominating-file default-directory "build.zig")
+      default-directory))
+
+(defun mcg/zig-build ()
+  "Run zig build."
+  (interactive)
+  (let ((default-directory (mcg--zig-find-build-root)))
+    (compile "zig build")))
+
+(defun mcg/zig-build-run ()
+  "Run zig build run."
+  (interactive)
+  (let ((default-directory (mcg--zig-find-build-root)))
+    (compile "zig build run")))
+
+(defun mcg/zig-build-test ()
+  "Run zig build test."
+  (interactive)
+  (let ((default-directory (mcg--zig-find-build-root)))
+    (compile "zig build test")))
+
+(defun mcg/zig-test ()
+  "Run zig test on current file."
+  (interactive)
+  (let ((file (buffer-file-name)))
+    (when file
+      (save-buffer)
+      (compile (format "zig test %s" (shell-quote-argument file))))))
+
+(defun mcg/zig-run ()
+  "Run current Zig file."
+  (interactive)
+  (let ((file (buffer-file-name)))
+    (when file
+      (save-buffer)
+      (compile (format "zig run %s" (shell-quote-argument file))))))
+#+end_src
+
+** Zig Build Steps
+
+Zig 构建步骤命令，支持不同的优化模式。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Zig Build Steps
+;;; ============================================================
+
+(defun mcg/zig-build-step (step)
+  "Run zig build with STEP."
+  (interactive "sBuild step: ")
+  (let ((default-directory (mcg--zig-find-build-root)))
+    (compile (format "zig build %s" step))))
+
+(defun mcg/zig-build-release ()
+  "Run zig build with release mode."
+  (interactive)
+  (let ((default-directory (mcg--zig-find-build-root)))
+    (compile "zig build -Doptimize=ReleaseSafe")))
+
+(defun mcg/zig-build-release-fast ()
+  "Run zig build with release-fast mode."
+  (interactive)
+  (let ((default-directory (mcg--zig-find-build-root)))
+    (compile "zig build -Doptimize=ReleaseFast")))
+#+end_src
+
+** Zig Documentation
+
+Zig 文档命令，在浏览器中打开文档。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Zig Documentation
+;;; ============================================================
+
+(defun mcg/zig-doc ()
+  "Open Zig documentation in browser."
+  (interactive)
+  (browse-url "https://ziglang.org/documentation/master/"))
+
+(defun mcg/zig-std-doc ()
+  "Open Zig standard library documentation in browser."
+  (interactive)
+  (browse-url "https://ziglang.org/documentation/master/std/"))
+#+end_src
+
+** Zig Keybindings
+
+Zig 模式的快捷键配置。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Zig Keybindings
+;;; ============================================================
+
+(defvar mcg-zig-mode-map
+  (let ((map (make-sparse-keymap)))
+    ;; Format
+    (define-key map (kbd "C-c C-f") #'mcg/zig-format)
+    ;; Build
+    (define-key map (kbd "C-c C-c b") #'mcg/zig-build)
+    (define-key map (kbd "C-c C-c r") #'mcg/zig-build-run)
+    (define-key map (kbd "C-c C-c t") #'mcg/zig-build-test)
+    (define-key map (kbd "C-c C-c s") #'mcg/zig-build-step)
+    (define-key map (kbd "C-c C-c R") #'mcg/zig-build-release)
+    (define-key map (kbd "C-c C-c F") #'mcg/zig-build-release-fast)
+    ;; Run/Test single file
+    (define-key map (kbd "C-c C-r") #'mcg/zig-run)
+    (define-key map (kbd "C-c C-t") #'mcg/zig-test)
+    ;; Documentation
+    (define-key map (kbd "C-c C-d d") #'mcg/zig-doc)
+    (define-key map (kbd "C-c C-d s") #'mcg/zig-std-doc)
+    map)
+  "Keymap for Zig-specific commands.")
+
+(defun mcg-zig-setup-keybindings ()
+  "Setup Zig-specific keybindings."
+  (use-local-map (make-composed-keymap mcg-zig-mode-map (current-local-map))))
+
+;; Keybindings setup via hooks
+(with-eval-after-load 'zig-mode
+  (add-hook 'zig-mode-hook #'mcg-zig-setup-keybindings))
+(when (mcg-treesit-available-p)
+  (add-hook 'zig-ts-mode-hook #'mcg-zig-setup-keybindings))
+#+end_src
+
+** Help Command
+
+Zig 帮助命令，显示快捷键和使用说明。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Help Command
+;;; ============================================================
+
+(defun mcg/zig-help ()
+  "Show Zig keybindings and command help."
+  (interactive)
+  (with-help-window "*MCG Zig Help*"
+    (princ "
+╔═══════════════════════════════════════════╗
+║       MCG Zig Keybindings                 ║
+╚═══════════════════════════════════════════╝
+
+FORMAT:
+  C-c C-f      - zig fmt
+
+BUILD (project with build.zig):
+  C-c C-c b    - zig build
+  C-c C-c r    - zig build run
+  C-c C-c t    - zig build test
+  C-c C-c s    - zig build <step>
+  C-c C-c R    - zig build (ReleaseSafe)
+  C-c C-c F    - zig build (ReleaseFast)
+
+SINGLE FILE:
+  C-c C-r      - zig run <file>
+  C-c C-t      - zig test <file>
+
+DOCUMENTATION:
+  C-c C-d d    - Open Zig docs
+  C-c C-d s    - Open std lib docs
+
+LSP COMMANDS (via lsp-bridge with zls):
+  M-.          - Go to definition
+  M-,          - Return from definition
+  M-?          - Find references
+  C-c r r      - Rename symbol
+  C-c r f      - Format buffer
+
+═══════════════════════════════════════════
+
+INSTALLATION:
+  - Zig: https://ziglang.org/download/
+  - ZLS: https://github.com/zigtools/zls
+
+═══════════════════════════════════════════
+")))
+#+end_src
+
+** Provide Feature
+
+#+begin_src emacs-lisp
+(provide 'init-zig)
+;;; init-zig.el ends here
+#+end_src

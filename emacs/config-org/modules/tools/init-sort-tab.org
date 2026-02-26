@@ -4,8 +4,6 @@
 
 * Sort Tab Module
 
-配置 sort-tab 标签页管理。
-
 ** File Header
 
 #+begin_src emacs-lisp

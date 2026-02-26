@@ -23,7 +23,7 @@
 ** Custom Options
 
 #+begin_src emacs-lisp
-(defcustom mcg-ui-theme 'ef-bio
+(defcustom mcg-ui-theme 'ef-dream
   "Default theme from ef-themes."
   :type 'symbol
   :group 'mcg)

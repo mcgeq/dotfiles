@@ -4,69 +4,163 @@
 
 * LSP Bridge Module
 
-使用 lsp-bridge 作为 LSP 前端，并复用 core-lib 的扩展发现与加载能力。
-
 ** File Header
 
 #+begin_src emacs-lisp
-;;; init-lsp-bridge.el --- LSP configuration -*- lexical-binding: t; -*-
+  ;;; init-lsp-bridge.el --- LSP configuration -*- lexical-binding: t; -*-
 
-;;; Commentary:
-;; Configure lsp-bridge from git submodule:
-;; emacs/site-lisp/extensions/lsp/lsp-bridge
+  ;;; Commentary:
+  ;; Configure lsp-bridge from git submodule:
+  ;; emacs/site-lisp/extensions/lsp/lsp-bridge
 
-;;; Code:
+  ;;; Code:
 
-(require 'core-lib)
+  (require 'core-lib)
+  
+#+end_src
+
+** Variables
+
+#+begin_src emacs-lisp
+  ;;; ============================================================
+  ;;; Variables
+  ;;; ============================================================
+
+  (defvar mcg-lsp-user-langserver-dir nil
+    "User custom LSP server configuration directory.")
+
+  (defvar mcg-lsp-user-multiserver-dir nil
+    "User custom multi-server configuration directory.")
+  
 #+end_src
 
 ** Custom Options
 
 #+begin_src emacs-lisp
-(defcustom mcg-lsp-enable-with-tramp t
-  "Whether lsp-bridge should be enabled for TRAMP buffers."
-  :type 'boolean
-  :group 'mcg)
+  (defcustom mcg-lsp-enable-with-tramp t
+    "Whether lsp-bridge should be enabled for TRAMP buffers."
+    :type 'boolean
+    :group 'mcg)
 
-(defcustom mcg-lsp-enable-inlay-hint nil
-  "Whether lsp-bridge inlay hints are enabled."
-  :type 'boolean
-  :group 'mcg)
+  (defcustom mcg-lsp-enable-inlay-hint nil
+    "Whether lsp-bridge inlay hints are enabled."
+    :type 'boolean
+    :group 'mcg)
+  
+#+end_src
+
+** Unified Keybindings
+
+*** Keymap Definition
+
+#+begin_src emacs-lisp
+  ;;; ============================================================
+  ;;; Unified Keybindings
+  ;;; ============================================================
+
+  (defvar mcg-lsp-keymap
+    '(;; Navigation
+      ("M-." . lsp-bridge-find-def)
+      ("M-," . lsp-bridge-find-def-return)
+      ("M-?" . lsp-bridge-find-references)
+
+      ;; Documentation
+      ("C-h ." . lsp-bridge-lookup-documentation)
+      ("C-h ," . lsp-bridge-show-signature)
+
+      ;; Refactoring
+      ("C-c r r" . lsp-bridge-rename)
+      ("C-c r a" . lsp-bridge-code-action)
+      ("C-c r f" . lsp-bridge-code-format)
+
+      ;; Diagnostics (M-g prefix - standard Emacs "goto" prefix)
+      ("M-g n" . lsp-bridge-diagnostic-jump-next)
+      ("M-g p" . lsp-bridge-diagnostic-jump-prev)
+      ("M-g l" . lsp-bridge-diagnostic-list)
+
+      ;; Workspace
+      ("C-c r s" . lsp-bridge-workspace-list-symbols))
+
+    "Unified LSP keybindings mapping.
+  All LSP-enabled language modes use the same keybindings:
+  - M-. Jump to definition
+  - M-, Return
+  - M-? Find references
+  - C-c r r Rename
+  - C-c r f Format
+  - C-c f H LSP Help")
+
+#+end_src
+
+*** Keybindings Setup Function
+
+#+begin_src emacs-lisp
+  (defun mcg-lsp-setup-keybindings ()
+    "Setup unified LSP keybindings.
+  This function is called in lsp-bridge-mode-hook,
+  setting up keybindings defined in mcg-lsp-keymap for current buffer."
+    (dolist (binding mcg-lsp-keymap)
+      (local-set-key (kbd (car binding)) (cdr binding))))
+
 #+end_src
 
 ** Setup
 
 #+begin_src emacs-lisp
-(defun mcg--setup-lsp-bridge ()
-  "Setup lsp-bridge with robust fallback."
-  (let ((lsp-bridge-path (or (mcg-extension-path "lsp-bridge")
-                             (expand-file-name
-                              "site-lisp/extensions/lsp/lsp-bridge"
-                              mcg-emacs-dir))))
-    (if (not (file-directory-p lsp-bridge-path))
-        (mcg-log-warning "lsp-bridge path not found: %s" lsp-bridge-path)
-      (add-to-list 'load-path lsp-bridge-path)
-      (let ((acm-path (expand-file-name "acm" lsp-bridge-path)))
-        (when (file-directory-p acm-path)
-          (add-to-list 'load-path acm-path)))
-      ;; lsp-bridge has a hard dependency on markdown-mode.
-      (mcg-require-extension "markdown-mode" t)
-      (if (require 'lsp-bridge nil t)
-          (progn
-            (setq lsp-bridge-enable-with-tramp mcg-lsp-enable-with-tramp)
-            (setq lsp-bridge-enable-inlay-hint mcg-lsp-enable-inlay-hint)
-            ;; Optional snippet backend
-            (when (mcg-require-extension "yasnippet" t)
-              (yas-global-mode 1))
-            (global-lsp-bridge-mode)
-            (mcg-log "lsp-bridge configured"))
-        (mcg-log-error "Failed to load lsp-bridge from %s" lsp-bridge-path)))))
+  (defun mcg--setup-lsp-bridge ()
+    "Setup lsp-bridge with robust fallback."
+    (let ((lsp-bridge-path (or (mcg-extension-path "lsp-bridge")
+                               (expand-file-name
+                                "site-lisp/extensions/lsp/lsp-bridge"
+                                mcg-emacs-dir))))
+      (if (not (file-directory-p lsp-bridge-path))
+          (mcg-log-warning "lsp-bridge path not found: %s" lsp-bridge-path)
+        (add-to-list 'load-path lsp-bridge-path)
+        (let ((acm-path (expand-file-name "acm" lsp-bridge-path)))
+          (when (file-directory-p acm-path)
+            (add-to-list 'load-path acm-path)))
+        ;; lsp-bridge has a hard dependency on markdown-mode.
+        (mcg-require-extension "markdown-mode" t)
+        (if (require 'lsp-bridge nil t)
+            (progn
+              (setq lsp-bridge-enable-with-tramp mcg-lsp-enable-with-tramp)
+              (setq lsp-bridge-enable-inlay-hint mcg-lsp-enable-inlay-hint)
+              ;; Optional snippet backend
+              (when (mcg-require-extension "yasnippet" t)
+                (yas-global-mode 1))
+              (global-lsp-bridge-mode)
+  	    ;; Set custom server directories
+  	    (when mcg-lsp-user-langserver-dir
+  	      (setq lsp-bridge-user-langserver-dir mcg-lsp-user-langserver-dir))
+  	    (when mcg-lsp-user-multiserver-dir
+  	      (setq lsp-bridge-user-multiserver-dir mcg-lsp-user-multiserver-dir))
+  	    
+  	    (setq lsp-bridge-enable-completion-in-minibuffer t)
+  	    (setq lsp-bridge-enable-org-babel t)
+  	    ;; ===== Diagnostics Settings =====
+  	    (setq lsp-bridge-enable-diagnostics t)
+  	    (setq lsp-bridge-enable-hover-diagnostic t)
+  	    (setq lsp-bridge-code-action-enable-popup-tip t)
+  	    ;; ===== Completion Settings =====
+  	    (setq lsp-bridge-enable-search-words t)
+  	    (setq lsp-bridge-enable-auto-import t)
+  	    (setq acm-enable-lsp-workspace-symbol t)
+  	    (setq acm-candidate-match-function 'orderless-regexp)
+  	    (setq acm-enable-preview t)
+  	    ;; Setup keybindings hook
+  	    (add-hook 'lsp-bridge-mode-hook #'mcg-lsp-setup-keybindings)
+  	    
+              (mcg-log "lsp-bridge configured"))
+          (mcg-log-error "Failed to load lsp-bridge from %s" lsp-bridge-path)))))
 #+end_src
 
 ** Initialize
 
 #+begin_src emacs-lisp
-(mcg--setup-lsp-bridge)
+  ;; Set default custom server directories
+  (setq mcg-lsp-user-langserver-dir (expand-file-name "langservers" mcg-emacs-dir))
+  (setq mcg-lsp-user-multiserver-dir (expand-file-name "multiservers" mcg-emacs-dir))
+  (mcg--setup-lsp-bridge)
 #+end_src
 
 ** Provide
@@ -75,5 +169,3 @@
 (provide 'init-lsp-bridge)
 ;;; init-lsp-bridge.el ends here
 #+end_src
-
-

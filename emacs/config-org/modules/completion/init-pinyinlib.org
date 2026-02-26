@@ -23,17 +23,53 @@
 ** Setup
 
 #+begin_src emacs-lisp
-(defun mcg--setup-pinyinlib ()
-  "Setup pinyinlib."
-  (if (mcg-require-extension "pinyinlib" t)
-      (mcg-log "pinyinlib configured")
-    (mcg-log-warning "pinyinlib not available")))
+;;; ============================================================
+;;; Variables
+;;; ============================================================
+
+(defvar mcg-completion-enable-pinyin t
+  "Whether to enable pinyin completion.")
+#+end_src
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Pinyin Support (Chinese)
+;;; ============================================================
+
+(defun mcg--setup-pinyin ()
+  "Setup pinyin completion support."
+  (when (and mcg-completion-enable-pinyin
+             (mcg-require-extension "pinyinlib" t))
+
+    (defun mcg/completion-regex-pinyin (str)
+      "Pinyin match STR."
+      (orderless-regexp (pinyinlib-build-regexp-string str)))
+
+    ;; Add pinyin matching to orderless styles
+    (add-to-list 'orderless-matching-styles 'mcg/completion-regex-pinyin)
+
+    (mcg-log "Pinyin completion enabled")))
+#+end_src
+
+*** Toggle Pinyin Completion
+
+#+begin_src emacs-lisp
+(defun mcg/toggle-pinyin-completion ()
+  "Toggle pinyin completion."
+  (interactive)
+  (if (member 'mcg/completion-regex-pinyin orderless-matching-styles)
+      (progn
+        (setq orderless-matching-styles
+              (remove 'mcg/completion-regex-pinyin orderless-matching-styles))
+        (message "Pinyin completion disabled"))
+    (add-to-list 'orderless-matching-styles 'mcg/completion-regex-pinyin)
+    (message "Pinyin completion enabled")))
 #+end_src
 
 ** Initialize
 
 #+begin_src emacs-lisp
-(mcg--setup-pinyinlib)
+(mcg--setup-pinyin)
 #+end_src
 
 ** Provide

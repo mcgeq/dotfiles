@@ -1,0 +1,158 @@
+#+TITLE: Color Rg Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-color-rg.el :lexical t
+
+* Color Rg Module
+
+** File Header
+
+#+begin_src emacs-lisp
+;;; init-color-rg.el --- color-rg configuration -*- lexical-binding: t; -*-
+
+;;; Commentary:
+;; Configure color-rg from:
+;; emacs/site-lisp/extensions/search/color-rg
+
+;;; Code:
+
+(require 'core-lib)
+#+end_src
+
+** Setup
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Color-rg Configuration
+;;; ============================================================
+
+(defun mcg--setup-color-rg ()
+  "Setup Color-rg project content search."
+  (when (mcg-require-extension "color-rg" t)
+    ;; Don't limit file types
+    (setq color-rg-search-file-regexp nil)
+
+    ;; Ignore directories
+    (setq color-rg-search-ignore-dirs
+          '(".git" ".svn" ".hg" "node_modules" "dist" "build" ".cache"
+            "target" ".idea" ".vscode" "__pycache__" ".pytest_cache"
+            "eln-cache" "elpa" "straight"))
+
+    ;; Ignore files
+    (setq color-rg-search-ignore-files
+          '("*.pyc" "*.o" "*.elc" "*.class" "*.jar" "*.war" "*.ear"
+            "*.min.js" "*.min.css" "*.log" "*.lock" "package-lock.json"
+            "*.png" "*.jpg" "*.gif" "*.pdf" "*.zip" "*.tar.gz"))
+
+    ;; Kill temp buffer on exit
+    (setq color-rg-kill-temp-buffer-p t)
+
+    ;; Mac uses GNU grep
+    (when (eq system-type 'darwin)
+      (when (executable-find "ggrep")
+        (setq color-rg-mac-grep "ggrep")))
+
+    ;; Window height
+    (setq color-rg-window-height 15)
+
+    ;; Show line numbers in result buffer
+    (add-hook 'color-rg-mode-hook
+              (lambda ()
+                (when (fboundp 'display-line-numbers-mode)
+                  (display-line-numbers-mode 1))))
+
+    ;; Performance optimization
+    (setq color-rg-regexp-match-limit 10000)
+
+    ;; Use ripgrep
+    (when (executable-find "rg")
+      (setq color-rg-search-command "rg"))
+
+    (mcg-log "Color-rg configured")))
+#+end_src
+
+** Color-rg Helper Functions
+
+*** Search by File Type
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Color-rg Helper Functions
+;;; ============================================================
+
+(defun mcg/color-rg-search-project-with-type ()
+  "Search in project by file type."
+  (interactive)
+  (let ((file-type (completing-read "File type: "
+                                    '("*.el" "*.org" "*.js" "*.ts" "*.py" "*.go"
+                                      "*.rs" "*.java" "*.c" "*.cpp" "*.h"
+                                      "*.md" "*.txt" "*.json" "*.yaml" "*.toml"))))
+    (let ((color-rg-search-file-regexp file-type))
+      (call-interactively 'color-rg-search-input-in-project))))
+#+end_src
+
+*** Search in Org Directory
+
+#+begin_src emacs-lisp
+(defun mcg/color-rg-search-in-org-directory ()
+  "Search in org directory."
+  (interactive)
+  (let ((org-dir (if (boundp 'org-directory)
+                     org-directory
+                   (expand-file-name "~/org"))))
+    (when (file-directory-p org-dir)
+      (let ((default-directory org-dir))
+        (call-interactively 'color-rg-search-input)))))
+#+end_src
+
+*** Search in Config Directory
+
+#+begin_src emacs-lisp
+(defun mcg/color-rg-search-in-config ()
+  "Search in Emacs configuration directory."
+  (interactive)
+  (let ((default-directory mcg-config-dir))
+    (call-interactively 'color-rg-search-input)))
+#+end_src
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Keybindings (C-c s prefix)
+;;; ============================================================
+
+(defun mcg--setup-search-keybindings ()
+  "Setup search related keybindings."
+  ;; Color-rg
+  (when (featurep 'color-rg)
+    ;; Project content search
+    (global-set-key (kbd "C-c s g") 'color-rg-search-input)
+    (global-set-key (kbd "C-c s G") 'color-rg-search-input-in-project)
+
+    ;; Symbol search
+    (global-set-key (kbd "C-c s s") 'color-rg-search-symbol)
+    (global-set-key (kbd "C-c s S") 'color-rg-search-symbol-in-project)
+
+    ;; Current file
+    (global-set-key (kbd "C-c s .") 'color-rg-search-symbol-in-current-file)
+    (global-set-key (kbd "C-c s ,") 'color-rg-search-input-in-current-file)
+
+    ;; Custom search
+    (global-set-key (kbd "C-c s T") 'mcg/color-rg-search-project-with-type)
+    (global-set-key (kbd "C-c s O") 'mcg/color-rg-search-in-org-directory)
+    (global-set-key (kbd "C-c s C") 'mcg/color-rg-search-in-config))
+
+  (mcg-log "Search keybindings configured"))
+#+end_src
+
+** Initialize
+
+#+begin_src emacs-lisp
+  (mcg--setup-color-rg)
+  (mcg--setup-search-keybindings)
+#+end_src
+
+** Provide
+
+#+begin_src emacs-lisp
+(provide 'init-color-rg)
+;;; init-color-rg.el ends here
+#+end_src

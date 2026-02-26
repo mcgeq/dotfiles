@@ -4,8 +4,6 @@
 
 * Init Module
 
-本模块是 MCG Emacs 配置的主入口点。它按顺序加载核心模块，设置模块系统，并协调所有启用模块的加载。
-
 ** File Header
 
 #+begin_src emacs-lisp
@@ -25,8 +23,6 @@
 #+end_src
 
 ** Bootstrap: Load Core Modules
-
-加载核心模块，按顺序初始化配置系统。
 
 *** Determine Configuration Directory
 
@@ -90,56 +86,57 @@
 
 ** Module Declaration: Define Enabled Modules
 
-使用 mcg! 宏声明启用的模块。以 `-' 为前缀的模块被禁用。
-
 #+begin_src emacs-lisp
-;; Declare which modules to enable using mcg! macro
-;; Modules prefixed with `-' are disabled
-;; 
-;; Categories:
-;;   :ui         - Theme, modeline, fonts, icons
-;;   :editor     - Editor defaults, navigation, editing tools
-;;   :completion - Vertico, snippets
-;;   :tools      - Git, search, input method, tabs, shell
-;;   :enhance    - Auto-save, which-key, helpful, recentf
-;;   :org        - Org-mode configuration
-;;   :writing    - Markdown, grammar checking
-;;   :lang       - LSP and language-specific modules
+  ;; Declare which modules to enable using mcg! macro
+  ;; Modules prefixed with `-' are disabled
+  ;; 
+  ;; Categories:
+  ;;   :ui         - Theme, modeline, fonts, icons
+  ;;   :editor     - Editor defaults, navigation, editing tools
+  ;;   :completion - Vertico, snippets
+  ;;   :tools      - Git, search, input method, tabs, shell
+  ;;   :enhance    - Auto-save, which-key, helpful, recentf
+  ;;   :org        - Org-mode configuration
+  ;;   :writing    - Markdown, grammar checking
+  ;;   :lang       - LSP and language-specific modules
 
-(mcg!
- ;; UI modules
- :ui
- font
- ef-themes
- nerd-icons
- awesome-tray
- 
- ;; Completion modules
- :completion
- consult
- marginalia
- vertico
- orderless
- embark
- pinyinlib
- nerd-icons-completion
+  (mcg!
+   ;; UI modules
+   :ui
+   font
+   ef-themes
+   nerd-icons
+   awesome-tray
+   
+   ;; Completion modules
+   :completion
+   consult
+   marginalia
+   vertico
+   orderless
+   embark
+   pinyinlib
+   nerd-icons-completion
 
- ;; Tools modules
- :tools
- posframe
- sort-tab
- auto-save
- lsp-bridge
-)
+   ;; Tools modules
+   :tools
+   posframe
+   sort-tab
+   auto-save
+   lsp-bridge
+   blink-search
+   color-rg
+   ;; Enhance
+   :enhance
+   recentf
+  )
 #+end_src
 
 ** Module Loading Strategy
 
-定义各类别使用的加载策略。
-
 #+begin_src emacs-lisp
 ;; Define which categories use which loading strategy
-(defvar mcg-immediate-categories '(:ui :completion :tools)
+(defvar mcg-immediate-categories '(:ui :completion :tools :enhance)
   "Categories to load immediately at startup.")
 
 (defvar mcg-idle-categories '()
@@ -151,8 +148,6 @@
 
 ** Load Immediate Modules
 
-加载立即类别中的所有模块。
-
 #+begin_src emacs-lisp
 (defun mcg-load-immediate-modules ()
   "Load all modules in immediate categories."
@@ -161,8 +156,6 @@
 #+end_src
 
 ** Setup Idle Loading
-
-设置完成和增强模块的空闲加载。
 
 #+begin_src emacs-lisp
 (defun mcg-setup-idle-modules ()
@@ -174,8 +167,6 @@
 
 ** Setup Deferred Loading
 
-设置写作和语言模块的延迟加载。
-
 #+begin_src emacs-lisp
 (defun mcg-setup-deferred-modules ()
   "Set up deferred loading for writing and language modules."
@@ -184,8 +175,6 @@
 #+end_src
 
 ** Load Private Configuration
-
-加载私有配置（如果存在）。私有配置在所有其他模块之后加载，以允许覆盖。
 
 #+begin_src emacs-lisp
 (defun mcg-load-private-config ()
@@ -205,8 +194,6 @@ Private config is loaded after all other modules to allow overrides."
 
 ** Startup Statistics
 
-Emacs 准备就绪后显示启动统计信息。
-
 #+begin_src emacs-lisp
 (defun mcg-display-startup-stats ()
   "Display startup statistics after Emacs is ready."
@@ -222,8 +209,6 @@ Emacs 准备就绪后显示启动统计信息。
 #+end_src
 
 ** Main Initialization Sequence
-
-主初始化函数，用于设置完整的 MCG Emacs 配置。
 
 #+begin_src emacs-lisp
 (defun mcg-init ()
@@ -249,8 +234,6 @@ Called to set up the complete MCG Emacs configuration."
 #+end_src
 
 ** Post-Startup Hooks
-
-Emacs 完全启动后的额外设置。
 
 #+begin_src emacs-lisp
 ;; Additional setup after Emacs is fully started

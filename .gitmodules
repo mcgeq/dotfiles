@@ -106,3 +106,30 @@
 [submodule "emacs-awesome-tray"]
 	path = emacs/site-lisp/extensions/ui/awesome-tray
 	url = https://github.com/manateelazycat/awesome-tray.git
+[submodule "emacs-vundo"]
+	path = emacs/site-lisp/extensions/editor/vundo
+	url = https://github.com/casouri/vundo.git
+[submodule "emacs-blink-search"]
+	path = emacs/site-lisp/extensions/search/blink-search
+	url = https://github.com/manateelazycat/blink-search.git
+[submodule "emacs-color-rg"]
+	path = emacs/site-lisp/extensions/search/color-rg
+	url = https://github.com/manateelazycat/color-rg.git
+[submodule "emacs-reformatter"]
+	path = emacs/site-lisp/extensions/lsp/zig/emacs-reformatter
+	url = https://github.com/purcell/emacs-reformatter.git
+[submodule "emacs-zig-mode"]
+	path = emacs/site-lisp/extensions/lsp/zig/zig-mode
+	url = https://codeberg.org/ziglang/zig-mode.git
+[submodule "emacs-markdown-ts-mode"]
+	path = emacs/site-lisp/extensions/docs/markdown-ts-mode
+	url = https://github.com/LionyxML/markdown-ts-mode.git
+[submodule "emacs-treesit-auto"]
+	path = emacs/site-lisp/extensions/lsp/treesit-auto
+	url = https://github.com/renzmann/treesit-auto.git
+[submodule "emacs-magit"]
+	path = emacs/site-lisp/extensions/git/magit
+	url = https://github.com/magit/magit.git
+[submodule "emacs-magit-with-editor"]
+	path = emacs/site-lisp/extensions/git/with-editor
+	url = https://github.com/magit/with-editor.git

@@ -22,15 +22,42 @@
 
 ** Setup
 
+** Orderless Configuration
+
+Orderless 模糊匹配引擎配置。
+
 #+begin_src emacs-lisp
+;;; ============================================================
+;;; Orderless Configuration
+;;; ============================================================
+
 (defun mcg--setup-orderless ()
-  "Setup orderless."
+  "Setup Orderless fuzzy matching engine."
   (when (mcg-require-extension "orderless" t)
-    (setq completion-styles '(orderless basic)
-          completion-category-defaults nil
-          completion-category-overrides
-          '((file (styles basic partial-completion))))
-    (mcg-log "orderless configured")))
+    ;; Core completion styles
+    (setq completion-styles '(orderless partial-completion basic)
+          completion-category-defaults nil)
+
+    ;; Component separator (space or &)
+    (setq orderless-component-separator "[ &]")
+
+    ;; File completion uses partial-completion style
+    (setq completion-category-overrides
+          '((file (styles partial-completion))
+            (buffer (styles orderless))
+            (info-menu (styles orderless))))
+
+    ;; Matching styles
+    (setq orderless-matching-styles
+          '(orderless-literal
+            orderless-regexp
+            orderless-initialism))
+
+    ;; Style dispatchers (! negation, = literal, ~ flex)
+    (setq orderless-style-dispatchers
+          '(orderless-affix-dispatch))
+
+    (mcg-log "Orderless configured")))
 #+end_src
 
 ** Initialize

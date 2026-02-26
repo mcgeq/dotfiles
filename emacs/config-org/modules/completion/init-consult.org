@@ -4,8 +4,6 @@
 
 * Consult Module
 
-配置 consult 命令与常用按键。
-
 ** File Header
 
 #+begin_src emacs-lisp
@@ -23,19 +21,76 @@
 ** Setup
 
 #+begin_src emacs-lisp
-(defun mcg--setup-consult ()
-  "Setup consult."
-  (when (mcg-require-extension "consult" t)
-    (mcg-bind-key "C-s" #'consult-line "completion/consult")
-    (mcg-bind-key "C-c b" #'consult-buffer "completion/consult")
-    (mcg-bind-key "M-y" #'consult-yank-pop "completion/consult")
-    (mcg-log "consult configured")))
+  (defun mcg--setup-consult ()
+      "Setup Consult consulting search commands."
+      (when (mcg-require-extension "consult" t)
+        ;; Preview configuration
+        (setq consult-narrow-key "<")
+        (setq consult-widen-key ">")
+
+        ;; Preview limits
+        (setq consult-preview-max-size 10485760)  ; 10 MB
+        (setq consult-preview-max-count 10)
+
+        ;; Async command configuration
+        (setq consult-async-refresh-delay 0.15)
+        (setq consult-async-input-throttle 0.2)
+        (setq consult-async-input-debounce 0.1)
+
+        ;; Register integration
+        (setq register-preview-delay 0.5
+              register-preview-function #'consult-register-format)
+        (advice-add #'register-preview :override #'consult-register-window)
+
+        ;; Xref integration
+        (setq xref-show-xrefs-function #'consult-xref
+              xref-show-definitions-function #'consult-xref)
+
+        ;; Buffer filter - hide internal buffers
+        (setq consult-buffer-filter
+              '("\\` "
+                "\\`\\*Completions\\*\\'"
+                "\\`\\*Flymake log\\*\\'"
+                "\\`\\*Semantic SymRef\\*\\'"
+                "\\`\\*tramp/.*\\*\\'"
+                "\\`\\*Messages\\*\\'"
+                "\\`\\*Warnings\\*\\'"
+                "\\`\\*Backtrace\\*\\'"
+                "\\`\\*Native-compile-Log\\*\\'"))
+
+        ;; Project function for project-based filtering
+        (setq consult-project-function
+              (lambda (_)
+                (when-let ((project (project-current)))
+                 (project-root project))))
+
+        ;; Windows UTF-8 configuration
+        (when (eq system-type 'windows-nt)
+          (setq locale-coding-system 'utf-8)
+          (set-default-coding-systems 'utf-8)
+          (prefer-coding-system 'utf-8)
+          (setq process-coding-system-alist
+                (append '(("grep" . (utf-8 . utf-8))
+                          ("rg" . (utf-8 . utf-8)))
+                        process-coding-system-alist)))
+
+        (mcg-log "Consult configured")))
+
+    (defun mcg--setup-consult-keybinding ()
+      "Setup consult."
+      (when (mcg-require-extension "consult" t)
+        (mcg-bind-key "C-s" #'consult-line "completion/consult")
+        (mcg-bind-key "C-c b" #'consult-buffer "completion/consult")
+        (mcg-bind-key "M-y" #'consult-yank-pop "completion/consult")
+        (mcg-bind-key "C-c f r" #'consult-recent-file "completion/consult")
+        (mcg-log "consult configured")))
 #+end_src
 
 ** Initialize
 
 #+begin_src emacs-lisp
-(mcg--setup-consult)
+  (mcg--setup-consult)
+  (mcg--setup-consult-keybinding)
 #+end_src
 
 ** Provide
