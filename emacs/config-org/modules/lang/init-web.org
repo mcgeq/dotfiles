@@ -1,0 +1,323 @@
+q#+TITLE: Web Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-web.el :lexical t
+
+* Web Module
+
+** File Header
+
+#+begin_src emacs-lisp
+;;; init-web.el --- Web development support for MCG Emacs -*- lexical-binding: t; -*-
+
+;; Copyright (C) 2024-2026 MCG
+;; Author: mcge <mcgeq@outlook.com>
+;; Keywords: languages, web, vue, html, css
+;; Compatibility: GNU Emacs 29.0+
+
+;;; Commentary:
+;; Web development support module for MCG Emacs:
+;; - web-mode for Vue/HTML templates
+;; - instant-rename-tag for tag renaming
+;; - CSS/SCSS support
+;; - Emmet integration
+;;
+#+end_src
+
+** Require
+
+#+begin_src emacs-lisp
+;;; Code:
+
+(require 'core-lib)
+(mcg-require-extension 'web-mode t)
+#+end_src
+
+** Variables
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Variables
+;;; ============================================================
+
+(defvar mcg-web-format-on-save t
+  "Whether to format web files on save.")
+#+end_src
+
+** web-mode Configuration
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; web-mode Configuration
+;;; ============================================================
+
+(defun mcg-web-mode-setup ()
+  "Setup function for web-mode."
+  ;; Indentation
+  (setq-local indent-tabs-mode nil)
+  (setq-local tab-width 2)
+
+  ;; web-mode specific indentation
+  (setq web-mode-markup-indent-offset 2)
+  (setq web-mode-css-indent-offset 2)
+  (setq web-mode-code-indent-offset 2)
+  (setq web-mode-script-padding 2)
+  (setq web-mode-style-padding 2)
+  (setq web-mode-block-padding 2)
+
+  ;; Auto-pairing
+  (setq web-mode-enable-auto-pairing t)
+  (setq web-mode-enable-auto-closing t)
+  (setq web-mode-enable-auto-quoting t)
+
+  ;; Highlighting
+  (setq web-mode-enable-current-element-highlight t)
+  (setq web-mode-enable-current-column-highlight nil)
+
+  ;; Enable subword mode
+  (subword-mode 1)
+
+  ;; Setup tag helpers
+  (mcg-web-setup-tag-helpers)
+
+  (mcg-log "Web mode setup complete"))
+
+;; Load web-mode extension
+(let ((web-mode-path (mcg-extension-path "web-mode")))
+  (when web-mode-path
+    (add-to-list 'load-path web-mode-path)))
+
+(with-eval-after-load 'web-mode
+  ;; Content types (for web-mode to recognize Vue/JSX)
+  (setq web-mode-content-types-alist
+        '(("vue" . "\\.vue\\'")
+          ("jsx" . "\\.jsx\\'")))
+
+  ;; Engines
+  (setq web-mode-engines-alist
+        '(("vue" . "\\.vue\\'")))
+
+  ;; Hook
+  (add-hook 'web-mode-hook #'mcg-web-mode-setup))
+#+end_src
+
+** instant-rename-tag
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; instant-rename-tag
+;;; ============================================================
+
+(defun mcg-web-setup-instant-rename-tag ()
+  "Setup instant-rename-tag for web-mode."
+  (let ((path (mcg-extension-path "instant-rename-tag")))
+    (when path
+      (add-to-list 'load-path path)
+      (require 'instant-rename-tag nil t))))
+
+(with-eval-after-load 'instant-rename-tag
+  (mcg-log "instant-rename-tag loaded"))
+#+end_src
+
+** Tag Helpers Setup
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Tag Helpers Setup
+;;; ============================================================
+
+(defun mcg-web-setup-tag-helpers ()
+  "Setup tag helper packages for web-mode."
+  ;; instant-rename-tag
+  (mcg-web-setup-instant-rename-tag))
+#+end_src
+
+** CSS/SCSS Support
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; CSS/SCSS Support
+;;; ============================================================
+
+(defun mcg-css-mode-setup ()
+  "Setup function for css-mode and scss-mode."
+  (setq-local indent-tabs-mode nil)
+  (setq-local tab-width 2)
+  (setq-local css-indent-offset 2)
+  (subword-mode 1))
+
+;; css-ts-mode (Emacs 29+)
+(when (and (fboundp 'treesit-available-p)
+           (treesit-available-p))
+  (add-to-list 'auto-mode-alist '("\\.css\\'" . css-ts-mode))
+  (add-hook 'css-ts-mode-hook #'mcg-css-mode-setup))
+
+;; css-mode fallback
+(add-hook 'css-mode-hook #'mcg-css-mode-setup)
+
+;; SCSS
+(add-to-list 'auto-mode-alist '("\\.scss\\'" . scss-mode))
+(add-hook 'scss-mode-hook #'mcg-css-mode-setup)
+
+;; Less
+(add-to-list 'auto-mode-alist '("\\.less\\'" . less-css-mode))
+(add-hook 'less-css-mode-hook #'mcg-css-mode-setup)
+#+end_src
+
+** Emmet Integration
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Emmet Integration
+;;; ============================================================
+
+(defun mcg-web-setup-emmet ()
+  "Setup emmet-mode for web development."
+  (let ((path (mcg-extension-path "emmet-mode")))
+    (when path
+      (add-to-list 'load-path path)
+      (require 'emmet-mode nil t)
+      (when (fboundp 'emmet-mode)
+        (emmet-mode 1)))))
+
+(with-eval-after-load 'emmet-mode
+  (setq emmet-indentation 2)
+  (setq emmet-move-cursor-between-quotes t)
+  (mcg-log "emmet-mode loaded"))
+
+;; Enable emmet in web-mode
+(add-hook 'web-mode-hook #'mcg-web-setup-emmet)
+(add-hook 'css-mode-hook #'mcg-web-setup-emmet)
+(add-hook 'css-ts-mode-hook #'mcg-web-setup-emmet)
+#+end_src
+
+** Web Commands
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Web Commands
+;;; ============================================================
+
+(defun mcg/web-rename-tag ()
+  "Rename current HTML tag."
+  (interactive)
+  (if (fboundp 'instant-rename-tag)
+      (call-interactively #'instant-rename-tag)
+    (message "instant-rename-tag not available")))
+
+(defun mcg/web-close-tag ()
+  "Close current HTML tag."
+  (interactive)
+  (if (fboundp 'web-mode-element-close)
+      (call-interactively #'web-mode-element-close)
+    (message "web-mode not available")))
+
+(defun mcg/web-wrap-tag ()
+  "Wrap selection with HTML tag."
+  (interactive)
+  (if (fboundp 'web-mode-element-wrap)
+      (call-interactively #'web-mode-element-wrap)
+    (message "web-mode not available")))
+
+(defun mcg/web-kill-tag ()
+  "Kill current HTML element."
+  (interactive)
+  (if (fboundp 'web-mode-element-kill)
+      (call-interactively #'web-mode-element-kill)
+    (message "web-mode not available")))
+
+(defun mcg/web-select-tag ()
+  "Select current HTML element."
+  (interactive)
+  (if (fboundp 'web-mode-element-select)
+      (call-interactively #'web-mode-element-select)
+    (message "web-mode not available")))
+
+(defun mcg/web-fold-tag ()
+  "Fold/unfold current HTML element."
+  (interactive)
+  (if (fboundp 'web-mode-fold-or-unfold)
+      (call-interactively #'web-mode-fold-or-unfold)
+    (message "web-mode not available")))
+#+end_src
+
+** Web Keybindings
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Web Keybindings
+;;; ============================================================
+
+(defvar mcg-web-mode-map
+  (let ((map (make-sparse-keymap)))
+    ;; Tag operations
+    (define-key map (kbd "C-c C-r") #'mcg/web-rename-tag)
+    (define-key map (kbd "C-c C-/") #'mcg/web-close-tag)
+    (define-key map (kbd "C-c C-w") #'mcg/web-wrap-tag)
+    (define-key map (kbd "C-c C-k") #'mcg/web-kill-tag)
+    (define-key map (kbd "C-c C-s") #'mcg/web-select-tag)
+    (define-key map (kbd "C-c C-f") #'mcg/web-fold-tag)
+    ;; Emmet
+    (define-key map (kbd "C-j") #'emmet-expand-line)
+    map)
+  "Keymap for web-mode specific commands.")
+
+(defun mcg-web-setup-keybindings ()
+  "Setup web-mode specific keybindings."
+  (use-local-map (make-composed-keymap mcg-web-mode-map (current-local-map))))
+
+(add-hook 'web-mode-hook #'mcg-web-setup-keybindings)
+#+end_src
+
+** Help Command
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Help Command
+;;; ============================================================
+
+(defun mcg/web-help ()
+  "Show web-mode keybindings and command help."
+  (interactive)
+  (with-help-window "*MCG Web Help*"
+    (princ "
+╔═══════════════════════════════════════════╗
+║       MCG Web Mode Keybindings            ║
+╚═══════════════════════════════════════════╝
+
+TAG OPERATIONS:
+  C-c C-r      - Rename tag
+  C-c C-/      - Close tag
+  C-c C-w      - Wrap selection with tag
+  C-c C-k      - Kill element
+  C-c C-s      - Select element
+  C-c C-f      - Fold/unfold element
+
+EMMET:
+  C-j          - Expand Emmet abbreviation
+
+LSP COMMANDS (via lsp-bridge with Volar):
+  M-.          - Go to definition
+  M-,          - Return from definition
+  M-?          - Find references
+  C-c r r      - Rename symbol
+  C-c r f      - Format buffer
+
+═══════════════════════════════════════════
+
+SUPPORTED FILE TYPES:
+  .vue         - Vue.js single file components
+  .html        - HTML files
+  .erb         - Ruby ERB templates
+  .ejs         - EJS templates
+  .svelte      - Svelte components
+
+═══════════════════════════════════════════
+")))
+#+end_src
+
+** Provide Feature
+
+#+begin_src emacs-lisp
+(provide 'init-web)
+;;; init-web.el ends here
+#+end_src

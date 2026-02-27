@@ -1,0 +1,77 @@
+#+TITLE: MWIM Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-mwim.el :lexical t
+
+* MWIM Module
+
+本模块配置 mwim (Move Where I Mean) 包，提供智能的行首/行尾移动功能。
+
+** File Header
+
+#+begin_src emacs-lisp
+;;; init-mwim.el --- MWIM for MCG Emacs -*- lexical-binding: t; -*-
+
+;; Copyright (C) 2024-2026 MCG
+;; Author: mcge <mcgeq@outlook.com>
+;; Keywords: editor, navigation, mwim
+;; Compatibility: GNU Emacs 29.0+
+
+;;; Commentary:
+;; MWIM (Move Where I Mean) provides intelligent movement commands
+;; that switch between various line positions like code beginning,
+;; line beginning, or comment.
+#+end_src
+
+** Require
+
+#+begin_src emacs-lisp
+;;; Code:
+
+(require 'core-lib)
+#+end_src
+
+** MWIM Configuration
+
+MWIM 提供智能的行首/行尾移动。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; MWIM Configuration
+;;; ============================================================
+
+(defun mcg-mwim-setup ()
+  "Setup mwim package."
+  ;; Bind C-a to mwim-beginning: toggles between code-beginning and line-beginning
+  (global-set-key (kbd "C-a") #'mwim-beginning)
+  
+  ;; Bind C-e to mwim-end: toggles between code-end and line-end
+  (global-set-key (kbd "C-e") #'mwim-end)
+  
+  ;; Optional: bind home/end keys
+  (global-set-key (kbd "<home>") #'mwim-beginning-of-line-or-code)
+  (global-set-key (kbd "<end>") #'mwim-end-of-line-or-code)
+  
+  (mcg-log "Configured mwim"))
+#+end_src
+
+** Initialize
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Initialize
+;;; ============================================================
+
+(autoload 'mwim-beginning "mwim" nil t)
+(autoload 'mwim-end "mwim" nil t)
+(autoload 'mwim-beginning-of-line-or-code "mwim" nil t)
+(autoload 'mwim-end-of-line-or-code "mwim" nil t)
+
+(mcg-mwim-setup)
+#+end_src
+
+** Provide Feature
+
+#+begin_src emacs-lisp
+(provide 'init-mwim)
+;;; init-mwim.el ends here
+#+end_src

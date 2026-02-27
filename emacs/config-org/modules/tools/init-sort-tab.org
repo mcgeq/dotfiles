@@ -29,10 +29,29 @@
     (mcg-log "sort-tab configured")))
 #+end_src
 
+** Keybindings
+
+#+BEGIN_SRC emacs-lisp
+  (defun mcg--setup-sort-tab-keybinding ()
+    "Setup sort-tab keybinding."
+    (when (featurep 'sort-tab)
+      (global-set-key (kbd "C-c t n") 'sort-tab-select-next-tab)
+      (global-set-key (kbd "C-c t p") 'sort-tab-select-prev-tab)
+      (global-set-key (kbd "M-8") 'sort-tab-select-next-tab)
+      (global-set-key (kbd "M-7") 'sort-tab-select-prev-tab)
+      (global-set-key (kbd "C-c t k") 'sort-tab-close-current-tab)
+      (global-set-key (kbd "C-c t o") 'sort-tab-close-other-tabs)
+      (global-set-key (kbd "C-c t f") 'sort-tab-select-first-tab)
+      (global-set-key (kbd "C-c t l") 'sort-tab-select-last-tab)
+      )
+    (mcg-log "Sort tab keybindings configured"))
+#+END_SRC
+
 ** Initialize
 
 #+begin_src emacs-lisp
-(mcg--setup-sort-tab)
+  (mcg--setup-sort-tab)
+  (mcg--setup-sort-tab-keybinding)
 #+end_src
 
 ** Provide

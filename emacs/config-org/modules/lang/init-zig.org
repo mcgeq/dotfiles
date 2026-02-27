@@ -4,12 +4,6 @@
 
 * Zig Module
 
-本模块负责 MCG Emacs 的 Zig 语言支持，包括：
-- zig-mode / zig-ts-mode 配置
-- zls (Zig Language Server) LSP 集成（通过 lsp-bridge）
-- Zig 构建集成
-- 使用 zig fmt 保存时格式化
-
 ** File Header
 
 #+begin_src emacs-lisp
@@ -39,8 +33,6 @@
 
 ** Variables
 
-Zig 模块的配置变量。
-
 #+begin_src emacs-lisp
 ;;; ============================================================
 ;;; Variables
@@ -52,8 +44,6 @@ Zig 模块的配置变量。
 
 ** zig-mode / zig-ts-mode Configuration
 
-zig-mode 和 zig-ts-mode 的配置，包括缩进和子词模式。
-
 #+begin_src emacs-lisp
 ;;; ============================================================
 ;;; zig-mode / zig-ts-mode Configuration
@@ -64,10 +54,10 @@ zig-mode 和 zig-ts-mode 的配置，包括缩进和子词模式。
   ;; Indentation
   (setq-local indent-tabs-mode nil)
   (setq-local tab-width 4)
-  
+
   ;; Enable subword mode for camelCase navigation
   (subword-mode 1)
-  
+
   (mcg-log "Zig mode setup complete"))
 
 ;; Setup Zig mode hooks (auto-mode-alist is managed in init-treesit.el)
@@ -86,33 +76,7 @@ zig-mode 和 zig-ts-mode 的配置，包括缩进和子词模式。
   (setq zig-format-show-buffer nil))
 #+end_src
 
-** zig fmt Integration
-
-zig fmt 格式化集成。
-
-#+begin_src emacs-lisp
-;;; ============================================================
-;;; zig fmt Integration
-;;; ============================================================
-
-(defun mcg/zig-format ()
-  "Format current buffer with zig fmt."
-  (interactive)
-  (if (executable-find "zig")
-      (let ((file (buffer-file-name)))
-        (when file
-          (save-buffer)
-          (if (zerop (call-process "zig" nil nil nil "fmt" file))
-              (progn
-                (revert-buffer t t t)
-                (message "Formatted with zig fmt"))
-            (message "zig fmt failed"))))
-    (message "zig not found. Install Zig.")))
-#+end_src
-
 ** Zig Build Integration
-
-Zig 构建命令集成，提供构建、运行、测试等功能。
 
 #+begin_src emacs-lisp
 ;;; ============================================================
@@ -161,8 +125,6 @@ Zig 构建命令集成，提供构建、运行、测试等功能。
 
 ** Zig Build Steps
 
-Zig 构建步骤命令，支持不同的优化模式。
-
 #+begin_src emacs-lisp
 ;;; ============================================================
 ;;; Zig Build Steps
@@ -189,8 +151,6 @@ Zig 构建步骤命令，支持不同的优化模式。
 
 ** Zig Documentation
 
-Zig 文档命令，在浏览器中打开文档。
-
 #+begin_src emacs-lisp
 ;;; ============================================================
 ;;; Zig Documentation
@@ -209,8 +169,6 @@ Zig 文档命令，在浏览器中打开文档。
 
 ** Zig Keybindings
 
-Zig 模式的快捷键配置。
-
 #+begin_src emacs-lisp
 ;;; ============================================================
 ;;; Zig Keybindings
@@ -218,8 +176,6 @@ Zig 模式的快捷键配置。
 
 (defvar mcg-zig-mode-map
   (let ((map (make-sparse-keymap)))
-    ;; Format
-    (define-key map (kbd "C-c C-f") #'mcg/zig-format)
     ;; Build
     (define-key map (kbd "C-c C-c b") #'mcg/zig-build)
     (define-key map (kbd "C-c C-c r") #'mcg/zig-build-run)
@@ -248,8 +204,6 @@ Zig 模式的快捷键配置。
 #+end_src
 
 ** Help Command
-
-Zig 帮助命令，显示快捷键和使用说明。
 
 #+begin_src emacs-lisp
 ;;; ============================================================

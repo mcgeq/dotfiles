@@ -1,8 +1,20 @@
 {
-  "default": "typescript",
-  "servers": ["typescript", "biome"],
-  "diagnostics": ["typescript", "biome"],
-  "code_action": ["typescript", "biome"],
-  "execute_command": ["typescript", "biome"],
-  "formatting": "biome"
+    "default": "typescript",
+    "servers": [
+        "typescript",
+        "biome"
+    ],
+    "diagnostics": [
+        "typescript",
+        "biome"
+    ],
+    "code_action": [
+        "typescript",
+        "biome"
+    ],
+    "execute_command": [
+        "typescript",
+        "biome"
+    ],
+    "formatting": "biome"
 }

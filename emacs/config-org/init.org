@@ -114,6 +114,8 @@
    :editor
    defaults
    vundo
+   mwim
+   treesit
 
    ;; Completion modules
    :completion
@@ -143,6 +145,11 @@
    ;; Org
    :org
    org
+
+   ;; Lang
+   :lang
+   zig
+   web
    )
 #+end_src
 
@@ -153,7 +160,7 @@
 (defvar mcg-immediate-categories '(:ui :editor :completion :tools :enhance :org)
   "Categories to load immediately at startup.")
 
-(defvar mcg-idle-categories '()
+(defvar mcg-idle-categories '(:lang)
   "Categories to load during idle time.")
 
 (defvar mcg-deferred-categories '()

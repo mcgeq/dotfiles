@@ -114,6 +114,9 @@ Functions receive (CATEGORY MODULE) as arguments.")
 Structure: (((CATEGORY . MODULE) . (PATTERN . MODE)) ...)")
 #+end_src
 
+#+RESULTS:
+: mcg-module-triggers
+
 ** Module Path Functions
 
 模块路径函数，用于获取模块文件路径。

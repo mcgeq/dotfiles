@@ -1,0 +1,517 @@
+#+TITLE: Tree-sitter Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-treesit.el :lexical t
+
+* Tree-sitter Module
+
+** File Header
+
+#+begin_src emacs-lisp
+;;; init-treesit.el --- Tree-sitter Configuration for MCG Emacs -*- lexical-binding: t; -*-
+
+;; Copyright (C) 2024-2026 MCG
+;; Author: mcge <mcgeq@outlook.com>
+;; Keywords: tree-sitter, syntax, highlighting
+;; Compatibility: GNU Emacs 29.0+
+
+;;; Commentary:
+;; Tree-sitter configuration module for MCG Emacs, responsible for:
+;; - treesit language source configuration
+;; - major-mode remapping
+;; - file type associations
+#+end_src
+
+** Require
+
+#+begin_src emacs-lisp
+;;; Code:
+
+(require 'core-lib)
+(require 'treesit)
+#+end_src
+
+** Prevent typescript-mode Package Loading
+
+外部 typescript-mode 包与内置 typescript-ts-mode 的模式层次结构不同，会导致 "Inconsistent hierarchy" 错误。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Prevent typescript-mode Package Loading
+;;; ============================================================
+
+;; The external typescript-mode package has a different mode hierarchy than
+;; the built-in typescript-ts-mode, causing "Inconsistent hierarchy" errors.
+;; We prevent it from being loaded by adding it to load-path exclusions.
+(with-eval-after-load 'typescript-mode
+  ;; If typescript-mode gets loaded anyway, warn the user
+  (message "Warning: typescript-mode package loaded. This may cause hierarchy conflicts with typescript-ts-mode."))
+
+;; Remove typescript-mode from auto-mode-alist if it gets added
+(defun mcg--remove-typescript-mode-from-auto-mode-alist ()
+  "Remove typescript-mode entries from auto-mode-alist."
+  (setq auto-mode-alist
+        (seq-remove (lambda (pair)
+                      (eq (cdr pair) 'typescript-mode))
+                    auto-mode-alist)))
+
+;; Run after init to ensure our settings take precedence
+(add-hook 'after-init-hook #'mcg--remove-typescript-mode-from-auto-mode-alist)
+#+end_src
+
+** Variables
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Variables
+;;; ============================================================
+
+(defvar mcg-treesit-font-lock-level 4
+  "Tree-sitter syntax highlighting level (1-4).
+1: Minimal highlighting
+4: Maximum highlighting")
+
+;; Set tree-sitter grammar install directory
+(setq treesit-extra-load-path
+      (list (expand-file-name "tree-sitter" user-emacs-directory)))
+#+end_src
+
+** Language Sources
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Language Sources
+;;; ============================================================
+
+(defvar mcg-treesit-language-sources
+  '((bash . ("https://github.com/tree-sitter/tree-sitter-bash"))
+    (c . ("https://github.com/tree-sitter/tree-sitter-c"))
+    (cpp . ("https://github.com/tree-sitter/tree-sitter-cpp"))
+    (css . ("https://github.com/tree-sitter/tree-sitter-css"))
+    (cmake . ("https://github.com/uyha/tree-sitter-cmake"))
+    (csharp . ("https://github.com/tree-sitter/tree-sitter-c-sharp.git"))
+    (dockerfile . ("https://github.com/camdencheek/tree-sitter-dockerfile"))
+    (elisp . ("https://github.com/Wilfred/tree-sitter-elisp"))
+    (elixir . ("https://github.com/elixir-lang/tree-sitter-elixir" "main" "src" nil nil))
+    (go . ("https://github.com/tree-sitter/tree-sitter-go"))
+    (gomod . ("https://github.com/camdencheek/tree-sitter-go-mod.git"))
+    (haskell . ("https://github.com/tree-sitter/tree-sitter-haskell" "master" "src" nil nil))
+    (html . ("https://github.com/tree-sitter/tree-sitter-html"))
+    (java . ("https://github.com/tree-sitter/tree-sitter-java.git"))
+    (javascript . ("https://github.com/tree-sitter/tree-sitter-javascript"))
+    (json . ("https://github.com/tree-sitter/tree-sitter-json"))
+    (lua . ("https://github.com/Azganoth/tree-sitter-lua"))
+    (make . ("https://github.com/alemuller/tree-sitter-make"))
+    (markdown . ("https://github.com/tree-sitter-grammars/tree-sitter-markdown"
+                 "split_parser" "tree-sitter-markdown/src"))
+    (markdown-inline . ("https://github.com/tree-sitter-grammars/tree-sitter-markdown"
+                        "split_parser" "tree-sitter-markdown-inline/src"))
+    (ocaml . ("https://github.com/tree-sitter/tree-sitter-ocaml" nil "ocaml/src"))
+    (org . ("https://github.com/milisims/tree-sitter-org"))
+    (python . ("https://github.com/tree-sitter/tree-sitter-python"))
+    (php . ("https://github.com/tree-sitter/tree-sitter-php"))
+    (typescript . ("https://github.com/tree-sitter/tree-sitter-typescript" nil "typescript/src"))
+    (tsx . ("https://github.com/tree-sitter/tree-sitter-typescript" nil "tsx/src"))
+    (ruby . ("https://github.com/tree-sitter/tree-sitter-ruby"))
+    (rust . ("https://github.com/tree-sitter/tree-sitter-rust"))
+    (sql . ("https://github.com/m-novikov/tree-sitter-sql"))
+    (scala . ("https://github.com/tree-sitter/tree-sitter-scala" "master" "src" nil nil))
+    (toml . ("https://github.com/tree-sitter/tree-sitter-toml" "master" "src" nil nil))
+    (vue . ("https://github.com/merico-dev/tree-sitter-vue"))
+    (kotlin . ("https://github.com/fwcd/tree-sitter-kotlin"))
+    (yaml . ("https://github.com/ikatyang/tree-sitter-yaml"))
+    (zig . ("https://github.com/GrayJack/tree-sitter-zig"))
+    (clojure . ("https://github.com/sogaiu/tree-sitter-clojure"))
+    (mojo . ("https://github.com/HerringtonDarkholme/tree-sitter-mojo")))
+  "Tree-sitter language grammar source list.")
+#+end_src
+
+** Major Mode Remap
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Major Mode Remap
+;;; ============================================================
+
+(defvar mcg-treesit-major-mode-remap
+  '((c-mode . c-ts-mode)
+    (c++-mode . c++-ts-mode)
+    (cmake-mode . cmake-ts-mode)
+    (conf-toml-mode . toml-ts-mode)
+    (css-mode . css-ts-mode)
+    (js-mode . js-ts-mode)
+    (js-json-mode . json-ts-mode)
+    (python-mode . python-ts-mode)
+    (json-mode . json-ts-mode)
+    (sh-mode . bash-ts-mode)
+    ;; Note: typescript-mode is not remapped because it's an external package
+    ;; with different mode hierarchy. Use typescript-ts-mode directly via auto-mode-alist.
+    (rust-mode . rust-ts-mode)
+    (java-mode . java-ts-mode)
+    (clojure-mode . clojure-ts-mode)
+    (markdown-mode . markdown-ts-mode))
+  "Mapping from traditional modes to tree-sitter modes.")
+#+end_src
+
+** Auto Mode Alist
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Auto Mode Alist
+;;; ============================================================
+
+(defvar mcg-treesit-auto-mode-alist
+  '(("\\.markdown\\'" . markdown-mode)
+    ("\\.md\\'" . markdown-mode)
+    ("\\.coffee\\'" . coffee-mode)
+    ("\\.iced\\'" . coffee-mode)
+    ("Cakefile\\'" . coffee-mode)
+    ("\\.stumpwmrc\\'" . lisp-mode)
+    ("\\.[hg]s\\'" . haskell-mode)
+    ("\\.hi\\'" . haskell-mode)
+    ("\\.hs-boot\\'" . haskell-mode)
+    ("\\.chs\\'" . haskell-mode)
+    ("\\.l[hg]s\\'" . literate-haskell-mode)
+    ("\\.inc\\'" . asm-mode)
+    ("\\.max\\'" . maxima-mode)
+    ("\\.org\\'" . org-mode)
+    ("\\.cron\\(tab\\)?\\'" . crontab-mode)
+    ("cron\\(tab\\)?\\." . crontab-mode)
+    ("\\.a90\\'" . intel-hex-mode)
+    ("\\.hex\\'" . intel-hex-mode)
+    ("\\.py\\'" . python-ts-mode)
+    ("\\.pyi\\'" . python-ts-mode)
+    ("/\\.php_cs\\(?:\\.dist\\)?\\'" . php-mode)
+    ("\\.\\(?:php\\.inc\\|stub\\)\\'" . php-mode)
+    ("\\.\\(?:php[s345]?\\|phtml\\)\\'" . php-mode-maybe)
+    ("SConstruct\\'" . python-ts-mode)
+    ("\\.ml\\'" . tuareg-mode)
+    ("\\.mli\\'" . tuareg-mode)
+    ("\\.mly\\'" . tuareg-mode)
+    ("\\.mll\\'" . tuareg-mode)
+    ("\\.mlp\\'" . tuareg-mode)
+    ("\\.qml\\'" . qml-mode)
+    ("\\.jl\\'" . lisp-mode)
+    ("\\.asdf\\'" . lisp-mode)
+    ("CMakeLists\\.txt\\'" . cmake-mode)
+    ("\\.cmake\\'" . cmake-mode)
+    ("\\.vue\\'" . web-mode)
+    ("\\.wxml\\'" . web-mode)
+    ("\\.phtml\\'" . web-mode)
+    ("\\.jsp\\'" . web-mode)
+    ("\\.as[cp]x\\'" . web-mode)
+    ("\\.erb\\'" . web-mode)
+    ("\\.ejs\\'" . web-mode)
+    ("\\.svelte\\'" . web-mode)
+    ("\\.mustache\\'" . web-mode)
+    ("\\.djhtml\\'" . web-mode)
+    ("\\.html?\\'" . web-mode)
+    ("\\.css\\'" . css-mode)
+    ("\\.wxss\\'" . css-mode)
+    ("\\.styl\\'" . sws-mode)
+    ("\\.jade\\'" . jade-mode)
+    ("\\.go\\'" . go-mode)
+    ("\\.vala\\'" . vala-mode)
+    ("\\.vapi\\'" . vala-mode)
+    ("\\.rs\\'" . rust-ts-mode)
+    ("\\.pro\\'" . qmake-mode)
+    ("\\.js\\'" . js-mode)
+    ("\\.ts\\'" . typescript-ts-mode)
+    ("\\.tsx\\'" . tsx-ts-mode)
+    ("\\.mts\\'" . typescript-ts-mode)
+    ("\\.cts\\'" . typescript-ts-mode)
+    ("\\.mjs\\'" . js-ts-mode)
+    ("\\.cjs\\'" . js-ts-mode)
+    ("\\.wxs\\'" . js-mode)
+    ("\\.jsx\\'" . web-mode)
+    ("\\.lua\\'" . lua-mode)
+    ("\\.swift\\'" . swift-mode)
+    ("\\.l\\'" . flex-mode)
+    ("\\.y\\'" . bison-mode)
+    ("\\.pdf\\'" . pdf-view-mode)
+    ("\\.cpp\\'" . c++-mode)
+    ("\\.h\\'" . c++-mode)
+    ("\\.ll\\'" . llvm-mode)
+    ("\\.bc\\'" . hexl-mode)
+    ("\\.nim\\'" . nim-mode)
+    ("\\.nims\\'" . nim-mode)
+    ("\\.nimble\\'" . nim-mode)
+    ("\\.nim\\.cfg\\'" . nim-mode)
+    ("\\.exs\\'" . elixir-mode)
+    ("\\.json\\'" . json-mode)
+    ("\\.clj\\'" . clojure-ts-mode)
+    ("\\.dart\\'" . dart-mode)
+    ("\\.zig\\'" . zig-mode)
+    ("\\.kt\\'" . kotlin-mode)
+    ("\\.mojo\\'" . mojo-mode)
+    ("\\.fs\\'" . fsharp-mode))
+  "Mapping from file extensions to modes.")
+#+end_src
+
+** Treesit Parser Hooks
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Treesit Parser Hooks
+;;; ============================================================
+
+(defvar mcg-treesit-parser-hooks
+  '((markdown-ts-mode-hook . markdown)
+    (zig-mode-hook . zig)
+    (mojo-mode-hook . mojo)
+    (emacs-lisp-mode-hook . elisp)
+    (ielm-mode-hook . elisp)
+    (json-mode-hook . json)
+    (go-mode-hook . go)
+    (java-mode-hook . java)
+    (java-ts-mode-hook . java)
+    (clojure-mode-hook . clojure)
+    (clojure-ts-mode-hook . clojure)
+    (cider-repl-mode-hook . clojure)
+    (php-mode-hook . php)
+    (php-ts-mode-hook . php)
+    (haskell-mode-hook . haskell)
+    (kotlin-mode-hook . kotlin)
+    (lua-mode-hook . lua))
+  "Mapping from mode hooks to tree-sitter languages.")
+
+(defun mcg-treesit--add-parser-hooks ()
+  "Add treesit-parser creation hooks for various modes."
+  (dolist (pair mcg-treesit-parser-hooks)
+    (let ((hook (car pair))
+          (lang (cdr pair)))
+      (add-hook hook
+                (lambda ()
+                  (when (treesit-available-p)
+                    (treesit-parser-create lang)))))))
+#+end_src
+
+** Web Mode Parser
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Web Mode Parser
+;;; ============================================================
+
+(defun mcg-treesit--web-mode-parser ()
+  "Create appropriate treesit parser for web-mode."
+  (let ((file-name (buffer-file-name)))
+    (when file-name
+      (treesit-parser-create
+       (pcase (file-name-extension file-name)
+         ("vue" 'vue)
+         ("html" 'html)
+         ("php" 'php))))))
+#+end_src
+
+** Autoloads
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Autoloads
+;;; ============================================================
+
+(defvar mcg-treesit-autoloads
+  '((cmake-mode . "cmake-mode")
+    (qml-mode . "qml-mode")
+    (php-mode . "php-mode")
+    (php-mode-maybe . "php-mode")
+    (coffee-mode . "coffee-mode")
+    (sws-mode . "sws-mode")
+    (jade-mode . "jade-mode")
+    (vala-mode . "vala-mode")
+    (rust-mode . "rust-mode")
+    (qmake-mode . "qmake-mode")
+    (swift-mode . "swift-mode")
+    (rjsx-mode . "rjsx-mode")
+    (flex-mode . "flex")
+    (bison-mode . "bison")
+    (llvm-mode . "llvm-mode")
+    (elixir-mode . "elixir-mode")
+    (json-mode . "json-mode")
+    (clojure-ts-mode . "clojure-ts-mode")
+    (dart-mode . "dart-mode")
+    (zig-mode . "zig-mode")
+    (kotlin-mode . "kotlin-mode")
+    (mojo-mode . "mojo")
+    (fsharp-mode . "fsharp-mode")
+    (lua-mode . "lang-lua")
+    (web-mode . "web-mode"))
+  "Autoload mapping from modes to files.")
+
+(defun mcg-treesit--setup-autoloads ()
+  "Setup mode autoloads."
+  (dolist (pair mcg-treesit-autoloads)
+    (autoload (car pair) (cdr pair) nil t)))
+#+end_src
+
+** Setup Functions
+
+*** Setup Sources
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Setup Functions
+;;; ============================================================
+
+(defun mcg-treesit-setup-sources ()
+  "Setup tree-sitter language sources."
+  (setq treesit-language-source-alist mcg-treesit-language-sources)
+  (mcg-log "Configured treesit language sources"))
+#+end_src
+
+*** Setup Remap
+
+#+begin_src emacs-lisp
+(defun mcg-treesit-setup-remap ()
+  "Setup major-mode remapping."
+  (setq major-mode-remap-alist mcg-treesit-major-mode-remap)
+  (mcg-log "Configured major-mode remap for tree-sitter"))
+#+end_src
+
+*** Setup Auto Mode
+
+#+begin_src emacs-lisp
+(defun mcg-treesit-setup-auto-mode ()
+  "Setup auto-mode-alist."
+  ;; Add entries in reverse order so higher priority ones end up first
+  (dolist (pair mcg-treesit-auto-mode-alist)
+    (add-to-list 'auto-mode-alist pair))
+  (add-to-list 'interpreter-mode-alist '("coffee" . coffee-mode))
+
+  ;; Ensure TypeScript/TSX use tree-sitter modes (highest priority)
+  ;; These must be at the front of auto-mode-alist to override any other settings
+  (setq auto-mode-alist
+        (append '(("\\.ts\\'" . typescript-ts-mode)
+                  ("\\.tsx\\'" . tsx-ts-mode)
+                  ("\\.mts\\'" . typescript-ts-mode)
+                  ("\\.cts\\'" . typescript-ts-mode))
+                (seq-remove (lambda (pair)
+                              (and (stringp (car pair))
+                                   (string-match-p "\\.\\(ts\\|tsx\\|mts\\|cts\\)\\\\'" (car pair))))
+                            auto-mode-alist)))
+  (mcg-log "Configured auto-mode-alist"))
+#+end_src
+
+*** Setup Hooks
+
+#+begin_src emacs-lisp
+(defun mcg-treesit-setup-hooks ()
+  "Setup treesit parser hooks."
+  (mcg-treesit--add-parser-hooks)
+  (add-hook 'web-mode-hook #'mcg-treesit--web-mode-parser)
+  (mcg-log "Configured treesit parser hooks"))
+#+end_src
+
+*** Setup Font Lock
+
+#+begin_src emacs-lisp
+(defun mcg-treesit-setup-font-lock ()
+  "Setup tree-sitter syntax highlighting level."
+  (setq treesit-font-lock-level mcg-treesit-font-lock-level)
+  (mcg-log "Set treesit font-lock level to %d" mcg-treesit-font-lock-level))
+#+end_src
+
+** Commands
+
+*** Install All Grammars
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Commands
+;;; ============================================================
+
+(defun mcg/treesit-install-all-grammars ()
+  "Install all configured tree-sitter grammars."
+  (interactive)
+  (dolist (lang-source treesit-language-source-alist)
+    (let ((lang (car lang-source)))
+      (unless (treesit-language-available-p lang)
+        (message "Installing grammar for %s..." lang)
+        (treesit-install-language-grammar lang))))
+  (message "All grammars installed!"))
+#+end_src
+
+*** Install Grammar
+
+#+begin_src emacs-lisp
+(defun mcg/treesit-install-grammar (lang)
+  "Install tree-sitter grammar for specified language LANG."
+  (interactive
+   (list (intern (completing-read "Language: "
+                                  (mapcar #'car treesit-language-source-alist)
+                                  nil t))))
+  (if (treesit-language-available-p lang)
+      (message "Grammar for %s is already installed" lang)
+    (treesit-install-language-grammar lang)
+    (message "Installed grammar for %s" lang)))
+#+end_src
+
+*** List Available
+
+#+begin_src emacs-lisp
+(defun mcg/treesit-list-available ()
+  "List all available tree-sitter grammars."
+  (interactive)
+  (let ((available nil)
+        (missing nil))
+    (dolist (lang-source treesit-language-source-alist)
+      (let ((lang (car lang-source)))
+        (if (treesit-language-available-p lang)
+            (push lang available)
+          (push lang missing))))
+    (with-current-buffer (get-buffer-create "*Tree-sitter Grammars*")
+      (erase-buffer)
+      (insert "Tree-sitter Grammar Status\n")
+      (insert "==========================\n\n")
+      (insert (format "Installed (%d):\n" (length available)))
+      (dolist (lang (sort available #'string<))
+        (insert (format "  ✓ %s\n" lang)))
+      (insert (format "\nNot Installed (%d):\n" (length missing)))
+      (dolist (lang (sort missing #'string<))
+        (insert (format "  ✗ %s\n" lang)))
+      (goto-char (point-min))
+      (display-buffer (current-buffer)))))
+#+end_src
+
+*** Explore
+
+#+begin_src emacs-lisp
+(defun mcg/treesit-explore ()
+  "Open tree-sitter syntax tree explorer for current buffer."
+  (interactive)
+  (if (treesit-parser-list)
+      (treesit-explore-mode)
+    (message "No tree-sitter parser active in this buffer")))
+#+end_src
+
+** Initialize
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Initialize
+;;; ============================================================
+
+;; Setup language sources
+(mcg-treesit-setup-sources)
+
+;; Setup major-mode remapping
+(mcg-treesit-setup-remap)
+
+;; Setup auto-mode-alist
+(mcg-treesit-setup-auto-mode)
+
+;; Setup parser hooks
+(mcg-treesit-setup-hooks)
+
+;; Setup syntax highlighting level
+(mcg-treesit-setup-font-lock)
+
+;; Setup autoloads
+(mcg-treesit--setup-autoloads)
+
+** Provide Feature
+
+#+begin_src emacs-lisp
+(provide 'init-treesit)
+;;; init-treesit.el ends here
+#+end_src

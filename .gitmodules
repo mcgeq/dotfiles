@@ -124,9 +124,6 @@
 [submodule "emacs-markdown-ts-mode"]
 	path = emacs/site-lisp/extensions/docs/markdown-ts-mode
 	url = https://github.com/LionyxML/markdown-ts-mode.git
-[submodule "emacs-treesit-auto"]
-	path = emacs/site-lisp/extensions/lsp/treesit-auto
-	url = https://github.com/renzmann/treesit-auto.git
 [submodule "emacs-magit"]
 	path = emacs/site-lisp/extensions/git/magit
 	url = https://github.com/magit/magit.git
@@ -199,3 +196,18 @@
 [submodule "emacs-ox-gfm"]
 	path = emacs/site-lisp/extensions/org/ox-gfm
 	url = https://github.com/larstvei/ox-gfm.git
+[submodule "emacs-mwim"]
+	path = emacs/site-lisp/extensions/utils/mwim
+	url = https://github.com/alezost/mwim.el.git
+[submodule "emacs-json-mode"]
+	path = emacs/site-lisp/extensions/utils/json-mode
+	url = https://github.com/json-emacs/json-mode.git
+[submodule "emacs-json-snatcher"]
+	path = emacs/site-lisp/extensions/utils/json-snatcher
+	url = https://github.com/Sterlingg/json-snatcher.git
+[submodule "emacs-web-mode"]
+	path = emacs/site-lisp/extensions/lsp/web-mode
+	url = https://github.com/fxbois/web-mode.git
+[submodule "emacs-instant-rename-tag"]
+	path = emacs/site-lisp/extensions/utils/instant-rename-tag
+	url = https://github.com/manateelazycat/instant-rename-tag.git

@@ -3,7 +3,6 @@
 #+PROPERTY: header-args:emacs-lisp :tangle init-org-agenda.el :lexical t
 
 * Org Agenda Module
-
 Org Agenda configuration with time grid, lunar calendar support, and custom views.
 
 ** File Header
@@ -187,7 +186,7 @@ Org Agenda configuration with time grid, lunar calendar support, and custom view
         (replace-match "" nil nil))
       (goto-char (point-min))
       (search-forward ",")
-      (buffer-substring (point-min) (match-beginning 0))))
+      (buffer-substring (point-min) (match-beginning 0)))))
 
 (defun diary-sunset ()
   "Get sunset time."
@@ -205,7 +204,7 @@ Org Agenda configuration with time grid, lunar calendar support, and custom view
       (setq end (match-beginning 0))
       (goto-char start)
       (capitalize-word 1)
-      (buffer-substring start end)))
+      (buffer-substring start end))))
 #+end_src
 
 ** Custom Agenda Views
