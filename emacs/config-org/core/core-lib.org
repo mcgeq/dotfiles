@@ -268,7 +268,7 @@ Returns the full directory path or nil if not found."
 
 (defun mcg-extension-direct-path (name)
   "Try to find extension NAME by direct path lookup.
-Checks common locations like extensions/NAME, extensions/git/NAME, etc.
+Checks common locations like extensions/NAME, extensions/git/NAME, extensions/*/*/NAME, etc.
 Returns the path if found, nil otherwise."
   (unless mcg-extensions-dir
     (mcg-init-paths))
@@ -276,36 +276,32 @@ Returns the path if found, nil otherwise."
   (let ((name-str (if (symbolp name) (symbol-name name) name))
         (result nil))
     
-    ;; Try direct path: extensions/name
-    (let ((direct-path (expand-file-name name-str mcg-extensions-dir)))
-      (when (file-directory-p direct-path)
-        ;; Check for lisp/ subdir first (priority)
-        (let ((lisp-path (expand-file-name "lisp" direct-path)))
-          (if (mcg--find-el-files-in-dir lisp-path)
-              (setq result lisp-path)
-            ;; Then check if it has .el files directly
-            (when (mcg--find-el-files-in-dir direct-path)
-              (setq result direct-path))))))
+    ;; Helper function to check a path
+    (defun mcg--check-ext-path (path)
+      (when (file-directory-p path)
+        (or (let ((lisp-path (expand-file-name "lisp" path)))
+              (and (mcg--find-el-files-in-dir lisp-path) lisp-path))
+            (and (mcg--find-el-files-in-dir path) path))))
     
-    ;; If not found yet, try subdirectory pattern: extensions/*/name
-    ;; (e.g., extensions/git/name)
+    ;; Try direct path: extensions/name
+    (setq result (mcg--check-ext-path (expand-file-name name-str mcg-extensions-dir)))
+    
+    ;; If try subdirectory pattern not found yet,: extensions/*/name
     (unless result
-      (unless (file-directory-p (expand-file-name name-str mcg-extensions-dir))
-        (catch 'found
-          (dolist (subdir (directory-files mcg-extensions-dir t "^[^.]"))
-            (when (file-directory-p subdir)
-              (let ((ext-path (expand-file-name name-str subdir)))
-                (when (file-directory-p ext-path)
-                  ;; Check for lisp/ subdir first (priority)
-                  (let ((lisp-path (expand-file-name "lisp" ext-path)))
-                    (if (mcg--find-el-files-in-dir lisp-path)
-                        (setq result lisp-path)
-                      ;; Then check if it has .el files directly
-                      (when (mcg--find-el-files-in-dir ext-path)
-                        (setq result ext-path))))
-                  (when result
-                    (throw 'found nil))))))
-          nil)))
+      (dolist (subdir (directory-files mcg-extensions-dir t "^[^.]"))
+        (unless result
+          (let ((ext-path (expand-file-name name-str subdir)))
+            (setq result (mcg--check-ext-path ext-path))))))
+    
+    ;; If still not found, try two-level pattern: extensions/*/*/name
+    (unless result
+      (dolist (subdir1 (directory-files mcg-extensions-dir t "^[^.]"))
+        (unless result
+          (dolist (subdir2 (directory-files subdir1 t "^[^.]"))
+            (unless result
+              (let ((ext-path (expand-file-name name-str subdir2)))
+                (setq result (mcg--check-ext-path ext-path))))))))
+    
     result))
 
 (defun mcg-extension-exists-p (name)

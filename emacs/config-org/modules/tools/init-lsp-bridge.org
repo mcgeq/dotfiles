@@ -136,7 +136,13 @@
               (setq lsp-bridge-user-multiserver-dir mcg-lsp-user-multiserver-dir))
             (setq lsp-bridge-enable-completion-in-minibuffer t)
             (setq lsp-bridge-enable-org-babel t)
+            ;; Auto format code: disable for Vue files (volar has performance issues)
             (setq lsp-bridge-enable-auto-format-code t)
+            (defun mcg-lsp-auto-format-maybe ()
+              "Auto format if not a Vue file."
+              (unless (string-suffix-p ".vue" (or (buffer-file-name) ""))
+                (lsp-bridge-code-format)))
+            (advice-add 'lsp-bridge-auto-format-code :override #'mcg-lsp-auto-format-maybe)
             ;; ===== Diagnostics Settings =====
             (setq lsp-bridge-enable-diagnostics t)
             (setq lsp-bridge-enable-hover-diagnostic t)
@@ -150,12 +156,13 @@
             ;; Multi-server configuration for TypeScript/JavaScript
             (setq lsp-bridge-multi-lang-server-extension-list
                   (cl-remove-if (lambda (item)
-                                  (member (car item) '(("ts") ("tsx") ("js") ("jsx"))))
+                                  (member (car item) '(("ts") ("tsx") ("js") ("jsx") ("vue"))))
                                 lsp-bridge-multi-lang-server-extension-list))
             (add-to-list 'lsp-bridge-multi-lang-server-extension-list '("ts" . "typescript_biome"))
             (add-to-list 'lsp-bridge-multi-lang-server-extension-list '("tsx" . "typescriptreact_biome"))
             (add-to-list 'lsp-bridge-multi-lang-server-extension-list '("js" . "javascript_biome"))
             (add-to-list 'lsp-bridge-multi-lang-server-extension-list '("jsx" . "javascript_biome"))
+            (add-to-list 'lsp-bridge-multi-lang-server-extension-list '("vue" . "vue_full"))
             ;; Setup keybindings hook
             (add-hook 'lsp-bridge-mode-hook #'mcg-lsp-setup-keybindings)
             (mcg-log "lsp-bridge configured"))

@@ -29,6 +29,7 @@
 ;;; Code:
 
 (require 'core-lib)
+(mcg-require-extension 'zig-mode t)
 #+end_src
 
 ** Variables
