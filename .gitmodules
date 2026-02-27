@@ -54,7 +54,7 @@
 	url = https://github.com/tomasr/molokai.git
 [submodule "emacs-lsp-bridge"]
 	path = emacs/site-lisp/extensions/lsp/lsp-bridge
-	url = https://github.com/mcgeq/lsp-bridge.git
+	url = https://github.com/manateelazycat/lsp-bridge.git
 [submodule "emacs-yasnippet"]
 	path = emacs/site-lisp/extensions/snippets/yasnippet
 	url = https://github.com/joaotavora/yasnippet.git
