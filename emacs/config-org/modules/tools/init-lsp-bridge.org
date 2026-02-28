@@ -47,6 +47,11 @@
     :type 'boolean
     :group 'mcg)
 
+  (defcustom mcg-lsp-enable-biome nil
+    "Use biome with web."
+    :type 'booleanp
+    :group 'mcg)
+
 #+end_src
 
 ** Unified Keybindings
@@ -147,22 +152,27 @@
             (setq lsp-bridge-enable-diagnostics t)
             (setq lsp-bridge-enable-hover-diagnostic t)
             (setq lsp-bridge-code-action-enable-popup-tip t)
+            (setq lsp-bridge-enable-inlay-hint t)
             ;; ===== Completion Settings =====
             (setq lsp-bridge-enable-search-words t)
             (setq lsp-bridge-enable-auto-import t)
+            (setq lsp-bridge-enable-completion-in-string t)
             (setq acm-enable-lsp-workspace-symbol t)
             (setq acm-candidate-match-function 'orderless-regexp)
             (setq acm-enable-preview t)
             ;; Multi-server configuration for TypeScript/JavaScript
-            (setq lsp-bridge-multi-lang-server-extension-list
+            (if mcg-lsp-enable-biome
+               (progn
+                 (setq lsp-bridge-multi-lang-server-extension-list
                   (cl-remove-if (lambda (item)
                                   (member (car item) '(("ts") ("tsx") ("js") ("jsx") ("vue"))))
                                 lsp-bridge-multi-lang-server-extension-list))
-            (add-to-list 'lsp-bridge-multi-lang-server-extension-list '("ts" . "typescript_biome"))
-            (add-to-list 'lsp-bridge-multi-lang-server-extension-list '("tsx" . "typescriptreact_biome"))
-            (add-to-list 'lsp-bridge-multi-lang-server-extension-list '("js" . "javascript_biome"))
-            (add-to-list 'lsp-bridge-multi-lang-server-extension-list '("jsx" . "javascript_biome"))
-            (add-to-list 'lsp-bridge-multi-lang-server-extension-list '("vue" . "vue_full"))
+                 (add-to-list 'lsp-bridge-multi-lang-server-extension-list '("ts" . "typescript_biome"))
+                 (add-to-list 'lsp-bridge-multi-lang-server-extension-list '("tsx" . "typescriptreact_biome"))
+                 (add-to-list 'lsp-bridge-multi-lang-server-extension-list '("js" . "javascript_biome"))
+                 (add-to-list 'lsp-bridge-multi-lang-server-extension-list '("jsx" . "javascript_biome"))
+                 (add-to-list 'lsp-bridge-multi-lang-server-extension-list '("vue" . "vue_full"))
+                 ))
             ;; Setup keybindings hook
             (add-hook 'lsp-bridge-mode-hook #'mcg-lsp-setup-keybindings)
             (mcg-log "lsp-bridge configured"))
