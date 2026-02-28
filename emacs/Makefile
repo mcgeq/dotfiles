@@ -1,6 +1,39 @@
 # =============================================================================
 # MCG Emacs Configuration Makefile
+# Cross-platform support: Linux/WSL and Windows
 # =============================================================================
+
+# Detect OS - cross-platform
+# Default to Windows (IS_LINUX = 0)
+IS_LINUX := 0
+
+# WSL detection
+ifneq ($(WSLENV),)
+    IS_LINUX := 1
+endif
+
+# MSYS2/Cygwin/Git Bash detection  
+ifneq ($(MSYSTEM),)
+    IS_LINUX := 1
+endif
+
+# Check OSTYPE if available (bash/zsh)
+ifneq ($(OSTYPE),)
+    ifneq ($(findstring linux,$(OSTYPE)),)
+        IS_LINUX := 1
+    endif
+    ifneq ($(findstring cygwin,$(OSTYPE)),)
+        IS_LINUX := 1
+    endif
+    ifneq ($(findstring msys,$(OSTYPE)),)
+        IS_LINUX := 1
+    endif
+endif
+
+# Define shell commands
+MKDIR = mkdir -p
+RM = rm -rf
+FIND = find
 
 # 定义 Emacs 变量
 EM ?= emacs
@@ -26,24 +59,26 @@ define tangle_template
 build-$(subst /,-,$(1)): $(patsubst $(SRC_DIR)/$(1)/%.org, $(DST_DIR)/$(1)/%.el, $(wildcard $(SRC_DIR)/$(1)/*.org))
 
 $(DST_DIR)/$(1)/%.el: $(SRC_DIR)/$(1)/%.org
-	@powershell -Command "if (-not (Test-Path '$(DST_DIR)/$(1)')) { New-Item -ItemType Directory -Path '$(DST_DIR)/$(1)' -Force | Out-Null }"
+	@$(MKDIR) $(DST_DIR)/$(1)
 	@echo Tangling: $$< -> $$@
 	$(EE) --eval '(org-babel-tangle-publish t "$$<" "$(DST_DIR)/$(1)/")'
 endef
 
 # init.el 特殊处理
 $(DST_DIR)/init.el: $(SRC_DIR)/init.org
-	@powershell -Command "if (-not (Test-Path '$(DST_DIR)')) { New-Item -ItemType Directory -Path '$(DST_DIR)' -Force | Out-Null }"
+	@$(MKDIR) $(DST_DIR)
 	@echo Tangling: $< -> $@
 	$(EE) --eval '(org-babel-tangle-publish t "$<" "$(DST_DIR)/")'
 
 # early-init.el 特殊处理 (生成后自动复制到 ~/.emacs.d/)
 $(DST_DIR)/early-init.el: $(SRC_DIR)/early-init.org
-	@powershell -Command "if (-not (Test-Path '$(DST_DIR)')) { New-Item -ItemType Directory -Path '$(DST_DIR)' -Force | Out-Null }"
+	@$(MKDIR) $(DST_DIR)
 	@echo Tangling: $< -> $@
 	$(EE) --eval '(org-babel-tangle-publish t "$<" "$(DST_DIR)/")'
 	@echo Copying early-init.el to ~/.emacs.d/
-	@powershell -Command "Copy-Item '$(DST_DIR)/early-init.el' \"$$env:APPDATA\\.emacs.d\\early-init.el\" -Force"
+	@if [ "$(IS_LINUX)" = "1" ]; then \
+		$(MKDIR) ~/.emacs.d && cp -f $(DST_DIR)/early-init.el ~/.emacs.d/early-init.el; \
+	fi
 
 # 生成所有目录的规则
 $(foreach dir,$(DIRS),$(eval $(call tangle_template,$(dir))))
@@ -59,7 +94,7 @@ ifndef DIR
 	$(error DIR is required. Usage: make tangle-dir DIR=core)
 endif
 	@echo Tangling directory: $(SRC_DIR)/$(DIR)
-	@powershell -Command "if (-not (Test-Path '$(DST_DIR)/$(DIR)')) { New-Item -ItemType Directory -Path '$(DST_DIR)/$(DIR)' -Force | Out-Null }"
+	@$(MKDIR) $(DST_DIR)/$(DIR)
 	@for file in $(SRC_DIR)/$(DIR)/*.org; do \
 		echo "Tangling: $$file"; \
 		$(EM) -Q --batch --eval "(progn (require 'ob-tangle) (setq org-confirm-babel-evaluate nil))" --eval "(org-babel-tangle-file \"$$file\")"; \
@@ -79,22 +114,24 @@ endif
 # 清理生成的文件
 clean:
 	@echo Cleaning generated files in $(DST_DIR)/...
-	-powershell -Command "Get-ChildItem -Path '$(DST_DIR)' -Filter '*.el' -Recurse | Remove-Item -Force"
+	@$(FIND) $(DST_DIR) -name '*.el' -type f -delete 2>/dev/null || true
 	@echo [OK] Generated .el files cleaned!
 
 # 清理所有生成的文件（包括目录）
 clean-all:
 	@echo Cleaning all generated files...
-	-powershell -Command "if (Test-Path '$(DST_DIR)') { Remove-Item -Recurse -Force '$(DST_DIR)' }"
+	@$(RM) $(DST_DIR)
 	@echo [OK] All files cleaned!
 
 # 显示文件列表
 list:
 	@echo Source .org files:
-	@powershell -Command "Get-ChildItem -Path '$(SRC_DIR)' -Filter '*.org' -Recurse | Where-Object { $$_.Name -ne 'README.org' -and $$_.Name -ne 'README.md' } | ForEach-Object { Write-Host ('  ' + $$_.FullName.Substring((Get-Location).Path.Length + 1)) }"
+	@$(FIND) $(SRC_DIR) -name '*.org' ! -name 'README.org' ! -name 'README.md' 2>/dev/null | sed 's|^$(SRC_DIR)/||' | sed 's|^|  |'
 	@echo ""
 	@echo Target .el files:
-	@powershell -Command "if (Test-Path '$(DST_DIR)') { Get-ChildItem -Path '$(DST_DIR)' -Filter '*.el' -Recurse | ForEach-Object { Write-Host ('  ' + $$_.FullName.Substring((Get-Location).Path.Length + 1)) } }"
+	@if [ -d "$(DST_DIR)" ]; then \
+		$(FIND) $(DST_DIR) -name '*.el' -type f 2>/dev/null | sed 's|^$(DST_DIR)/||' | sed 's|^|  |'; \
+	fi
 
 .PHONY: all tangle-file clean clean-all list
 
@@ -110,7 +147,7 @@ elc:
 
 clean-elc:
 	@echo Cleaning .elc files...
-	-powershell -Command "Get-ChildItem -Path '$(DST_DIR)' -Filter '*.elc' -Recurse | Remove-Item -Force"
+	@$(FIND) $(DST_DIR) -name '*.elc' -type f -delete 2>/dev/null || true
 	@echo [OK] .elc files cleaned!
 
 compile: all elc
@@ -204,7 +241,7 @@ endif
 	@echo Removing submodule: $(CAT)/$(NAME)...
 	git -C $(ROOT_DIR) submodule deinit -f emacs/$(EXT_DIR)/$(CAT)/$(NAME)
 	git -C $(ROOT_DIR) rm -f emacs/$(EXT_DIR)/$(CAT)/$(NAME)
-	-powershell -Command "Remove-Item -Recurse -Force '$(ROOT_DIR)/.git/modules/emacs/$(EXT_DIR)/$(CAT)/$(NAME)' -ErrorAction SilentlyContinue"
+	@$(RM) $(ROOT_DIR)/.git/modules/emacs/$(EXT_DIR)/$(CAT)/$(NAME) 2>/dev/null || true
 	@echo [OK] Submodule $(NAME) removed!
 
 # 同步 .gitmodules URL
@@ -228,7 +265,7 @@ compile-ext:
 
 clean-ext:
 	@echo Cleaning extension .elc files...
-	-powershell -Command "Get-ChildItem -Path '$(EXT_DIR)' -Filter '*.elc' -Recurse | Remove-Item -Force"
+	@$(FIND) $(EXT_DIR) -name '*.elc' -type f -delete 2>/dev/null || true
 	@echo [OK] Extension .elc files cleaned!
 
 # 快捷别名

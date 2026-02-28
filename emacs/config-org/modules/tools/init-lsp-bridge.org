@@ -148,6 +148,21 @@
               (unless (string-suffix-p ".vue" (or (buffer-file-name) ""))
                 (lsp-bridge-code-format)))
             (advice-add 'lsp-bridge-auto-format-code :override #'mcg-lsp-auto-format-maybe)
+
+            ;; 方案C: 格式化后自动保存 (兼容 auto-save 插件)
+            ;; 在格式化完成后自动保存 buffer
+            (defun mcg-lsp-format-and-save-after-format (filename edits)
+              "格式化完成后自动保存 buffer，兼容 auto-save 插件。"
+              (when (and (buffer-file-name)
+                         (lsp-bridge-has-lsp-server-p)
+                         ;; 只有在 idle 触发时才自动保存（不是手动保存）
+                         (not (eq last-command 'save-buffer)))
+                ;; 延迟一点时间再保存，让格式化完成
+                (run-with-idle-timer 0.5 nil
+                  (lambda ()
+                    (when (buffer-modified-p)
+                      (auto-save-save-buffer))))))
+            (advice-add 'lsp-bridge-format--update :after #'mcg-lsp-format-and-save-after-format)
             ;; ===== Diagnostics Settings =====
             (setq lsp-bridge-enable-diagnostics t)
             (setq lsp-bridge-enable-hover-diagnostic t)
