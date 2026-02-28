@@ -1,0 +1,9 @@
+{
+  "default": "volar",
+  "completion": ["volar", "vtsls"],
+  "completion_item_resolve": ["volar", "vtsls"],
+  "diagnostics": ["volar", "vtsls", "vscode-eslint-language-server"],
+  "code_action": ["volar", "vtsls", "vscode-eslint-language-server"],
+  "hover": "volar",
+  "formatting": "vscode-eslint-language-server"
+}

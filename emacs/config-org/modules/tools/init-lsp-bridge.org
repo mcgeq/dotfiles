@@ -141,13 +141,8 @@
               (setq lsp-bridge-user-multiserver-dir mcg-lsp-user-multiserver-dir))
             (setq lsp-bridge-enable-completion-in-minibuffer t)
             (setq lsp-bridge-enable-org-babel t)
-            ;; Auto format code: disable for Vue files (volar has performance issues)
+            ;; Auto format code
             (setq lsp-bridge-enable-auto-format-code t)
-            (defun mcg-lsp-auto-format-maybe ()
-              "Auto format if not a Vue file."
-              (unless (string-suffix-p ".vue" (or (buffer-file-name) ""))
-                (lsp-bridge-code-format)))
-            (advice-add 'lsp-bridge-auto-format-code :override #'mcg-lsp-auto-format-maybe)
 
             ;; 方案C: 格式化后自动保存 (兼容 auto-save 插件)
             ;; 在格式化完成后自动保存 buffer

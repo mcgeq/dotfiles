@@ -1,0 +1,9 @@
+{
+  "default": "volar",
+  "completion": ["volar", "emmet-ls"],
+  "completion_item_resolve": ["volar", "emmet-ls"],
+  "diagnostics": ["volar", "emmet-ls", "vscode-eslint-language-server"],
+  "code_action": ["volar", "emmet-ls", "vscode-eslint-language-server"],
+  "execute_command": ["volar", "emmet-ls"],
+  "formatting": "volar"
+}

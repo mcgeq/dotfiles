@@ -30,8 +30,8 @@
 ** Variables
 
 #+begin_src emacs-lisp
-(defvar mcg-holo-layer-enabled t
-  "Whether to enable holo-layer.")
+(defvar mcg-holo-layer-enabled (not (eq system-type 'gnu/linux))
+  "Whether to enable holo-layer. Disabled on Linux/WSL by default.")
 
 (defvar mcg-holo-layer-enable-window-border t
   "Whether to enable window border.")
