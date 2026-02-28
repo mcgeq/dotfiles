@@ -128,6 +128,10 @@
       (mcg-require-extension "markdown-mode" t)
       (if (require 'lsp-bridge nil t)
           (progn
+            ;; Load acm-terminal in terminal (non-graphical environment)
+            (unless (display-graphic-p)
+              (mcg-require-extension 'acm-terminal t))
+            
             (setq lsp-bridge-enable-with-tramp mcg-lsp-enable-with-tramp)
             (setq lsp-bridge-enable-inlay-hint mcg-lsp-enable-inlay-hint)
             ;; Optional snippet backend

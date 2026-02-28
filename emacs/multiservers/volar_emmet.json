@@ -5,5 +5,5 @@
   "diagnostics": ["volar", "emmet-ls", "vscode-eslint-language-server"],
   "code_action": ["volar", "emmet-ls", "vscode-eslint-language-server"],
   "execute_command": ["volar", "emmet-ls"],
-  "formatting": "volar"
+  "formatting": "vscode-eslint-language-server"
 }

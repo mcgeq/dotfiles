@@ -211,3 +211,12 @@
 [submodule "emacs-instant-rename-tag"]
 	path = emacs/site-lisp/extensions/utils/instant-rename-tag
 	url = https://github.com/manateelazycat/instant-rename-tag.git
+[submodule "emacs-treesit-auto"]
+	path = emacs/site-lisp/extensions/lsp/treesit-auto
+	url = https://github.com/renzmann/treesit-auto.git
+[submodule "emacs-acm-terminal"]
+	path = emacs/site-lisp/extensions/lsp/acm-terminal
+	url = https://github.com/twlz0ne/acm-terminal.git
+[submodule "emacs-popon"]
+	path = emacs/site-lisp/extensions/lsp/popon
+	url = https://codeberg.org/akib/emacs-popon.git

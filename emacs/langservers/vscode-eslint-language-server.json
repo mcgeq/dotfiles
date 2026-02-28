@@ -21,7 +21,7 @@
 		"packageManager": "npm",
 		"useESLintClass": false,
 		"experimental": {
-			"useFlatConfig": false
+			"useFlatConfig": true
 		},
 		"nodePath": null,
 		"codeActionOnSave": {
@@ -30,7 +30,9 @@
 		"format": true,
 		"quiet": false,
 		"onIgnoredFiles": "off",
-		"options": {},
+		"options": {
+			"configFile": "eslint.config.mjs"
+		},
 		"rulesCustomizations": [],
 		"run": "onType",
 		"problems": {},
