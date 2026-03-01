@@ -2,14 +2,17 @@
 # MCG Emacs Configuration Makefile
 # =============================================================================
 
-# OS Detection - Check if running in Unix-like environment (Git Bash/MSYS2/WSL/Linux)
-# If MSYSTEM is set, we're in a Unix-like environment
-ifneq ($(MSYSTEM),)
-    # Unix-like environment (Git Bash, MSYS2, WSL, etc.)
-    IS_UNIX := 1
-else
-    # Windows native (CMD/PowerShell)
+# OS Detection - Best Practice: 组合多种检测方式
+ifeq ($(shell uname -s 2>/dev/null),Windows_NT)
     IS_UNIX := 0
+else ifeq ($(shell command -v uname 2>/dev/null),)
+    ifeq ($(shell command -v rm 2>/dev/null),)
+        IS_UNIX := 0
+    else
+        IS_UNIX := 1
+    endif
+else
+    IS_UNIX := 1
 endif
 
 # Define Emacs variable
