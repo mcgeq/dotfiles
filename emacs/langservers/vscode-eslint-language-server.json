@@ -4,7 +4,8 @@
         "tsx": "typescriptreact",
         "ts": "typescript",
         "js": "javascript",
-        "jsx": "javascriptreact"
+        "jsx": "javascriptreact",
+        "vue": "typescript"
     },
     "command": [
         "vscode-eslint-language-server",

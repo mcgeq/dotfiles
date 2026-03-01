@@ -1,0 +1,14 @@
+{
+  "name": "emmet-ls",
+  "languageId": "",
+  "languageIds": {
+    "vue": "html",
+    "html": "html",
+    "htm": "html"
+  },
+  "command": [
+    "emmet-ls",
+    "--stdio"
+  ],
+  "settings": {}
+}
