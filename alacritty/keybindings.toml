@@ -1,0 +1,90 @@
+# Alacritty 键盘快捷键配置
+
+[[keyboard.bindings]]
+key = "N"
+mods = "Control|Shift"
+action = "CreateNewWindow"
+
+[[keyboard.bindings]]
+key = "F11"
+action = "ToggleFullscreen"
+
+[[keyboard.bindings]]
+key = "F11"
+mods = "Control"
+action = "ToggleMaximized"
+
+[[keyboard.bindings]]
+key = "H"
+mods = "Control|Shift"
+action = "Hide"
+
+[[keyboard.bindings]]
+key = "M"
+mods = "Control|Shift"
+action = "Minimize"
+
+[[keyboard.bindings]]
+key = "Q"
+mods = "Control|Shift"
+action = "Quit"
+
+[[keyboard.bindings]]
+key = "C"
+mods = "Control|Shift"
+action = "Copy"
+
+[[keyboard.bindings]]
+key = "V"
+mods = "Control|Shift"
+action = "Paste"
+
+[[keyboard.bindings]]
+key = "Escape"
+action = "ClearSelection"
+
+[[keyboard.bindings]]
+key = "F"
+mods = "Control|Shift"
+action = "SearchForward"
+
+[[keyboard.bindings]]
+key = "F"
+mods = "Control|Shift"
+action = "SearchBackward"
+
+[[keyboard.bindings]]
+key = "Return"
+mode = "Search"
+action = "SearchConfirm"
+
+[[keyboard.bindings]]
+key = "Escape"
+mode = "Search"
+action = "SearchCancel"
+
+[[keyboard.bindings]]
+key = "U"
+mode = "Search"
+action = "SearchClear"
+
+[[keyboard.bindings]]
+key = "PageUp"
+action = "ScrollPageUp"
+
+[[keyboard.bindings]]
+key = "PageDown"
+action = "ScrollPageDown"
+
+[[keyboard.bindings]]
+key = "Home"
+action = "ScrollToTop"
+
+[[keyboard.bindings]]
+key = "End"
+action = "ScrollToBottom"
+
+[[keyboard.bindings]]
+key = "L"
+mods = "Control"
+action = "ClearHistory"

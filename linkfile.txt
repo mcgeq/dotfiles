@@ -11,6 +11,7 @@ USERPROFILE\.local D:\config\.local
 USERPROFILE\.gradle G:\registory\gradle
 USERPROFILE\.bun D:\bin\.bun
 APPDATA\.emacs.d D:\config\.emacs.d
+APPDATA\alacritty D:\config\dotfiles\alacritty
 APPDATA\Code D:\devTools\Roaming\Code
 APPDATA\fnm G:\registory\nodejs\fnm
 APPDATA\nushell D:\config\dotfiles\mcge-nushell
