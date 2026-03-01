@@ -38,7 +38,7 @@ history = 10000
 multiplier = 3
 
 [terminal]
-shell = { program = "wsl", args = ["-d", "Arch", "--cd", "~", "-e", "tmux", "new-session", "-A", "-D", "-s", "main"] }
+shell = { program = "wsl", args = ["-d", "Arch", "--cd", "~", "-e", "fish", "-l", "-c", "tmux new-session -A -D -s main"] }
 osc52 = "OnlyCopy"
 
 [mouse]
