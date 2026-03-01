@@ -72,5 +72,5 @@ end
 
 # 自动启动 tmux
 if not set -q TMUX
-    tmux new-session -A -D -s main
+  tmux new-session -A -D -s main
 end
