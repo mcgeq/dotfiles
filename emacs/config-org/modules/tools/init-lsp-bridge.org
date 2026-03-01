@@ -52,6 +52,13 @@
     :type 'booleanp
     :group 'mcg)
 
+  (defcustom mcg-lsp-python-server "ty"
+    "Python LSP server choice.
+Options: \"ty\" (ty + ruff), \"basedpyright\" (basedpyright + ruff).
+Can be overridden in private/config.el."
+    :type 'string
+    :group 'mcg)
+
 #+end_src
 
 ** Unified Keybindings
@@ -187,6 +194,16 @@
                  (add-to-list 'lsp-bridge-multi-lang-server-extension-list '("jsx" . "javascript_biome"))
                  (add-to-list 'lsp-bridge-multi-lang-server-extension-list '("vue" . "vue_full"))
                  ))
+            ;; Multi-server configuration for Python
+            (when (member mcg-lsp-python-server '("ty" "basedpyright"))
+              (setq lsp-bridge-multi-lang-server-extension-list
+                    (cl-remove-if (lambda (item)
+                                    (member (car item) '(("py") ("pyw"))))
+                                  lsp-bridge-multi-lang-server-extension-list))
+              (add-to-list 'lsp-bridge-multi-lang-server-extension-list
+                           (cons "py" (concat mcg-lsp-python-server "_ruff")))
+              (add-to-list 'lsp-bridge-multi-lang-server-extension-list
+                           (cons "pyw" (concat mcg-lsp-python-server "_ruff"))))
             ;; Setup keybindings hook
             (add-hook 'lsp-bridge-mode-hook #'mcg-lsp-setup-keybindings)
             (mcg-log "lsp-bridge configured"))
