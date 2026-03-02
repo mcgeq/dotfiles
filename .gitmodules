@@ -220,3 +220,6 @@
 [submodule "emacs-popon"]
 	path = emacs/site-lisp/extensions/lsp/popon
 	url = https://codeberg.org/akib/emacs-popon.git
+[submodule "emacs-majutsu"]
+	path = emacs/site-lisp/extensions/git/majutsu
+	url = https://github.com/0WD0/majutsu.git

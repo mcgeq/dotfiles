@@ -137,6 +137,7 @@
    blink-search
    color-rg
    magit
+   majutsu
 
    ;; Enhance
    :enhance

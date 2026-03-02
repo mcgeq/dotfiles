@@ -1,0 +1,87 @@
+#+TITLE: Majutsu Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-majutsu.el :lexical t
+
+* Majutsu Module
+
+Majutsu - Magit-style interface for Jujutsu (jj).
+
+** File Header
+
+#+begin_src emacs-lisp
+;;; init-majutsu.el --- Majutsu configuration -*- lexical-binding: t; -*-
+
+;; Filename: init-majutsu.el
+;; Description: Jujutsu (jj) VCS integration via Majutsu
+;; Author: mcge <mcgeq@outlook.com>
+;; Copyright (C) 2024-2026, mcge, all rights reserved.
+;; Create   Date: 2026-03-02
+;; Version: 1.0
+;; Keywords: jujutsu, jj, version-control, magit
+;; Compatibility: Emacs 29.1+, jj 0.37.0+
+
+;;; Commentary:
+;;
+;; Majutsu provides a Magit-style interface for Jujutsu (jj) VCS.
+;; It wraps the jj CLI and provides interactive operations.
+;;
+;; Dependencies:
+;;   - Emacs 29.1+
+;;   - Jujutsu (jj) v0.37.0+
+;;   - magit, transient, with-editor
+;;
+;; Module metadata:
+;; :depends (magit transient with-editor)
+;; :defer t
+
+;;; Code:
+
+(require 'core-lib)
+#+end_src
+
+** Variables
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Variables
+;;; ============================================================
+
+(defvar mcg-tools-majutsu-prefix "C-x M-j"
+  "Prefix key for majutsu commands.")
+
+(defvar mcg-tools-majutsu-enable-evil-integration t
+  "Whether to enable evil integration for majutsu.")
+#+end_src
+
+** Initialize
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Initialize
+;;; ============================================================
+
+(defun mcg--setup-majutsu ()
+  "Setup majutsu - Magit for Jujutsu."
+  (if (mcg-require-extension 'majutsu t)
+      (progn
+        ;; Setup keybindings
+        (global-set-key (kbd mcg-tools-majutsu-prefix) 'majutsu)
+        
+        ;; Optional: Setup evil integration
+        (when (and mcg-tools-majutsu-enable-evil-integration
+                   (featurep 'evil))
+          (require 'majutsu-evil nil t))
+        
+        (mcg-log "Majutsu configured with keybinding %s" mcg-tools-majutsu-prefix))
+    (mcg-log-error "Failed to load Majutsu - ensure jj is installed")))
+
+;; Setup majutsu after module load
+(mcg--setup-majutsu)
+#+end_src
+
+** Provide Feature
+
+#+begin_src emacs-lisp
+(provide 'init-majutsu)
+;;; init-majutsu.el ends here
+#+end_src
