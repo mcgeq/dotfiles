@@ -116,29 +116,29 @@
 
 #+begin_src emacs-lisp
 ;;; ============================================================
-;;; Keybindings (C-c s prefix)
+;;; Keybindings (C-c r prefix - ripgrep)
 ;;; ============================================================
 
 (defun mcg--setup-search-keybindings ()
   "Setup search related keybindings."
   ;; Color-rg
-  (when (featurep 'color-rg)
+  (when (mcg-require-extension "color-rg" t)
     ;; Project content search
-    (global-set-key (kbd "C-c s g") 'color-rg-search-input)
-    (global-set-key (kbd "C-c s G") 'color-rg-search-input-in-project)
+    (global-set-key (kbd "C-c r g") 'color-rg-search-input)
+    (global-set-key (kbd "C-c r G") 'color-rg-search-input-in-project)
 
     ;; Symbol search
-    (global-set-key (kbd "C-c s s") 'color-rg-search-symbol)
-    (global-set-key (kbd "C-c s S") 'color-rg-search-symbol-in-project)
+    (global-set-key (kbd "C-c r s") 'color-rg-search-symbol)
+    (global-set-key (kbd "C-c r S") 'color-rg-search-symbol-in-project)
 
     ;; Current file
-    (global-set-key (kbd "C-c s .") 'color-rg-search-symbol-in-current-file)
-    (global-set-key (kbd "C-c s ,") 'color-rg-search-input-in-current-file)
+    (global-set-key (kbd "C-c r .") 'color-rg-search-symbol-in-current-file)
+    (global-set-key (kbd "C-c r ,") 'color-rg-search-input-in-current-file)
 
     ;; Custom search
-    (global-set-key (kbd "C-c s T") 'mcg/color-rg-search-project-with-type)
-    (global-set-key (kbd "C-c s O") 'mcg/color-rg-search-in-org-directory)
-    (global-set-key (kbd "C-c s C") 'mcg/color-rg-search-in-config))
+    (global-set-key (kbd "C-c r t") 'mcg/color-rg-search-project-with-type)
+    (global-set-key (kbd "C-c r o") 'mcg/color-rg-search-in-org-directory)
+    (global-set-key (kbd "C-c r c") 'mcg/color-rg-search-in-config))
 
   (mcg-log "Search keybindings configured"))
 #+end_src
