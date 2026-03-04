@@ -16,6 +16,7 @@
 - [GitGutter Git状态](#gitgutter-git状态)
 - [Terminal (Floaterm)](#terminal-floaterm)
 - [Matchup 匹配导航](#matchup-匹配导航)
+- [Visual Multi 多光标](#visual-multi-多光标)
 - [Whitespace 空字符](#whitespace-空字符)
 
 ---
@@ -348,6 +349,116 @@
 | `a%` | matchup-a% | 选择匹配块 (操作符) |
 
 > Matchup 支持: `()` `[]` `{}` `if/endif` `while/endwhile` `for/endfor` `try/endtry` 等
+
+---
+
+## Visual Multi 多光标
+
+> 多光标编辑插件，支持同时编辑多处文本
+
+### 启动方式
+
+| 快捷键 | 命令 | 说明 |
+|--------|------|------|
+| `<C-n>` | Find Under | 选择光标下的词 (启动 VM) |
+| `<C-n>` | Find Subword Under | 从 Visual 模式选择 (无词边界) |
+| `<C-Down>` | Add Cursor Down | 向下添加光标 |
+| `<C-Up>` | Add Cursor Up | 向上添加光标 |
+| `<Esc>` | Exit | 退出 VM |
+| `\\A` | Select All | 选择所有匹配词 |
+| `\\/` | Start Regex Search | 正则搜索创建选区 |
+| `\\` | Add Cursor At Pos | 在当前位置添加单个光标 |
+| `\\gS` | Reselect Last | 重新选择上次的 VM 会话 |
+
+### Visual 模式启动
+
+| 快捷键 | 命令 | 说明 |
+|--------|------|------|
+| `\\A` | Visual All | 选择所有视觉选中的内容 |
+| `\\/` | Visual Regex | 在视觉选中区中正则搜索 |
+| `\\f` | Visual Find | 查找所有匹配模式 |
+| `\\c` | Visual Cursors | 从视觉选区创建列光标 |
+| `\\a` | Visual Add | 从视觉选区创建区域 |
+| `\\s` | Visual Subtract | 移除当前视觉选区中的区域 |
+| `\\r` | Visual Reduce | 移除视觉选区外的区域 |
+
+### VM 运行中操作
+
+| 快捷键 | 命令 | 说明 |
+|--------|------|------|
+| `n` | Find Next | 查找下一个匹配 |
+| `N` | Find Prev | 查找上一个匹配 |
+| `]` | Goto Next | 跳转到下一个选区 |
+| `[` | Goto Prev | 跳转到上一个选区 |
+| `q` | Skip Region | 跳过并查找下一个 |
+| `Q` | Remove Region | 移除当前光标 |
+| `g/` | Slash Search | 使用 / 扩展/移动光标 |
+| `R` | Replace | 替换选区内容 |
+
+### 光标移动
+
+| 快捷键 | 命令 | 说明 |
+|--------|------|------|
+| `<C-f>` | Seek Next | 快进到下一页 |
+| `<C-b>` | Seek Prev | 快退到上一页 |
+
+### 插入模式
+
+| 快捷键 | 命令 | 说明 |
+|--------|------|------|
+| `I` | I | 在选区前插入 |
+| `A` | A | 在选区后插入 |
+| `<Tab>` | I Next | 切换到下一个光标 |
+| `<S-Tab>` | I Prev | 切换到上一个光标 |
+
+### 文本操作
+
+| 快捷键 | 命令 | 说明 |
+|--------|------|------|
+| `s` | Select Operator | 选择操作符 |
+| `m` | Find Operator | 查找操作符 |
+| `<C-a>` | Increase | 增加数字 |
+| `<C-x>` | Decrease | 减少数字 |
+| `g<C-a>` | gIncrease | 递进增加数字 |
+| `g<C-x>` | gDecrease | 递进减少数字 |
+
+### 高级操作
+
+| 快捷键 | 命令 | 说明 |
+|--------|------|------|
+| `\\t` | Transpose | 转置 |
+| `\\a` | Align | 对齐选区 |
+| `\\<` | Align Char | 按字符对齐 |
+| `\\>` | Align Regex | 按正则对齐 |
+| `\\s` | Split Regions | 按模式分割区域 |
+| `\\f` | Filter Regions | 按模式过滤区域 |
+| `\\e` | Transform Regions | 用表达式转换区域 |
+| `\\m` | Merge Regions | 合并重叠区域 |
+| `\\d` | Duplicate | 复制区域 |
+| `\\-` | Shrink | 从两侧缩小区域 |
+| `\\+` | Enlarge | 从两侧扩大区域 |
+| `\\L` | One Per Line | 每行保留一个区域 |
+| `M` | Toggle Multiline | 切换多行模式 |
+
+### 运行命令
+
+| 快捷键 | 命令 | 说明 |
+|--------|------|------|
+| `\\z` | Run Normal | 运行 Normal 命令 |
+| `\\v` | Run Visual | 运行 Visual 命令 |
+| `\\x` | Run Ex | 运行 Ex 命令 |
+| `\\@` | Run Macro | 运行宏 |
+
+### 选项切换
+
+| 快捷键 | 命令 | 说明 |
+|--------|------|------|
+| `\\w` | Toggle Whole Word | 切换整词搜索 |
+| `\\c` | Case Setting | 循环切换大小写 (scs->noic->ic) |
+| `\\ `` | Tools Menu | 工具菜单 |
+| `\\C` | Case Conversion Menu | 大小写转换菜单 |
+| `\\"` | Show Registers | 显示 VM 寄存器 |
+| `\\<Space>` | Toggle Mappings | 切换 VM 映射 |
 
 ---
 
