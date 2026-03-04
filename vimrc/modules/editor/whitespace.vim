@@ -4,11 +4,17 @@ vim9script
 # 作者：mcge <mcgeq@outlook.com>
 # ============================================================================
 
+# 防止重复加载
+if exists('g:mcge_whitespace_loaded')
+  finish
+endif
+g:mcge_whitespace_loaded = true
+
 # 配置
 var config = {
   enabled: 1,
   strip_on_save: 1,
-  filetypes_blacklist: ['diff', 'gitcommit', 'markdown', 'xml'],
+  filetypes_blacklist: ['diff', 'gitcommit', 'markdown', 'xml', 'startify'],
   color: 'CursorColumn',
   current_line_disabled: 1,
 }

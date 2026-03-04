@@ -261,6 +261,8 @@ vimrc/
 - `<Ctrl-tab>` / `<Ctrl-s-tab>` - 下一个/上一个缓冲区
 - `<Ctrl-x><Ctrl-s>` - 保存文件
 - `<Ctrl-x><Ctrl-q>` - 保存并退出
+- `<leader>sv` - 重新加载 Vim 配置（已废弃，使用 `<leader>rr`）
+- `<leader>rr` - 重新加载 Vim 配置（推荐）
 
 ---
 

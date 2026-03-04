@@ -5,6 +5,12 @@ vim9script
 # 插件：vim-startify
 # ============================================================================
 
+# 防止重复加载
+if exists('g:mcge_startify_loaded')
+  finish
+endif
+g:mcge_startify_loaded = true
+
 # 配置
 var config = {
   enabled: true,
@@ -85,7 +91,7 @@ def g:InitStartify(user_config: dict<any> = {})
   # 书签
   g:startify_bookmarks = [
     {'v': g:mcge_customvimrcdir .. '/init.vim'},
-    {'c': g:mcge_customvimrcdir .. '/local/user_settings.vim'},
+    {'C': g:mcge_customvimrcdir .. '/local/user_settings.vim'},
   ]
 
   # 其他设置

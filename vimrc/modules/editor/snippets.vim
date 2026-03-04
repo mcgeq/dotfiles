@@ -4,6 +4,12 @@ vim9script
 # 作者：mcge <mcgeq@outlook.com>
 # ============================================================================
 
+# 防止重复加载
+if exists('g:mcge_snippets_loaded')
+  finish
+endif
+g:mcge_snippets_loaded = true
+
 # 配置
 var config = {
   enabled: true,

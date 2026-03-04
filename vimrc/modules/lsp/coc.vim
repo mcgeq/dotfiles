@@ -5,12 +5,17 @@ vim9script
 # 说明: 统一管理 CoC 的配置、扩展和行为
 # ============================================================================
 
+# 防止重复加载
+if exists('g:mcge_coc_loaded')
+  finish
+endif
+g:mcge_coc_loaded = true
+
 # 默认配置
 var config = {
   enabled: true,
   config_home: g:mcge_customvimrcdir .. "/config",
   data_home: g:mcge_customvimrcdir .. "/coc-data",
-  auto_install: true,
   extensions: [
     # 语言服务
     "coc-clangd",              # C/C++
@@ -58,7 +63,7 @@ var config = {
     "coc-sql",                 # SQL
     "coc-markdownlint",        # Markdown Lint
     "coc-markdown-preview-enhanced",  # Markdown 预览
-    "coc-clang-format-style-options", # Clang Format
+    # 注意：coc-clang-format-style-options 已移除，clang-format 由 clangd 内置提供
   ],
 }
 
@@ -80,25 +85,20 @@ def g:InitCoc(user_config: dict<any> = {})
   # 设置路径
   g:coc_config_home = config.config_home
   g:coc_data_home = config.data_home
-  
-  # 设置扩展列表
+
+  # 设置扩展列表（CoC 会自动安装缺失的扩展）
   g:coc_global_extensions = config.extensions
-  
+
   # 设置自动命令
   SetupAutocmds()
-  
+
   # 设置自定义命令
   SetupCommands()
-  
-  # 自动安装扩展
-  if config.auto_install
-    SetupAutoInstall()
-  endif
-  
+
   # 集成状态栏
   set statusline^=%{coc#status()}%{get(b:,'coc_current_function','')}
-  
-  call g:ErrDebug('CoC LSP initialized')  # 改为调试级别
+
+  call g:ErrDebug('CoC LSP initialized')
 enddef
 
 # 设置自动命令
@@ -151,27 +151,6 @@ def ShowCocInfo()
   endif
   
   echo '=========================================='
-enddef
-
-# 自动安装扩展
-def SetupAutoInstall()
-  timer_start(500, (_) => {
-    if !IsCocAvailable()
-      return
-    endif
-    for ext in config.extensions
-      if !CocExtensionInstalled(ext)
-        echo $'Installing coc extension: ' .. ext
-        execute 'CocInstall ' .. ext
-      endif
-    endfor
-  })
-enddef
-
-# 检查扩展是否已安装
-def CocExtensionInstalled(ext: string): bool
-  var ext_path = config.data_home .. '/extensions/' .. ext
-  return isdirectory(ext_path) || filereadable(ext_path .. '.json')
 enddef
 
 # 获取配置

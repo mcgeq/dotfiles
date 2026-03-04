@@ -4,6 +4,12 @@ vim9script
 # 作者: mcge <mcgeq@outlook.com>
 # ============================================================================
 
+# 防止重复加载
+if exists('g:mcge_statusline_loaded')
+  finish
+endif
+g:mcge_statusline_loaded = true
+
 # 检查 airline 是否可用
 def IsAirlineAvailable(): bool
   return exists('g:loaded_airline')

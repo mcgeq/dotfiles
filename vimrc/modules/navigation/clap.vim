@@ -5,6 +5,12 @@ vim9script
 # 官方文档：https://github.com/liuchengxu/vim-clap
 # ============================================================================
 
+# 防止重复加载
+if exists('g:mcge_clap_loaded')
+  finish
+endif
+g:mcge_clap_loaded = true
+
 # 配置
 var config = {
   enabled: true,

@@ -5,6 +5,12 @@ vim9script
 # 插件：vim-floaterm
 # ============================================================================
 
+# 防止重复加载
+if exists('g:mcge_floaterm_loaded')
+  finish
+endif
+g:mcge_floaterm_loaded = true
+
 # 配置
 var config = {
   enabled: true,

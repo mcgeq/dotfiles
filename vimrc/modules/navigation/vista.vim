@@ -5,6 +5,12 @@ vim9script
 # 官方文档：https://github.com/liuchengxu/vista.vim
 # ============================================================================
 
+# 防止重复加载
+if exists('g:mcge_vista_loaded')
+  finish
+endif
+g:mcge_vista_loaded = true
+
 # 配置
 var config = {
   enabled: true,

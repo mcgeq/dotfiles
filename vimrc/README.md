@@ -261,6 +261,8 @@ vimrc/
 - `<Ctrl-tab>` / `<Ctrl-s-tab>` - Next/previous buffer
 - `<Ctrl-x><Ctrl-s>` - Save file
 - `<Ctrl-x><Ctrl-q>` - Save and quit
+- `<leader>sv` - Reload Vim configuration (use `<leader>rr` instead)
+- `<leader>rr` - Reload Vim configuration (recommended)
 
 ---
 

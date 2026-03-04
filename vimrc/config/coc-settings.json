@@ -1,4 +1,6 @@
 {
+  "npmRegistry": "https://registry.npmmirror.com",
+  "npmClient": "npm",
   "languageserver": {
     "csharp-ls": {
       "command": "csharp-ls",
@@ -9,7 +11,7 @@
 
   "workspace.rootPatterns": [".git", ".hg", ".jj", ".projections.json"],
 
-"rust-analyzer.enable": true,
+  "rust-analyzer.enable": true,
   "rust-analyzer.checkOnSave": true,
 
   "ty.enable": true,
@@ -68,6 +70,12 @@
   "diagnostic.virtualText": true,
 
   "coc.preferences.formatOnSave": true,
+
+  "clangd.fallbackFlags": ["-std=c++17", "-Wall"],
+
+  "clang-format.enable": true,
+  "clang-format.style": "file",
+  "clang-format.fallbackStyle": "LLVM",
 
   "explorer.width": 38,
   "explorer.quitOnOpen": true,
