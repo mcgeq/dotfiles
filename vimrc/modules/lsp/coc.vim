@@ -14,7 +14,7 @@ var config = {
   extensions: [
     # 语言服务
     "coc-clangd",              # C/C++
-    "coc-pyright",             # Python
+    "@yaegassy/coc-ty",        # Python (ty)
     "coc-rust-analyzer",       # Rust
     "coc-tsserver",            # TypeScript/JavaScript
     "coc-java",                # Java
@@ -90,6 +90,11 @@ def g:InitCoc(user_config: dict<any> = {})
   # 设置自定义命令
   SetupCommands()
   
+  # 自动安装扩展
+  if config.auto_install
+    SetupAutoInstall()
+  endif
+  
   # 集成状态栏
   set statusline^=%{coc#status()}%{get(b:,'coc_current_function','')}
   
@@ -146,6 +151,27 @@ def ShowCocInfo()
   endif
   
   echo '=========================================='
+enddef
+
+# 自动安装扩展
+def SetupAutoInstall()
+  timer_start(500, (_) => {
+    if !IsCocAvailable()
+      return
+    endif
+    for ext in config.extensions
+      if !CocExtensionInstalled(ext)
+        echo $'Installing coc extension: ' .. ext
+        execute 'CocInstall! ' .. ext
+      endif
+    endfor
+  })
+enddef
+
+# 检查扩展是否已安装
+def CocExtensionInstalled(ext: string): bool
+  var ext_path = config.data_home .. '/extensions/' .. ext
+  return isdirectory(ext_path) || filereadable(ext_path .. '.json')
 enddef
 
 # 获取配置

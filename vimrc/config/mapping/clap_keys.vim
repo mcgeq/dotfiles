@@ -11,6 +11,7 @@ vim9script
 # 文件搜索
 nnoremap <silent> <leader>p :Clap files<CR>
 nnoremap <silent> <leader>P :Clap gfiles<CR>
+nnoremap <silent> <leader><Space> :Clap files<CR>
 
 # 缓冲区
 nnoremap <silent> <leader>bb :Clap buffers<CR>
@@ -25,6 +26,17 @@ nnoremap <silent> <leader>fh :Clap history<CR>
 # 文本搜索（使用 ripgrep）
 nnoremap <silent> <leader>/ :Clap grep<CR>
 nnoremap <silent> <leader>fg :Clap grep<CR>
+
+# 智能 grep 搜索（组合 filer + grep）
+nnoremap <silent> <leader>st :Clap igrep<CR>
+
+# 普通 grep 搜索
+nnoremap <silent> <leader>sg :Clap grep<CR>
+xnoremap <silent> <leader>sg :Clap grep --query=@visual<CR>
+
+# 搜索光标下单词/选中文本
+nnoremap <silent> <leader>sw :Clap grep --query=<cword><CR>
+xnoremap <silent> <leader>sw :Clap grep --query=@visual<CR>
 
 # 当前文件行搜索
 nnoremap <silent> <leader>fl :Clap blines<CR>

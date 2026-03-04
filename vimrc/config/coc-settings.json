@@ -3,14 +3,22 @@
     "csharp-ls": {
       "command": "csharp-ls",
       "filetypes": ["cs"],
-      "rootPatterns": ["*.csproj", ".vim/", ".git/", ".hg/"]
+      "rootPatterns": ["*.csproj", ".vim/", ".git/", ".hg/", ".jj/"]
     }
   },
 
-  "workspace.rootPatterns": [".git", ".hg", ".projections.json"],
+  "workspace.rootPatterns": [".git", ".hg", ".jj", ".projections.json"],
 
-  "rust-analyzer.enable": true,
+"rust-analyzer.enable": true,
   "rust-analyzer.checkOnSave": true,
+
+  "ty.enable": true,
+  "ty.disableCompletion": false,
+  "ty.disableDiagnostics": false,
+  "ty.disableHover": false,
+  "ty.disableInlayHint": false,
+
+  "pyright.enable": false,
 
   "python.linting.ruffEnabled": true,
   "python.formatting.provider": "ruff",
@@ -55,8 +63,6 @@
   "diagnostic.warningSign": "\uf071",
   "diagnostic.infoSign": "\uf129",
   "diagnostic.hintSign": "\uf864",
-  "diagnostic.displayByAle": false,
-  "diagnostic.refreshOnInsertMode": false,
   "diagnostic.checkCurrentLine": true,
   "diagnostic.virtualTextPrefix": " ❯❯❯ ",
   "diagnostic.virtualText": true,
