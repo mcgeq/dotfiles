@@ -3,7 +3,7 @@ vim9script
 # Vim 配置主入口（优化版）
 # 作者: mcge <mcgeq@outlook.com>
 # 版本: 2.0.0
-# 最后修改: 2024-11-30
+# 最后修改: 2026-03-04
 # ============================================================================
 
 # ----------------------------------------------------------------------------
@@ -118,8 +118,15 @@ const config_plugins_dir = config_root .. '/config/plugins'
 if isdirectory(config_plugins_dir)
   const plugin_files = sort(g:GetAllVimFiles(config_plugins_dir))
   for file in plugin_files
-    # 跳过 UI 和 LSP 相关（已迁移到 modules/）以及 startify（稍后加载）
-    if file !~# 'ui\.vim$' && file !~# 'airline\.vim$' && file !~# 'coc\.vim$' && file !~# 'startify\.vim$'
+    # 跳过已迁移到 modules/ 的文件
+    # 跳过：UI (ui.vim, airline.vim, startify.vim)、LSP (coc.vim)、导航 (clap.vim, vista.vim)、
+    #      终端 (floaterm.vim)、编辑器 (edit/*.vim, tags.vim)
+    if file !~# 'ui\.vim$' && file !~# 'airline\.vim$' && file !~# 'coc\.vim$' &&
+         \ file !~# 'clap\.vim$' && file !~# 'vista\.vim$' &&
+         \ file !~# 'floaterm\.vim$' &&
+         \ file !~# 'nerdcommenter\.vim$' && file !~# 'tabsize\.vim$' && file !~# 'ultisnips\.vim$' &&
+         \ file !~# 'visual-multi\.vim$' && file !~# 'matchup\.vim$' && file !~# 'whitespace\.vim$' &&
+         \ file !~# 'startify\.vim$' && file !~# 'tags\.vim$'
       call g:LoadFile(file)
     endif
   endfor
@@ -134,12 +141,18 @@ const ui_dir = config_root .. '/modules/ui'
 if isdirectory(ui_dir)
   # 外观设置立即加载
   call g:LoadFile(ui_dir .. '/appearance.vim')
-  
+
   # 配色方案立即加载
   call g:LoadFile(ui_dir .. '/colorscheme.vim')
-  
+
   # 状态栏延迟加载（等待 airline 插件）
   call g:DeferLoad(ui_dir .. '/statusline.vim', 100)
+
+  # Airline 状态栏配置
+  call g:LoadFile(ui_dir .. '/airline.vim')
+
+  # Startify 启动界面
+  call g:LoadFile(ui_dir .. '/startify.vim')
 endif
 
 # LSP 模块 - 立即加载（确保 Startify 快捷键可用）
@@ -147,13 +160,42 @@ const lsp_dir = config_root .. '/modules/lsp'
 if isdirectory(lsp_dir)
   # CoC LSP - 立即加载，确保 Startify 命令响应快速
   call g:LoadFile(lsp_dir .. '/coc.vim')
+  # CoC 快捷键映射
+  call g:LoadFile(lsp_dir .. '/mapping.vim')
   # 如果想延迟加载以加快启动：call g:DeferLoad(lsp_dir .. '/coc.vim', 50)
 endif
 
-# Startify 启动界面 - 在 CoC 之后加载（确保命令可用）
-const startify_config = config_root .. '/config/plugins/ui/startify.vim'
-if filereadable(startify_config)
-  call g:LoadFile(startify_config)
+# Git 模块
+const git_dir = config_root .. '/modules/git'
+if isdirectory(git_dir)
+  call g:LoadFile(git_dir .. '/gutter.vim')
+  call g:LoadFile(git_dir .. '/mapping.vim')
+endif
+
+# 导航模块
+const nav_dir = config_root .. '/modules/navigation'
+if isdirectory(nav_dir)
+  call g:LoadFile(nav_dir .. '/clap.vim')
+  call g:LoadFile(nav_dir .. '/vista.vim')
+  call g:LoadFile(nav_dir .. '/mapping.vim')
+endif
+
+# 终端模块
+const term_dir = config_root .. '/modules/terminal'
+if isdirectory(term_dir)
+  call g:LoadFile(term_dir .. '/floaterm.vim')
+endif
+
+# 编辑器增强模块
+const editor_dir = config_root .. '/modules/editor'
+if isdirectory(editor_dir)
+  call g:LoadFile(editor_dir .. '/tabsize.vim')
+  call g:LoadFile(editor_dir .. '/commenter.vim')
+  call g:LoadFile(editor_dir .. '/snippets.vim')
+  call g:LoadFile(editor_dir .. '/multi-cursor.vim')
+  call g:LoadFile(editor_dir .. '/match-pair.vim')
+  call g:LoadFile(editor_dir .. '/whitespace.vim')
+  call g:LoadFile(editor_dir .. '/tags.vim')
 endif
 
 # ----------------------------------------------------------------------------
@@ -179,7 +221,15 @@ const mappings_dir = config_root .. '/config/mapping'
 if isdirectory(mappings_dir)
   const mapping_files = sort(g:GetAllVimFiles(mappings_dir))
   for file in mapping_files
-    call g:LoadFile(file)
+    # 跳过已迁移到 modules/ 的映射文件
+    # 跳过：git.vim, navigation.vim, clap_keys.vim, vista_keys.vim,
+    #      coc.vim, coc_list.vim, terminal.vim
+    if file !~# 'git\.vim$' && file !~# 'navigation\.vim$' &&
+         \ file !~# 'clap_keys\.vim$' && file !~# 'vista_keys\.vim$' &&
+         \ file !~# 'coc\.vim$' && file !~# 'coc_list\.vim$' &&
+         \ file !~# 'terminal\.vim$'
+      call g:LoadFile(file)
+    endif
   endfor
 endif
 

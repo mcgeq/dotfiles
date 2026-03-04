@@ -12,6 +12,13 @@ if &compatible
     set nocompatible
 endif
 
+# ----------------------------------------------------------------------------
+# Leader 键设置（必须在任何映射之前设置）
+# ----------------------------------------------------------------------------
+# 设置 <leader> 为空格，这样 <leader>p 就是 空格+p
+vim9cmd legacy let mapleader = ' '
+vim9cmd legacy let maplocalleader = ','
+
 # 显示设置
 set number
 set relativenumber

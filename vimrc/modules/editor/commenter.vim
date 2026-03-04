@@ -1,0 +1,64 @@
+vim9script
+# ============================================================================
+# Editor 模块 - 注释功能 (NERDCommenter)
+# 作者：mcge <mcgeq@outlook.com>
+# ============================================================================
+
+# 配置
+var config = {
+  enabled: true,
+  create_default_mappings: 1,
+  space_delims: 1,
+  compact_sexy_coms: 1,
+  default_align: "left",
+  alt_delims_java: 1,
+  custom_delimiters: { "c": { "left": "/**", "right": "*/" } },
+  comment_empty_lines: 1,
+  trim_trailing_whitespace: 1,
+  toggle_check_all_lines: 1,
+}
+
+# 初始化 NERDCommenter
+def g:InitNERDCommenter(user_config: dict<any> = {})
+  # 合并用户配置
+  extend(config, user_config)
+
+  if !config.enabled
+    call g:ErrDebug('NERDCommenter is disabled')
+    return
+  endif
+
+  # 基础设置
+  g:NERDCreateDefaultMappings = config.create_default_mappings
+  g:NERDSpaceDelims = config.space_delims
+  g:NERDCompactSexyComs = config.compact_sexy_coms
+  g:NERDDefaultAlign = config.default_align
+  g:NERDAltDelims_java = config.alt_delims_java
+  g:NERDCustomDelimiters = config.custom_delimiters
+  g:NERDCommentEmptyLines = config.comment_empty_lines
+  g:NERDTrimTrailingWhitespace = config.trim_trailing_whitespace
+  g:NERDToggleCheckAllLines = config.toggle_check_all_lines
+
+  call g:ErrDebug('NERDCommenter initialized')
+enddef
+
+# 健康检查
+def g:NERDCommenterHealthCheck(): dict<any>
+  return {
+    name: 'NERDCommenter',
+    available: exists(':NERDCommenterToggle'),
+    enabled: config.enabled,
+    mappings_configured: config.create_default_mappings,
+    status: config.enabled ? 'running' : 'disabled',
+  }
+enddef
+
+# 获取配置
+def g:GetNERDCommenterConfig(): dict<any>
+  return config
+enddef
+
+# 立即初始化
+call g:InitNERDCommenter()
+
+# vim: set ft=vim sw=2 ts=2 sts=2 et:

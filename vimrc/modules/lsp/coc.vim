@@ -162,7 +162,7 @@ def SetupAutoInstall()
     for ext in config.extensions
       if !CocExtensionInstalled(ext)
         echo $'Installing coc extension: ' .. ext
-        execute 'CocInstall! ' .. ext
+        execute 'CocInstall ' .. ext
       endif
     endfor
   })

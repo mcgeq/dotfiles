@@ -1,175 +1,345 @@
-#+TITLE: Vim Config
+#+TITLE: mcge's Vim Configuration
 #+AUTHOR: mcge
-#+DATE: <2024-03-27 19:38:19>
-* A simple vim configuration
-此 vimrc 配置是使用 vim9script 编写。
+#+EMAIL: mcgeq@outlook.com
+#+DATE: <2024-11-30>
+#+VERSION: 2.0
+#+KEYWORDS: vim vim9script coc.nvim lsp modules
 
-** 使用方式
+A production-ready Vim configuration written in *Vim9script* with hybrid modular architecture.
 
-1. windows平台运行=install.bat=文件
-2. Linux平台运行=install.sh=文件
+---
 
-** 配置文件目录介绍
-- colors :: 自定义 colorscheme
-- pack :: 插件，使用 vim 内置的包管理功能
-- config :: 存放具体配置的目录
-  + core :: 全局变量等
-- ftdetect :: 设置文件类型检测
-- ftplugin :: 针对文件类型加载的插件
+* Overview
 
-** 废弃
-*** 配置 vimrc
-在=vimrc=文件中写入以下内容
-#+BEGIN_SRC vimscript
-    vim9script
+This configuration uses a *hybrid architecture* that combines:
+- =modules/= for complex feature modules with config dicts and health checks
+- =config/= for simple settings and language-specific configurations
 
-    def SetPackPath(custom_dir: string)
-        var packpath_exist = index(split(&packpath, ','), custom_dir) != -1
-        if !packpath_exist
-            execute 'set packpath+=' .. custom_dir
-        endif
-    enddef
-    
-    # 自定义一些全局变量
-    g:mcge_custom_project = "F:/2024/projects"
-    g:mcge_custom_workspace = "F:/workspace"
-    g:mcge_custom_fzf_dir = "D:/bin/fzf"
-    g:mcge_custom_preview_bash = "D:/bin/Git/bin/bash.exe"
+** Architecture Layers
 
-    # 自定义vim配置文件路径
-    g:mcge_customvimrcdir = "D:/config/mcge-vimrc"
-
-    if has("unix")
-        g:mcge_customvimrcdir = "~/mcge-vimrc"
-        g:mcge_custom_project = "~/projects"
-        g:mcge_custom_workspace = "~/workspace"
-        g:mcge_custom_fzf_dir = "~/.fzf"
-        g:mcge_custom_preview_bash = "/usr/bin/bash"
-    endif
-
-    SetPackPath(g:mcge_customvimrcdir)
-    var vim_pos_x = 1000
-    var vim_pos_y = 10
-    var vim_width = 50
-    var vim_height = 90
-
-    execute $"set lines={vim_width}"
-    execute $"set columns={vim_height}"
-    execute $"winpos {vim_pos_x} {vim_pos_y}"
-    
-    execute 'source ' .. fnameescape(g:mcge_customvimrcdir .. '/init.vim')
+#+BEGIN_SRC text
+Bootstrap → Core → Modules → Config → Local
+    ↓         ↓        ↓         ↓        ↓
+ Environ   Utils   Features  Simple   User
 #+END_SRC
 
-*** 废弃
-#+BEGIN_SRC vimscript
-    vim9script
+- *Bootstrap* - Environment initialization, constants, basic settings
+- *Core* - Error handling, utilities, module loader, health check
+- *Modules* - Feature modules (20 files)
+- *Config* - Simple configurations (8 files)
+- *Local* - User customizations
 
-    def SetRuntimePath(custom_dir: string)
-        var runtimepath_exist = index(split(&runtimepath, ','), custom_dir) != -1
-        if !runtimepath_exist
-            execute 'set runtimepath+=' .. custom_dir
-        endif
-    enddef
+** Performance
 
-    def SetPackPath(custom_dir: string)
-        var packpath_exist = index(split(&packpath, ','), custom_dir) != -1
-        if !packpath_exist
-            execute 'set packpath+=' .. custom_dir
-        endif
-    enddef
-    
-    # 自定义一些全局变量
-    g:mcge_custom_project = "F:/2024/projects"
-    g:mcge_custom_workspace = "F:/workspace"
-    g:mcge_custom_fzf_dir = "D:/bin/fzf"
+- Startup time: ~80-100ms
+- Smart lazy loading
+- Built-in health checks
 
-    # 自定义vim配置文件路径
-    g:mcge_customvimrcdir = "D:/config/mcge-vimrc"
+---
 
-    if has('unix')
-        g:mcge_customvimrcdir = "~/mcge-vimrc"
-        g:mcge_custom_project = "~/projects"
-        g:mcge_custom_workspace = "~/workspace"
-        g:mcge_custom_fzf_dir = "~/.fzf"
-    endif
+* Installation
 
-    SetRuntimePath(g:mcge_customvimrcdir)
-    SetRuntimePath(g:mcge_custom_fzf_dir)
+** Requirements
 
-    SetPackPath(g:mcge_customvimrcdir)
+| Requirement     | Version | Purpose           |
+|-----------------+---------+-------------------|
+| Vim/Neovim      | 9.0+/0.8+ | Editor            |
+| Node.js         | 16+     | CoC.nvim          |
+| Git             | any     | Version control   |
+| ripgrep (rg)    | any     | Fast search       |
+| fd              | any     | File finding      |
+| ctags           | any     | Code tags         |
 
-    execute 'source ' .. fnameescape(g:mcge_customvimrcdir .. '/init.vim')
+** Quick Start
+
+*** Windows
+
+#+BEGIN_SRC powershell
+winget install BurntSushi.ripgrep.MSVC
+winget install sharkdp.fd
+winget install UniversalCtags.UniversalCtags
+
+git clone <your-repo> vimrc
+cd vimrc
+.\install.bat
 #+END_SRC
 
-*** 废弃
-#+BEGIN_SRC vimscript
-  vim9script
-  # 自定义一些全局变量
-  g:mcge_custom_project = "F:/2024/projects"
-  g:mcge_custom_workspace = "F:/workspace"
+*** Linux/macOS
 
-  # 自定义vim配置文件路径
-  g:mcge_customvimrcdir = "D:/config/mcge-vimrc"
+#+BEGIN_SRC bash
+# Install tools
+brew install ripgrep fd ctags  # macOS
+sudo apt install ripgrep fd-find universal-ctags  # Ubuntu
 
-  if has('unix')
-      g:mcge_customvimrcdir = "~/mcge-vimrc"
-      g:mcge_custom_project = "~/projects"
-      g:mcge_custom_workspace = "~/workspace"
-  endif
-  
-  var runtimepath_exist = index(split(&runtimepath, ','), g:mcge_customvimrcdir) != -1
-  if !runtimepath_exist
-      # 将自定义的配置文件路径加入`runtimepath'
-      execute 'set runtimepath+=' .. g:mcge_customvimrcdir
-  endif
-  # 判断自定义的配置文件路径是否已经存在packpath中使用vim内置包管理自动加载
-  var packpath_exist = index(split(&packpath, ','), g:mcge_customvimrcdir) != -1
-  if !packpath_exist
-      execute 'set packpath+=' .. g:mcge_customvimrcdir
-  endif
-  # 加载配置文件
-  execute 'source ' .. fnameescape(g:mcge_customvimrcdir .. '/init.vim')
+# Clone and install
+git clone <your-repo> vimrc
+cd vimrc
+chmod +x install.sh
+./install.sh
 #+END_SRC
 
-*** 废弃的方法
-#+BEGIN_SRC vimscript
-# 获取指定字符串结尾目录的下一级目录
-def GetSubDirectories(path: string, suffix: string, next: bool): list<string> 
-    var subdirectories = []
-    def RecursiveTraversal(directory: string)
-	for entry in glob(directory .. '/*', 1, 1)
-		if isdirectory(entry)
-			if fnamemodify(entry, ':t') ==# suffix
-				if next
-					for sub_entry in glob(entry .. '/*', 1, 1)
-						if isdirectory(sub_entry)
-                			add(subdirectories, sub_entry)
-						endif
-					endfor
-				else
-					add(subdirectories, entry)
-				endif
-			endif
-			call RecursiveTraversal(entry)
-		endif
-	endfor
-    enddef
-    call RecursiveTraversal(path)
-    return subdirectories
-enddef
+---
 
+* Directory Structure
 
-var subdires = GetSubDirectories(g:mcge_customvimrcdir, 'start', true)
-# for directory in subdires
-#	execute 'set runtimepath+=' .. directory
-#	var docdir = directory .. "\\doc"
-#	if isdirectory(docdir)
-#		execute "helptags " .. docdir
-#	endif
-# endfor
-var optdires = GetSubDirectories(g:mcge_customvimrcdir, 'opt', false)
-# for dires in optdires
-#	execute 'set runtimepath+=' .. dires
-# endfor
+#+BEGIN_SRC text
+vimrc/
+├── init.vim                    # Main entry point
+├── bootstrap/                  # Environment & basic settings
+│   ├── constants.vim
+│   ├── environment.vim
+│   └── settings.vim
+├── core/                       # Core functionality
+│   ├── error_handler.vim
+│   ├── utils.vim
+│   ├── loader.vim
+│   └── health.vim
+├── modules/                    # Feature modules (20 files)
+│   ├── editor/ (7)             # Editor enhancements
+│   ├── git/ (2)                # Git integration
+│   ├── lsp/ (2)                # LSP configuration
+│   ├── navigation/ (3)         # Navigation
+│   ├── terminal/ (1)           # Terminal
+│   └── ui/ (5)                 # UI configuration
+├── config/                     # Simple configurations (8 files)
+│   ├── lang/ (6)               # Language-specific
+│   ├── mapping/
+│   ├── ftplugin/
+│   └── coc-settings.json
+├── local/                      # User customizations
+│   ├── user_env.vim
+│   ├── user_settings.vim
+│   └── user_mappings.vim
+└── pack/mcge/start/            # Vim plugins
 #+END_SRC
 
+---
+
+* Key Bindings
+
+** Leader Key
+
+The leader key is set to ~<Space>~.
+
+** Startify
+
+| Key | Function        |
+|-----+-----------------|
+| n   | New file        |
+| f   | File search     |
+| o   | Recent files    |
+| w   | Text search     |
+| s   | Load session    |
+| c   | Open config     |
+
+** Clap
+
+| Shortcut    | Function          |
+|-------------+-------------------|
+| <leader>p   | File search       |
+| <leader>P   | Git files         |
+| <leader>/   | Text search       |
+| <leader>fg  | Grep search       |
+| <leader>bb  | Buffers           |
+| <leader>fh  | Recent files      |
+| <leader>fl  | Current file lines|
+| <leader>gc  | Git commits       |
+| <leader>:   | Command search    |
+| <leader>;   | Command history   |
+| <leader>km  | Key mappings      |
+| <leader>?   | Help tags         |
+| <leader>tc  | Colorschemes      |
+
+** Vista
+
+| Shortcut    | Function          |
+|-------------+-------------------|
+| <F8>        | Toggle outline    |
+| <leader>v   | Toggle outline    |
+| <leader>vf  | Symbol search     |
+| <leader>vc  | Use CoC backend   |
+| <leader>vt  | Use ctags backend |
+
+** CoC LSP
+
+| Shortcut    | Function              |
+|-------------+-----------------------|
+| gd          | Go to definition      |
+| gy          | Go to type definition |
+| gi          | Go to implementation  |
+| gr          | Find references       |
+| K           | Show documentation    |
+| <leader>rn  | Rename symbol         |
+| <leader>f   | Format code           |
+| [g / ]g     | Previous/next diag    |
+| <leader>e   | Open explorer         |
+| <leader>y   | Yank history          |
+
+** Windows & Buffers
+
+| Shortcut        | Function           |
+|-----------------+--------------------|
+| <Ctrl-h/j/k/l>  | Switch windows     |
+| <Ctrl-tab>      | Next buffer        |
+| <Ctrl-s-tab>    | Previous buffer    |
+| <Ctrl-x><Ctrl-s>| Save file          |
+| <Ctrl-x><Ctrl-q>| Save and quit      |
+
+---
+
+* Configuration
+
+** User Environment (~local/user_env.vim~)
+
+#+BEGIN_SRC vim
+vim9script
+
+g:mcge_custom_author = "Your Name"
+g:mcge_custom_email = "<your@email.com>"
+g:mcge_custom_vista_executive = "coc"
+
+if has('win32') || has('win64')
+  g:mcge_custom_project = "E:/MyProjects"
+  g:mcge_custom_workspace = "E:/Workspaces"
+endif
+#+END_SRC
+
+** User Settings (~local/user_settings.vim~)
+
+#+BEGIN_SRC vim
+vim9script
+
+set number
+set relativenumber
+#+END_SRC
+
+** User Mappings (~local/user_mappings.vim~)
+
+#+BEGIN_SRC vim
+vim9script
+
+nnoremap <leader>w :w<CR>
+nnoremap <leader>q :q<CR>
+#+END_SRC
+
+** CoC Configuration (~config/coc-settings.json~)
+
+#+BEGIN_SRC json
+{
+  "python.linting.enabled": true,
+  "python.formatting.provider": "black",
+  "rust-analyzer.checkOnSave.command": "clippy"
+}
+#+END_SRC
+
+---
+
+* Commands
+
+** Performance & Debugging
+
+| Command              | Description          |
+|----------------------+----------------------|
+| :VimStartupTime      | View startup time    |
+| :VimrcLoadReport     | Module loading report|
+| :CheckHealth         | Health check         |
+
+** Clap
+
+| Command              | Description          |
+|----------------------+----------------------|
+| :Clap files          | File search          |
+| :Clap grep           | Text search          |
+| :Clap buffers        | Buffers              |
+| :Clap history        | Recent files         |
+| :Clap command        | Commands             |
+| :Clap maps           | Key mappings         |
+| :Clap colors         | Colorschemes         |
+
+** Vista
+
+| Command              | Description          |
+|----------------------+----------------------|
+| :Vista               | Toggle outline       |
+| :Vista finder        | Symbol search        |
+| :Vista coc           | Use CoC backend      |
+| :Vista info          | Show info            |
+
+** CoC
+
+| Command              | Description          |
+|----------------------+----------------------|
+| :CocInfo             | CoC info             |
+| :CocList extensions  | Extension list       |
+| :CocCommand explorer | File browser         |
+| :Format              | Format code          |
+| :OR                  | Organize imports     |
+| :CocRestart          | Restart CoC          |
+
+---
+
+* Troubleshooting
+
+** CoC Not Working
+
+1. Check Node.js: ~node --version~ (requires 16+)
+2. View status: ~:CocInfo~
+3. Restart CoC: ~:CocRestart~
+
+** Search is Slow
+
+1. Ensure ripgrep is installed: ~rg --version~
+2. Use Clap: ~:Clap files~
+
+** Module Loading Issues
+
+#+BEGIN_SRC vim
+:VimrcLoadReport         " Check failed modules
+:echo g:mcge_startup_time " View startup time
+#+END_SRC
+
+---
+
+* Advanced Usage
+
+** Module Health Checks
+
+#+BEGIN_SRC vim
+:call g:ClapHealthCheck()
+:call g:VistaHealthCheck()
+:call g:AirlineHealthCheck()
+#+END_SRC
+
+** Add Plugins
+
+#+BEGIN_SRC bash
+cd pack/mcge/start
+git clone https://github.com/author/plugin-name
+#+END_SRC
+
+** Add CoC Extensions
+
+#+BEGIN_SRC vim
+:CocInstall coc-extension-name
+#+END_SRC
+
+---
+
+* Resources
+
+- [[https://vimhelp.org/vim9.txt.html][Vim 9 Documentation]]
+- [[https://github.com/neoclide/coc.nvim][CoC.nvim]]
+- [[https://github.com/liuchengxu/vim-clap][vim-clap]]
+- [[https://github.com/liuchengxu/vista.vim][Vista.vim]]
+- [[https://github.com/vim-airline/vim-airline][vim-airline]]
+- [[https://github.com/mhinz/vim-startify][vim-startify]]
+
+---
+
+* License
+
+MIT License
+
+---
+
+*Enjoy your Vim journey!* 🎉

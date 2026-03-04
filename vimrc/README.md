@@ -4,32 +4,32 @@
 
 [中文文档](./README_CN.md)
 
-A production-ready Vim configuration written in **Vim9script** with modular architecture, intelligent lazy loading, and comprehensive LSP support via CoC.nvim.
+A production-ready Vim configuration written in **Vim9script** with hybrid modular architecture, intelligent lazy loading, and comprehensive LSP support via CoC.nvim.
 
 ---
 
 ## ✨ Features
 
-### 🏗️ Modular Architecture (v2.0)
+### 🏗️ Hybrid Architecture (v2.0)
 
 ```
 Bootstrap → Core → Modules → Config → Local
      ↓         ↓        ↓         ↓        ↓
-  Environ   Utils   UI/LSP   Compat   User
+  Environ   Utils   Features  Simple   User
 ```
 
 - **Bootstrap** - Environment initialization, constants, basic settings
 - **Core** - Error handling, utilities, module loader, health check
-- **Modules** - UI config, LSP config (modular, pluggable)
-- **Config** - Legacy compatibility, plugin config, key mappings
+- **Modules** - Feature modules with config dicts, health checks (20 files)
+- **Config** - Simple configurations, language-specific settings (8 files)
 - **Local** - User customizations (not tracked by Git)
 
 ### ⚡ Performance Optimization
 
-- **Smart Lazy Loading** - UI & LSP load on demand, startup < 100ms
+- **Smart Lazy Loading** - Modules load on demand, startup < 100ms
 - **Performance Monitoring** - Built-in startup time tracking & module stats
 - **Health Checks** - Auto-detect config, dependencies & plugin status
-- **Deferred Init** - Statusline & non-critical modules load later
+- **Deferred Init** - Non-critical modules load later
 
 ### 🌐 Language Support (45+ CoC Extensions)
 
@@ -57,8 +57,9 @@ Bootstrap → Core → Modules → Config → Local
 
 **Editing Enhancements**
 - **Floaterm** - Floating terminal
-- **vim-surround** - Quick surroundings
-- **vim-commentary** - Comments
+- **vim-visual-multi** - Multi-cursor editing
+- **NERDCommenter** - Comments
+- **vim-matchup** - Enhanced matching
 
 ---
 
@@ -115,25 +116,77 @@ chmod +x install.sh
 
 1. Start Vim: `vim`
 2. CoC extensions will auto-install (takes a few minutes on first launch)
-3. Run health check: `:CheckHealth`
+3. Run health check: `:VimrcLoadReport`
 4. View startup time: `:VimStartupTime`
 
 ---
 
 ## 🗂️ Directory Structure
 
+### Hybrid Architecture
+
 ```
 vimrc/
-├── init.vim                # Main entry point
-├── bootstrap/              # Environment & settings
-├── core/                   # Error handling, utilities, loader, health check
-├── modules/                # UI & LSP modules (modular, pluggable)
-├── config/                 # Plugin configs, mappings, language-specific
-├── local/                  # User customizations (not tracked by Git)
-└── pack/                   # Vim plugins
+├── init.vim                    # Main entry point
+├── bootstrap/                  # Environment & basic settings
+│   ├── constants.vim           # Global constants
+│   ├── environment.vim         # Environment detection
+│   └── settings.vim            # Basic Vim settings
+├── core/                       # Core functionality
+│   ├── error_handler.vim       # Error handling
+│   ├── utils.vim               # Utility functions
+│   ├── loader.vim              # Module loader
+│   └── health.vim              # Health check system
+├── modules/                    # Feature modules (20 files)
+│   ├── editor/ (7)             # Editor enhancements
+│   │   ├── commenter.vim       # NERDCommenter
+│   │   ├── match-pair.vim      # vim-matchup
+│   │   ├── multi-cursor.vim    # vim-visual-multi
+│   │   ├── snippets.vim        # UltiSnips
+│   │   ├── tabsize.vim         # Tab configuration
+│   │   ├── tags.vim            # gutentags
+│   │   └── whitespace.vim      # Whitespace highlighting
+│   ├── git/ (2)                # Git integration
+│   │   ├── gutter.vim          # vim-gitgutter
+│   │   └── mapping.vim         # Git keybindings
+│   ├── lsp/ (2)                # LSP configuration
+│   │   ├── coc.vim             # CoC setup
+│   │   └── mapping.vim         # LSP keybindings
+│   ├── navigation/ (3)         # Navigation
+│   │   ├── clap.vim            # Clap fuzzy finder
+│   │   ├── mapping.vim         # Navigation keys
+│   │   └── vista.vim           # Vista outline
+│   ├── terminal/ (1)           # Terminal
+│   │   └── floaterm.vim        # Floaterm
+│   └── ui/ (5)                 # UI configuration
+│       ├── airline.vim         # Airline statusline
+│       ├── appearance.vim      # GUI settings
+│       ├── colorscheme.vim     # Color scheme
+│       ├── startify.vim        # Start screen
+│       └── statusline.vim      # Statusline config
+├── config/                     # Simple configurations (8 files)
+│   ├── lang/ (6)               # Language-specific settings
+│   │   ├── python.vim
+│   │   ├── rust.vim
+│   │   ├── typescript.vim
+│   │   ├── zig.vim
+│   │   ├── css.vim
+│   │   └── html.vim
+│   ├── mapping/
+│   │   └── basic.vim           # Basic global mappings
+│   ├── ftplugin/
+│   │   └── vim.vim             # Vim ftplugin
+│   └── coc-settings.json       # CoC JSON config
+├── local/                      # User customizations
+│   ├── user_env.vim            # User environment variables
+│   ├── user_settings.vim       # User settings
+│   └── user_mappings.vim       # User keybindings
+└── pack/mcge/start/            # Vim plugins
 ```
 
-**Architecture Layers**: Bootstrap → Core → Modules → Config → Local
+**Design Principles:**
+- **modules/** - Complex features with config dicts, functions, health checks
+- **config/** - Simple settings, language-specific autocmds, basic mappings
 
 ---
 
@@ -152,16 +205,23 @@ vimrc/
 | `s` | Load session |
 | `c` | Open config |
 
-### Clap Search (Recommended)
+### Clap Search
 
 | Shortcut | Function |
 |----------|----------|
 | `<leader>p` | File search |
 | `<leader>P` | Git files |
 | `<leader>/` | Text search |
+| `<leader>fg` | Grep search |
 | `<leader>bb` | Buffers |
 | `<leader>fh` | Recent files |
+| `<leader>fl` | Current file lines |
 | `<leader>gc` | Git commits |
+| `<leader>:` | Command search |
+| `<leader>;` | Command history |
+| `<leader>km` | Key mappings |
+| `<leader>?` | Help tags |
+| `<leader>tc` | Colorschemes |
 
 ### Vista Code Outline
 
@@ -170,6 +230,8 @@ vimrc/
 | `<F8>` | Toggle outline |
 | `<leader>v` | Toggle outline |
 | `<leader>vf` | Symbol search |
+| `<leader>vc` | Use CoC backend |
+| `<leader>vt` | Use ctags backend |
 
 ### CoC LSP
 
@@ -183,13 +245,22 @@ vimrc/
 **Code Actions**
 - `<leader>rn` - Rename symbol
 - `<leader>f` - Format code
+- `<leader>a` - Code actions
+- `<leader>ac` - Code action (cursor)
 - `[g` / `]g` - Previous/next diagnostic
+
+**CoC Explorer**
+- `<leader>e` - Open explorer
+- `<leader>ed` - Explorer (directory)
+- `<leader>ef` - Explorer (floating)
+- `<leader>y` - Yank history
 
 ### Windows and Buffers
 
 - `<Ctrl-h/j/k/l>` - Switch windows
-- `<Ctrl-n/p>` - Switch buffers
+- `<Ctrl-tab>` / `<Ctrl-s-tab>` - Next/previous buffer
 - `<Ctrl-x><Ctrl-s>` - Save file
+- `<Ctrl-x><Ctrl-q>` - Save and quit
 
 ---
 
@@ -228,6 +299,18 @@ set number
 set relativenumber
 ```
 
+### User Key Bindings
+
+Edit `local/user_mappings.vim`:
+
+```vim
+vim9script
+
+# Your custom keybindings
+nnoremap <leader>w :w<CR>
+nnoremap <leader>q :q<CR>
+```
+
 ### CoC Configuration
 
 Edit `config/coc-settings.json`:
@@ -259,6 +342,11 @@ Edit `config/coc-settings.json`:
 :Clap grep               " Text search
 :Clap buffers            " Buffers
 :Clap history            " Recent files
+:Clap command            " Commands
+:Clap command_history    " Command history
+:Clap maps               " Key mappings
+:Clap help_tags          " Help tags
+:Clap colors             " Colorschemes
 ```
 
 ### Vista Outline
@@ -267,6 +355,8 @@ Edit `config/coc-settings.json`:
 :Vista                   " Toggle outline
 :Vista finder            " Symbol search
 :Vista coc               " Use CoC backend
+:Vista ctags             " Use ctags backend
+:Vista info              " Show info
 ```
 
 ### CoC
@@ -277,6 +367,7 @@ Edit `config/coc-settings.json`:
 :CocCommand explorer     " File browser
 :Format                  " Format code
 :OR                      " Organize imports
+:CocRestart              " Restart CoC
 ```
 
 ---
@@ -288,6 +379,7 @@ Edit `config/coc-settings.json`:
 1. Check Node.js: `node --version` (requires 16+)
 2. View status: `:CocInfo`
 3. Restart CoC: `:CocRestart`
+4. Check extensions: `:CocList extensions`
 
 ### Search is Slow
 
@@ -301,12 +393,19 @@ Edit `config/coc-settings.json`:
 2. Switch backend: `:Vista coc`
 3. Check CoC: `:CocInfo`
 
+### Module Loading Issues
+
+```vim
+:VimrcLoadReport         " Check which modules failed
+:echo g:mcge_startup_time " View startup time in ms
+```
+
 ---
 
 ## 🚀 Performance Metrics
 
 - **Startup Time**: ~80-100ms
-- **Modules**: 40+
+- **Modules**: 20 feature modules
 - **CoC Extensions**: 45+
 
 ### View Performance
@@ -332,17 +431,17 @@ git clone https://github.com/author/plugin-name
 
 ```vim
 :CocInstall coc-extension-name
+:CocUninstall coc-extension-name
 ```
 
-### Custom Key Bindings
+### Module Health Checks
 
-Edit `local/user_mappings.vim`:
+Each module provides a health check function:
 
 ```vim
-vim9script
-
-nnoremap <leader>w :w<CR>
-nnoremap <leader>q :q<CR>
+:call g:ClapHealthCheck()
+:call g:VistaHealthCheck()
+:call g:AirlineHealthCheck()
 ```
 
 ---
@@ -353,6 +452,8 @@ nnoremap <leader>q :q<CR>
 - [CoC.nvim](https://github.com/neoclide/coc.nvim)
 - [vim-clap](https://github.com/liuchengxu/vim-clap)
 - [Vista.vim](https://github.com/liuchengxu/vista.vim)
+- [vim-airline](https://github.com/vim-airline/vim-airline)
+- [vim-startify](https://github.com/mhinz/vim-startify)
 
 ---
 

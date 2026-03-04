@@ -2,6 +2,11 @@ vimrc/coc-data/*
 vimrc/pack/mcge/start/ultisnips/tags
 !vimrc/coc-data/ultisnips/
 !vimrc/coc-data/ultisnips/*
+vimrc/cache/*
+vimrc/backup/*
+vimrc/swap/*
+vimrc/undo/*
+vimrc/tmp/*
 
 emacs/site-lisp/.data/*
 emacs/site-lisp/.cache/*
