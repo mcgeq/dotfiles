@@ -155,6 +155,9 @@ if isdirectory(ui_dir)
 
   # Startify 启动界面
   call g:LoadFile(ui_dir .. '/startify.vim')
+
+  # Which-key 快捷键提示
+  call g:LoadFile(ui_dir .. '/whichkey.vim')
 endif
 
 # LSP 模块 - 立即加载（确保 Startify 快捷键可用）

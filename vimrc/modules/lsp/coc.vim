@@ -37,8 +37,7 @@ var config = {
     "coc-prettier",            # Prettier
     "@yaegassy/coc-tailwindcss3",  # TailwindCSS v3 (推荐，活跃维护)
     "coc-unocss",              # UnoCSS
-    "coc-vetur",               # Vue 2
-    "@yaegassy/coc-volar",     # Vue 3 (推荐，活跃维护)
+    "@yaegassy/coc-volar",     # Vue 3 (推荐，Volar 语言服务器)
     
     # 数据格式
     "coc-json",                # JSON
@@ -105,15 +104,21 @@ enddef
 def SetupAutocmds()
   augroup mcge_coc_lsp
     autocmd!
-    
+
     # 高亮光标下的符号和引用
     autocmd CursorHold * silent call CocActionAsync('highlight')
-    
+
     # 特定文件类型的格式化表达式
     autocmd FileType typescript,json setl formatexpr=CocAction('formatSelected')
-    
+
     # 跳转占位符时更新签名帮助
     autocmd User CocJumpPlaceholder call CocActionAsync('showSignatureHelp')
+
+    # Vue 文件：设置 workspace root 模式
+    autocmd FileType vue vim9cmd legacy let b:coc_root_patterns = ['.git', '.env', 'package.json', 'tsconfig.json', 'jsconfig.json', 'vite.config.ts', 'vite.config.js', 'vue.config.js', 'nuxt.config.ts']
+
+    # Vue 文件：支持 - 字符的补全
+    autocmd FileType vue setlocal iskeyword+=-
   augroup END
 enddef
 

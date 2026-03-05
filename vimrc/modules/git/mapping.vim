@@ -8,10 +8,11 @@ vim9script
 def SetupGitMappings()
   # Fugitive Git 命令
   nnoremap <silent><nowait> <leader>gg  :G<CR>
+  nnoremap <silent><nowait> <leader>gs  :<c-u>Git<CR>
   nnoremap <silent><nowait> <leader>gb  :<c-u>Git blame<CR>
   nnoremap <silent><nowait> <leader>gd  :<c-u>Gdiffsplit<CR>
   nnoremap <silent><nowait> <leader>gw  :<c-u>Gwrite<CR>
-  nnoremap <silent><nowait> <leader>gr  :<c-u>Gread<CR>
+  nnoremap <silent><nowait> <leader>gR  :<c-u>Gread<CR>
   nnoremap <silent><nowait> <leader>gm  :<c-u>Git commit<CR>
   nnoremap <silent><nowait> <leader>gc  :<c-u>Gclog<CR>
   nnoremap <silent><nowait> <leader>go  :<c-u>copen<CR>
@@ -21,10 +22,11 @@ def SetupGitMappings()
 
   # Insert 模式映射
   inoremap <silent><nowait> <leader>gg  <esc>:<c-u>G<CR>
+  inoremap <silent><nowait> <leader>gs  <Esc>:<c-u>Git<CR>
   inoremap <silent><nowait> <leader>gb  <Esc>:<c-u>Git blame<CR>
   inoremap <silent><nowait> <leader>gd  <Esc>:<c-u>Gdiffsplit<CR>
   inoremap <silent><nowait> <leader>gw  <Esc>:<c-u>Gwrite<CR>
-  inoremap <silent><nowait> <leader>gr  <Esc>:<c-u>Gread<CR>
+  inoremap <silent><nowait> <leader>gR  <Esc>:<c-u>Gread<CR>
   inoremap <silent><nowait> <leader>gm  <Esc>:<c-u>Git commit<CR>
   inoremap <silent><nowait> <leader>gc  <Esc>:<c-u>Gclog<CR>
 enddef

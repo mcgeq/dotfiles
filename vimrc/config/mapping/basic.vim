@@ -16,11 +16,9 @@ vnoremap <silent> <C-x><C-q> <Esc>:wq<CR>
 # -------------------- 窗口 start --------------------
 noremap <c-h> <C-w>h
 noremap <c-j> <C-w>j
-noremap <c-k> <C-w>k
 noremap <c-l> <C-w>l
 tnoremap <c-h> <c-\><c-n><c-w>h
 tnoremap <c-j> <c-\><c-n><c-w>j
-tnoremap <c-k> <c-\><c-n><c-w>k
 tnoremap <c-l> <c-\><c-n><c-w>l
 
 

@@ -11,6 +11,11 @@
 
   "workspace.rootPatterns": [".git", ".hg", ".jj", ".projections.json"],
 
+  "zig.enabled": true,
+  "zig.startUpMessage": true,
+  "zig.path": "zls",
+  "zig.debugLog": false,
+  
   "rust-analyzer.enable": true,
   "rust-analyzer.checkOnSave": true,
 
@@ -19,12 +24,61 @@
   "ty.disableDiagnostics": false,
   "ty.disableHover": false,
   "ty.disableInlayHint": false,
+  "ty.trace.server": "off",
 
   "pyright.enable": false,
 
   "python.linting.ruffEnabled": true,
+  "python.linting.enabled": true,
   "python.formatting.provider": "ruff",
-  "pyright.organizeimports.provider": "ruff",
+  "python.analysis.typeCheckingMode": "off",
+
+  "volar.enable": true,
+  "volar.useWorkspaceTsdk": true,
+  "volar.disableFormatting": true,
+  "volar.vueserver.typescript.takeOverMode": false,
+  "volar.vueserver.splitEditors": true,
+  "volar.vueserver.fullCompletionLists": true,
+  "volar.formatting.initialIndent": false,
+  "volar.codeActions.enabled": true,
+  "volar.codeLens.enabled": true,
+  "volar.completion.enabled": true,
+  "volar.diagnostic.enabled": true,
+  "volar.semanticTokens.enabled": true,
+  "volar.signatureHelp.enabled": true,
+  "volar.documentDropEdits.enabled": true,
+  "volar.inlayHints.enabled": true,
+  "volar.inlayHints.destructuredProps": true,
+  "volar.inlayHints.missingProps": true,
+  "volar.inlayHints.inlineHandlerLeading": false,
+  "volar.inlayHints.optionsWrapper": true,
+  "volar.inlayHints.vBindShorthand": true,
+
+"javascript.preferences.quoteStyle": "single",
+  "typescript.preferences.quoteStyle": "single",
+  "typescript.format.enable": false,
+  "javascript.format.enable": false,
+  "tsserver.enable": false,
+
+  "prettier.requireConfig": true,
+  "prettier.singleQuote": true,
+  "prettier.eslintIntegration": false,
+
+  "eslint.enable": true,
+  "eslint.autoFixOnSave": true,
+  "eslint.validate": [
+    "javascript",
+    "javascriptreact",
+    "typescript",
+    "typescriptreact",
+    "vue"
+  ],
+  "eslint.format.enable": true,
+  "eslint.packageManager": "bun",
+  "eslint.workingDirectories": [{"mode": "auto"}],
+  "eslint.useESLintRC": true,
+
+  "workspace.workspaceFolderControl": "local",
 
   "typescript.suggest.autoImports": true,
   "typescript.updateImportsOnFileMove.enabled": "always",
@@ -167,5 +221,8 @@
     "]c": ["wait", "markNext:git"],
     "<<": "gitStage",
     ">>": "gitUnstage"
+  },
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true
   }
 }

@@ -113,7 +113,7 @@ def SetupCocListMappings()
   nnoremap <silent> <leader>fb :CocList buffers<CR>
   nnoremap <silent> <leader>fr :CocList mru<CR>
   nnoremap <silent> <leader>fc :CocList cmdhistory<CR>
-  nnoremap <silent> <leader>fg :CocList gfiles<CR>
+  nnoremap <silent> <leader>gf :CocList gfiles<CR>
   nnoremap <silent> <leader>fl :CocListResume<CR>
 enddef
 
