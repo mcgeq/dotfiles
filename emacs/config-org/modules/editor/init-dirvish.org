@@ -1,0 +1,166 @@
+#+TITLE: Dirvish Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-dirvish.el :lexical t
+
+* Dirvish Module
+
+本模块配置 Dirvish 文件管理器，提供现代化的 dired 替代方案。
+
+** File Header
+
+#+begin_src emacs-lisp
+;;; init-dirvish.el --- Dirvish configuration for MCG Emacs -*- lexical-binding: t; -*-
+
+;; Copyright (C) 2024-2026 MCG
+;; Author: mcge <mcgeq@outlook.com>
+;; Keywords: dired, dirvish
+;; Compatibility: GNU Emacs 29.0+
+
+(require 'core-lib)
+
+;; 添加 dirvish 子模块目录到 load-path
+(let ((dirvish-dir (file-name-directory (locate-library "dirvish"))))
+  (when dirvish-dir
+    (add-to-list 'load-path (expand-file-name "extensions" dirvish-dir))))
+
+(require 'dirvish-vc nil t)  ; dirvish-vc 是 dirvish 的子模块
+(require 'dirvish-icons nil t)  ; dirvish-icons 提供图标支持
+#+end_src
+
+** Variables
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Variables
+;;; ============================================================
+
+(setq dirvish-quick-access-entries
+      '(("h" "~/" "Home")
+        ("d" "~/Downloads/" "Downloads")
+        ("m" "/mnt/" "Drives")
+        ("t" "~/.local/share/Trash/files/" "TrashCan")))
+
+(setq dirvish-mode-line-format
+      '(:left (sort symlink) :right (omit yank index)))
+
+;; Dirvish 属性配置（顺序很重要）
+(setq dirvish-attributes
+      '(vc-state subtree-state nerd-icons collapse git-msg file-time file-size))
+
+(setq dirvish-large-directory-threshold 20000)
+
+;; 显示详细信息（默认为 t 会隐藏详情）
+(setq dirvish-hide-details nil)
+
+;; Dired 参数
+(setq dired-listing-switches
+      "-l --almost-all --human-readable --group-directories-first --no-group")
+(put 'dired-find-alternate-file 'disabled nil)
+
+;; 在 dirvish-setup-hook 中强制显示详细信息
+(defun mcg/dirvish-show-details ()
+  "Force show details in Dirvish buffers."
+  (when (fboundp 'dired-hide-details-mode)
+    (dired-hide-details-mode -1)))
+
+(add-hook 'dirvish-setup-hook #'mcg/dirvish-show-details)
+#+end_src
+
+** Dirvish Core Configuration
+
+Dirvish 核心配置，包括基本设置、快速访问、属性配置和快捷键绑定。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Dirvish Core Configuration
+;;; ============================================================
+
+(defun mcg--setup-dirvish ()
+  "Setup Dirvish file manager."
+  (when (mcg-require-extension "dirvish" t)
+    (dirvish-override-dired-mode)
+
+    (global-set-key (kbd "C-c d") 'dirvish)
+    (define-key dirvish-mode-map (kbd ";") 'dired-up-directory)
+    (define-key dirvish-mode-map (kbd "?") 'dirvish-dispatch)
+    (define-key dirvish-mode-map (kbd "a") 'dirvish-setup-menu)
+    (define-key dirvish-mode-map (kbd "f") 'dirvish-file-info-menu)
+    (define-key dirvish-mode-map (kbd "o") 'dirvish-quick-access)
+    (define-key dirvish-mode-map (kbd "s") 'dirvish-quicksort)
+    (define-key dirvish-mode-map (kbd "r") 'dirvish-history-jump)
+    (define-key dirvish-mode-map (kbd "l") 'dirvish-ls-switches-menu)
+    (define-key dirvish-mode-map (kbd "v") 'dirvish-vc-menu)
+    (define-key dirvish-mode-map (kbd "*") 'dirvish-mark-menu)
+    (define-key dirvish-mode-map (kbd "y") 'dirvish-yank-menu)
+    (define-key dirvish-mode-map (kbd "N") 'dirvish-narrow)
+    (define-key dirvish-mode-map (kbd "^") 'dirvish-history-last)
+    (define-key dirvish-mode-map (kbd "TAB") 'dirvish-subtree-toggle)
+    (define-key dirvish-mode-map (kbd "M-f") 'dirvish-history-go-forward)
+    (define-key dirvish-mode-map (kbd "M-b") 'dirvish-history-go-backward)
+    (define-key dirvish-mode-map (kbd "M-e") 'dirvish-emerge-menu)
+
+    (mcg-log "Dirvish configured")))
+#+end_src
+
+** Dirvish Extras Configuration
+
+扩展功能配置，包括 dired-x、diredfl、nerd-icons、tramp 和鼠标操作支持。
+
+#+begin_src emacs-lisp
+(defun mcg--setup-dirvish-extras ()
+  "Setup Dirvish extra features."
+  (when (featurep 'dirvish)
+    ;; dired-x 是 Emacs 内置包
+    (when (require 'dired-x nil t)
+      (setq dired-omit-files
+            (concat dired-omit-files "\\|^\\..*$")))
+
+    ;; diredfl 需要单独安装
+    (when (require 'diredfl nil t)
+      (add-hook 'dired-mode-hook #'diredfl-mode)
+      (add-hook 'dirvish-directory-view-mode-hook #'diredfl-mode)
+      (set-face-attribute 'diredfl-dir-name nil :bold t))
+
+    ;; nerd-icons 需要单独安装
+    (when (require 'nerd-icons nil t)
+      (mcg-log "nerd-icons loaded"))
+
+    ;; tramp 是 Emacs 内置包
+    (when (require 'tramp nil t)
+      (connection-local-set-profile-variables
+       'remote-direct-async-process
+       '((tramp-direct-async-process . t)))
+      (connection-local-set-profiles
+       '(:application tramp :protocol "ssh")
+       'remote-direct-async-process)
+      (setq tramp-verbose 0)
+      (setq tramp-chunksize 2000)
+      (setq tramp-ssh-controlmaster-options nil))
+
+    (setq dired-mouse-drag-files t)
+    (setq mouse-drag-and-drop-region-cross-program t)
+    (setq mouse-1-click-follows-link nil)
+    (define-key dirvish-mode-map (kbd "<mouse-1>") 'dirvish-subtree-toggle-or-open)
+    (define-key dirvish-mode-map (kbd "<mouse-2>") 'dired-mouse-find-file-other-window)
+    (define-key dirvish-mode-map (kbd "<mouse-3>") 'dired-mouse-find-file)
+
+    (setq delete-by-moving-to-trash t)
+
+    (mcg-log "Dirvish extras configured")))
+
+(with-eval-after-load 'dirvish
+  (mcg--setup-dirvish-extras))
+#+end_src
+
+** Initialize
+
+#+begin_src emacs-lisp
+(mcg--setup-dirvish)
+#+end_src
+
+** Provide Feature
+
+#+begin_src emacs-lisp
+(provide 'init-dirvish)
+;;; init-dirvish.el ends here
+#+end_src

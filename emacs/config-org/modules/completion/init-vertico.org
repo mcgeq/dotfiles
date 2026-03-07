@@ -18,6 +18,11 @@
 ;;; Code:
 
 (require 'core-lib)
+
+;; 添加 vertico 扩展目录到 load-path
+(let ((vertico-dir (file-name-directory (locate-library "vertico"))))
+  (when vertico-dir
+    (add-to-list 'load-path (expand-file-name "extensions" vertico-dir))))
 #+end_src
 
 ** Setup

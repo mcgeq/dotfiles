@@ -238,3 +238,6 @@
 [submodule "vim-visual-multi"]
 	path = vimrc/pack/mcge/start/vim-visual-multi
 	url = https://github.com/mg979/vim-visual-multi.git
+[submodule "emacs-dirvish"]
+	path = emacs/site-lisp/extensions/tools/dirvish
+	url = https://github.com/alexluigit/dirvish.git

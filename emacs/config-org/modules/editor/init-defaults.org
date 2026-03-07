@@ -401,6 +401,10 @@ OV is the overlay object."
 ;; Default indentation settings
 (setq-default indent-tabs-mode nil)
 (setq-default tab-width 4)
+
+;; 确保常用缩进变量已定义（避免 lsp-bridge 等包在 json-mode 等模式下报错）
+(unless (boundp 'js-indent-level)
+  (defvar js-indent-level 2 "JavaScript 缩进级别。"))
 #+end_src
 
 *** Adjust Languages Indent Function
@@ -410,22 +414,34 @@ OV is the overlay object."
   "Set indentation for various languages to N spaces."
   ;; C/C++
   (setq-local c-basic-offset n)
-  ;; JavaScript
-  (setq-local coffee-tab-width n)
-  (setq-local javascript-indent-level n)
-  (setq-local js-indent-level n)
-  (setq-local js2-basic-offset n)
+  ;; JavaScript (only if the variable exists)
+  (when (boundp 'javascript-indent-level)
+    (setq-local javascript-indent-level n))
+  (when (boundp 'js-indent-level)
+    (setq-local js-indent-level n))
+  (when (boundp 'js2-basic-offset)
+    (setq-local js2-basic-offset n))
+  (when (boundp 'coffee-tab-width)
+    (setq-local coffee-tab-width n))
   ;; Web mode
-  (setq-local web-mode-attr-indent-offset n)
-  (setq-local web-mode-attr-value-indent-offset n)
-  (setq-local web-mode-code-indent-offset n)
-  (setq-local web-mode-css-indent-offset n)
-  (setq-local web-mode-markup-indent-offset n)
-  (setq-local web-mode-sql-indent-offset n)
+  (when (boundp 'web-mode-attr-indent-offset)
+    (setq-local web-mode-attr-indent-offset n))
+  (when (boundp 'web-mode-attr-value-indent-offset)
+    (setq-local web-mode-attr-value-indent-offset n))
+  (when (boundp 'web-mode-code-indent-offset)
+    (setq-local web-mode-code-indent-offset n))
+  (when (boundp 'web-mode-css-indent-offset)
+    (setq-local web-mode-css-indent-offset n))
+  (when (boundp 'web-mode-markup-indent-offset)
+    (setq-local web-mode-markup-indent-offset n))
+  (when (boundp 'web-mode-sql-indent-offset)
+    (setq-local web-mode-sql-indent-offset n))
   ;; CSS
-  (setq-local css-indent-offset n)
+  (when (boundp 'css-indent-offset)
+    (setq-local css-indent-offset n))
   ;; TypeScript
-  (setq-local typescript-indent-level n))
+  (when (boundp 'typescript-indent-level)
+    (setq-local typescript-indent-level n))
 #+end_src
 
 *** Setup Language Indent

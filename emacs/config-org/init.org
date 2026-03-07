@@ -1,4 +1,4 @@
-#+TITLE: Init Module
+to#+TITLE: Init Module
 #+AUTHOR: mcge
 #+PROPERTY: header-args:emacs-lisp :tangle init.el :lexical t
 
@@ -116,6 +116,7 @@
    vundo
    mwim
    treesit
+   dirvish
 
    ;; Completion modules
    :completion
