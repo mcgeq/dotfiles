@@ -248,6 +248,7 @@ If FORCE-REFRESH is non-nil, bypass the cache and rediscover extensions."
 *** Extension Path Lookup
 
 #+begin_src emacs-lisp
+
 (defun mcg-extension-path (name)
   "Get the path for extension NAME.
 Returns the full directory path or nil if not found."
@@ -266,33 +267,33 @@ Returns the full directory path or nil if not found."
       (let ((extensions (mcg-list-extensions)))
         (cdr (assoc name extensions))))))
 
+(defun mcg--extension-check-path (path)
+  "Return extension PATH or its lisp subdir when valid."
+  (when (file-directory-p path)
+    (or (let ((lisp-path (expand-file-name "lisp" path)))
+          (and (mcg--find-el-files-in-dir lisp-path) lisp-path))
+        (and (mcg--find-el-files-in-dir path) path))))
+
 (defun mcg-extension-direct-path (name)
   "Try to find extension NAME by direct path lookup.
 Checks common locations like extensions/NAME, extensions/git/NAME, extensions/*/*/NAME, etc.
 Returns the path if found, nil otherwise."
   (unless mcg-extensions-dir
     (mcg-init-paths))
-  
+
   (let ((name-str (if (symbolp name) (symbol-name name) name))
         (result nil))
-    
-    ;; Helper function to check a path
-    (defun mcg--check-ext-path (path)
-      (when (file-directory-p path)
-        (or (let ((lisp-path (expand-file-name "lisp" path)))
-              (and (mcg--find-el-files-in-dir lisp-path) lisp-path))
-            (and (mcg--find-el-files-in-dir path) path))))
-    
+
     ;; Try direct path: extensions/name
-    (setq result (mcg--check-ext-path (expand-file-name name-str mcg-extensions-dir)))
-    
+    (setq result (mcg--extension-check-path (expand-file-name name-str mcg-extensions-dir)))
+
     ;; If try subdirectory pattern not found yet,: extensions/*/name
     (unless result
       (dolist (subdir (directory-files mcg-extensions-dir t "^[^.]"))
         (unless result
           (let ((ext-path (expand-file-name name-str subdir)))
-            (setq result (mcg--check-ext-path ext-path))))))
-    
+            (setq result (mcg--extension-check-path ext-path))))))
+
     ;; If still not found, try two-level pattern: extensions/*/*/name
     (unless result
       (dolist (subdir1 (directory-files mcg-extensions-dir t "^[^.]"))
@@ -300,8 +301,8 @@ Returns the path if found, nil otherwise."
           (dolist (subdir2 (directory-files subdir1 t "^[^.]"))
             (unless result
               (let ((ext-path (expand-file-name name-str subdir2)))
-                (setq result (mcg--check-ext-path ext-path))))))))
-    
+                (setq result (mcg--extension-check-path ext-path))))))))
+
     result))
 
 (defun mcg-extension-exists-p (name)

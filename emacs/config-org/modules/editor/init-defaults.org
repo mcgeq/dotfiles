@@ -441,7 +441,7 @@ OV is the overlay object."
     (setq-local css-indent-offset n))
   ;; TypeScript
   (when (boundp 'typescript-indent-level)
-    (setq-local typescript-indent-level n))
+    (setq-local typescript-indent-level n)))
 #+end_src
 
 *** Setup Language Indent
@@ -500,6 +500,64 @@ OV is the overlay object."
   (dolist (hook '(text-mode-hook message-mode-hook))
     (add-hook hook #'auto-fill-mode))
   (mcg-log "Configured auto-fill"))
+#+end_src
+
+** Smart Kill Configuration
+
+为编程和 Markdown 模式提供结构优先的 `C-k`，并在 Org 模式保留默认 `C-k`。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Smart Kill Configuration
+;;; ============================================================
+
+(defun mcg/kill-dwim ()
+  "Kill region or next sexp, fallback to line.
+If region is active, kill region.
+Otherwise try `kill-sexp' first; if it fails, kill line.
+
+In Org mode, keep default `C-k` behavior and use `C-M-k` for sexp kill."
+  (interactive)
+  (cond
+   ((use-region-p)
+    (kill-region (region-beginning) (region-end)))
+   (t
+    (condition-case _
+        (kill-sexp 1)
+      (error (kill-line 1))))))
+
+(defvar mcg-smart-kill-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "C-k") #'mcg/kill-dwim)
+    (define-key map [remap kill-line] #'mcg/kill-dwim)
+    (define-key map [remap kill-visual-line] #'mcg/kill-dwim)
+    map)
+  "Keymap for `mcg-smart-kill-mode'.")
+
+(defvar mcg-smart-kill-emulation-map-alist
+  `((mcg-smart-kill-mode . ,mcg-smart-kill-mode-map))
+  "Emulation map alist for `mcg-smart-kill-mode'.")
+
+(add-to-list 'emulation-mode-map-alists 'mcg-smart-kill-emulation-map-alist)
+
+(define-minor-mode mcg-smart-kill-mode
+  "Minor mode for structural-first `C-k'."
+  :init-value nil
+  :lighter nil
+  :keymap mcg-smart-kill-mode-map)
+
+(defun mcg-editor--setup-smart-kill-keybindings ()
+  "Setup smart kill keybindings for different major modes."
+  ;; Programming and Markdown modes: use smart structural kill via minor mode.
+  (add-hook 'prog-mode-hook #'mcg-smart-kill-mode)
+  (add-hook 'markdown-mode-hook #'mcg-smart-kill-mode)
+
+  ;; Org: keep default C-k behavior, ensure C-M-k is structural kill.
+  (add-hook 'org-mode-hook
+            (lambda ()
+              (local-set-key (kbd "C-M-k") #'kill-sexp)))
+
+  (mcg-log "Configured smart kill keybindings"))
 #+end_src
 
 ** Commands
@@ -574,6 +632,7 @@ OV is the overlay object."
 (mcg-editor-setup-language-indent)
 (mcg-editor-setup-line-numbers)
 (mcg-editor-setup-auto-fill)
+(mcg-editor--setup-smart-kill-keybindings)
 #+end_src
 
 ** Provide Feature

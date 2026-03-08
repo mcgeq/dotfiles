@@ -196,26 +196,26 @@ Org Capture templates and Hugo blog integration.
 #+begin_src emacs-lisp
 ;;; Hugo Integration
 
+(defun mcg/org-hugo-new-subtree-post-capture-template ()
+  "Returns org-capture template string for new Hugo post."
+  (let* ((date (format-time-string (org-time-stamp-format :long :inactive) (org-current-time)))
+         (title (read-from-minibuffer "Post Title: "))
+         (fname (org-hugo-slug title)))
+    (mapconcat #'identity
+               `(,(concat "* TODO " title)
+                 ":PROPERTIES:"
+                 ,(concat ":EXPORT_FILE_NAME: " fname)
+                 ,(concat ":EXPORT_DATE: " date)
+                 ":END:"
+                 "%?\n")
+               "\n")))
+
 (defun mcg--setup-hugo-integration ()
   "Setup Hugo blog integration."
   (when mcg-org-enable-hugo-integration
     (with-eval-after-load 'org
       (when (mcg-require-extension "ox-hugo" t)
-        (setq org-hugo-base-dir (concat mcg-blog-base-directory "/")))
-
-      (defun mcg/org-hugo-new-subtree-post-capture-template ()
-        "Returns org-capture template string for new Hugo post."
-        (let* ((date (format-time-string (org-time-stamp-format :long :inactive) (org-current-time)))
-               (title (read-from-minibuffer "Post Title: "))
-               (fname (org-hugo-slug title)))
-          (mapconcat #'identity
-                     `(,(concat "* TODO " title)
-                       ":PROPERTIES:"
-                       ,(concat ":EXPORT_FILE_NAME: " fname)
-                       ,(concat ":EXPORT_DATE: " date)
-                       ":END:"
-                       "%?\n")
-                     "\n")))))
+        (setq org-hugo-base-dir (concat mcg-blog-base-directory "/")))))
 
   (when mcg-org-enable-hugo-integration
     (add-to-list 'org-capture-templates '("h" "Hugo Post"))
@@ -248,10 +248,10 @@ Org Capture templates and Hugo blog integration.
 
 (defun mcg--setup-capture-keybindings ()
   "Setup Capture related keybindings."
-  (global-set-key (kbd "C-c n c") 'org-capture)
-  (global-set-key (kbd "C-c n a") 'org-agenda)
-  (global-set-key (kbd "C-c n l") 'org-store-link)
-  (global-set-key (kbd "C-c n t") 'org-todo-list)
+  (mcg-bind-key "C-c n c" 'org-capture "org/capture")
+  (mcg-bind-key "C-c n a" 'org-agenda "org/capture")
+  (mcg-bind-key "C-c n l" 'org-store-link "org/capture")
+  (mcg-bind-key "C-c n t" 'org-todo-list "org/capture")
   (mcg-log "Capture keybindings configured"))
 #+end_src
 

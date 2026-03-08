@@ -41,6 +41,26 @@ Vundo 可视化撤销树配置。
 ;;; Vundo Configuration
 ;;; ============================================================
 
+(defun mcg--vundo-force-writable (&rest _)
+  "Force buffer to be writable after vundo command."
+  (run-with-timer 0.01 nil
+                  (lambda ()
+                    (when (and (not (eq major-mode 'vundo-mode))
+                               buffer-read-only)
+                      (read-only-mode -1)))))
+
+(defconst mcg--vundo-post-command-functions
+  '(vundo-backward
+    vundo-forward
+    vundo-next
+    vundo-previous
+    vundo-stem-root
+    vundo-stem-end
+    vundo-goto-last-saved
+    vundo-quit
+    vundo-confirm)
+  "Vundo commands advised by `mcg--vundo-force-writable'.")
+
 (defun mcg--setup-vundo ()
   "Setup Vundo visual undo."
   (when (mcg-require-extension "vundo" t)
@@ -50,31 +70,16 @@ Vundo 可视化撤销树配置。
     (setq vundo-compact-display t)
     (setq vundo-diff-quit 'bury)
     
-    ;; Fix vundo buffer becoming read-only after exit
-    (defun mcg--vundo-force-writable (&rest _)
-      "Force buffer to be writable after vundo command."
-      (run-with-timer 0.01 nil
-                      (lambda ()
-                        (when (and (not (eq major-mode 'vundo-mode))
-                                   buffer-read-only)
-                          (read-only-mode -1)))))
-    
     ;; Add advice to all vundo commands
-    (advice-add 'vundo-backward :after #'mcg--vundo-force-writable)
-    (advice-add 'vundo-forward :after #'mcg--vundo-force-writable)
-    (advice-add 'vundo-next :after #'mcg--vundo-force-writable)
-    (advice-add 'vundo-previous :after #'mcg--vundo-force-writable)
-    (advice-add 'vundo-stem-root :after #'mcg--vundo-force-writable)
-    (advice-add 'vundo-stem-end :after #'mcg--vundo-force-writable)
-    (advice-add 'vundo-goto-last-saved :after #'mcg--vundo-force-writable)
-    (advice-add 'vundo-quit :after #'mcg--vundo-force-writable)
-    (advice-add 'vundo-confirm :after #'mcg--vundo-force-writable)
+    (dolist (fn mcg--vundo-post-command-functions)
+      (unless (advice-member-p #'mcg--vundo-force-writable fn)
+        (advice-add fn :after #'mcg--vundo-force-writable)))
     
     ;; Keybindings
-    (global-set-key (kbd "C-x u") 'vundo)
-    (global-set-key (kbd "C-c u") 'vundo)
-    (global-set-key (kbd "C-/") 'vundo)      ; Use vundo instead of default undo
-    (global-set-key (kbd "C-?") 'undo-redo)
+    (mcg-bind-key "C-x u" 'vundo "editor/vundo")
+    (mcg-bind-key "C-c u" 'vundo "editor/vundo")
+    (mcg-bind-key "C-/" 'vundo "editor/vundo") ; Use vundo instead of default undo
+    (mcg-bind-key "C-?" 'undo-redo "editor/vundo")
     
     (mcg-log "Vundo configured")))
 #+end_src

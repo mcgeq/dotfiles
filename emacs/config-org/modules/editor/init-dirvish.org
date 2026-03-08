@@ -80,7 +80,7 @@ Dirvish 核心配置，包括基本设置、快速访问、属性配置和快捷
   (when (mcg-require-extension "dirvish" t)
     (dirvish-override-dired-mode)
 
-    (global-set-key (kbd "C-c d") 'dirvish)
+    (mcg-bind-key "C-c d" 'dirvish "editor/dirvish")
     (define-key dirvish-mode-map (kbd ";") 'dired-up-directory)
     (define-key dirvish-mode-map (kbd "?") 'dirvish-dispatch)
     (define-key dirvish-mode-map (kbd "a") 'dirvish-setup-menu)

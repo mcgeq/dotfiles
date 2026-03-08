@@ -65,7 +65,7 @@ Majutsu - Magit-style interface for Jujutsu (jj).
   (if (mcg-require-extension 'majutsu t)
       (progn
         ;; Setup keybindings
-        (global-set-key (kbd mcg-tools-majutsu-prefix) 'majutsu)
+        (mcg-bind-key mcg-tools-majutsu-prefix 'majutsu "tools/majutsu")
         
         ;; Optional: Setup evil integration
         (when (and mcg-tools-majutsu-enable-evil-integration

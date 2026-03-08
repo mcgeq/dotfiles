@@ -42,14 +42,14 @@ MWIM 提供智能的行首/行尾移动。
 (defun mcg-mwim-setup ()
   "Setup mwim package."
   ;; Bind C-a to mwim-beginning: toggles between code-beginning and line-beginning
-  (global-set-key (kbd "C-a") #'mwim-beginning)
+  (mcg-bind-key "C-a" #'mwim-beginning "editor/mwim")
   
   ;; Bind C-e to mwim-end: toggles between code-end and line-end
-  (global-set-key (kbd "C-e") #'mwim-end)
+  (mcg-bind-key "C-e" #'mwim-end "editor/mwim")
   
   ;; Optional: bind home/end keys
-  (global-set-key (kbd "<home>") #'mwim-beginning-of-line-or-code)
-  (global-set-key (kbd "<end>") #'mwim-end-of-line-or-code)
+  (mcg-bind-key "<home>" #'mwim-beginning-of-line-or-code "editor/mwim")
+  (mcg-bind-key "<end>" #'mwim-end-of-line-or-code "editor/mwim")
   
   (mcg-log "Configured mwim"))
 #+end_src

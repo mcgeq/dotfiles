@@ -304,6 +304,23 @@ If not provided, it defaults to the parent of site-lisp/config/core/."
 设置 =load-path= 以包含所有配置目录。
 
 #+begin_src emacs-lisp
+(defcustom mcg-extension-load-path-excluded-dirs
+  '("test" "tests" "testing"
+    "example" "examples"
+    "demo" "demos"
+    "docs" "doc"
+    ".github" ".gitlab"
+    "workflow" "workflows"
+    "scripts" "ci")
+  "Directory names excluded when scanning extensions for `load-path'."
+  :type '(repeat string)
+  :group 'mcg)
+
+(defun mcg--extension-dir-excluded-p (dir)
+  "Return non-nil when DIR should be excluded from extension scanning."
+  (member (file-name-nondirectory (directory-file-name dir))
+          mcg-extension-load-path-excluded-dirs))
+
 (defun mcg-setup-load-path ()
   "Set up `load-path' for MCG configuration.
 Adds core, modules, and extensions directories to load-path."
@@ -334,14 +351,16 @@ Adds core, modules, and extensions directories to load-path."
 (defun mcg--add-extensions-to-load-path (dir)
   "Recursively add extension directories under DIR to `load-path'.
 Only adds directories that contain .el files."
-  (when (file-directory-p dir)
+  (when (and (file-directory-p dir)
+             (not (mcg--extension-dir-excluded-p dir)))
     (dolist (entry (directory-files dir t "^[^.]"))
       (when (file-directory-p entry)
-        ;; Check if directory contains .el files
-        (if (directory-files entry nil "\\.el$" t)
-            (add-to-list 'load-path entry)
-          ;; Otherwise, recurse into subdirectories
-          (mcg--add-extensions-to-load-path entry))))))
+        (unless (mcg--extension-dir-excluded-p entry)
+          ;; Check if directory contains .el files
+          (if (directory-files entry nil "\\.el$" t)
+              (add-to-list 'load-path entry)
+            ;; Otherwise, recurse into subdirectories
+            (mcg--add-extensions-to-load-path entry)))))))
 #+end_src
 
 ** GC Optimization
@@ -357,7 +376,9 @@ Sets high GC threshold during startup and restores it after."
   (setq gc-cons-percentage 0.6)
   
   ;; Restore normal values after startup
-  (add-hook 'emacs-startup-hook #'mcg-restore-gc-defaults))
+  (add-hook 'emacs-startup-hook #'mcg-restore-gc-defaults)
+  ;; Restore file-name handlers from early-init
+  (add-hook 'emacs-startup-hook #'mcg-restore-startup-optimizations))
 
 (defun mcg-restore-gc-defaults ()
   "Restore GC settings to normal values after startup."
@@ -366,6 +387,13 @@ Sets high GC threshold during startup and restores it after."
   (mcg-log "Restored GC defaults: threshold=%s, percentage=%s"
            mcg-gc-cons-threshold-default
            mcg-gc-cons-percentage-default))
+
+(defun mcg-restore-startup-optimizations ()
+  "Restore startup optimizations changed in early-init.
+Restores `file-name-handler-alist' when early-init saved its original value."
+  (when (boundp 'mcg--file-name-handler-alist-original)
+    (setq file-name-handler-alist mcg--file-name-handler-alist-original)
+    (mcg-log "Restored file-name-handler-alist")))
 #+end_src
 
 ** Bootstrap Entry Point
