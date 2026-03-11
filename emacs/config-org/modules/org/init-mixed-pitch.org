@@ -22,6 +22,7 @@ Mixed pitch mode for org.
 ;;; Code:
 
 (require 'core-lib)
+(require 'init-font)  ; Load font utilities
 #+end_src
 
 ** Configuration
@@ -42,18 +43,8 @@ Mixed pitch mode for org.
     (when (and mcg-org-enable-mixed-pitch
                (mcg-require-extension "mixed-pitch" t))
       (when (display-graphic-p)
-        (let ((mono-font (cond
-                          ((find-font (font-spec :name "FiraCode Nerd Font Mono"))
-                           "FiraCode Nerd Font Mono")
-                          ((find-font (font-spec :name "Consolas"))
-                           "Consolas")
-                          (t "monospace")))
-              (serif-font (cond
-                           ((find-font (font-spec :name "Noto Serif"))
-                            "Noto Serif")
-                           ((find-font (font-spec :name "Georgia"))
-                            "Georgia")
-                           (t "serif"))))
+        (let ((mono-font (or (mcg-get-monospace-font) "monospace"))
+              (serif-font (mcg-get-serif-font)))
           (custom-set-faces
            `(default ((t (:font ,mono-font))))
            `(fixed-pitch ((t (:font ,mono-font :height 1.0))))

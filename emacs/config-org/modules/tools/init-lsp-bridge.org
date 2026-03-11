@@ -153,8 +153,9 @@ Can be overridden in private/config.el."
             
             (setq lsp-bridge-enable-with-tramp mcg-lsp-enable-with-tramp)
             (setq lsp-bridge-enable-inlay-hint mcg-lsp-enable-inlay-hint)
-            ;; Optional snippet backend
-            (when (mcg-require-extension "yasnippet" t)
+            ;; Optional snippet backend - only enable if yasnippet is already loaded
+            ;; (init-yasnippet.el handles the initial configuration)
+            (when (featurep 'yasnippet)
               (yas-global-mode 1))
             (global-lsp-bridge-mode)
             ;; Set custom server directories

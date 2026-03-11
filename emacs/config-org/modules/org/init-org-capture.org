@@ -4,7 +4,7 @@
 
 * Org Capture Module
 
-Org Capture templates and Hugo blog integration.
+Org Capture 模板配置。
 
 ** File Header
 
@@ -13,7 +13,7 @@ Org Capture templates and Hugo blog integration.
 
 ;; Copyright (C) 2024-2026 MCG
 ;; Author: mcge <mcgeq@outlook.com>
-;; Keywords: org, capture, hugo
+;; Keywords: org, capture
 #+end_src
 
 ** Require
@@ -191,56 +191,6 @@ Org Capture templates and Hugo blog integration.
   (mcg-log "Capture templates configured"))
 #+end_src
 
-** Hugo Integration
-
-#+begin_src emacs-lisp
-;;; Hugo Integration
-
-(defun mcg/org-hugo-new-subtree-post-capture-template ()
-  "Returns org-capture template string for new Hugo post."
-  (let* ((date (format-time-string (org-time-stamp-format :long :inactive) (org-current-time)))
-         (title (read-from-minibuffer "Post Title: "))
-         (fname (org-hugo-slug title)))
-    (mapconcat #'identity
-               `(,(concat "* TODO " title)
-                 ":PROPERTIES:"
-                 ,(concat ":EXPORT_FILE_NAME: " fname)
-                 ,(concat ":EXPORT_DATE: " date)
-                 ":END:"
-                 "%?\n")
-               "\n")))
-
-(defun mcg--setup-hugo-integration ()
-  "Setup Hugo blog integration."
-  (when mcg-org-enable-hugo-integration
-    (with-eval-after-load 'org
-      (when (mcg-require-extension "ox-hugo" t)
-        (setq org-hugo-base-dir (concat mcg-blog-base-directory "/")))))
-
-  (when mcg-org-enable-hugo-integration
-    (add-to-list 'org-capture-templates '("h" "Hugo Post"))
-    (add-to-list 'org-capture-templates '("hl" "About Development Language"))
-
-    (dolist (topic '(("hla" "ArkTS" "ArkTS")
-                     ("hle" "React" "React")
-                     ("hlr" "Rust" "Rust")
-                     ("hlv" "Vue" "Vue")))
-      (add-to-list 'org-capture-templates
-                   `(,(nth 0 topic)
-                     ,(concat "About " (nth 1 topic))
-                     entry
-                     (file+headline mcg-org-blog-development-file ,(nth 2 topic))
-                     (function mcg/org-hugo-new-subtree-post-capture-template))))
-
-    (add-to-list 'org-capture-templates
-                 '("he" "About Emacs"
-                   entry
-                   (file+olp mcg-org-blog-emacs-file "Emacs")
-                   (function mcg/org-hugo-new-subtree-post-capture-template)))
-
-    (mcg-log "Hugo integration configured")))
-#+end_src
-
 ** Keybindings
 
 #+begin_src emacs-lisp
@@ -262,12 +212,6 @@ Org Capture templates and Hugo blog integration.
 
 (mcg--setup-org-capture)
 (mcg--setup-capture-templates)
-
-(add-hook 'org-mode-hook
-          (lambda ()
-            (when mcg-org-enable-hugo-integration
-              (mcg--setup-hugo-integration))))
-
 (mcg--setup-capture-keybindings)
 #+end_src
 

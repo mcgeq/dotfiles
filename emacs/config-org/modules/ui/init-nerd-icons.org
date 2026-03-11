@@ -18,6 +18,7 @@
 ;;; Code:
 
 (require 'core-lib)
+(require 'init-font)  ; Load font utilities for mcg-get-icon-font
 #+end_src
 
 ** Setup
@@ -27,8 +28,8 @@
   "Setup nerd-icons."
   (if (mcg-require-extension "nerd-icons" t)
       (progn
-        (when (boundp 'mcg-ui-icon-font-family)
-          (setq nerd-icons-font-family mcg-ui-icon-font-family))
+        ;; Use unified icon font from init-font.el
+        (setq nerd-icons-font-family (mcg-get-icon-font))
         (if (and (boundp 'nerd-icons-font-family)
                  (find-font (font-spec :family nerd-icons-font-family)))
             (mcg-log "nerd-icons configured: %s" nerd-icons-font-family)

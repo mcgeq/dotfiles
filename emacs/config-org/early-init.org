@@ -126,6 +126,23 @@
 (setq inhibit-startup-echo-area-message user-login-name)
 #+end_src
 
+** Windows Encoding
+
+Windows 平台 UTF-8 编码配置（在早期加载以确保正确的编码处理）。
+
+#+begin_src emacs-lisp
+;;; Windows Encoding
+
+(when (eq system-type 'windows-nt)
+  (setq locale-coding-system 'utf-8)
+  (set-default-coding-systems 'utf-8)
+  (prefer-coding-system 'utf-8)
+  (setq process-coding-system-alist
+        (append '(("grep" . (utf-8 . utf-8))
+                  ("rg" . (utf-8 . utf-8)))
+                process-coding-system-alist)))
+#+end_src
+
 ** Provide Feature
 
 #+begin_src emacs-lisp

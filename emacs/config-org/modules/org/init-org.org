@@ -69,12 +69,6 @@ Org 模式相关的配置变量。
   :type 'directory
   :group 'mcg-org)
 
-(defcustom mcg-org-blog-directory
-  (expand-file-name "blog" mcg-org-directory)
-  "Blog related Org files directory."
-  :type 'directory
-  :group 'mcg-org)
-
 (defcustom mcg-org-default-notes-file
   (expand-file-name "notes.org" mcg-org-notes-directory)
   "Default notes file."
@@ -91,6 +85,23 @@ Org 模式相关的配置变量。
   "Whether to enable Org mode symbol beautification."
   :type 'boolean
   :group 'mcg-org)
+
+(defcustom mcg-org-bullets-alist
+  '(("◉" "○" "✸" "✿" "✤" "✜" "◆" "▶")
+    ((43 . "◆")
+     (45 . "▸")
+     (42 . "•")))
+  "Unified Org bullets configuration.
+Structure: (headline-bullets item-bullet-alist)
+where headline-bullets is a list of symbols for each level,
+and item-bullet-alist is an alist mapping ASCII codes to bullet characters.
+
+Used by both org-modern and org-superstar for consistent appearance."
+  :type '(list (repeat string) (repeat (cons integer string)))
+  :group 'mcg-org)
+
+;; Blog-related variables are now in init-org-hugo.el
+;; See: mcg-org-blog-directory, mcg-org-blog-development-file, etc.
 #+end_src
 
 ** Org Core Configuration
@@ -114,8 +125,9 @@ Org 核心配置。
   (mapc #'mcg-org-ensure-directory
         (list mcg-org-directory
               mcg-org-agenda-directory
-              mcg-org-notes-directory
-              mcg-org-blog-directory)))
+              mcg-org-notes-directory))
+  ;; Blog directory is initialized by init-org-hugo.el
+  (mcg-log "Org directories initialized"))
 
 (defun mcg--setup-org-core ()
   "Set up org mode core configuration."
@@ -216,9 +228,8 @@ Org 核心配置。
 (require 'init-visual-fill-column)
 (require 'init-org-download)
 (require 'init-mixed-pitch)
-(require 'init-ox-hugo)
+(require 'init-org-hugo)      ; Hugo integration (combines easy-hugo, ox-hugo)
 (require 'init-ox-gfm)
-(require 'init-easy-hugo)
 (require 'init-org-numbering)
 (require 'init-org-agenda)
 (require 'init-org-babel)

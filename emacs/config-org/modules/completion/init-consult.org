@@ -64,43 +64,37 @@
                 (when-let ((project (project-current)))
                  (project-root project))))
 
-        ;; Windows UTF-8 configuration
-        (when (eq system-type 'windows-nt)
-          (setq locale-coding-system 'utf-8)
-          (set-default-coding-systems 'utf-8)
-          (prefer-coding-system 'utf-8)
-          (setq process-coding-system-alist
-                (append '(("grep" . (utf-8 . utf-8))
-                          ("rg" . (utf-8 . utf-8)))
-                        process-coding-system-alist)))
-
         (mcg-log "Consult configured")))
 
     (defun mcg--setup-consult-keybinding ()
       "Setup consult."
       (when (mcg-require-extension "consult" t)
-        ;; 搜索与导航
+        ;; 搜索与导航 (C-c s prefix - search)
         (mcg-bind-key "C-s" #'consult-line "completion/consult")
+        (mcg-bind-key "C-c s l" #'consult-line "completion/consult")
         (mcg-bind-key "C-c s r" #'consult-ripgrep "completion/consult")
         (mcg-bind-key "C-c s i" #'consult-imenu "completion/consult")
         (mcg-bind-key "C-c s o" #'consult-outline "completion/consult")
+
+        ;; 缓冲区与文件 (C-c b / C-c f prefix)
+        ;; C-c b is a prefix key for buffer operations
+        (define-prefix-command 'mcg-consult-buffer-map)
+        (mcg-bind-key "C-c b" 'mcg-consult-buffer-map "completion/consult")
+        (define-key mcg-consult-buffer-map "b" #'consult-buffer)
+        (define-key mcg-consult-buffer-map "m" #'consult-bookmark)
+        (define-key mcg-consult-buffer-map "r" #'consult-recent-file)
         
-        ;; 缓冲区与文件
-        (mcg-bind-key "C-c b" #'consult-buffer "completion/consult")
-        (mcg-bind-key "C-c f r" #'consult-recent-file "completion/consult")
+        ;; C-c f for file operations
         (mcg-bind-key "C-c f f" #'consult-find "completion/consult")
-        
+
         ;; 粘贴与历史
         (mcg-bind-key "M-y" #'consult-yank-pop "completion/consult")
-        
+
         ;; 命令与寄存器
         (mcg-bind-key "C-c x c" #'consult-complex-command "completion/consult")
         (mcg-bind-key "C-c x" #'consult-mode-command "completion/consult")
         (mcg-bind-key "C-c ; r" #'consult-register "completion/consult")
-        
-        ;; 书签
-        (mcg-bind-key "C-c b m" #'consult-bookmark "completion/consult")
-        
+
         (mcg-log "consult configured")))
 #+end_src
 

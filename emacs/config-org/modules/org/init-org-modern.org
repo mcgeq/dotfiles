@@ -41,10 +41,13 @@ Org Modern - Modern visual style for Org mode.
   (with-eval-after-load 'org
     (when (and mcg-org-enable-org-modern
                (mcg-require-extension "org-modern" t))
-      (setq org-modern-star '("◉" "○" "✸" "✿" "✤" "✜" "◆" "▶")
-            org-modern-table-vertical 1
+      ;; Use unified bullets from mcg-org-bullets-alist
+      (let ((headline-bullets (car mcg-org-bullets-alist))
+            (item-bullets (cadr mcg-org-bullets-alist)))
+        (setq org-modern-star headline-bullets
+              org-modern-list item-bullets))
+      (setq org-modern-table-vertical 1
             org-modern-table-horizontal 0.2
-            org-modern-list '((43 . "◆") (45 . "▸") (42 . "•"))
             org-modern-todo-faces
             '(("TODO" :inverse-video t :inherit org-todo)
               ("HOLD" :inverse-video t)

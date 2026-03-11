@@ -170,11 +170,28 @@ Org Agenda configuration with time grid, lunar calendar support, and custom view
   (with-eval-after-load 'calendar
     (setq calendar-longitude mcg-calendar-location-longitude
           calendar-latitude mcg-calendar-location-latitude)
+    (mcg-log "Configured calendar location")))
+
+(defun mcg-org-agenda-setup-chinese-calendar ()
+  "Setup Chinese calendar (cal-china-x)."
+  (with-eval-after-load 'calendar
     (setq calendar-chinese-celestial-stem
           ["甲" "乙" "丙" "丁" "戊" "己" "庚" "辛" "壬" "癸"]
           calendar-chinese-terrestrial-branch
-          ["子" "丑" "寅" "卯" "辰" "巳" "午" "未" "申" "酉" "戌" "亥"])
-    (mcg-log "Configured calendar location")))
+          ["子" "丑" "寅" "卯" "辰" "巳" "午" "未" "申" "酉" "戌" "亥"]
+          calendar-month-name-array
+          ["一月" "二月" "三月" "四月" "五月" "六月"
+           "七月" "八月" "九月" "十月" "十一月" "十二月"]
+          calendar-day-name-array
+          ["日" "一" "二" "三" "四" "五" "六"]
+          calendar-week-start-day 1
+          calendar-chinese-all-holidays-flag nil
+          calendar-mark-holidays-flag t
+          calendar-mark-diary-entries-flag nil
+          calendar-time-zone-style 'numeric
+          calendar-date-style 'iso)
+    (add-hook 'calendar-today-visible-hook 'calendar-mark-today)
+    (mcg-log "Configured Chinese calendar")))
 
 (defun diary-sunrise ()
   "Get sunrise time."
@@ -251,6 +268,7 @@ Org Agenda configuration with time grid, lunar calendar support, and custom view
             (mcg-org-agenda-setup-time-grid)
             (mcg-org-agenda-setup-display)
             (mcg-org-agenda-setup-location)
+            (mcg-org-agenda-setup-chinese-calendar)
             (mcg-org-agenda-setup-custom-views)))
 #+end_src
 

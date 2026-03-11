@@ -818,6 +818,124 @@ Sets up caches and registries."
   (mcg-log "core-lib initialized"))
 #+end_src
 
+** Module Definition Macro
+
+模块定义模板宏，用于简化模块配置文件的编写。
+
+#+begin_src emacs-lisp
+(defmacro mcg-defmodule (name &rest body)
+  "Define an MCG module with standard structure.
+
+NAME is the module name (symbol), used for logging.
+BODY contains the module configuration code.
+
+This macro provides:
+- Standard error handling
+- Logging of module setup
+- Feature provision
+
+Example usage:
+  (mcg-defmodule my-module
+    :config
+    (setq my-var t)
+    :bind
+    (\"C-c m\" . my-command))
+
+Keywords:
+  :config  - Configuration code to execute
+  :bind    - Keybindings as alist
+  :hook    - Mode hooks as alist (mode . function)
+  :after   - Features to load after (symbols or list)
+  :custom  - Custom variables as alist (var . value)"
+  (declare (indent 1))
+  (let ((config-code nil)
+        (bindings nil)
+        (hooks nil)
+        (after-features nil)
+        (custom-vars nil)
+        (key nil)
+        (val nil))
+    ;; Parse body
+    (while body
+      (setq key (car body))
+      (cond
+       ((eq key :config)
+        (setq config-code (cadr body))
+        (setq body (cddr body)))
+       ((eq key :bind)
+        (setq bindings (cadr body))
+        (setq body (cddr body)))
+       ((eq key :hook)
+        (setq hooks (cadr body))
+        (setq body (cddr body)))
+       ((eq key :after)
+        (setq after-features (cadr body))
+        (setq body (cddr body)))
+       ((eq key :custom)
+        (setq custom-vars (cadr body))
+        (setq body (cddr body)))
+       (t
+        (setq body (cdr body)))))
+    `(progn
+       ;; Set custom variables
+       ,@(mapcar (lambda (cv)
+                   `(setq ,(car cv) ,(cdr cv)))
+                 custom-vars)
+       ;; Setup hooks
+       ,@(mapcar (lambda (h)
+                   `(add-hook ',(car h) #',(cdr h)))
+                 hooks)
+       ;; Execute configuration
+       ,(if config-code
+            `(condition-case err
+                 (progn
+                   ,config-code
+                   (mcg-log "Module '%s' configured" ',name))
+               (error
+                (mcg-log-error "Module '%s' configuration failed: %s"
+                               ',name (error-message-string err))))
+          `(mcg-log "Module '%s' configured" ',name))
+       ;; Setup keybindings
+       ,@(mapcar (lambda (b)
+                   `(mcg-bind-key ,(car b) ,(cdr b) ,(format "%s" name)))
+                 bindings)
+       ;; Load after features
+       ,@(mapcar (lambda (f)
+                   `(with-eval-after-load ',f
+                      (mcg-log "Module '%s' post-load hooks executed" ',name)))
+                 after-features))))
+#+end_src
+
+*** Simple Module Macro
+
+更简单的模块定义宏，适用于不需要复杂配置的场景。
+
+#+begin_src emacs-lisp
+(defmacro mcg-simple-module (name setup-fn &optional keybindings)
+  "Define a simple MCG module with setup function and optional keybindings.
+
+NAME is the module name (string) for logging.
+SETUP-FN is the setup function to call.
+KEYBINDINGS is an optional alist of (key . command) pairs.
+
+Example usage:
+  (mcg-simple-module \"marginalia\"
+      (marginalia-mode 1)
+    ((\"M-A\" . marginalia-cycle)))"
+  (declare (indent 1))
+  `(progn
+     (condition-case err
+         (progn
+           ,setup-fn
+           (mcg-log "Module '%s' configured" ,name))
+       (error
+        (mcg-log-error "Module '%s' configuration failed: %s"
+                       ,name (error-message-string err))))
+     ,@(mapcar (lambda (b)
+                 `(mcg-bind-key ,(car b) ,(cdr b) ,name))
+               keybindings)))
+#+end_src
+
 ** Provide Feature
 
 #+begin_src emacs-lisp

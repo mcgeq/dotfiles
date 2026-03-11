@@ -22,35 +22,27 @@
 
 ** Setup
 
-*** Setup Marginalia
-
 #+begin_src emacs-lisp
 ;;; ============================================================
-;;; Marginalia Configuration
+;;; Marginalia Configuration using mcg-simple-module
 ;;; ============================================================
 
-(defun mcg--setup-marginalia ()
-  "Setup Marginalia candidate annotations."
-  (when (mcg-require-extension "marginalia" t)
-    ;; Alignment settings
-    (setq marginalia-align 'right)
-    (setq marginalia-align-offset 0)
+(mcg-simple-module "marginalia"
+    (when (mcg-require-extension "marginalia" t)
+      ;; Alignment settings
+      (setq marginalia-align 'right
+            marginalia-align-offset 0
+            marginalia-max-relative-age 3600)
+      ;; Enable marginalia-mode
+      (marginalia-mode 1)
+      ;; Keybinding for cycling annotation levels
+      (define-key minibuffer-local-map (kbd "M-A") #'marginalia-cycle))
+  (("M-A" . marginalia-cycle)))
 
-    ;; Relative time display
-    (setq marginalia-max-relative-age 3600)
+;;; ============================================================
+;;; Commands
+;;; ============================================================
 
-    ;; Enable marginalia-mode
-    (marginalia-mode 1)
-
-    ;; Keybinding for cycling annotation levels
-    (define-key minibuffer-local-map (kbd "M-A") #'marginalia-cycle)
-
-    (mcg-log "Marginalia configured")))
-#+end_src
-
-*** Toggle Marginalia
-
-#+begin_src emacs-lisp
 (defun mcg/toggle-marginalia ()
   "Toggle Marginalia mode."
   (interactive)

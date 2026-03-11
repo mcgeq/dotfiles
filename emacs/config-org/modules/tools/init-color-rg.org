@@ -116,29 +116,29 @@
 
 #+begin_src emacs-lisp
 ;;; ============================================================
-;;; Keybindings (C-c r prefix - ripgrep)
+;;; Keybindings (C-c s prefix - search, g subprefix for grep/rg)
 ;;; ============================================================
 
 (defun mcg--setup-color-rg-keybindings ()
   "Setup search related keybindings."
-  ;; Color-rg
+  ;; Color-rg - unified search prefix C-c s, with 'g' subprefix for grep/rg
   (when (mcg-require-extension "color-rg" t)
     ;; Project content search
-    (mcg-bind-key "C-c r g" 'color-rg-search-input "tools/color-rg")
-    (mcg-bind-key "C-c r G" 'color-rg-search-input-in-project "tools/color-rg")
+    (mcg-bind-key "C-c s g" 'color-rg-search-input "tools/color-rg")
+    (mcg-bind-key "C-c s G" 'color-rg-search-input-in-project "tools/color-rg")
 
-    ;; Symbol search
-    (mcg-bind-key "C-c r s" 'color-rg-search-symbol "tools/color-rg")
-    (mcg-bind-key "C-c r S" 'color-rg-search-symbol-in-project "tools/color-rg")
+    ;; Symbol search (using 's' for symbol)
+    (mcg-bind-key "C-c s s" 'color-rg-search-symbol "tools/color-rg")
+    (mcg-bind-key "C-c s S" 'color-rg-search-symbol-in-project "tools/color-rg")
 
     ;; Current file
-    (mcg-bind-key "C-c r ." 'color-rg-search-symbol-in-current-file "tools/color-rg")
-    (mcg-bind-key "C-c r ," 'color-rg-search-input-in-current-file "tools/color-rg")
+    (mcg-bind-key "C-c s ." 'color-rg-search-symbol-in-current-file "tools/color-rg")
+    (mcg-bind-key "C-c s ," 'color-rg-search-input-in-current-file "tools/color-rg")
 
     ;; Custom search
-    (mcg-bind-key "C-c r t" 'mcg/color-rg-search-project-with-type "tools/color-rg")
-    (mcg-bind-key "C-c r o" 'mcg/color-rg-search-in-org-directory "tools/color-rg")
-    (mcg-bind-key "C-c r c" 'mcg/color-rg-search-in-config "tools/color-rg"))
+    (mcg-bind-key "C-c s t" 'mcg/color-rg-search-project-with-type "tools/color-rg")
+    (mcg-bind-key "C-c s o" 'mcg/color-rg-search-in-org-directory "tools/color-rg")
+    (mcg-bind-key "C-c s c" 'mcg/color-rg-search-in-config "tools/color-rg"))
 
   (mcg-log "Search keybindings configured"))
 #+end_src

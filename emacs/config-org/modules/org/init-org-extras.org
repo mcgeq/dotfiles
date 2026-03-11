@@ -22,36 +22,7 @@ Org Extras - cal-china-x and keybindings.
 ;;; Code:
 
 (require 'core-lib)
-#+end_src
-
-** Cal-China-X Configuration
-
-#+begin_src emacs-lisp
-;;; Cal-China-X Configuration
-
-(defun mcg--setup-cal-china-x ()
-  "Setup Chinese calendar (cal-china-x)."
-  (with-eval-after-load 'org-agenda
-    (when (mcg-require-extension "cal-china-x" t)
-      (with-eval-after-load 'calendar
-        (add-hook 'calendar-today-visible-hook 'calendar-mark-today)
-        (setq calendar-chinese-all-holidays-flag nil
-              calendar-mark-holidays-flag t
-              calendar-mark-diary-entries-flag nil
-              calendar-time-zone-style 'numeric
-              calendar-date-style 'iso)
-        (setq calendar-chinese-celestial-stem
-              ["甲" "乙" "丙" "丁" "戊" "己" "庚" "辛" "壬" "癸"])
-        (setq calendar-chinese-terrestrial-branch
-              ["子" "丑" "寅" "卯" "辰" "巳" "午" "未" "申" "酉" "戌" "亥"])
-        (setq calendar-month-name-array
-              ["一月" "二月" "三月" "四月" "五月" "六月"
-               "七月" "八月" "九月" "十月" "十一月" "十二月"])
-        (setq calendar-day-name-array
-              ["日" "一" "二" "三" "四" "五" "六"])
-        (setq calendar-week-start-day 1))
-      (add-hook 'after-init-hook 'cal-china-x-setup)
-      (mcg-log "Chinese calendar (cal-china-x) configured"))))
+(require 'init-org-agenda)  ; Load calendar configuration from agenda module
 #+end_src
 
 ** Org Mode Keybindings
@@ -73,7 +44,6 @@ Org Extras - cal-china-x and keybindings.
 #+begin_src emacs-lisp
 ;;; Initialize
 
-(add-hook 'org-agenda-mode-hook #'mcg--setup-cal-china-x)
 (mcg--setup-org-extras-keybindings)
 #+end_src
 

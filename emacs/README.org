@@ -498,11 +498,27 @@ All custom bindings use =C-c= prefix (user reserved area) with which-key descrip
 
 ** Search
 
-| Key     | Description              |
-|---------+--------------------------|
-| C-c s l | Search line (consult)    |
-| C-c s g | Search content (color-rg)|
-| C-c s B | Blink search             |
+| Key     | Description                    |
+|---------+--------------------------------|
+| C-c s l | Search line (consult-line)     |
+| C-c s r | Search with ripgrep (consult)  |
+| C-c s i | Search imenu (consult)         |
+| C-c s o | Search outline (consult)       |
+| C-c s g | Search content (color-rg)      |
+| C-c s G | Search project (color-rg)      |
+| C-c s s | Search symbol (color-rg)       |
+| C-c s b | Blink search                   |
+| C-c s d | Search current directory       |
+| C-c s p | Search project root            |
+
+** Buffers & Files
+
+| Key     | Description                    |
+|---------+--------------------------------|
+| C-c b b | Switch buffer (consult)        |
+| C-c b m | Switch bookmark                |
+| C-c b r | Open recent file               |
+| C-c f f | Find file                      |
 
 ** Help
 

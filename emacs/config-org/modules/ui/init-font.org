@@ -58,6 +58,10 @@
 ** Setup
 
 #+begin_src emacs-lisp
+;;; ============================================================
+;;; Font Utility Functions
+;;; ============================================================
+
 (defun mcg--font-available-p (font)
   "Return non-nil when FONT is available."
   (find-font (font-spec :family font)))
@@ -68,15 +72,44 @@
            when (mcg--font-available-p f)
            return f))
 
+(defun mcg-get-monospace-font ()
+  "Get the configured monospace font family."
+  (mcg--pick-font mcg-font-default-candidates))
+
+(defun mcg-get-cjk-font ()
+  "Get the configured CJK font family."
+  (mcg--pick-font mcg-font-cjk-candidates))
+
+(defun mcg-get-emoji-font ()
+  "Get the configured emoji font family."
+  (mcg--pick-font mcg-font-emoji-candidates))
+
+(defun mcg-get-icon-font ()
+  "Get the configured icon font family."
+  (if (mcg--font-available-p mcg-ui-icon-font-family)
+      mcg-ui-icon-font-family
+    (mcg--pick-font mcg-font-default-candidates)))
+
+(defun mcg-get-serif-font ()
+  "Get a serif font for variable-pitch faces."
+  (or (mcg--pick-font '("Noto Serif" "Georgia" "serif"))
+      "serif"))
+#+end_src
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Font Setup
+;;; ============================================================
+
 (defun mcg--setup-fonts ()
   "Setup default/CJK/emoji fonts."
   (when (display-graphic-p)
-    (when-let ((main (mcg--pick-font mcg-font-default-candidates)))
+    (when-let ((main (mcg-get-monospace-font)))
       (set-face-attribute 'default nil :family main :height mcg-font-height))
-    (when-let ((cjk (mcg--pick-font mcg-font-cjk-candidates)))
+    (when-let ((cjk (mcg-get-cjk-font)))
       (dolist (charset '(han kana cjk-misc bopomofo))
         (set-fontset-font t charset (font-spec :family cjk) nil 'prepend)))
-    (when-let ((emoji (mcg--pick-font mcg-font-emoji-candidates)))
+    (when-let ((emoji (mcg-get-emoji-font)))
       (set-fontset-font t 'emoji (font-spec :family emoji) nil 'prepend))
     (if (mcg--font-available-p mcg-ui-icon-font-family)
         (mcg-log "font configured, icon font: %s" mcg-ui-icon-font-family)

@@ -35,10 +35,13 @@ Org Superstar - fancy bullets and checkboxes.
   "Set up org-superstar-mode."
   (with-eval-after-load 'org
     (when (mcg-require-extension "org-superstar-mode" t)
-      (setq org-superstar-leading-bullet ?\s
-            org-superstar-special-todo-items t
-            org-superstar-item-bullet-alist '((43 . "◆") (45 . "▸"))
-            org-superstar-headline-bullets-list '("◉" "○" "✸" "✿" "✤" "✜" "◆" "▶"))
+      ;; Use unified bullets from mcg-org-bullets-alist
+      (let ((headline-bullets (car mcg-org-bullets-alist))
+            (item-bullets (cadr mcg-org-bullets-alist)))
+        (setq org-superstar-leading-bullet ?\s
+              org-superstar-special-todo-items t
+              org-superstar-item-bullet-alist item-bullets
+              org-superstar-headline-bullets-list headline-bullets))
 
       (custom-set-faces
        '(org-superstar-item ((t (:inherit 'fixed-pitch))))

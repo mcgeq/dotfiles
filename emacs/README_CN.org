@@ -392,11 +392,27 @@ Warning: Module fingertip is renamed to paredit
 
 ** 搜索
 
-| 快捷键  | 描述                   |
-|---------+------------------------|
-| C-c s l | 搜索行 (consult)       |
-| C-c s g | 搜索内容 (color-rg)    |
-| C-c s B | Blink 搜索             |
+| 快捷键  | 描述                       |
+|---------+----------------------------|
+| C-c s l | 搜索行 (consult-line)      |
+| C-c s r | ripgrep 搜索 (consult)     |
+| C-c s i | 搜索 imenu (consult)       |
+| C-c s o | 搜索大纲 (consult)         |
+| C-c s g | 搜索内容 (color-rg)        |
+| C-c s G | 搜索项目 (color-rg)        |
+| C-c s s | 搜索符号 (color-rg)        |
+| C-c s b | Blink 搜索                 |
+| C-c s d | 搜索当前目录               |
+| C-c s p | 搜索项目根目录             |
+
+** 缓冲区与文件
+
+| 快捷键  | 描述                       |
+|---------+----------------------------|
+| C-c b b | 切换缓冲区 (consult)       |
+| C-c b m | 切换书签                   |
+| C-c b r | 打开最近文件               |
+| C-c f f | 查找文件                   |
 
 完整快捷键参考，在 Emacs 中按 =C-h K=。
 

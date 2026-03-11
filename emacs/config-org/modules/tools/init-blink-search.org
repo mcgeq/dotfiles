@@ -110,16 +110,16 @@ Blink-search 辅助函数。
 
 #+begin_src emacs-lisp
 ;;; ============================================================
-;;; Keybindings (C-c f prefix - find files)
+;;; Keybindings (C-c s prefix - search)
 ;;; ============================================================
 
 (defun mcg--setup-blink-search-keybindings ()
   "Setup search related keybindings."
-  ;; Blink-search
+  ;; Blink-search - unified search prefix C-c s
   (when (featurep 'blink-search)
-    (mcg-bind-key "C-c f b" 'blink-search "tools/blink-search")
-    (mcg-bind-key "C-c f d" 'mcg/blink-search-grep-current-dir "tools/blink-search")
-    (mcg-bind-key "C-c f p" 'mcg/blink-search-project-root "tools/blink-search"))
+    (mcg-bind-key "C-c s b" 'blink-search "tools/blink-search")
+    (mcg-bind-key "C-c s d" 'mcg/blink-search-grep-current-dir "tools/blink-search")
+    (mcg-bind-key "C-c s p" 'mcg/blink-search-project-root "tools/blink-search"))
 
     (mcg-log "Search keybindings configured"))
 #+end_src
