@@ -241,3 +241,6 @@
 [submodule "emacs-dirvish"]
 	path = emacs/site-lisp/extensions/tools/dirvish
 	url = https://github.com/alexluigit/dirvish.git
+[submodule "emacs-clutch"]
+	path = emacs/site-lisp/extensions/tools/clutch
+	url = https://github.com/LuciusChen/clutch.git

@@ -1,0 +1,188 @@
+#+TITLE: Database Client Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-clutch.el :lexical t
+
+* Database Client Module
+
+** File Header
+
+#+begin_src emacs-lisp
+;;; init-clutch.el --- Database Client for MCG Emacs -*- lexical-binding: t; -*-
+
+;; Filename: init-clutch.el
+;; Description: Database client module (Clutch)
+;; Author: mcge <mcgeq@outlook.com>
+;; Copyright (C) 2024-2026, mcge, all rights reserved.
+;; Create   Date: 2026-03-14
+;; Version: 1.0
+;; Keywords: database, sql, clutch, postgresql, mysql, sqlite
+;; Compatibility: GNU Emacs 28.1+
+
+;;; Commentary:
+;;
+;; Database client module for MCG Emacs, responsible for:
+;; - Clutch database client configuration
+;; - PostgreSQL, MySQL, SQLite3 connection settings
+;; - Database browsing and query execution
+;;
+;; Module metadata:
+;; :depends ()
+;; :defer t
+;;
+#+end_src
+
+** Require
+
+#+begin_src emacs-lisp
+;;; Code:
+
+(require 'core-lib)
+#+end_src
+
+** Variables
+
+数据库连接配置变量。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Variables
+;;; ============================================================
+
+(defvar mcg-tools-clutch-connections nil
+  "Database connection alist.
+Each entry is (NAME . PLIST) where PLIST contains:
+  :backend  - 'mysql, 'pg, or 'sqlite
+  :host     - Host name (for MySQL/PostgreSQL)
+  :port     - Port number (for MySQL/PostgreSQL)
+  :user     - User name
+  :password - Password (or use auth-source)
+  :database - Database name or file path (for SQLite)")
+
+(defvar mcg-tools-clutch-default-backend 'pg
+  "Default database backend.")
+#+end_src
+
+** Clutch Configuration
+
+Clutch 数据库客户端核心配置。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Clutch Configuration
+;;; ============================================================
+
+(defun mcg-tools-clutch--get-password (host user)
+  "Get password from auth-source for HOST and USER."
+  (or (plist-get (car (auth-source-search :host host :user user)) :secret)
+      ""))
+
+(defun mcg-tools-clutch--make-connection (backend &key host port user password database)
+  "Create a connection plist for BACKEND with given parameters."
+  (list :backend backend
+        :host host
+        :port port
+        :user user
+        :password password
+        :database database))
+#+end_src
+
+** Connection Template
+
+数据库连接配置模板说明。实际配置请在 `private/config.org` 中设置。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Connection Template
+;;; ============================================================
+
+;; Database connections should be configured in private/config.org
+;; to keep sensitive information (passwords, hosts) out of version control.
+;;
+;; Example template:
+;;   (setq mcg-tools-clutch-connections
+;;         '(("dev-mysql" . (:backend mysql
+;;                             :host "127.0.0.1" :port 3306
+;;                             :user "root" :password "test"
+;;                             :database "mydb"))
+;;           ("dev-pg" . (:backend pg
+;;                          :host "127.0.0.1" :port 5432
+;;                          :user "postgres" :password "test"
+;;                          :database "mydb"))
+;;           ("dev-sqlite" . (:backend sqlite
+;;                               :database "/path/to/my.db"))))
+;;
+;; Supported backends:
+;;   - mysql  : MySQL / MariaDB
+;;   - pg     : PostgreSQL
+;;   - sqlite : SQLite3 (Emacs 29+)
+;;
+;; Optional parameters:
+;;   - :connect-timeout    - Connection timeout in seconds
+;;   - :read-idle-timeout  - Read idle timeout in seconds
+;;   - :ssl                - Enable SSL (t/nil)
+;;   - :socket             - Unix socket path (MySQL)
+;;   - :encoding           - Character encoding (default: utf8)
+#+end_src
+
+** Initialize
+
+模块初始化。Load clutch and setup configuration.
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Initialize
+;;; ============================================================
+
+(when (mcg-require-extension 'clutch t)
+  ;; Load backend modules using require (they are submodules of clutch)
+  (require 'clutch-db-mysql nil t)
+  (require 'clutch-db-pg nil t)
+  (require 'clutch-db-sqlite nil t)
+
+  ;; Load Org-Babel support
+  (require 'ob-clutch nil t)
+  (require 'ob-mysql nil t)
+  (require 'ob-postgresql nil t)
+  (require 'ob-sqlite nil t)
+
+  ;; Set connection alist after private-config is loaded
+  ;; This ensures mcg-tools-clutch-connections is properly set
+  (eval-after-load 'private-config
+    '(when mcg-tools-clutch-connections
+       (setq clutch-connection-alist mcg-tools-clutch-connections)))
+
+  ;; Keybindings (C-c ; prefix for database operations)
+  (mcg-bind-key "C-c ; c" 'clutch-query-console "tools/clutch")
+  (mcg-bind-key "C-c ; j" 'clutch-jump "tools/clutch")
+  (mcg-bind-key "C-c ; t" 'clutch-list-tables "tools/clutch")
+  (mcg-bind-key "C-c ; s" 'clutch-show-schema "tools/clutch")
+  (mcg-bind-key "C-c ; r" 'clutch-recent "tools/clutch")
+  (mcg-bind-key "C-c ; ?" 'clutch-dispatch "tools/clutch")
+
+  ;; Transient menu prefix
+  (transient-define-prefix mcg/clutch-menu ()
+    "MCG Clutch database operations menu."
+    [["Connect"
+      ("c" "Connect" clutch-connect)
+      ("d" "Disconnect" clutch-disconnect)
+      ("r" "Recent" clutch-recent)]
+     ["Query"
+      ("q" "Query Console" clutch-query-console)
+      ("e" "Execute Region" clutch-execute-region)
+      ("b" "Execute Buffer" clutch-execute-buffer)]
+     ["Browse"
+      ("t" "List Tables" clutch-list-tables)
+      ("j" "Jump to Table" clutch-jump)
+      ("s" "Show Schema" clutch-show-schema)]
+     ["Export"
+      ("x" "Export Results" clutch-export-results)]])
+
+  (mcg-log "Clutch database client configured with keybindings"))
+#+end_src
+
+** Provide Feature
+
+#+begin_src emacs-lisp
+(provide 'init-clutch)
+;;; init-clutch.el ends here
+#+end_src

@@ -139,6 +139,7 @@ to#+TITLE: Init Module
    color-rg
    magit
    majutsu
+   clutch
 
    ;; Enhance
    :enhance

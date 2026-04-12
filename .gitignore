@@ -15,6 +15,7 @@ emacs/config-org/**/*.md
 emacs/config-org/**/*.el
 emacs/custom.el
 emacs/site-lisp/packages-lock.el
+emacs/config-org/private/config.org
 
 # nushell
 nushell/history.*
