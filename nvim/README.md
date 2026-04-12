@@ -1,569 +1,305 @@
 # Neovim Configuration
 
-A modern Neovim configuration based on [AstroNvim v5](https://github.com/AstroNvim/AstroNvim) with extensive language support and productivity features.
+This directory is the active Neovim config. It has been rebuilt around native Neovim 0.12+ features and `vim.pack`, with a stable override layer under `lua/user/`.
 
-## 🌟 Features
+The old AstroNvim / Lazy / preset-based structure is no longer the source of truth. If you want to extend or override behavior, use [docs/customization.md](/d:/config/dotfiles/nvim/docs/customization.md).
 
-### Core Stack
-- **Base**: AstroNvim v5 - A modular Neovim framework
-- **Package Manager**: Lazy.nvim - Fast and efficient plugin management
-- **Language Server**: AstroLSP with Mason - Comprehensive LSP support
-- **Snippets**: LuaSnip with friendly-snippets
+Historical notes such as `MIGRATION.md`, `LEGACY-FILES.md`, and `ENHANCEMENT_GUIDE.md` are archival only. The files in this README are the current source of truth.
 
-### Language Support
-Full LSP support for 20+ languages:
-- **Systems**: C/C++, Rust, Zig, Go, CMake
-- **Web**: TypeScript, JavaScript, Vue, Svelte, JSON, HTML/CSS
-- **Dynamic**: Python (with Ruff), Lua, Bash
-- **Functional**: Clojure, Jison (jj)
-- **Data**: SQL, YAML, XML, TOML, Markdown
-- **Mobile**: Dart/Flutter, Kotlin
-- **Other**: Docker
+## Goals
 
-### Editor Features
-- **Navigation**: Flash.nvim, smart-splits, window-picker
-- **Completion**: Blink.cmp with multiple sources (LSP, Git, Emoji, etc.)
-- **Diagnostics**: Trouble.nvim, error-lens, neodim
-- **Search**: Fzf-lua, namu.nvim, snacks-picker
-- **Git**: Gitsigns, diffview, gitlinker, blame, gist
-- **Tree-sitter**: Full syntax highlighting and text objects
-- **Formatter**: Conform.nvim
-- **Testing**: Neotest with language-specific adapters
+- Prefer built-in Neovim features first
+- Keep modern plugins where they clearly improve UX
+- Keep keymaps predictable and grouped
+- Keep personal overrides isolated from the base config
+- Support frontend, backend, markdown, and terminal-heavy workflows without bringing back a framework layer
 
-### Productivity
-- **Session Management**: Resession.nvim
-- **Task Runner**: Overseer.nvim, Executor.nvim
-- **Debugging**: nvim-dap with language-specific integrations
-- **File Explorer**: mini.files, Oil.nvim
-- **Terminal**: ToggleTerm.nvim
-- **Zen Mode**: Distraction-free editing
+## Current Stack
 
-### ⚡ Performance Optimizations
+Core:
 
-This configuration includes several performance optimizations:
+- Native `vim.pack` plugin management
+- Native `vim.lsp.config()` and `vim.lsp.enable()`
+- Mason for tool and LSP installation
+- Treesitter for syntax and structure
+- Conform for non-frontend formatting
 
-- **Dynamic Loading**: Plugins and tools load based on selected preset
-- **Lazy Themes**: Only active theme loads on startup (others on-demand)
-- **Smart Treesitter**: Parser installation based on preset (13-30 parsers)
-- **Optimized Mason**: Tool installation based on preset (8-31 tools)
-- **Reduced Keybindings**: Cleaned up from 60+ to 45 essential shortcuts
-- **Delayed Initialization**: Critical components load in correct order
-- **Error Resilience**: Comprehensive error handling prevents startup failures
+UI and navigation:
 
-**Performance Gains** (compared to loading all plugins):
-- Startup time: **33-40% faster** (frontend/backend presets)
-- Memory usage: **15-33% lower** (preset-dependent)
-- Disk space: **44-69% less** (minimal preset)
+- `snacks.nvim` for dashboard, picker, explorer, notifier, and git search
+- `flash.nvim` for motion
+- `nvim-spider` for smarter `w/e/b/ge` word motions
+- `noice.nvim` for message and commandline UI
+- `blink.cmp` for completion
+- `bufferline.nvim` for buffer tabs
+- `which-key.nvim` for grouped keymap hints
+- `nvim-spectre` for interactive search and replace
 
-## 📦 Installation
+Themes:
 
-### Prerequisites
-- Neovim 0.9+ 
-- Git
-- (Optional) Nerd Fonts for icons
+- `tokyonight`
+- `catppuccin`
+- `kanagawa`
 
-### Quick Install
+If a preferred theme is missing or broken locally, the config now falls back to a theme that actually exists on disk.
 
-#### For Windows:
-```powershell
-# Backup existing config
-Move-Item $env:LOCALAPPDATA\nvim $env:LOCALAPPDATA\nvim.bak -ErrorAction SilentlyContinue
+## Language Support
 
-# Clone configuration
-git clone <repository-url> $env:LOCALAPPDATA\nvim
+LSP is configured directly in [lua/lsp/servers.lua](/d:/config/dotfiles/nvim/lua/lsp/servers.lua).
 
-# Start Neovim
-nvim
-```
+Built-in base support includes:
 
-#### For Linux/macOS:
-```bash
-# Backup existing config
-mv ~/.config/nvim ~/.config/nvim.bak 2>/dev/null
-mv ~/.local/share/nvim ~/.local/share/nvim.bak 2>/dev/null
-mv ~/.local/state/nvim ~/.local/state/nvim.bak 2>/dev/null
-mv ~/.cache/nvim ~/.cache/nvim.bak 2>/dev/null
+- Lua: `lua_ls`
+- Bash: `bashls`
+- JSON: `jsonls`
+- YAML: `yamlls`
+- TOML: `taplo`
+- Markdown: `marksman`
+- Go: `gopls`
+- Rust: `rust_analyzer`
+- Zig: `zls`
+- Python: `ruff`, optional `ty`
+- CSS / HTML: `cssls`, `emmet_language_server`
+- JavaScript / TypeScript / React: `vtsls`, `eslint`
+- Vue: `vue_ls` with `@vue/typescript-plugin` wired into `vtsls`
 
-# Clone configuration
-git clone <repository-url> ~/.config/nvim
+Frontend formatting defaults to ESLint-driven workflows so projects using `@antfu/eslint-config` can keep one source of truth. Non-frontend filetypes continue to use Conform.
 
-# Start Neovim
-nvim
-```
+## Useful Commands
 
-The first launch will automatically install Lazy.nvim and all configured plugins.
+Config and status:
 
-## ⚡ Preset System
+- `:NvimConfig` open the config directory
+- `:NvimUserConfig` open the user override directory
+- `:NvimStatus` show active config path, data path, current theme, and frontend mode
 
-This configuration features a powerful preset system that dynamically loads plugins, LSP servers, and tools based on your development needs.
+Theme:
 
-### 📦 Available Presets
+- `:Theme` show current theme
+- `:Theme <name>` switch theme for the current session
+- `:ThemeCycle` rotate bundled themes
 
-| Preset | Plugins | Parsers | Tools | Startup | Use Case |
-|--------|---------|---------|-------|---------|----------|
-| **fullstack** (default) | All | 30+ | 31 | ~400ms | Full-stack development |
-| **frontend** | ~70% | 20 | 18 | ~250ms | JS/TS/Vue/React development |
-| **backend** | ~70% | 19 | 23 | ~280ms | Rust/Go/Python/C++ development |
-| **minimal** | ~40% | 13 | 8 | ~120ms | Quick editing, config files |
-| **performance** | ~50% | 15 | 8 | ~180ms | Low-spec machines |
+Frontend mode:
 
-### 🎯 Preset Features
+- `:FrontendMode` show current frontend mode
+- `:FrontendMode eslint`
+- `:FrontendMode eslint_imports`
+- `:FrontendMode conform`
+- `:FrontendModeCycle`
 
-Each preset automatically configures:
+Plugin management:
 
-**Frontend Preset**:
-- LSP: TypeScript, Vue, HTML, CSS, Tailwind, Emmet
-- Tools: Biome (formatter/linter), Prettier
-- Parsers: JavaScript, TypeScript, Vue, HTML, CSS
-- Plugins: TypeScript-tools, Vue Language Server, Colorizer
+- `:PackUpdate` open a fuzzy picker of installed plugins
+- `:PackUpdate <plugin>` update one plugin
+- `:PackUpdate!` update all plugins
+- `:PackStatus` inspect plugin status with the same picker
+- `:PackRepair` show only broken or missing plugins
+- `:PackRepair <plugin>` reinstall one broken plugin
+- `:PackRepair!` repair all broken or missing plugins
+- `:PackSync` write the current resolved state to [nvim-pack-lock.json](/d:/config/dotfiles/nvim/nvim-pack-lock.json)
+- `:PackOpenLog` open the lightweight `vim.pack` activity log
+- `:MarkdownTableFormat` format the markdown table under cursor
 
-**Backend Preset**:
-- LSP: Rust, Go, Python, C++, Zig, CMake
-- Tools: rust-analyzer, gopls, pyright, ruff, clangd
-- Parsers: Rust, Go, Python, C, C++, Zig
-- Plugins: Go.nvim, Python venv-selector, DAP debuggers
+`PackRepair` is especially useful when a plugin directory is corrupted and only contains `.git`.
 
-**Minimal Preset**:
-- LSP: Lua, Bash, YAML, JSON, TOML
-- Tools: Essential formatters only
-- Parsers: Core + config files
-- Plugins: Basic editing features only
+## Keymap Shape
 
-### 🛠️ Switching Presets
+Global:
 
-**Method 1: Using Command**
-```vim
-:PresetSwitch frontend
-" Restart Neovim after switching
-```
+- `<leader><space>` smart file picker
+- `<leader>,` buffers
+- `<leader>/` grep project
+- `<leader>e` explorer
+- `<C-s>` save
+- `<leader>qq` quit all
 
-**Method 2: Configuration File**
-```bash
-# Create .preset file in nvim config directory
-echo "frontend" > ~/.config/nvim/.preset  # Linux/macOS
-# or
-echo "frontend" > %LOCALAPPDATA%\nvim\.preset  # Windows
-```
+Search and picker:
 
-**Method 3: Environment Variable**
-```bash
-export NVIM_PRESET=backend  # Linux/macOS
-$env:NVIM_PRESET="backend"  # Windows PowerShell
-nvim
-```
+- `<leader>ff` files
+- `<leader>fg` git files
+- `<leader>fr` recent files
+- `<leader>fc` config files
+- `<leader>sb` buffer lines
+- `<leader>sd` diagnostics
+- `<leader>sh` help
+- `<leader>sk` keymaps
+- `<leader>sn` notifications
+- `<leader>sw` grep current word with `snacks.picker`
+- `<leader>sr` replace in files with `nvim-spectre`
+- `<leader>sW` replace current word or selection with `nvim-spectre`
+- `<leader>sF` replace in current file with `nvim-spectre`
+- `<leader>sR` resume last picker
 
-### 🔧 After Switching Presets
+Theme and frontend runtime toggles:
 
-1. **Restart Neovim**
-2. **Sync plugins**: `:Lazy sync`
-3. **Update parsers**: `:TSUpdate`
-4. **Install tools**: `:MasonToolsInstall`
+- `<leader>uf` cycle frontend mode
+- `<leader>uF` show frontend mode
+- `<leader>ut` cycle theme
+- `<leader>uT` show theme
+- `<leader>uC` colorscheme picker
+- `<leader>gg` LazyGit through `snacks.nvim`
 
-### 📊 Optimization Commands
+Workflow and tools:
 
-```vim
-:PresetList          " List all presets
-:PresetSwitch <name> " Switch preset (requires restart)
-:ConfigInfo          " Show config information
-:KeymapDocs          " Show all keymaps
-:ConfigValidate      " Validate configuration
-:PluginStats         " Show plugin statistics
-:MasonToolsInstall   " Install tools for current preset
-```
+- `<leader>gj` Jujutsu TUI
+- `<leader>js` Jujutsu status
+- `<leader>jl` Jujutsu log
+- `<leader>jd` Jujutsu diff
+- `<leader>ld` LazyDocker
+- `<leader>ls` Live Server
+- `<leader>db` toggle DBUI
 
-## 🗂️ Configuration Structure
+Plugin maintenance:
 
-```
+- `<leader>pu` plugin update picker
+- `<leader>pP` update all plugins
+- `<leader>ps` plugin status picker
+- `<leader>pr` plugin repair picker
+- `<leader>pl` pack log
+
+LSP and code navigation:
+
+- `K` hover
+- `gd` definitions
+- `gD` declarations
+- `gr` references
+- `gI` implementations
+- `gy` type definitions
+- `<leader>ca` code action
+- `<leader>cr` rename
+- `<leader>xd` line diagnostics
+- `w/e/b/ge` smart subword motions via `nvim-spider`
+
+Filetype-local actions use `<localleader>`.
+
+Examples:
+
+- Markdown: `<localleader>m*`
+- `package.json`: `<localleader>n*`
+- Hurl: `<localleader>h*`
+- Frontend buffers: `<localleader>l*`, `<localleader>t*`, `<localleader>v*`
+
+## Structure
+
+```text
 nvim/
-├── init.lua                    # Bootstrap file for Lazy.nvim
-├── lazy-lock.json             # Plugin versions lockfile
-├── .preset                    # Current preset (fullstack/frontend/etc.)
+├── init.lua
+├── nvim-pack-lock.json
+├── after/
+│   └── ftplugin/
+├── docs/
 ├── lua/
-│   ├── lazy_setup.lua         # Plugin specifications
-│   ├── community.lua          # AstroCommunity imports (optimized)
-│   ├── polish.lua             # Final polish and customizations
-│   ├── config/                # Custom configuration modules
-│   │   ├── auto_update_timestamp.lua  # Auto-update timestamps
-│   │   ├── plugin_manager.lua # Plugin grouping & management
-│   │   ├── presets.lua        # Preset system
-│   │   ├── keymaps.lua        # Keymap management
-│   │   ├── validator.lua      # Configuration validator
-│   │   ├── commands.lua       # User commands
-│   │   └── ...                # Other utilities
-│   └── plugins/               # Plugin-specific configurations
-│       ├── astrocore.lua      # AstroNvim core options
-│       ├── astrolsp.lua       # LSP configuration
-│       ├── conform.lua        # Formatting (Biome with --unsafe)
-│       ├── jujutsu.lua        # Jujutsu VCS support
-│       └── ...
-└── snippets/                  # Custom snippets
-    ├── cpp.json
-    ├── rust.json
-    ├── FE.json
-    └── ...
+│   ├── core/      # options, diagnostics, keymaps, commands, terminal helpers
+│   ├── lang/      # runtime language modes, python helper logic
+│   ├── lsp/       # LSP registry and setup
+│   ├── pack/      # vim.pack specs, commands, and UI
+│   ├── plugins/   # plugin setup grouped by responsibility
+│   └── user/      # stable override entrypoints
 ```
 
-## ⚙️ Customization
+Main runtime chain:
 
-### Adding Plugins
+1. [init.lua](/d:/config/dotfiles/nvim/init.lua)
+2. [lua/core/](/d:/config/dotfiles/nvim/lua/core)
+3. [lua/pack/](/d:/config/dotfiles/nvim/lua/pack)
+4. [lua/plugins/](/d:/config/dotfiles/nvim/lua/plugins)
+5. [lua/lsp/](/d:/config/dotfiles/nvim/lua/lsp)
 
-Edit `lua/plugins/user.lua` to add new plugins:
+## User Overrides
 
-```lua
----@type LazySpec
-return {
-  {
-    "your-plugin/repo",
-    event = "VeryLazy",
-    config = function()
-      require("your-plugin").setup()
-    end,
-  },
-}
-```
+The base config is meant to stay stable. Put personal changes under [lua/user/](/d:/config/dotfiles/nvim/lua/user).
 
-### Overriding Default Configs
+Entry points:
 
-Each plugin in `lua/plugins/` directory can be customized. The configuration loading order is:
-1. AstroNvim defaults
-2. AstroCommunity plugins
-3. User plugin configs
-4. `polish.lua` for final touches
+- [lua/user/init.lua](/d:/config/dotfiles/nvim/lua/user/init.lua) theme, extra plugins, disabled base plugins, extra LSP config
+- [lua/user/options.lua](/d:/config/dotfiles/nvim/lua/user/options.lua) option overrides
+- [lua/user/keymaps.lua](/d:/config/dotfiles/nvim/lua/user/keymaps.lua) extra keymaps
+- [lua/user/autocmds.lua](/d:/config/dotfiles/nvim/lua/user/autocmds.lua) extra autocmds
+- [lua/user/commands.lua](/d:/config/dotfiles/nvim/lua/user/commands.lua) custom commands
+- [lua/user/lang.lua](/d:/config/dotfiles/nvim/lua/user/lang.lua) treesitter, formatters, frontend mode defaults, extra Mason tools
+- [lua/user/plugins/](/d:/config/dotfiles/nvim/lua/user/plugins) extra plugins
+- [lua/user/lsp/](/d:/config/dotfiles/nvim/lua/user/lsp) extra or overridden LSP servers
+- [after/ftplugin/](/d:/config/dotfiles/nvim/after/ftplugin) per-filetype local behavior
 
-### Auto-update Timestamps
+See [docs/customization.md](/d:/config/dotfiles/nvim/docs/customization.md) for examples.
 
-A custom feature that automatically updates file headers when saving code files (`.rs`, `.c`, `.cpp`, `.py`, `.ts`, `.cs`).
+## Installation
 
-Configuration: `lua/config/auto_update_timestamp.lua`
+Requirements:
 
-## 🔧 LSP & Tools Management
+- Neovim 0.12 or newer
+- `git`
+- Nerd Font recommended
+- External tools as needed for your languages, for example `ruff`, `stylua`, `goimports`, `gofumpt`, `shfmt`
 
-### Mason Tool Installation
+Typical install:
 
-Tools are installed automatically based on your preset, but you can manage them manually:
+Windows:
 
-```vim
-:Mason                    " Open Mason UI
-:MasonToolsInstall        " Install tools for current preset
-:MasonUpdate             " Update all installed tools
-```
-
-**Important Notes**:
-- Tool installation is **manual** (not on startup) to avoid initialization errors
-- After switching presets, run `:MasonToolsInstall` to install required tools
-- Use `:Mason` UI to install/uninstall individual tools (press `i` to install, `X` to uninstall)
-
-### Tool Categories by Preset
-
-**Core Tools** (all presets):
-- lua-language-server, stylua
-- bash-language-server, shellcheck
-- yaml-language-server, json-lsp, taplo
-
-**Frontend Tools** (frontend/fullstack):
-- typescript-language-server, vue-language-server
-- html-lsp, css-lsp, tailwindcss-language-server
-- biome, emmet-language-server
-
-**Backend Tools** (backend/fullstack):
-- rust-analyzer, gopls, pyright, ruff-lsp
-- clangd, clang-format, zls, cmake-language-server
-- debugpy, codelldb, delve (debuggers)
-
-## ⌨️ Key Bindings
-
-### Leader Key: `<Space>`
-
-**Top-level shortcuts** (most frequently used):
-- `<Leader><Space>` - Smart find files
-- `<Leader>,` - Buffer list
-- `<Leader>/` - Grep in project
-- `<Leader>e` - File explorer
-
-**File operations** (`<Leader>f`):
-- `<Leader>ff` - Find files
-- `<Leader>fg` - Find git files
-- `<Leader>fc` - Find config files
-- `<Leader>fr` - Recent files
-- `<Leader>fp` - Projects
-- `<Leader>fm` - Mini.files (current directory)
-
-**Git operations** (`<Leader>g`):
-- `<Leader>gb` - Branches
-- `<Leader>gl` - Commit log
-- `<Leader>gs` - Git status
-- `<Leader>gd` - Git diff (hunks)
-- `<Leader>gf` - File log
-
-**Search operations** (`<Leader>s`):
-- `<Leader>sw` - Grep word/selection
-- `<Leader>sb` - Buffer lines
-- `<Leader>sc` - Commands
-- `<Leader>sd` - Diagnostics
-- `<Leader>sh` - Help pages
-- `<Leader>sk` - Keymaps
-- `<Leader>ss` - LSP symbols
-
-**LSP Navigation** (`g` prefix):
-- `gd` - Go to definition
-- `gD` - Go to declaration
-- `gr` - References
-- `gI` - Go to implementation
-- `gy` - Go to type definition
-- `K` - Hover documentation
-
-**LSP Actions** (`<Leader>l`):
-- `<Leader>la` - Code actions
-- `<Leader>lr` - Rename symbol
-- `<Leader>lf` - Format document
-- `<Leader>ld` - Show line diagnostics
-
-**Utilities** (`<Leader>u`):
-- `<Leader>uC` - Switch colorscheme
-
-For a complete keymap reference, run `:KeymapDocs` or press `<Leader>sk` to search keymaps.
-
-## 🔧 Plugin Management
-
-### Update Plugins
-```vim
-:Lazy sync
-```
-
-### Clean Unused Plugins
-```vim
-:Lazy clean
-```
-
-### Performance
-Plugins are lazy-loaded based on events:
-- `VeryLazy` - Load on idle
-- `BufRead` - Load when reading buffers
-- Filetype-specific loading
-
-Disabled default plugins for performance:
-- netrwPlugin
-- tarPlugin
-- zipPlugin
-- gzip
-- tohtml
-
-## 🎨 Appearance
-
-- **Theme**: AstroTheme (configurable)
-- **Icons**: nerd fonts integration via mini.icons
-- **Statusline**: Heirline.nvim
-- **Indentation**: indent-blankline with rainbow delimiters
-- **Syntax**: Tree-sitter for all supported languages
-
-## 📝 Snippets
-
-Custom snippets located in `snippets/`:
-- `cpp.json` - C++ templates
-- `rust.json` - Rust boilerplate
-- `FE.json` - Frontend templates
-- `dart.json` - Dart/Flutter snippets
-- `svelte.json` - Svelte components
-
-## 🐛 Debugging
-
-Debug configuration available via nvim-dap with support for:
-- **Rust**: rustaceanvim integration
-- **Python**: Python debugger
-- **Go**: Delve debugger
-- **JavaScript/TypeScript**: Node.js debugging
-- **Others**: Native DAP protocol
-
-Press `<Leader> d` for debugging menu.
-
-## 🔄 Synchronization
-
-This configuration uses `lazy-lock.json` to lock plugin versions for reproducibility across machines.
-
-To sync with latest versions:
-```vim
-:Lazy update
-```
-
-## 🐛 Troubleshooting
-
-### Common Issues
-
-**1. Mason tools not installing on startup**
-
-This is by design to avoid initialization errors. Install manually:
-```vim
-:MasonToolsInstall
-```
-
-**2. Preset not applying after switch**
-
-Make sure to:
-1. Restart Neovim completely
-2. Run `:Lazy sync` to sync plugins
-3. Run `:TSUpdate` to update parsers
-4. Run `:MasonToolsInstall` to install tools
-
-**3. Slow startup time**
-
-Check your current preset:
-```vim
-:ConfigInfo
-```
-Consider switching to a lighter preset:
-```vim
-:PresetSwitch minimal
-```
-
-**4. Theme not loading**
-
-Backup themes are lazy-loaded. To activate:
-```vim
-:colorscheme catppuccin  " or tokyonight, kanagawa
-```
-
-**5. LSP not working for a language**
-
-Check if LSP server is installed:
-```vim
-:Mason         " Look for the LSP server
-:LspInfo       " Check active LSP servers
-```
-
-### Diagnostic Commands
-
-```vim
-:checkhealth           " Full health check
-:checkhealth mason     " Check Mason specifically
-:Lazy log             " View plugin load logs
-:messages             " View all messages
-:ConfigValidate       " Validate configuration
-```
-
-### Clean Reinstall
-
-If something goes wrong:
-
-**Windows:**
 ```powershell
-Remove-Item -Recurse -Force $env:LOCALAPPDATA\nvim-data
+Move-Item $env:LOCALAPPDATA\nvim $env:LOCALAPPDATA\nvim.bak -ErrorAction SilentlyContinue
+git clone <repository-url> $env:LOCALAPPDATA\nvim
 nvim
-:Lazy sync
-:MasonToolsInstall
 ```
 
-**Linux/macOS:**
+Linux / macOS:
+
 ```bash
-rm -rf ~/.local/share/nvim
+mv ~/.config/nvim ~/.config/nvim.bak 2>/dev/null
+git clone <repository-url> ~/.config/nvim
 nvim
-:Lazy sync
-:MasonToolsInstall
 ```
 
-## 💡 Tips & Tricks
+On first launch, `vim.pack` will offer to install configured plugins.
 
-### Disable Startup Notification
+## Troubleshooting
 
-If you don't want the preset info notification:
-```bash
-# Add to environment
-export NVIM_SHOW_PRESET_INFO=0
-```
+Theme fails to load:
 
-### Quick Theme Switching
+- Run `:PackStatus` or `:PackUpdate`
+- If the plugin directory is broken, run `:PackRepair <plugin>`
+- Restart Neovim after plugin changes
 
-```vim
-:colorscheme <Tab>  " Tab completion for installed themes
-```
+`PackRepair` says a plugin is active:
 
-### Performance Profiling
+- Restart once with `NVIM_NO_PLUGINS=1`
+- Run `:PackRepair <plugin>` in that session
 
-```vim
-:Lazy profile  " See plugin load times
-```
+Headless checks fail in a restricted sandbox:
 
-### Manual Tool Management
+- `vim.pack` bootstrap needs `git` on PATH
+- Neovim also needs write access to its data directory for logs and ShaDa
+- If you validate startup in a sandboxed environment, these errors may be environmental rather than config issues
 
-Prefer manual control? Comment out the `mason-tool-installer` plugin in `lua/plugins/mason.lua`.
+Frontend save behavior is too aggressive:
 
-## 📚 Resources
+- Use `:FrontendMode conform`
+- Or adjust [lua/user/lang.lua](/d:/config/dotfiles/nvim/lua/user/lang.lua)
 
-- [AstroNvim Documentation](https://astronvim.com/)
-- [AstroNvim GitHub](https://github.com/AstroNvim/AstroNvim)
-- [AstroCommunity](https://github.com/AstroNvim/astrocommunity)
-- [Lazy.nvim](https://github.com/folke/lazy.nvim)
-- [Mason.nvim](https://github.com/williamboman/mason.nvim)
-- [Neovim Configuration Wiki](https://github.com/nanotee/nvim-lua-guide)
+Need a quick health snapshot:
 
-## 🤝 Contributing
+- `:NvimStatus`
+- `:checkhealth`
+- `:messages`
 
-This is a personal configuration. Feel free to:
-1. Fork it for your own use
-2. Open issues for bugs or suggestions
-3. Submit PRs for improvements
+## Notes From `cap153-nvim`
 
-## 📄 License
+Most framework-level ideas from `cap153-nvim` were intentionally not carried forward. The current config already absorbed the parts that aged well:
 
-Same as the parent dotfiles repository.
+- `snacks.nvim` as the main dashboard and picker layer
+- `blink.cmp`
+- `noice.nvim`
+- direct Neovim 0.11+ / 0.12+ LSP style instead of framework glue
+- the older custom dashboard header
 
-## 📋 Configuration Highlights
+Still potentially useful as future borrow candidates:
 
-### What Makes This Config Special
+- optional GUI-specific helpers for Neovide
 
-1. **Smart Preset System**: Automatically configures Neovim based on your workflow
-2. **Performance First**: 30-40% faster startup with preset-based loading
-3. **Zero Startup Errors**: Comprehensive error handling prevents crashes
-4. **Manual Tool Control**: No surprises - you control when tools install
-5. **Clean Keybindings**: Organized, conflict-free shortcuts (45 essential bindings)
-6. **Treesitter Optimized**: Only install parsers you need (13-30 instead of all)
-7. **Mason Optimized**: Only install tools you need (8-31 instead of all)
-8. **Theme Lazy Loading**: Faster startup, themes load on-demand
-9. **Modern Tooling**: Biome, Ruff, rust-analyzer, gopls - best-in-class tools
-10. **Jujutsu Support**: Built-in support for modern VCS
+Already borrowed into the new base:
 
-### Architecture Principles
+- markdown table auto-formatting with a manual `:MarkdownTableFormat` command
+- a few picker interaction details such as `<Esc>`, `<C-e>`, and `<C-u>`
+- `snacks.nvim` lazygit integration
 
-- **Modularity**: Each feature in separate files
-- **Safety**: All `require()` calls wrapped in `pcall()`
-- **Extensibility**: Easy to add/remove presets and plugins
-- **Documentation**: Inline comments explain every decision
-- **Best Practices**: Follows AstroNvim and Neovim community standards
-
-## 📝 Changelog
-
-### v2.0.0 (2025-12-05) - Performance Optimization Release
-
-**Major Changes**:
-- ✨ Added preset system (minimal, frontend, backend, fullstack, performance)
-- ⚡ Implemented dynamic plugin/tool loading based on preset
-- 🚀 Optimized startup time (33-40% faster for specialized presets)
-- 🎨 Lazy-loaded themes (only active theme loads on startup)
-- 🔧 Cleaned up keybindings (60+ → 45)
-- 🛠️ Mason tools now manual install (prevents initialization errors)
-- 📦 Treesitter parsers based on preset (13-30 parsers)
-- 🔒 Enhanced error handling (prevents startup failures)
-- 📊 Added optimization commands (:ConfigInfo, :PresetSwitch, etc.)
-
-**Performance Gains**:
-- Startup: ~400ms (fullstack) → ~250ms (frontend) / ~280ms (backend) / ~120ms (minimal)
-- Memory: -15% to -33% depending on preset
-- Disk: -44% to -69% depending on preset
-
-**Migration Guide**:
-- Default behavior unchanged (fullstack preset)
-- To use presets: `:PresetSwitch <name>` or create `.preset` file
-- After switching: `:Lazy sync`, `:TSUpdate`, `:MasonToolsInstall`
-
-### v1.x - Initial Release
-
-- Base AstroNvim v5 configuration
-- Full language support (20+ languages)
-- Custom snippets and auto-timestamp updates
-- AstroCommunity integration
-
-## 🙏 Acknowledgments
-
-- AstroNvim team for the excellent framework
-- All plugin authors for their amazing work
-- The Neovim community for endless inspiration
-- Contributors to the preset and optimization system
+Those are treated as optional enhancements, not core architecture.

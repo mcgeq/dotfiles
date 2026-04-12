@@ -1,0 +1,5 @@
+require("core.options")
+require("core.diagnostics")
+require("core.autocmds")
+require("core.keymaps").setup()
+require("core.commands").setup()

@@ -1,234 +1,94 @@
-# nvim-spectre - 全局搜索和替换
+# nvim-spectre
 
-## 📖 简介
+`nvim-spectre` is active in the current config as the project-wide search and replace UI.
 
-`nvim-spectre` 是一个强大的全局搜索和替换工具，提供可视化界面让你在替换前预览所有更改。支持正则表达式、项目级搜索等高级功能。
+## Active keymaps
 
-## 🎯 核心功能
+Configured in [lua/plugins/search.lua](/d:/config/dotfiles/nvim/lua/plugins/search.lua).
 
-- ✅ 全局搜索和替换
-- ✅ 可视化预览所有匹配项
-- ✅ 支持正则表达式
-- ✅ 文件类型过滤
-- ✅ 路径过滤（包含/排除特定目录）
-- ✅ 替换前预览
-- ✅ 撤销单个替换
+Current mappings:
 
-## ⌨️ 快捷键
+- `<leader>sr`: open project replace
+- `<leader>sW` in normal mode: replace current word
+- `<leader>sW` in visual mode: replace current selection
+- `<leader>sF`: replace only in current file
 
-> **注意**: 快捷键已在 `lua/plugins/nvim-spectre.lua` 中配置
+## What it is good for
 
-### 打开 Spectre
+Use it when you want a reviewable replace workflow instead of raw `:%s` or external CLI tools.
 
-| 快捷键 | 功能 | 说明 |
-|--------|------|------|
-| `<leader>sr` | 打开 Spectre 面板 | 全局搜索替换 |
-| `<leader>sw` | 搜索当前单词 | 自动填充光标下的单词 |
-| `<leader>sp` | 在当前文件中搜索 | 限定当前文件 |
+Typical cases:
 
-### Spectre 面板内操作
+- rename a repeated string across a project
+- update import paths
+- replace API endpoints
+- review regex-based replacements before applying them
 
-| 快捷键 | 功能 |
-|--------|------|
-| `<CR>` (Enter) | 执行替换（所有匹配项）|
-| `<leader>rc` | 替换光标下的项 |
-| `<leader>R` | 替换所有匹配项 |
-| `dd` | 删除/排除当前项 |
-| `o` | 跳转到文件位置 |
-| `q` | 关闭 Spectre 面板 |
-| `?` | 显示帮助菜单 |
+## Current behavior
 
-## 🔥 使用场景
-
-### 1. 基本搜索替换
-
-```
-1. 按 <leader>sr 打开 Spectre
-2. 在 "Search" 输入框输入要搜索的内容
-3. 在 "Replace" 输入框输入替换内容
-4. 按 <CR> 或 <leader>R 执行替换
-```
-
-**示例**：将所有 `userName` 重命名为 `userId`
-
-```
-Search:  userName
-Replace: userId
-```
-
-### 2. 正则表达式搜索
-
-```
-Search:  user_(\w+)
-Replace: person_$1
-```
-
-**效果**：
-```javascript
-// 替换前
-const user_name = "John";
-const user_age = 30;
-
-// 替换后
-const person_name = "John";
-const person_age = 30;
-```
-
-### 3. 特定文件类型搜索
-
-在 "File" 过滤框中：
-
-```
-*.ts      # 只搜索 TypeScript 文件
-*.{js,ts} # 搜索 JS 和 TS 文件
-*.vue     # 只搜索 Vue 文件
-```
-
-### 4. 排除特定目录
-
-在 "Path" 过滤框中：
-
-```
-!node_modules  # 排除 node_modules
-!dist          # 排除 dist 目录
-!**/test/**    # 排除所有 test 目录
-```
-
-### 5. 搜索当前单词
-
-```javascript
-const userName = "John";
-//    ^ 光标在 userName 上
-// 按 <leader>sw 自动打开 Spectre 并搜索 'userName'
-```
-
-## 💡 实用技巧
-
-### 1. 重构变量名
-
-```typescript
-// 将整个项目中的 oldName 改为 newName
-<leader>sw  // 在 oldName 上
-# 在 Replace 框输入 newName
-# 预览所有匹配项
-# 按 <CR> 执行替换
-```
-
-### 2. 更新 API 端点
-
-```javascript
-// 搜索所有 API 路径并更新
-Search:  /api/v1/
-Replace: /api/v2/
-```
-
-### 3. 移除调试代码
-
-```javascript
-// 删除所有 console.log
-Search:  console\.log\(.*\);?\n?
-Replace: (留空)
-```
-
-### 4. 批量添加 async
-
-```typescript
-// 将所有函数添加 async
-Search:  function (\w+)\(
-Replace: async function $1(
-```
-
-### 5. 更新 Import 路径
-
-```javascript
-// 更新所有 import 路径
-Search:  from '@/components/
-Replace: from '@/components/new-folder/
-```
-
-## 🎨 界面说明
-
-```
-╭─ Spectre ──────────────────────────────────╮
-│ Search:  [输入搜索内容]                      │
-│ Replace: [输入替换内容]                      │
-│ Path:    [路径过滤，如 !node_modules]        │
-│ File:    [文件过滤，如 *.ts]                 │
-│                                             │
-│ Results: 42 matches in 12 files             │
-│ ────────────────────────────────────────    │
-│ ✓ src/utils/helper.ts (3 matches)          │
-│   12: const userName = 'John';              │
-│   25: function getUserName() {              │
-│   30:   return userName;                    │
-│                                             │
-│ ✓ src/components/User.tsx (2 matches)      │
-│   15: <div>{userName}</div>                 │
-│   20: const name = userName;                │
-╰─────────────────────────────────────────────╯
-```
-
-## ⚙️ 高级配置
-
-### 自定义搜索引擎
-
-默认使用 `rg`（ripgrep），也可以配置为其他工具：
+The base config keeps it intentionally simple:
 
 ```lua
-{
-  "nvim-pack/nvim-spectre",
-  opts = {
-    default = {
-      find = {
-        cmd = "rg",
-        options = {"--ignore-case"}
-      }
-    }
-  }
+require("spectre").setup({})
+```
+
+The plugin is mainly there for the workflow and keymaps, not for a heavily customized UI layer.
+
+## Recommended usage
+
+### Replace in project
+
+1. Press `<leader>sr`
+2. Fill in search text
+3. Fill in replacement text
+4. Review matches
+5. Apply changes from the Spectre UI
+
+### Search current word
+
+1. Put the cursor on a symbol
+2. Press `<leader>sW`
+3. Narrow or replace from the panel
+
+### Search current selection
+
+1. Select text in visual mode
+2. Press `<leader>sW`
+3. Spectre opens with the selection prefilled
+
+### Search only in current file
+
+1. Press `<leader>sF`
+2. Spectre opens in file-local mode
+
+## Why it stays
+
+This plugin still earns its place because:
+
+- it complements `snacks.picker.grep()` well
+- it is much better than ad-hoc global replace for multi-file refactors
+- it fits the current workflow without requiring a framework layer
+
+`snacks` is the fast finder. `spectre` is the safer interactive replace tool.
+
+## Change or disable it
+
+If you want to remove it:
+
+Edit [lua/user/init.lua](/d:/config/dotfiles/nvim/lua/user/init.lua):
+
+```lua
+return {
+  pack = {
+    disable = { "nvim-spectre" },
+  },
 }
 ```
 
-### 自定义快捷键
+If you only want different keymaps, override them in [lua/user/keymaps.lua](/d:/config/dotfiles/nvim/lua/user/keymaps.lua).
 
-在 AstroNvim 中：
+## Related files
 
-```lua
-{
-  "nvim-pack/nvim-spectre",
-  keys = {
-    { "<leader>S", function() require("spectre").toggle() end, desc = "Toggle Spectre" },
-    { "<leader>sw", function() require("spectre").open_visual({select_word=true}) end, desc = "Search current word" },
-  }
-}
-```
-
-## 📚 注意事项
-
-### 安全提示
-
-1. **始终先预览**：在执行替换前仔细检查所有匹配项
-2. **使用 Git**：替换前确保代码已提交，方便回滚
-3. **小范围测试**：先在小范围测试正则表达式
-4. **排除文件**：使用 Path 和 File 过滤避免修改不需要的文件
-
-### 性能优化
-
-1. 使用文件过滤减少搜索范围
-2. 排除 `node_modules`、`dist` 等大型目录
-3. 对大型项目使用更具体的搜索词
-
-## 🆚 对比其他工具
-
-| 特性 | Spectre | 原生 `:s///` | sed/awk |
-|------|---------|-------------|---------|
-| 可视化预览 | ✅ | ❌ | ❌ |
-| 跨文件搜索 | ✅ | ❌ | ✅ |
-| 易用性 | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐ |
-| 正则支持 | ✅ | ✅ | ✅ |
-| 撤销单项 | ✅ | ❌ | ❌ |
-
-## 🔗 相关资源
-
-- [GitHub - nvim-spectre](https://github.com/nvim-pack/nvim-spectre)
-- [AstroCommunity 插件页](https://github.com/AstroNvim/astrocommunity/tree/main/lua/astrocommunity/search/nvim-spectre)
-- [Ripgrep 文档](https://github.com/BurntSushi/ripgrep)
+- [lua/pack/spec.lua](/d:/config/dotfiles/nvim/lua/pack/spec.lua)
+- [lua/plugins/search.lua](/d:/config/dotfiles/nvim/lua/plugins/search.lua)
+- [lua/user/init.lua](/d:/config/dotfiles/nvim/lua/user/init.lua)

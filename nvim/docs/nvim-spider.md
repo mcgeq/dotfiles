@@ -1,204 +1,84 @@
-# nvim-spider - 智能单词移动
+# nvim-spider
 
-## 📖 简介
+`nvim-spider` is active in the current config and replaces the default word motions with smarter subword-aware movement.
 
-`nvim-spider` 改进了 Vim 的单词移动行为（`w`、`e`、`b`），使其更符合直觉。它会跳过无意义的标点符号，让你的光标移动更高效。
+## Active behavior
 
-## 🎯 核心功能
+Configured in [lua/plugins/editor.lua](/d:/config/dotfiles/nvim/lua/plugins/editor.lua).
 
-### 智能移动
+Current mappings:
 
-传统 Vim 会在每个标点符号处停下：
+- `w`: next smart word start
+- `e`: next smart word end
+- `b`: previous smart word start
+- `ge`: previous smart word end
 
-```javascript
-// 使用原生 w
-const myVariable = getValue();
-^     ^         ^ ^        ^ ^
-1     2         3 4        5 6  (6次按键)
+These mappings are active in:
 
-// 使用 nvim-spider
-const myVariable = getValue();
-^     ^            ^
-1     2            3  (3次按键)
-```
+- normal mode
+- visual mode
+- operator-pending mode
 
-### 改进的移动命令
+That means commands like `dw`, `cw`, `ve`, and `d2w` keep working, but they skip punctuation more naturally than stock Vim.
 
-| 命令 | 功能 | 对比原生 Vim |
-|------|------|-------------|
-| `w` | 移动到下一个单词 | 跳过无意义标点 |
-| `e` | 移动到单词末尾 | 跳过无意义标点 |
-| `b` | 移动到上一个单词 | 跳过无意义标点 |
+## Current setup
 
-## 🔥 使用场景
-
-### 1. 代码变量名移动
-
-```javascript
-// 原生 Vim: w w w w (4次)
-// Spider:   w w     (2次)
-const userName = "John";
-^     ^        ^ ^
-```
-
-### 2. 跳过操作符
-
-```python
-# 原生 Vim: w w w w w (5次)
-# Spider:   w w w     (3次)
-result = calculate() + transform()
-^      ^ ^          ^ ^
-```
-
-### 3. 处理链式调用
-
-```javascript
-// 原生 Vim: w w w w w w w (7次)
-// Spider:   w w w w       (4次)
-user.getName().toUpperCase();
-^    ^         ^
-```
-
-### 4. 跳过括号和分隔符
-
-```rust
-// 原生 Vim: e e e e e (5次)
-// Spider:   e e       (2次)
-fn example(arg1, arg2, arg3)
-  ^       ^     ^     ^
-```
-
-## ⌨️ 默认快捷键
-
-Spider 会自动映射到标准的移动键：
-
-```vim
-w  " 下一个单词开头
-e  " 下一个单词末尾
-b  " 上一个单词开头
-ge " 上一个单词末尾
-```
-
-### 在可视模式和操作符待决模式中同样有效
-
-```vim
-" 选择多个单词
-vw    " 选择到下一个单词
-ve    " 选择到单词末尾
-
-" 删除操作
-dw    " 删除到下一个单词
-de    " 删除到单词末尾
-
-" 修改操作
-cw    " 修改到下一个单词
-ce    " 修改到单词末尾
-```
-
-## 💡 实用技巧
-
-### 1. 快速导航变量名
-
-```typescript
-const userAuthenticationToken = generateToken();
-//    ^                         ^
-//    w (一次按键即可跳转)
-```
-
-### 2. 跳过方法链
-
-```javascript
-data
-  .filter(x => x > 0)
-  .map(x => x * 2)
-  .reduce((a, b) => a + b);
-
-// 使用 w 快速跳转到每个方法
-```
-
-### 3. 结合删除/修改操作
-
-```python
-# 光标在 first_ 上
-first_name = get_user_name()
-#     ^ 使用 dw 删除 'name'，而不是 'name ='
-
-# 结果
-first_ = get_user_name()
-```
-
-### 4. 驼峰命名和下划线命名
-
-```javascript
-// 驼峰命名
-myVariableName
-^ w跳到这里 ^
-
-// 下划线命名
-my_variable_name
-^ w跳到这里 ^
-```
-
-## 🎨 高级用法
-
-### 结合数字前缀
-
-```vim
-3w  " 跳转3个单词
-2b  " 回退2个单词
-5e  " 跳转到第5个单词末尾
-```
-
-### 结合操作符
-
-```javascript
-const config = { name: "app", version: "1.0.0" }
-//               ^              使用 d3w 删除3个单词
-// 结果: const config = { }
-```
-
-### 在长链式调用中导航
-
-```javascript
-user
-  .getProfile()
-  .getSettings()
-  .getNotifications()
-  .filter(n => n.read === false);
-
-// 从 user 开始，使用 4w 直接跳到 filter
-```
-
-## ⚙️ 配置说明
-
-Spider 在 AstroNvim 中已经自动配置，但如果需要自定义：
+The base config enables:
 
 ```lua
-{
-  "chrisgrieser/nvim-spider",
-  opts = {
-    skipInsignificantPunctuation = true, -- 跳过无意义标点
-  }
+require("spider").setup({
+  skipInsignificantPunctuation = true,
+  subwordMovement = true,
+  consistentOperatorPending = false,
+})
+```
+
+This keeps movement smarter without aggressively changing all operator-pending semantics.
+
+## Why keep it
+
+It is lightweight and improves daily navigation in:
+
+- JavaScript / TypeScript
+- Vue / JSX / TSX
+- Rust / Zig / Go
+- Lua / Python
+
+Examples:
+
+- `user.getName().toUpperCase()` takes fewer `w` presses
+- `foo_bar_baz` and `fooBarBaz` feel more consistent
+- `dw` is less likely to stop on punctuation noise
+
+## Change or disable it
+
+If you want to override or remove it without editing the base config:
+
+1. Disable the plugin in [lua/user/init.lua](/d:/config/dotfiles/nvim/lua/user/init.lua):
+
+```lua
+return {
+  pack = {
+    disable = { "nvim-spider" },
+  },
 }
 ```
 
-## 🆚 对比原生 Vim
+2. Or remap the motions in [lua/user/keymaps.lua](/d:/config/dotfiles/nvim/lua/user/keymaps.lua).
 
-| 场景 | 原生 Vim | nvim-spider |
-|------|----------|-------------|
-| `foo.bar()` | 4次 `w` | 2次 `w` |
-| `const x = y` | 5次 `w` | 4次 `w` |
-| `user.getName()` | 5次 `w` | 3次 `w` |
+Example:
 
-**效率提升约 30-50%**
+```lua
+return function(map)
+  map.map({ "n", "o", "x" }, "w", "w", "Builtin forward word")
+  map.map({ "n", "o", "x" }, "e", "e", "Builtin end word")
+  map.map({ "n", "o", "x" }, "b", "b", "Builtin backward word")
+  map.map({ "n", "o", "x" }, "ge", "ge", "Builtin backward end word")
+end
+```
 
-## 📚 注意事项
+## Related files
 
-- Spider 保持了 Vim 的语义，只是跳过了"不重要"的停顿点
-- 所有原有的 Vim 移动肌肉记忆依然有效
-- 在操作符待决模式（如 `dw`、`cw`）中行为一致
-
-## 🔗 相关资源
-
-- [GitHub - nvim-spider](https://github.com/chrisgrieser/nvim-spider)
-- [AstroCommunity 插件页](https://github.com/AstroNvim/astrocommunity/tree/main/lua/astrocommunity/motion/nvim-spider)
+- [lua/pack/spec.lua](/d:/config/dotfiles/nvim/lua/pack/spec.lua)
+- [lua/plugins/editor.lua](/d:/config/dotfiles/nvim/lua/plugins/editor.lua)
+- [lua/user/keymaps.lua](/d:/config/dotfiles/nvim/lua/user/keymaps.lua)

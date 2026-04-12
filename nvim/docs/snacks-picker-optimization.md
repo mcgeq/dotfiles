@@ -1,333 +1,182 @@
-# snacks-picker 优化配置说明
+# snacks picker 当前配置说明
 
-## 📖 简介
+## 当前位置
 
-snacks-picker 是 snacks.nvim 提供的现代化模糊查找器，已经过性能和体验优化。
+当前 `snacks` 相关配置已经迁移到新结构，主要文件是：
 
-## ✨ 优化内容
+- `nvim/lua/plugins/snacks.lua`
 
-### 1. 性能优化
+这份文档只描述当前真正生效的 picker 配置，不再对应旧的 `lua/plugins/snacks.nvim.lua`。
 
-```lua
-throttle = 20  -- 降低输入延迟到 20ms（默认更高）
-```
+## 当前目标
 
-**效果**：输入搜索时更流畅，几乎无延迟感。
+这套 picker 配置的方向是：
 
-### 2. 智能排序（Frecency）
+- 用 `snacks.picker` 作为主力查找入口
+- 保持默认布局足够通用
+- 打开速度快
+- 常用文件排序更合理
+- 快捷键统一到当前新结构
 
-```lua
-frecency = true  -- 启用频率+最近使用算法
-```
+## 当前生效配置
 
-**效果**：
-- 常用文件排在前面
-- 最近打开的文件优先显示
-- 减少搜索步骤
-
-**示例**：
-```
-你经常编辑 src/App.tsx
-搜索 "app" 时，App.tsx 会排在最前面
-而不是按字母顺序或路径顺序
-```
-
-### 3. Ivy 布局（底部弹出）
+当前 picker 的核心配置如下：
 
 ```lua
-layout.preset = "ivy"
-```
-
-**效果**：
-- 搜索框在底部弹出
-- 更符合使用直觉（类似 VSCode 的 Ctrl+P）
-- 视线移动距离更短
-
-**对比布局**：
-```
-Ivy 布局（推荐）:
-┌─────────────────────────┐
-│     Editor Content      │
-│                         │
-├─────────────────────────┤
-│ > Search: app_          │
-│   src/App.tsx           │
-│   src/AppConfig.ts      │
-└─────────────────────────┘
-
-Dropdown 布局:
-┌─────────────────────────┐
-│ > Search: app_          │
-│   src/App.tsx           │
-│   src/AppConfig.ts      │
-├─────────────────────────┤
-│     Editor Content      │
-└─────────────────────────┘
-```
-
-### 4. 智能大小写匹配
-
-```lua
-case_mode = "smart_case"
-```
-
-**效果**：
-- 小写搜索：忽略大小写
-- 大写搜索：精确匹配
-
-**示例**：
-```
-搜索 "user"    -> 匹配 user, User, USER, userName
-搜索 "User"    -> 只匹配 User, UserName（不匹配 user）
-搜索 "userName" -> 精确匹配 userName
-```
-
-### 5. 文件名优先显示
-
-```lua
-filename_first = true
-```
-
-**效果**：列表显示文件名在前，路径在后
-
-**对比**：
-```
-优化前:
-src/components/user/Profile.tsx
-src/utils/user/helpers.ts
-
-优化后:
-Profile.tsx     src/components/user/
-helpers.ts      src/utils/user/
-```
-
-扫描更快，更易识别文件。
-
-### 6. 预览窗口
-
-```lua
-preview = {
-  enabled = true,
-  width = 0.5,
-  border = "rounded",
+picker = {
+  matcher = {
+    frecency = true,
+    case_mode = "smart_case",
+  },
+  layout = {
+    preset = "default",
+  },
+  formatters = {
+    file = {
+      filename_first = true,
+    },
+  },
+  files = {
+    hidden = false,
+    follow = true,
+    exclude = {
+      ".git",
+      "node_modules",
+      "dist",
+      "build",
+      "target",
+      ".next",
+      ".cache",
+    },
+  },
+  win = {
+    input = {
+      keys = {
+        ["<Esc>"] = { "close", mode = { "n", "i" } },
+        ["<C-e>"] = { "list_down", mode = { "n", "i" } },
+        ["<C-u>"] = { "list_up", mode = { "n", "i" } },
+      },
+    },
+  },
 }
 ```
 
-**效果**：
-- 搜索时实时预览文件内容
-- 占屏幕 50% 宽度
-- 圆角边框更美观
+## 这和旧说明的差别
 
-**使用**：
-```
-┌───────────────┬──────────────────┐
-│ > Search      │  File Preview    │
-│ App.tsx       │  import React    │
-│ User.tsx      │  from 'react'    │
-│ Home.tsx      │                  │
-│               │  function App()  │
-└───────────────┴──────────────────┘
-```
+下面这些旧文档里的说法，已经不是当前配置：
 
-### 7. 排除大文件夹
+- 不再写 `throttle = 20`
+- 当前布局不是 `ivy`，而是 `default`
+- 当前没有把 `<C-j>/<C-k>/<C-n>/<C-p>` 作为 picker 输入区主按键
+- 当前文档也不再假设存在旧的 `projects` 独立优化配置文件
 
-```lua
-ignore_patterns = {
-  "node_modules",
-  ".git",
-  "dist",
-  "build",
-  ...
-}
-```
+也就是说，旧文档更像一份“曾经的优化设想”，现在这份才是实际运行状态。
 
-**效果**：
-- 搜索速度更快（跳过无关文件）
-- 减少干扰结果
-- 降低内存占用
+## 当前体验特点
 
-## 🎯 实际使用体验
+### 1. `frecency`
 
-### 场景 1：快速查找常用文件
+开启了 `frecency = true`，常用且最近访问过的文件会更靠前。
 
-```
-1. 按 <leader>ff
-2. 输入 "app"
-3. App.tsx 自动排第一（因为 frecency）
-4. 直接按 <CR> 打开
-```
+### 2. `smart_case`
 
-**提升**：从 3-5 次按键减少到 2 次。
+开启了 `case_mode = "smart_case"`：
 
-### 场景 2：搜索时预览
+- 小写搜索时更宽松
+- 带大写时更偏精确匹配
 
-```
-1. 按 <leader>ff
-2. 输入 "user"
-3. j/k 上下浏览结果
-4. 右侧实时预览文件内容
-5. 确认是目标文件后 <CR> 打开
-```
+### 3. 文件名优先显示
 
-**提升**：不需要打开文件再关闭，减少试错。
+`filename_first = true` 会先展示文件名，再展示路径，扫结果更快。
 
-### 场景 3：智能大小写
+### 4. 默认启用预览
 
-```
-# 日常搜索（小写）
-<leader>ff -> "user" 
-# 找到 user.ts, User.tsx, userService.ts 等
+当前使用默认 layout，文件类 picker 会按 `snacks` 当前版本的默认行为显示预览窗口，方便在不真正打开文件的情况下确认目标。
 
-# 精确搜索（大写）
-<leader>ff -> "User"
-# 只找到 User.tsx, UserProfile.tsx（组件）
-```
+### 5. 避开大目录
 
-**提升**：一个搜索框，两种搜索模式。
+默认排除：
 
-### 场景 4：大项目搜索
+- `.git`
+- `node_modules`
+- `dist`
+- `build`
+- `target`
+- `.next`
+- `.cache`
 
-```
-# 前端项目（有 node_modules）
-项目文件：500 个
-node_modules：50,000+ 个
+对前端、Rust、全栈项目都更实用。
 
-优化前：搜索卡顿，结果混乱
-优化后：秒级响应，只显示源码
-```
+## 当前常用快捷键
 
-## ⌨️ Picker 内快捷键
+这些映射来自：
 
-| 快捷键 | 功能 |
-|--------|------|
-| `<C-j>` / `<C-n>` | 下一个结果 |
-| `<C-k>` / `<C-p>` | 上一个结果 |
-| `<CR>` | 打开文件 |
-| `<C-v>` | 垂直分割打开 |
-| `<C-x>` | 水平分割打开 |
-| `<C-t>` | 新标签页打开 |
-| `<C-h>` | 切换显示隐藏文件 |
-| `<C-u>` | 清空搜索框 |
-| `<Esc>` | 关闭 picker |
+- `nvim/lua/plugins/snacks.lua`
 
-## 💡 高级技巧
+当前主力查找相关快捷键：
 
-### 1. 组合搜索
+- `<leader><space>`: 智能查找
+- `<leader>,`: buffer 列表
+- `<leader>/`: 全局 grep
+- `<leader>ff`: 查找文件
+- `<leader>fg`: 查找 git 文件
+- `<leader>fr`: 最近文件
+- `<leader>fc`: 查找 Neovim 配置文件
+- `<leader>sb`: 当前 buffer 行内搜索
+- `<leader>sw`: 搜索当前单词
+- `<leader>sd`: 项目诊断
+- `<leader>sD`: 当前 buffer 诊断
+- `<leader>sk`: 快捷键列表
+- `<leader>sh`: help
+- `<leader>sn`: 通知历史
+- `<leader>sR`: 恢复上一次 picker
+- `<leader>ss`: 文档符号
+- `<leader>sS`: 工作区符号
+- `<leader>sm`: marks
+- `<leader>sc`: commands
+- `<leader>sp`: 插件目录文件
 
-```vim
-" 搜索特定类型文件
-<leader>ff -> *.tsx<Space>component
-" 只在 .tsx 文件中搜索 component
-```
+Git 工作流相关：
 
-### 2. 路径搜索
+- `<leader>gb`: git branches
+- `<leader>gg`: lazygit
+- `<leader>gs`: git status
+- `<leader>gl`: git log
+- `<leader>gf`: 当前文件 git log
+- `<leader>gL`: 当前行 git log
 
-```vim
-<leader>ff -> src/comp
-" 匹配路径包含 src/comp 的文件
-```
+LSP 跳转也走了 `snacks.picker`：
 
-### 3. 快速跳转最近文件
+- `gd`: definition
+- `gD`: declaration
+- `gr`: references
+- `gI`: implementation
+- `gy`: type definition
 
-```vim
-<leader>fr  " Recent files
-" 按最近打开顺序排列，第一个就是刚才的文件
-<CR>        " 直接打开
-```
+## picker 内部按键
 
-### 4. 项目间切换
+当前额外定义的输入区按键是：
 
-```vim
-<leader>fp  " Projects
-" 选择项目后，所有搜索自动限定在该项目
-```
+- `<Esc>`: 关闭 picker
+- `<C-e>`: 向下选择
+- `<C-u>`: 向上选择
 
-## 🔄 布局选择指南
+这部分是为了尽量统一当前配置的操作习惯，而不是继续沿用旧文档里的那一套组合键。
 
-根据个人习惯选择布局：
+## 自定义入口
 
-```lua
--- Ivy（推荐）：底部弹出，类似 VSCode
-preset = "ivy"
+如果你后面要覆盖 picker 行为，建议不要直接改核心逻辑，优先放到用户层：
 
--- Dropdown：顶部下拉，类似 Sublime Text
-preset = "dropdown"
+- `nvim/lua/user/plugins/`
 
--- Default：居中浮窗，传统样式
-preset = "default"
+适合放在用户层覆盖的内容：
 
--- Cursor：光标位置弹出，适合快速查看
-preset = "cursor"
-```
+- 默认布局
+- 是否显示隐藏文件
+- 排除目录
+- picker 内部按键
+- 额外的搜索快捷键
 
-修改 `snacks.nvim.lua` 第 16 行的 `preset` 值即可。
+## 结论
 
-## 📊 性能对比
-
-| 场景 | 优化前 | 优化后 |
-|------|--------|--------|
-| 输入响应 | 50-100ms | ~20ms |
-| 搜索大项目 | 2-3秒 | <1秒 |
-| 内存占用 | ~200MB | ~80MB |
-| 常用文件定位 | 3-5步 | 1-2步 |
-
-## 🎨 自定义建议
-
-### 调整预览窗口大小
-
-```lua
-preview = {
-  width = 0.6,  -- 改为 60%（适合宽屏）
-}
-```
-
-### 显示隐藏文件
-
-```lua
-files = {
-  hidden = true,  -- 默认显示隐藏文件
-}
-```
-
-### 修改延迟时间
-
-```lua
-throttle = 10,  -- 更低延迟（高性能机器）
-throttle = 50,  -- 更高延迟（低性能机器，避免卡顿）
-```
-
-## 🔗 相关快捷键
-
-已配置的常用快捷键：
-
-```vim
-<leader><space>  " Smart find（智能查找）
-<leader>ff       " Find files（查找文件）
-<leader>fg       " Git files（Git 文件）
-<leader>fr       " Recent files（最近文件）
-<leader>fp       " Projects（项目）
-<leader>/        " Grep（全局搜索）
-<leader>sw       " Grep word（搜索当前词）
-<leader>sb       " Buffer lines（当前文件搜索）
-```
-
-完整列表见 `snacks.nvim.lua` 文件。
-
-## 🆚 对比 Telescope
-
-| 特性 | snacks-picker | Telescope |
-|------|--------------|-----------|
-| 启动速度 | ⚡⚡⚡ 更快 | ⚡⚡ 快 |
-| 内存占用 | 📦 更小 | 📦📦 较大 |
-| 配置复杂度 | 🔧 简单 | 🔧🔧 复杂 |
-| 功能完整度 | ✅ 完整 | ✅✅ 更丰富 |
-| Frecency | ✅ 内置 | ⚠️ 需插件 |
-| UI 现代感 | 🎨🎨🎨 最佳 | 🎨🎨 良好 |
-
-**结论**：snacks-picker 更快、更轻量、更现代，适合日常开发。
-
-## 📚 参考资源
-
-- [snacks.nvim 官方文档](https://github.com/folke/snacks.nvim)
-- [Picker 配置文档](https://github.com/folke/snacks.nvim#-picker)
-- 配置文件：`lua/plugins/snacks.nvim.lua`
+当前这套 `snacks picker` 已经不是“旧 AstroNvim 配套优化”，而是新配置体系里的主搜索入口。后续如果继续调优，建议以 `nvim/lua/plugins/snacks.lua` 和 `lua/user/plugins/` 为准，而不是再参考旧路径。

@@ -1,86 +1,46 @@
--- Markdown 增强配置
--- 提供完整的 Markdown 写作和预览体验
+local M = {}
 
--- 注意：Markdown 预览已由 AstroCommunity 提供
---  - astrocommunity.markdown-and-latex.markdown-preview-nvim
--- 如需自定义配置，可以在 polish.lua 中覆盖 vim.g.mkdp_* 选项
+function M.setup()
+  local map = require("core.keymaps").map
+  local markdown = require("lang.markdown")
 
----@type LazySpec
-return {
+  vim.g.table_mode_corner = "|"
+  vim.g.table_mode_corner_corner = "|"
+  vim.g.table_mode_header_fillchar = "-"
 
-  -- ===== Markdown 表格助手 =====
-  {
-    "dhruvasagar/vim-table-mode",
-    ft = "markdown",
-    keys = {
-      { "<leader>mt", "<cmd>TableModeToggle<cr>", desc = "Toggle Table Mode" },
-    },
-    config = function()
-      vim.g.table_mode_corner = "|"
-      vim.g.table_mode_corner_corner = "|"
-      vim.g.table_mode_header_fillchar = "-"
-    end,
-  },
-
-  -- ===== Markdown 图片粘贴 =====
-  {
-    "HakonHarnes/img-clip.nvim",
-    ft = "markdown",
-    keys = {
-      { "<leader>mi", "<cmd>PasteImage<cr>", desc = "Paste Image" },
-    },
-    opts = {
+  local ok_imgclip, imgclip = pcall(require, "img-clip")
+  if ok_imgclip then
+    imgclip.setup({
       default = {
-        dir_path = "assets/images", -- 图片保存目录
-        file_name = "%Y-%m-%d-%H-%M-%S", -- 文件名格式
-        use_absolute_path = false,
+        dir_path = "assets/images",
+        file_name = "%Y-%m-%d-%H-%M-%S",
         relative_to_current_file = true,
+        use_absolute_path = false,
       },
-    },
-  },
+    })
+  end
 
-  -- ===== Markdown 目录生成 =====
-  {
-    "mzlogin/vim-markdown-toc",
-    ft = "markdown",
-    cmd = { "GenTocGFM", "GenTocGitLab", "GenTocMarked" },
-    keys = {
-      { "<leader>mT", "<cmd>GenTocGFM<cr>", desc = "Generate TOC (GitHub)" },
-    },
-  },
-
-  -- ===== Markdown 标题美化 =====
-  {
-    "lukas-reineke/headlines.nvim",
-    ft = "markdown",
-    dependencies = "nvim-treesitter/nvim-treesitter",
-    opts = {
+  local ok_headlines, headlines = pcall(require, "headlines")
+  if ok_headlines then
+    headlines.setup({
       markdown = {
-        headline_highlights = {
-          "Headline1",
-          "Headline2",
-          "Headline3",
-          "Headline4",
-          "Headline5",
-          "Headline6",
-        },
-        fat_headlines = false, -- 禁用上下装饰线
-        fat_headline_upper_string = "",
-        fat_headline_lower_string = "",
+        fat_headlines = false,
       },
-    },
-    config = function(_, opts)
-      require("headlines").setup(opts)
-      
-      -- 自定义标题背景颜色（类似官方示例）
-      vim.cmd([[
-        highlight Headline1 guibg=#1e2718
-        highlight Headline2 guibg=#21262d
-        highlight Headline3 guibg=#1a1e30
-        highlight Headline4 guibg=#1e2030
-        highlight Headline5 guibg=#1d1f2b
-        highlight Headline6 guibg=#1c1c1c
-      ]])
+    })
+  end
+
+  markdown.setup()
+
+  vim.api.nvim_create_autocmd("FileType", {
+    group = vim.api.nvim_create_augroup("plugins_markdown_keymaps", { clear = true }),
+    pattern = "markdown",
+    callback = function(event)
+      map("n", "<localleader>mf", "<cmd>MarkdownTableFormat<cr>", "Format markdown table", { buffer = event.buf })
+      map("n", "<localleader>mt", "<cmd>TableModeToggle<cr>", "Toggle table mode", { buffer = event.buf })
+      map("n", "<localleader>mi", "<cmd>PasteImage<cr>", "Paste markdown image", { buffer = event.buf })
+      map("n", "<localleader>mT", "<cmd>GenTocGFM<cr>", "Generate markdown TOC", { buffer = event.buf })
     end,
-  },
-}
+  })
+end
+
+return M
