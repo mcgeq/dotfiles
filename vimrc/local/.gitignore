@@ -4,6 +4,7 @@
 # 用户配置文件（会被忽略）
 user_settings.vim
 user_mappings.vim
+module_overrides.vim
 user_plugins.vim
 
 # 临时文件
@@ -14,4 +15,5 @@ user_plugins.vim
 # 保留示例文件（不会被忽略）
 !user_settings.example.vim
 !user_mappings.example.vim
+!module_overrides.example.vim
 !*.example.vim

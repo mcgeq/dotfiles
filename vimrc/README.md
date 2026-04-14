@@ -1,16 +1,16 @@
 # mcge's Vim Configuration
 
-> **Version 2.0** - Modern, Modular, High-Performance
+> Modern, modular, and explicit
 
 [中文文档](./README_CN.md)
 
-A production-ready Vim configuration written in **Vim9script** with hybrid modular architecture, intelligent lazy loading, and comprehensive LSP support via CoC.nvim.
+A production-ready Vim configuration written in **Vim9script** with a small, explicit architecture, intelligent lazy loading, and comprehensive LSP support via CoC.nvim.
 
 ---
 
 ## ✨ Features
 
-### 🏗️ Hybrid Architecture (v2.0)
+### 🏗️ Hybrid Architecture
 
 ```
 Bootstrap → Core → Modules → Config → Local
@@ -20,18 +20,22 @@ Bootstrap → Core → Modules → Config → Local
 
 - **Bootstrap** - Environment initialization, constants, basic settings
 - **Core** - Error handling, utilities, module loader, health check
-- **Modules** - Feature modules with config dicts, health checks (20 files)
-- **Config** - Simple configurations, language-specific settings (8 files)
-- **Local** - User customizations (not tracked by Git)
+- **Modules** - Feature modules with real setup logic
+- **Config** - Shared mappings and static plugin-native configuration
+- **Local** - User-specific overrides and machine-local values
+
+Standard filetype behavior now lives in `after/ftplugin`, so language-specific settings are loaded by Vim's native runtime mechanism instead of a custom loader.
+
+Directory ownership rules live in [ARCHITECTURE.md](./ARCHITECTURE.md).
 
 ### ⚡ Performance Optimization
 
-- **Smart Lazy Loading** - Modules load on demand, startup < 100ms
+- **Smart Lazy Loading** - Modules load only when helpful
 - **Performance Monitoring** - Built-in startup time tracking & module stats
 - **Health Checks** - Auto-detect config, dependencies & plugin status
 - **Deferred Init** - Non-critical modules load later
 
-### 🌐 Language Support (45+ CoC Extensions)
+### 🌐 CoC-Based Language Support
 
 - **System**: C/C++ (clangd), Java, CMake, Zig
 - **Web**: TypeScript/JavaScript, HTML, CSS/SCSS, Vue 2/3, React, TailwindCSS v3
@@ -43,7 +47,7 @@ Bootstrap → Core → Modules → Config → Local
 ### 🔧 Core Plugins
 
 **LSP & Completion**
-- CoC.nvim - Full LSP support with 45+ extensions
+- CoC.nvim - Full LSP support with project-specific extensions
 
 **Search & Navigation**
 - **Clap** - Modern fuzzy finder (faster than FZF)
@@ -68,7 +72,7 @@ Bootstrap → Core → Modules → Config → Local
 ### Requirements
 
 **Required**
-- Vim 9.0+ or Neovim 0.8+
+- Vim 9.0+ (`vim9script`; use the separate `nvim/` config for Neovim)
 - Node.js 16+ (for CoC.nvim)
 - Git
 
@@ -128,6 +132,7 @@ chmod +x install.sh
 ```
 vimrc/
 ├── init.vim                    # Main entry point
+├── ARCHITECTURE.md             # Directory ownership rules
 ├── bootstrap/                  # Environment & basic settings
 │   ├── constants.vim           # Global constants
 │   ├── environment.vim         # Environment detection
@@ -136,9 +141,11 @@ vimrc/
 │   ├── error_handler.vim       # Error handling
 │   ├── utils.vim               # Utility functions
 │   ├── loader.vim              # Module loader
+│   ├── keymap.vim              # Declarative keymap helpers
+│   ├── module.vim              # Shared module helpers
 │   └── health.vim              # Health check system
-├── modules/                    # Feature modules (20 files)
-│   ├── editor/ (7)             # Editor enhancements
+├── modules/                    # Feature modules
+│   ├── editor/                 # Editor enhancements
 │   │   ├── commenter.vim       # NERDCommenter
 │   │   ├── match-pair.vim      # vim-matchup
 │   │   ├── multi-cursor.vim    # vim-visual-multi
@@ -146,47 +153,68 @@ vimrc/
 │   │   ├── tabsize.vim         # Tab configuration
 │   │   ├── tags.vim            # gutentags
 │   │   └── whitespace.vim      # Whitespace highlighting
-│   ├── git/ (2)                # Git integration
-│   │   ├── gutter.vim          # vim-gitgutter
-│   │   └── mapping.vim         # Git keybindings
-│   ├── lsp/ (2)                # LSP configuration
-│   │   ├── coc.vim             # CoC setup
-│   │   └── mapping.vim         # LSP keybindings
-│   ├── navigation/ (3)         # Navigation
+│   ├── git/                    # Git integration
+│   │   └── gutter.vim          # vim-gitgutter
+│   ├── lsp/                    # LSP configuration
+│   │   └── coc.vim             # CoC setup
+│   ├── navigation/             # Navigation
 │   │   ├── clap.vim            # Clap fuzzy finder
-│   │   ├── mapping.vim         # Navigation keys
 │   │   └── vista.vim           # Vista outline
-│   ├── terminal/ (1)           # Terminal
+│   ├── terminal/               # Terminal
 │   │   └── floaterm.vim        # Floaterm
-│   └── ui/ (5)                 # UI configuration
+│   └── ui/                     # UI configuration
 │       ├── airline.vim         # Airline statusline
 │       ├── appearance.vim      # GUI settings
 │       ├── colorscheme.vim     # Color scheme
 │       ├── startify.vim        # Start screen
-│       └── statusline.vim      # Statusline config
-├── config/                     # Simple configurations (8 files)
-│   ├── lang/ (6)               # Language-specific settings
-│   │   ├── python.vim
-│   │   ├── rust.vim
-│   │   ├── typescript.vim
-│   │   ├── zig.vim
-│   │   ├── css.vim
-│   │   └── html.vim
-│   ├── mapping/
-│   │   └── basic.vim           # Basic global mappings
-│   ├── ftplugin/
-│   │   └── vim.vim             # Vim ftplugin
+│       └── whichkey.vim        # Which-key integration
+├── config/                     # Shared configuration
+│   ├── mapping/                # Centralized keymap ownership
+│   │   ├── basic.vim           # Core global mappings
+│   │   ├── editor.vim          # Editor plugin mappings
+│   │   ├── git.vim             # Git mappings
+│   │   ├── lsp.vim             # CoC/LSP mappings
+│   │   ├── navigation.vim      # Clap/Vista mappings
+│   │   ├── terminal.vim        # Floaterm mappings
+│   │   └── ui.vim              # Which-key trigger mappings
 │   └── coc-settings.json       # CoC JSON config
+├── after/
+│   └── ftplugin/               # Standard filetype-local overrides
+│       ├── ftplugin.template.vim
+│       ├── python.vim
+│       ├── rust.vim
+│       ├── typescript.vim
+│       ├── typescriptreact.vim
+│       ├── vim.vim
+│       └── zig.vim
 ├── local/                      # User customizations
 │   ├── user_env.vim            # User environment variables
+│   ├── module_overrides.example.vim
+│   ├── user_mappings.example.vim
+│   ├── user_settings.example.vim
 │   ├── user_settings.vim       # User settings
-│   └── user_mappings.vim       # User keybindings
+│   ├── module_overrides.vim    # Optional module config overrides
+│   └── user_mappings.vim       # Optional personal keybindings
 └── pack/mcge/start/            # Vim plugins
 ```
 
 **Design Principles:**
-- **modules/** - Complex features with config dicts, functions, health checks
-- **config/** - Simple settings, language-specific autocmds, basic mappings
+- **modules/** - Complex features with plugin setup, helper functions, and health checks
+- **config/** - Centralized shared mappings and static cross-feature configuration
+- **after/ftplugin/** - Filetype-local behavior using Vim's standard runtime mechanism
+- **local/** - Personal overrides without changing shared module ownership
+
+Start from `modules/module.template.vim`, `after/ftplugin/ftplugin.template.vim`,
+`local/module_overrides.example.vim`, `local/user_settings.example.vim`, and
+`local/user_mappings.example.vim` when you add new shared modules, filetype
+overrides, or local customizations.
+
+**Decision Guide**
+- Put plugin setup and feature logic in `modules/`.
+- Put shared global mappings in `config/mapping/` and register them through `core/keymap.vim`.
+- Put filetype-local settings in `after/ftplugin/`.
+- Keep `config/` small and declarative.
+- Keep module conventions, file header rules, and helper usage aligned with [ARCHITECTURE.md](./ARCHITECTURE.md).
 
 ---
 
@@ -194,75 +222,31 @@ vimrc/
 
 ### Leader Key: `<Space>`
 
-### Startify Start Screen
+The complete shortcut list is generated from the runtime keymap registry:
 
-| Key | Function |
-|-----|----------|
-| `n` | New file |
-| `f` | File search (Clap) |
-| `o` | Recent files |
-| `w` | Text search |
-| `s` | Load session |
-| `c` | Open config |
+- [docs/keymaps.md](./docs/keymaps.md)
 
-### Clap Search
+That file is the single source of truth for shared mappings. After changing
+`config/mapping/*.vim` or `core/keymap.vim`, regenerate and verify it with:
 
-| Shortcut | Function |
-|----------|----------|
-| `<leader>p` | File search |
-| `<leader>P` | Git files |
-| `<leader>/` | Text search |
-| `<leader>fg` | Grep search |
-| `<leader>bb` | Buffers |
-| `<leader>fh` | Recent files |
-| `<leader>fl` | Current file lines |
-| `<leader>gc` | Git commits |
-| `<leader>:` | Command search |
-| `<leader>;` | Command history |
-| `<leader>km` | Key mappings |
-| `<leader>?` | Help tags |
-| `<leader>tc` | Colorschemes |
+```powershell
+pwsh -File vimrc/scripts/verify_keymaps.ps1
+```
 
-### Vista Code Outline
+When adding a new `config/mapping/*.vim` file, keep the file shape consistent:
+put shared `const ..._defaults` tables at the top, then which-key groups, then
+spec lists, and finally one `g:MapMany()` / `g:CmdMapMany()` /
+`g:PlugMapMany()` call per list. If a file still needs one-off mappings, use
+`g:MapSpec(spec, defaults)` so repeated options do not spread back into every
+entry.
 
-| Shortcut | Function |
-|----------|----------|
-| `<F8>` | Toggle outline |
-| `<leader>v` | Toggle outline |
-| `<leader>vf` | Symbol search |
-| `<leader>vc` | Use CoC backend |
-| `<leader>vt` | Use ctags backend |
+Representative namespaces:
 
-### CoC LSP
-
-**Code Navigation**
-- `gd` - Go to definition
-- `gy` - Go to type definition
-- `gi` - Go to implementation
-- `gr` - Find references
-- `K` - Show documentation
-
-**Code Actions**
-- `<leader>rn` - Rename symbol
-- `<leader>f` - Format code
-- `<leader>a` - Code actions
-- `<leader>ac` - Code action (cursor)
-- `[g` / `]g` - Previous/next diagnostic
-
-**CoC Explorer**
-- `<leader>e` - Open explorer
-- `<leader>ed` - Explorer (directory)
-- `<leader>ef` - Explorer (floating)
-- `<leader>y` - Yank history
-
-### Windows and Buffers
-
-- `<Ctrl-h/j/k/l>` - Switch windows
-- `<Ctrl-tab>` / `<Ctrl-s-tab>` - Next/previous buffer
-- `<Ctrl-x><Ctrl-s>` - Save file
-- `<Ctrl-x><Ctrl-q>` - Save and quit
-- `<leader>sv` - Reload Vim configuration (use `<leader>rr` instead)
-- `<leader>rr` - Reload Vim configuration (recommended)
+- Search and navigation: `<leader>p`, `<leader>/`, `<leader>sg`, `<leader>sw`
+- LSP and actions: `gd`, `gr`, `<leader>rn`, `<leader>af`, `<leader>aa`
+- Explorer and outline: `<leader>ee`, `<leader>vv`, `<leader>vf`
+- Windows and buffers: `<C-h/j/l>`, `<C-tab>`, `<C-x><C-s>`, `<leader>rr`
+- Terminal: `<F7>`, `<F8>`, `<F9>`, `<F12>`
 
 ---
 
@@ -296,22 +280,49 @@ Edit `local/user_settings.vim`:
 ```vim
 vim9script
 
-# Your custom settings
-set number
-set relativenumber
+def ApplyUserEditorOverrides()
+  set number
+  set relativenumber
+enddef
+
+def ApplyUserUiOverrides()
+  set cursorline
+enddef
+
+def RegisterUserAutocmds()
+  augroup mcge_local_user_custom
+    autocmd!
+    autocmd BufEnter *.md setlocal wrap
+  augroup END
+enddef
 ```
 
-### User Key Bindings
+Put most personal overrides in `local/user_settings.vim`.
+Prefer keeping it split into `ApplyUserEditorOverrides()`,
+`ApplyUserUiOverrides()`, `RegisterUserCommands()`, and
+`RegisterUserAutocmds()`.
+If you want to keep personal mappings isolated, you can optionally create
+`local/user_mappings.vim`, but it is not required by the shared architecture.
 
-Edit `local/user_mappings.vim`:
+### Module Overrides
+
+Use `local/module_overrides.vim` when you want to change a shared module's
+`config` fields without editing `modules/*`.
 
 ```vim
 vim9script
 
-# Your custom keybindings
-nnoremap <leader>w :w<CR>
-nnoremap <leader>q :q<CR>
+g:SetModuleOverride('colorscheme', {scheme: 'desert'})
+g:SetModuleOverride('clap', {layout: {width: '90%'}})
 ```
+
+Copy `local/module_overrides.example.vim` as a starting point. This is the
+preferred user entrypoint for shared module config changes.
+
+### Filetype Overrides
+
+Put language-local settings in `after/ftplugin/<filetype>.vim`.
+This keeps startup config smaller and lets Vim load filetype behavior only when the matching buffer is opened.
 
 ### CoC Configuration
 
@@ -327,120 +338,77 @@ Edit `config/coc-settings.json`:
 
 ---
 
-## 🔧 Common Commands
+## 🔧 Operations
 
-### Performance and Debugging
+### Shared Reports
+
+After changing `config/mapping/*.vim`, `core/keymap.vim`, or which-key registry
+behavior, run:
+
+```powershell
+pwsh -File vimrc/scripts/verify_keymaps.ps1
+```
+
+This command regenerates `docs/keymaps.md`, checks for UTF-8/LF output without
+embedded `NUL` bytes, and runs `git diff --check` on the keymap-related files.
+
+For runtime inspection, use the shared entry points first:
 
 ```vim
-:VimStartupTime          " View startup time
+:CheckHealth             " Shared health report
 :VimrcLoadReport         " Module loading report
-:CheckHealth             " Health check
+:VimStartupTime          " Startup timing
 ```
 
-### Clap Search
+`CheckHealth` now shows module override/config metadata more directly, including
+`module_id`, whether local overrides are active, override keys, and config key
+summaries for managed modules.
 
-```vim
-:Clap files              " File search
-:Clap grep               " Text search
-:Clap buffers            " Buffers
-:Clap history            " Recent files
-:Clap command            " Commands
-:Clap command_history    " Command history
-:Clap maps               " Key mappings
-:Clap help_tags          " Help tags
-:Clap colors             " Colorschemes
-```
+### Plugin-Specific Status
 
-### Vista Outline
-
-```vim
-:Vista                   " Toggle outline
-:Vista finder            " Symbol search
-:Vista coc               " Use CoC backend
-:Vista ctags             " Use ctags backend
-:Vista info              " Show info
-```
-
-### CoC
-
-```vim
-:CocInfo                 " CoC info
-:CocList extensions      " Extension list
-:CocCommand explorer     " File browser
-:Format                  " Format code
-:OR                      " Organize imports
-:CocRestart              " Restart CoC
-```
+Use plugin-native commands when you are debugging a specific feature. Common
+examples are `:CocInfo`, `:Vista info`, and `:Clap files`, but the exact set
+depends on which modules are enabled.
 
 ---
 
 ## 🐛 Troubleshooting
 
-### CoC Not Working
-
-1. Check Node.js: `node --version` (requires 16+)
-2. View status: `:CocInfo`
-3. Restart CoC: `:CocRestart`
-4. Check extensions: `:CocList extensions`
-
-### Search is Slow
-
-1. Ensure ripgrep is installed: `rg --version`
-2. Use Clap: `:Clap files`
-3. Use CoC List: `:CocList files`
-
-### Vista Not Showing Symbols
-
-1. Check file type: `:Vista info`
-2. Switch backend: `:Vista coc`
-3. Check CoC: `:CocInfo`
-
-### Module Loading Issues
-
-```vim
-:VimrcLoadReport         " Check which modules failed
-:echo g:mcge_startup_time " View startup time in ms
-```
+1. Start with `:CheckHealth` and `:VimrcLoadReport` to separate dependency
+   failures from module-load failures.
+2. For keymap/doc drift, rerun `pwsh -File vimrc/scripts/verify_keymaps.ps1`.
+3. For CoC/Vista/Clap issues, verify external tools such as `node`, `rg`,
+   `fd`, and `ctags`, then inspect plugin-native status commands like
+   `:CocInfo` or `:Vista info`.
 
 ---
 
-## 🚀 Performance Metrics
+## 📚 Extending
 
-- **Startup Time**: ~80-100ms
-- **Modules**: 20 feature modules
-- **CoC Extensions**: 45+
-
-### View Performance
-
-```vim
-:VimStartupTime          " Startup time
-:VimrcLoadReport         " Module loading report
-:CheckHealth             " Health status
-```
-
----
-
-## 📚 Advanced Usage
-
-### Adding Plugins
+### Add Plugins
 
 ```bash
 cd pack/mcge/start
 git clone https://github.com/author/plugin-name
 ```
 
-### Adding CoC Extensions
+After adding a plugin, start from `modules/module.template.vim`, then wire its
+behavior into `modules/`, `config/`, or
+`after/ftplugin/` according to [ARCHITECTURE.md](./ARCHITECTURE.md).
+
+### Add CoC Extensions
 
 ```vim
 :CocInstall coc-extension-name
-:CocUninstall coc-extension-name
 ```
 
-### Module Health Checks
+### Inspect Module State
 
-Each module provides a health check function:
+Use the shared health report and selected module helpers to inspect runtime
+state, for example:
 
 ```vim
+:CheckHealth
 :call g:ClapHealthCheck()
 :call g:VistaHealthCheck()
 :call g:AirlineHealthCheck()

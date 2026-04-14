@@ -1,15 +1,14 @@
 vim9script
 # ============================================================================
-# UI 模块 - Startify 启动界面
-# 作者：mcge <mcgeq@outlook.com>
-# 插件：vim-startify
+# 模块: UI / Startify
+# 作者: mcge <mcgeq@outlook.com>
+# 说明: 配置 Startify 启动页、会话和快捷入口。
 # ============================================================================
 
 # 防止重复加载
-if exists('g:mcge_startify_loaded')
+if g:MarkModuleLoaded('startify')
   finish
 endif
-g:mcge_startify_loaded = true
 
 # 配置
 var config = {
@@ -27,79 +26,70 @@ var config = {
   update_oldfiles: 1,
 }
 
+def CenterStartifyLines(lines: list<string>): list<string>
+  if g:FunctionExists('startify#center')
+    return call('startify#center', [lines])
+  endif
+
+  return lines
+enddef
+
 # 初始化 Startify
 def g:InitStartify(user_config: dict<any> = {})
-  # 合并用户配置
-  extend(config, user_config)
+  config = g:ResolveModuleConfig('startify', config, user_config)
 
-  if !config.enabled
-    call g:ErrDebug('Startify is disabled')
+  if g:ModuleIsDisabled(config, 'Startify')
     return
   endif
 
-  # 基础设置
-  g:startify_files_number = config.files_number
-  g:startify_fortune_use_unicode = config.fortune_use_unicode
-
-  # 启动界面显示的项目
-  g:startify_lists = [
-    {'type': 'commands',  'header': ['   Quick Actions']},
-    {'type': 'files',     'header': ['   Recent Files']},
-    {'type': 'bookmarks', 'header': ['   Bookmarks']},
-    {'type': 'dir',       'header': ['   Project Directory']},
-  ]
-
-  # 自定义 header
-  g:startify_custom_header = startify#center([
-    " _      ____  _____ _     _  _     ",
-    "/ \\__/|/   _\\/  __// \\ |\\/ \\/ \\__/|",
-    "| |\\/|||  /  | |  _| | //| || |\\/||",
-    "| |  |||  \\_ | |_//| \\\\// | || |  ||",
-    "\\_/  \\|\\____/\\____\\\\__/  \\_/\\_/  \\|",
-    "                                     ",
-  ])
-
-  # 自定义 footer
-  g:startify_custom_footer = startify#center([
-    "",
-    '  ⚡ Vim config by mcgeq',
-  ])
-
-  # 快捷命令（使用 Clap）
-  g:startify_commands = [
-    {'n': ['  New File', 'enew']},
-    {'f': ['  Find File', 'Clap files']},
-    {'o': ['  Recents', 'Clap history']},
-    {'w': ['  Find Word', 'Clap grep']},
-    {'b': ['  Buffers', 'Clap buffers']},
-    {'s': ['  Last Session', 'SLoad']},
-    {'c': ['  Config', $"edit {g:mcge_customvimrcdir}/init.vim"]},
-  ]
-
-  # 会话管理
-  g:startify_session_dir = config.session_dir
-  g:startify_session_autoload = config.session_autoload
-  g:startify_session_delete_buffers = config.session_delete_buffers
-  g:startify_session_persistence = config.session_persistence
-
-  # 自动更新会话
-  g:startify_session_before_save = [
-    'echo "Cleaning up before saving.."',
-    'silent! NERDTreeTabsClose',
-  ]
-
-  # 书签
-  g:startify_bookmarks = [
-    {'v': g:mcge_customvimrcdir .. '/init.vim'},
-    {'C': g:mcge_customvimrcdir .. '/local/user_settings.vim'},
-  ]
-
-  # 其他设置
-  g:startify_change_to_dir = config.change_to_dir
-  g:startify_change_to_vcs_root = config.change_to_vcs_root
-  g:startify_enable_special = config.enable_special
-  g:startify_relative_path = config.relative_path
-  g:startify_update_oldfiles = config.update_oldfiles
+  g:ApplyGlobalVars({
+    startify_files_number: config.files_number,
+    startify_fortune_use_unicode: config.fortune_use_unicode,
+    startify_lists: [
+      {'type': 'commands',  'header': ['   Quick Actions']},
+      {'type': 'files',     'header': ['   Recent Files']},
+      {'type': 'bookmarks', 'header': ['   Bookmarks']},
+      {'type': 'dir',       'header': ['   Project Directory']},
+    ],
+    startify_custom_header: CenterStartifyLines([
+      " _      ____  _____ _     _  _     ",
+      "/ \\__/|/   _\\/  __// \\ |\\/ \\/ \\__/|",
+      "| |\\/|||  /  | |  _| | //| || |\\/||",
+      "| |  |||  \\_ | |_//| \\\\// | || |  ||",
+      "\\_/  \\|\\____/\\____\\\\__/  \\_/\\_/  \\|",
+      "                                     ",
+    ]),
+    startify_custom_footer: CenterStartifyLines([
+      "",
+      '  ⚡ Vim config by mcgeq',
+    ]),
+    startify_commands: [
+      {'n': ['  New File', 'enew']},
+      {'f': ['  Find File', 'Clap files']},
+      {'o': ['  Recents', 'Clap history']},
+      {'w': ['  Find Word', 'Clap grep']},
+      {'b': ['  Buffers', 'Clap buffers']},
+      {'s': ['  Last Session', 'SLoad']},
+      {'c': ['  Config', $"edit {g:mcge_customvimrcdir}/init.vim"]},
+    ],
+    startify_session_dir: config.session_dir,
+    startify_session_autoload: config.session_autoload,
+    startify_session_delete_buffers: config.session_delete_buffers,
+    startify_session_persistence: config.session_persistence,
+    startify_session_before_save: [
+      'echo "Cleaning up before saving.."',
+      'silent! NERDTreeTabsClose',
+    ],
+    startify_bookmarks: [
+      {'v': g:mcge_customvimrcdir .. '/init.vim'},
+      {'C': g:mcge_customvimrcdir .. '/local/user_settings.vim'},
+    ],
+    startify_change_to_dir: config.change_to_dir,
+    startify_change_to_vcs_root: config.change_to_vcs_root,
+    startify_enable_special: config.enable_special,
+    startify_relative_path: config.relative_path,
+    startify_update_oldfiles: config.update_oldfiles,
+  })
 
   call g:ErrDebug('Startify initialized')
 enddef
@@ -108,15 +98,11 @@ enddef
 def g:StartifyHealthCheck(): dict<any>
   var session_dir_exists = isdirectory(config.session_dir)
 
-  return {
-    name: 'Startify',
-    available: exists(':Startify'),
-    enabled: config.enabled,
+  return g:BuildManagedCommandModuleHealth('startify', 'Startify', config, 'Startify', {
     session_dir: config.session_dir,
     session_dir_exists: session_dir_exists,
     bookmarks_count: len(get(g:, 'startify_bookmarks', [])),
-    status: config.enabled ? 'running' : 'disabled',
-  }
+  })
 enddef
 
 # 获取配置

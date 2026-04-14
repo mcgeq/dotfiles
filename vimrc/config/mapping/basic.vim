@@ -1,77 +1,66 @@
 vim9script
 
-# -------------------- 保存退出 start --------------------
-# 保存文件
-nnoremap <silent> <C-x><C-s> :w<CR>
-inoremap <silent> <C-x><C-s> <Esc>:w<CR>
-vnoremap <silent> <C-x><C-s> <Esc>:w<CR>
+const basic_cmd_defaults = {modes: ['n', 'i', 'v'], silent: true, clear_cmdline: false, doc_section: 'Basic Editing'}
+const window_map_defaults = {doc_section: 'Windows and Buffers'}
+const window_cmd_defaults = {clear_cmdline: false, doc_section: 'Windows and Buffers'}
+const ui_cmd_defaults = {mode: 'n', silent: true, clear_cmdline: false, doc_section: 'UI'}
 
-# 退出
-nnoremap <silent> <C-x><C-q> :wq<CR>
-inoremap <silent> <C-x><C-q> <Esc>:wq<CR>
-vnoremap <silent> <C-x><C-q> <Esc>:wq<CR>
+const save_and_quit_maps = [
+  {lhs: '<C-x><C-s>', cmd: 'w', desc: 'save'},
+  {lhs: '<C-x><C-q>', cmd: 'wq', desc: 'save-and-quit', doc_desc: 'save and quit'},
+]
+g:CmdMapMany(save_and_quit_maps, basic_cmd_defaults)
 
-# -------------------- 保存退出 end   --------------------
+const window_switch_maps = [
+  {lhs: '<c-h>', rhs: '<C-w>h', desc: 'window-left', doc_desc: 'focus left window'},
+  {lhs: '<c-j>', rhs: '<C-w>j', desc: 'window-down', doc_desc: 'focus lower window'},
+  {lhs: '<c-l>', rhs: '<C-w>l', desc: 'window-right', doc_desc: 'focus right window'},
+]
+g:MapMany(window_switch_maps, g:MapSpec({mode: ''}, window_map_defaults))
 
-# -------------------- 窗口 start --------------------
-noremap <c-h> <C-w>h
-noremap <c-j> <C-w>j
-noremap <c-l> <C-w>l
-tnoremap <c-h> <c-\><c-n><c-w>h
-tnoremap <c-j> <c-\><c-n><c-w>j
-tnoremap <c-l> <c-\><c-n><c-w>l
+const terminal_window_maps = [
+  {lhs: '<c-h>', rhs: '<c-\><c-n><c-w>h', desc: 'window-left', doc_desc: 'focus left window'},
+  {lhs: '<c-j>', rhs: '<c-\><c-n><c-w>j', desc: 'window-down', doc_desc: 'focus lower window'},
+  {lhs: '<c-l>', rhs: '<c-\><c-n><c-w>l', desc: 'window-right', doc_desc: 'focus right window'},
+]
+g:MapMany(terminal_window_maps, g:MapSpec({mode: 't'}, window_map_defaults))
 
+const close_maps = [
+  {lhs: 'q', cmd: 'close', desc: 'close-window', doc_desc: 'close window'},
+]
+g:CmdMapMany(close_maps, g:MapSpec({modes: ['n', 'v'], silent: true}, window_cmd_defaults))
 
-# 关闭窗口
-nnoremap <silent> q <esc>:close<cr>
-vnoremap <silent> q <esc>:close<cr>
+const buffer_close_maps = [
+  {lhs: '<C-q>', cmd: 'bdelete', desc: 'delete-buffer', doc_desc: 'close buffer'},
+]
+g:CmdMapMany(buffer_close_maps, g:MapSpec({modes: ['n', 'i', 'v'], silent: true}, window_cmd_defaults))
 
-nnoremap <silent> <C-q> :bdelete<cr>
-inoremap <silent> <C-q> <esc>:bdelete<cr>
-vnoremap <silent> <C-q> <esc>:bdelete<cr>
-# -------------------- 窗口 end --------------------
+const line_boundary_maps = [
+  {lhs: '<C-a>', rhs_by_mode: {n: '0', i: '<Esc>0', v: '<Esc>0'}, desc: 'line-start', doc_desc: 'jump to line start'},
+  {lhs: '<C-e>', rhs_by_mode: {n: '$', i: '<Esc>$', v: '<Esc>$'}, desc: 'line-end', doc_desc: 'jump to line end'},
+]
+g:MapMany(line_boundary_maps, {modes: ['n', 'i', 'v'], silent: true, doc_section: 'Basic Editing'})
 
-# -------------------- 行     start --------------------
-# 行首
-nnoremap <silent> <C-a> 0
-inoremap <silent> <C-a> <Esc>0
-vnoremap <silent> <C-a> <Esc>0
+const cmdline_maps = [
+  {lhs: '<C-h>', rhs: '<Home>', desc: 'cmdline-home', doc_desc: 'command line start'},
+  {lhs: '<C-l>', rhs: '<End>', desc: 'cmdline-end', doc_desc: 'command line end'},
+]
+g:MapMany(cmdline_maps, {mode: 'c', doc_section: 'Basic Editing'})
 
-# 行尾
-nnoremap <silent> <C-e> $
-inoremap <silent> <C-e> <Esc>$
-vnoremap <silent> <C-e> <Esc>$
+const buffer_cycle_maps = [
+  {lhs: '<M-q>', cmd: 'bdelete', desc: 'delete-buffer', doc_desc: 'close buffer'},
+  {lhs: '<C-tab>', cmd: 'bnext', desc: 'next-buffer', doc_desc: 'next buffer'},
+  {lhs: '<C-s-tab>', cmd: 'bprevious', desc: 'prev-buffer', doc_desc: 'previous buffer'},
+]
+g:CmdMapMany(buffer_cycle_maps, g:MapSpec({mode: 'n'}, window_cmd_defaults))
 
-# -------------------- 行       end --------------------
+const buffer_navigation_maps = [
+  {lhs: '<C-p>', cmd: 'bprevious', desc: 'prev-buffer', doc_desc: 'previous buffer'},
+  {lhs: '<C-n>', cmd: 'bnext', desc: 'next-buffer', doc_desc: 'next buffer'},
+]
+g:CmdMapMany(buffer_navigation_maps, g:MapSpec({modes: ['n', 'i', 'v']}, window_cmd_defaults))
 
-# -------------------- 命令行 start --------------------
-# 命令行移动
-cnoremap <C-h> <Home>
-cnoremap <C-l> <End>
-# -------------------- 命令行 end --------------------
+g:Map({mode: 'n', remap: true, lhs: 'Q', rhs: '<nop>', doc: false})
+g:Map({mode: '', lhs: 'Q', rhs: 'q', doc: false})
 
-# -------------------- buffer start --------------------
-# 使用 alt q 关闭当前 buffer
-nnoremap <M-q> <esc>:bdelete<cr>
-
-# 切换buffer
-nnoremap <C-p> :bprevious<CR>
-inoremap <C-p> <Esc>:bprevious<CR>
-vnoremap <C-p> <Esc>:bprevious<CR>
-
-nnoremap <C-n> :bnext<CR>
-inoremap <C-n> <Esc>:bnext<CR>
-vnoremap <C-n> <Esc>:bnext<CR>
-# -------------------- buffer end --------------------
-
-# -------------------- 宏 start --------------------
-# 去除 EX 模式
-nmap Q <nop>
-# 使用 Q 进行宏录制
-noremap Q q
-# -------------------- 宏 end --------------------
-
-# -------------------- 配置重载 start --------------------
-# 重新加载 Vim 配置
-nnoremap <silent> <leader>rr :source $MYVIMRC<CR>
-# -------------------- 配置重载 end --------------------
+g:CmdMap(g:MapSpec({lhs: '<leader>rr', cmd: 'source $MYVIMRC', desc: 'reload-config', doc_desc: 'reload configuration'}, ui_cmd_defaults))

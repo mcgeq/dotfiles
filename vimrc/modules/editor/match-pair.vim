@@ -1,18 +1,18 @@
 vim9script
 # ============================================================================
-# Editor 模块 - 括号匹配导航 (vim-matchup)
-# 作者：mcge <mcgeq@outlook.com>
+# 模块: Editor / MatchPair
+# 作者: mcge <mcgeq@outlook.com>
+# 说明: 配置 vim-matchup 匹配与文本对象行为。
 # ============================================================================
 
 # 防止重复加载
-if exists('g:mcge_match_pair_loaded')
+if g:MarkModuleLoaded('match_pair')
   finish
 endif
-g:mcge_match_pair_loaded = true
 
 # 配置
 var config = {
-  enabled: 1,
+  enabled: true,
   matchparen_offscreen: {'method': 'popup'},
   matchparen_highlight: 1,
   delim_noskips: 2,
@@ -22,49 +22,30 @@ var config = {
 
 # 初始化 Matchup
 def g:InitMatchup(user_config: dict<any> = {})
-  # 合并用户配置
-  extend(config, user_config)
+  config = g:ResolveModuleConfig('match_pair', config, user_config)
 
-  if !config.enabled
-    call g:ErrDebug('Matchup is disabled')
+  if g:ModuleIsDisabled(config, 'Matchup')
     return
   endif
 
   # 基础设置
-  g:matchup_enabled = config.enabled
-  g:matchup_matchparen_offscreen = config.matchparen_offscreen
-  g:matchup_matchparen_highlight = config.matchparen_highlight
-  g:matchup_delim_noskips = config.delim_noskips
-  g:matchup_mappings_enabled = config.mappings_enabled
-  g:matchup_text_obj_enabled = config.text_obj_enabled
-
-  # 设置映射
-  SetupMappings()
+  g:ApplyGlobalVars({
+    matchup_enabled: config.enabled,
+    matchup_matchparen_offscreen: config.matchparen_offscreen,
+    matchup_matchparen_highlight: config.matchparen_highlight,
+    matchup_delim_noskips: config.delim_noskips,
+    matchup_mappings_enabled: config.mappings_enabled,
+    matchup_text_obj_enabled: config.text_obj_enabled,
+  })
 
   call g:ErrDebug('Matchup initialized')
 enddef
 
-# 设置映射
-def SetupMappings()
-  omap i <Plug>(matchup-i%)
-  omap a <Plug>(matchup-a%)
-  xmap i <Plug>(matchup-i%)
-  xmap a <Plug>(matchup-a%)
-  nmap g% <Plug>(matchup-g%)
-  nmap [% <Plug>(matchup-[%)
-  nmap ]% <Plug>(matchup-]%)
-  nmap z% <Plug>(matchup-z%)
-enddef
-
 # 健康检查
 def g:MatchupHealthCheck(): dict<any>
-  return {
-    name: 'Matchup',
-    available: exists(':MatchupInfo'),
-    enabled: config.enabled,
+  return g:BuildManagedCommandModuleHealth('match_pair', 'Matchup', config, 'MatchupInfo', {
     popup_supported: has('popup'),
-    status: config.enabled ? 'running' : 'disabled',
-  }
+  })
 enddef
 
 # 获取配置

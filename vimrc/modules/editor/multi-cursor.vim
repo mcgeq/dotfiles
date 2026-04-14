@@ -1,14 +1,14 @@
 vim9script
 # ============================================================================
-# Editor 模块 - 多光标编辑 (vim-visual-multi)
-# 作者：mcge <mcgeq@outlook.com>
+# 模块: Editor / MultiCursor
+# 作者: mcge <mcgeq@outlook.com>
+# 说明: 配置 vim-visual-multi 多光标编辑行为。
 # ============================================================================
 
 # 防止重复加载
-if exists('g:mcge_multi_cursor_loaded')
+if g:MarkModuleLoaded('multi_cursor')
   finish
 endif
-g:mcge_multi_cursor_loaded = true
 
 # 配置
 var config = {
@@ -25,36 +25,32 @@ var config = {
 
 # 初始化 Visual Multi
 def g:InitVisualMulti(user_config: dict<any> = {})
-  # 合并用户配置
-  extend(config, user_config)
+  config = g:ResolveModuleConfig('multi_cursor', config, user_config)
 
-  if !config.enabled
-    call g:ErrDebug('VisualMulti is disabled')
+  if g:ModuleIsDisabled(config, 'VisualMulti')
     return
   endif
 
   # 设置配置
-  g:VM_highlight_matches = config.highlight_matches
-  g:VM_show_warnings = config.show_warnings
-  g:VM_set_statusline = config.set_statusline
-  g:VM_silent_exit = config.silent_exit
-  g:VM_skip_shorter_lines = config.skip_shorter_lines
-  g:VM_live_editing = config.live_editing
-  g:VM_reselect_first = config.reselect_first
-  g:VM_mouse_mappings = config.mouse_mappings
+  g:ApplyGlobalVars({
+    VM_highlight_matches: config.highlight_matches,
+    VM_show_warnings: config.show_warnings,
+    VM_set_statusline: config.set_statusline,
+    VM_silent_exit: config.silent_exit,
+    VM_skip_shorter_lines: config.skip_shorter_lines,
+    VM_live_editing: config.live_editing,
+    VM_reselect_first: config.reselect_first,
+    VM_mouse_mappings: config.mouse_mappings,
+  })
 
   call g:ErrDebug('VisualMulti initialized')
 enddef
 
 # 健康检查
 def g:VisualMultiHealthCheck(): dict<any>
-  return {
-    name: 'VisualMulti',
-    available: exists(':VMSelectCursors'),
-    enabled: config.enabled,
+  return g:BuildManagedCommandModuleHealth('multi_cursor', 'VisualMulti', config, 'VMSelectCursors', {
     mouse_mappings: config.mouse_mappings,
-    status: config.enabled ? 'running' : 'disabled',
-  }
+  })
 enddef
 
 # 获取配置

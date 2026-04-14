@@ -1,15 +1,14 @@
 vim9script
 # ============================================================================
-# Vista 模块 - 代码大纲和符号导航
-# 作者：mcge <mcgeq@outlook.com>
-# 官方文档：https://github.com/liuchengxu/vista.vim
+# 模块: Navigation / Vista
+# 作者: mcge <mcgeq@outlook.com>
+# 说明: 配置 Vista 大纲视图和 ctags 集成。
 # ============================================================================
 
 # 防止重复加载
-if exists('g:mcge_vista_loaded')
+if g:MarkModuleLoaded('vista')
   finish
 endif
-g:mcge_vista_loaded = true
 
 # 配置
 var config = {
@@ -55,62 +54,52 @@ var icons = {
 
 # 初始化 Vista
 def g:InitVista(user_config: dict<any> = {})
-  # 合并用户配置
-  extend(config, user_config)
+  config = g:ResolveModuleConfig('vista', config, user_config)
 
-  if !config.enabled
-    call g:ErrDebug('Vista is disabled')
+  if g:ModuleIsDisabled(config, 'Vista')
     return
   endif
 
   # Executive 配置
-  g:vista_default_executive = config.default_executive
-  g:vista_executive_for = {
-    'vim': 'ctags',
-    'python': 'coc',
-    'javascript': 'coc',
-    'typescript': 'coc',
-    'rust': 'coc',
-    'go': 'coc',
-    'c': 'coc',
-    'cpp': 'coc',
-    'java': 'coc',
-  }
-
-  # 外观设置
-  g:vista_sidebar_width = config.sidebar_width
-  g:vista_icon_indent = config.icon_indent
-  g:vista_highlight_whole_line = config.highlight_whole_line
-  g:vista#renderer#enable_icon = config.enable_icon
-  g:vista_cursor_delay = config.cursor_delay
-
-  # 浮动窗口
-  g:vista_floating_preview = config.floating_preview
-  g:vista_floating_border = config.floating_border
-  g:vista_focus_on_icons = config.focus_on_icons
-
-  # 自动更新
-  g:vista_update_on_text_changed = config.update_on_text_changed
-  g:vista_update_on_text_changed_delay = config.update_on_text_changed_delay
-  g:vista_echo_cursor = config.echo_cursor
-  g:vista_close_on_jump = config.close_on_jump
-  g:vista_stay_on_open = config.stay_on_open
-  g:vista_sidebar_position = config.sidebar_position
-
-  # 图标配置
-  g:vista#renderer#icons = icons
+  config.default_executive = get(g:, 'mcge_custom_vista_executive', config.default_executive)
+  g:ApplyGlobalVars({
+    vista_default_executive: config.default_executive,
+    vista_executive_for: {
+      'vim': 'ctags',
+      'python': 'coc',
+      'javascript': 'coc',
+      'typescript': 'coc',
+      'rust': 'coc',
+      'go': 'coc',
+      'c': 'coc',
+      'cpp': 'coc',
+      'java': 'coc',
+    },
+    vista_sidebar_width: config.sidebar_width,
+    vista_icon_indent: config.icon_indent,
+    vista_highlight_whole_line: config.highlight_whole_line,
+    'vista#renderer#enable_icon': config.enable_icon,
+    vista_cursor_delay: config.cursor_delay,
+    vista_floating_preview: config.floating_preview,
+    vista_floating_border: config.floating_border,
+    vista_focus_on_icons: config.focus_on_icons,
+    vista_update_on_text_changed: config.update_on_text_changed,
+    vista_update_on_text_changed_delay: config.update_on_text_changed_delay,
+    vista_echo_cursor: config.echo_cursor,
+    vista_close_on_jump: config.close_on_jump,
+    vista_stay_on_open: config.stay_on_open,
+    vista_sidebar_position: config.sidebar_position,
+    'vista#renderer#icons': icons,
+  })
 
   # Ctags 配置
-  SetupCtags()
-
-  # 设置快捷键
-  SetupMappings()
+  ConfigureCtags()
 
   call g:ErrDebug('Vista initialized')
 enddef
 
 # 设置 Ctags
-def SetupCtags()
+def ConfigureCtags()
   if executable('ctags')
     g:vista_ctags_cmd = {
       'haskell': 'hasktags -x -o - -c',
@@ -120,42 +109,17 @@ def SetupCtags()
   endif
 enddef
 
-# 设置快捷键
-def SetupMappings()
-  # 基本操作
-  nnoremap <silent> <F8> :Vista!!<CR>
-  nnoremap <silent> <leader>v :Vista!!<CR>
-  nnoremap <silent> <leader>vq :Vista!<CR>
-
-  # 符号查找
-  nnoremap <silent> <leader>vf :Vista finder<CR>
-  nnoremap <silent> <leader>vF :Vista finder!<CR>
-
-  # 后端切换
-  nnoremap <silent> <leader>vc :Vista coc<CR>
-  nnoremap <silent> <leader>vt :Vista ctags<CR>
-  nnoremap <silent> <leader>vl :Vista vim_lsp<CR>
-
-  # 信息查看
-  nnoremap <silent> <leader>vi :Vista info<CR>
-  nnoremap <silent> <leader>vI :Vista info+<CR>
-enddef
-
 # 健康检查
 def g:VistaHealthCheck(): dict<any>
   var ctags_available = executable('ctags')
   var coc_available = exists('*CocAction')
 
-  return {
-    name: 'Vista',
-    available: exists(':Vista'),
-    enabled: config.enabled,
+  return g:BuildManagedCommandModuleHealth('vista', 'Vista', config, 'Vista', {
     default_executive: config.default_executive,
     ctags_available: ctags_available,
     coc_available: coc_available,
     icons_configured: true,
-    status: config.enabled ? 'running' : 'disabled',
-  }
+  })
 enddef
 
 # 获取配置

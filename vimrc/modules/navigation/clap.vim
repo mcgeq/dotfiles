@@ -1,15 +1,14 @@
 vim9script
 # ============================================================================
-# Clap 模块 - 现代化模糊搜索
-# 作者：mcge <mcgeq@outlook.com>
-# 官方文档：https://github.com/liuchengxu/vim-clap
+# 模块: Navigation / Clap
+# 作者: mcge <mcgeq@outlook.com>
+# 说明: 配置 Clap 搜索界面与 provider 行为。
 # ============================================================================
 
 # 防止重复加载
-if exists('g:mcge_clap_loaded')
+if g:MarkModuleLoaded('clap')
   finish
 endif
-g:mcge_clap_loaded = true
 
 # 配置
 var config = {
@@ -38,43 +37,38 @@ var config = {
 
 # 初始化 Clap
 def g:InitClap(user_config: dict<any> = {})
-  # 合并用户配置
-  extend(config, user_config)
+  config = g:ResolveModuleConfigDeep('clap', config, user_config)
 
-  if !config.enabled
-    call g:ErrDebug('Clap is disabled')
+  if g:ModuleIsDisabled(config, 'Clap')
     return
   endif
 
-  # 外观设置
-  g:clap_theme = config.theme
-  g:clap_enable_icon = config.enable_icon
-  g:clap_layout = config.layout
-  g:clap_enable_background_shadow = config.enable_background_shadow
-  g:clap_prompt_format = config.prompt_format
-  g:clap_enable_indicator = config.enable_indicator
-
-  # 预览和性能
-  g:clap_preview_size = config.preview_size
-  g:clap_preview_direction = config.preview_direction
-  g:clap_provider_grep_delay = config.grep_delay
-  g:clap_provider_grep_blink = config.grep_blink
-  g:clap_cache_directory = expand(config.cache_directory)
-  g:clap_provider_history_size = config.provider_history_size
-  g:clap_insert_mode_only = config.insert_mode_only
-  g:clap_force_python = config.force_python
+  # 外观、预览和性能
+  g:ApplyGlobalVars({
+    clap_theme: config.theme,
+    clap_enable_icon: config.enable_icon,
+    clap_layout: config.layout,
+    clap_enable_background_shadow: config.enable_background_shadow,
+    clap_prompt_format: config.prompt_format,
+    clap_enable_indicator: config.enable_indicator,
+    clap_preview_size: config.preview_size,
+    clap_preview_direction: config.preview_direction,
+    clap_provider_grep_delay: config.grep_delay,
+    clap_provider_grep_blink: config.grep_blink,
+    clap_cache_directory: expand(config.cache_directory),
+    clap_provider_history_size: config.provider_history_size,
+    clap_insert_mode_only: config.insert_mode_only,
+    clap_force_python: config.force_python,
+  })
 
   # 设置搜索工具
-  SetupProviders()
-
-  # 设置快捷键
-  SetupMappings()
+  ConfigureProviders()
 
   call g:ErrDebug('Clap initialized')
 enddef
 
 # 设置 Provider
-def SetupProviders()
+def ConfigureProviders()
   # 使用 ripgrep 和 fd（性能最佳）
   if executable('rg')
     g:clap_provider_grep_executable = 'rg'
@@ -87,63 +81,16 @@ def SetupProviders()
   endif
 enddef
 
-# 设置快捷键
-def SetupMappings()
-  # 基础搜索
-  nnoremap <silent> <leader>p :Clap files<CR>
-  nnoremap <silent> <leader>P :Clap gfiles<CR>
-  nnoremap <silent> <leader><Space> :Clap files<CR>
-
-  # 缓冲区
-  nnoremap <silent> <leader>bb :Clap buffers<CR>
-
-  # 最近文件
-  nnoremap <silent> <leader>fh :Clap history<CR>
-
-  # 文本搜索
-  nnoremap <silent> <leader>/ :Clap grep<CR>
-  nnoremap <silent> <leader>fg :Clap grep<CR>
-  nnoremap <silent> <leader>st :Clap igrep<CR>
-  nnoremap <silent> <leader>sg :Clap grep<CR>
-  xnoremap <silent> <leader>sg :Clap grep --query=@visual<CR>
-  nnoremap <silent> <leader>sw :Clap grep --query=<cword><CR>
-  xnoremap <silent> <leader>sw :Clap grep --query=@visual<CR>
-
-  # 行搜索
-  nnoremap <silent> <leader>fl :Clap blines<CR>
-  nnoremap <silent> <leader>fL :Clap lines<CR>
-
-  # Git 相关
-  nnoremap <silent> <leader>gc :Clap commits<CR>
-  nnoremap <silent> <leader>gd :Clap git_diff_files<CR>
-  nnoremap <silent> <leader>gf :Clap gfiles<CR>
-
-  # Vim 功能
-  nnoremap <silent> <leader>; :Clap command_history<CR>
-  nnoremap <silent> <leader>km :Clap maps<CR>
-  nnoremap <silent> <leader>? :Clap help_tags<CR>
-  nnoremap <silent> <leader>tc :Clap colors<CR>
-
-  # 导航
-  nnoremap <silent> <leader>fm :Clap marks<CR>
-  nnoremap <silent> <leader>fj :Clap jumps<CR>
-  nnoremap <silent> <leader>fr :Clap registers<CR>
-enddef
-
 # 健康检查
 def g:ClapHealthCheck(): dict<any>
   var rg_available = executable('rg')
   var fd_available = executable('fd')
 
-  return {
-    name: 'Clap',
-    available: exists(':Clap'),
-    enabled: config.enabled,
+  return g:BuildManagedCommandModuleHealth('clap', 'Clap', config, 'Clap', {
     theme: config.theme,
     rg_available: rg_available,
     fd_available: fd_available,
-    status: config.enabled ? 'running' : 'disabled',
-  }
+  })
 enddef
 
 # 获取配置

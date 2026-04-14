@@ -1,14 +1,14 @@
 vim9script
 # ============================================================================
-# 用户自定义配置
+# 组件: Local / UserSettings
 # 作者: mcge <mcgeq@outlook.com>
-# 说明: 此文件用于覆盖默认配置，不会被 Git 跟踪
+# 说明: 用户本地覆盖与启动完成后的自定义行为示例。
 # ============================================================================
 
 # ----------------------------------------------------------------------------
-# 配置加载完成事件
+# 启动提示
 # ----------------------------------------------------------------------------
-autocmd User McgeConfigLoaded {
+def g:ShowUserStartupSummary()
   # 显示配置加载完成信息
   echo ''
   echohl Title
@@ -59,20 +59,53 @@ autocmd User McgeConfigLoaded {
   echo '        使用 :VimrcLoadReport 查看加载报告'
   echohl None
   echo ''
-}
+enddef
+
+def RegisterUserStartupAutocmds()
+  augroup mcge_local_user_settings
+    autocmd!
+    autocmd User McgeConfigLoaded call g:ShowUserStartupSummary()
+  augroup END
+enddef
+
+RegisterUserStartupAutocmds()
 
 # ----------------------------------------------------------------------------
-# 你的自定义设置
+# 用户覆盖约定
 # ----------------------------------------------------------------------------
 
-# 示例：覆盖默认设置
-# set number
-# set relativenumber
+def ApplyUserEditorOverrides()
+  # 放编辑器选项、set、本地默认行为。
+  set number
+  set relativenumber
+enddef
 
-# 示例：自定义快捷键
-# nnoremap <leader>h :echo "Hello from user config!"<CR>
+def ApplyUserUiOverrides()
+  # 放个人 UI / 主题 / 展示偏好。
+  set cursorline
+  # colorscheme desert
+enddef
 
-# 示例：自定义颜色方案
-# colorscheme desert
+def RegisterUserCommands()
+  # 放仅属于当前用户的本地命令。
+  command! UserHello echo 'Hello from user config!'
+enddef
+
+def RegisterUserAutocmds()
+  # 放个人自动命令。请始终使用独立 augroup，保证可重复 source。
+  augroup mcge_local_user_custom
+    autocmd!
+    autocmd BufEnter *.md setlocal wrap
+  augroup END
+enddef
+
+def g:InitUserSettings()
+  ApplyUserEditorOverrides()
+  ApplyUserUiOverrides()
+  RegisterUserCommands()
+  RegisterUserAutocmds()
+enddef
+
+g:InitUserSettings()
 
 # vim: set ft=vim sw=2 ts=2 sts=2 et:

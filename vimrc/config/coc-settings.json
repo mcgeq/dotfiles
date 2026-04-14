@@ -6,6 +6,26 @@
       "command": "csharp-ls",
       "filetypes": ["cs"],
       "rootPatterns": ["*.csproj", ".vim/", ".git/", ".hg/", ".jj/"]
+    },
+    "vtsls": {
+      "command": "vtsls",
+      "args": ["--stdio"],
+      "filetypes": [
+        "javascript",
+        "javascriptreact",
+        "javascript.jsx",
+        "typescript",
+        "typescriptreact",
+        "typescript.tsx"
+      ],
+      "rootPatterns": [
+        "tsconfig.json",
+        "jsconfig.json",
+        "package.json",
+        ".git",
+        ".hg",
+        ".jj"
+      ]
     }
   },
 
@@ -15,7 +35,7 @@
   "zig.startUpMessage": true,
   "zig.path": "zls",
   "zig.debugLog": false,
-  
+
   "rust-analyzer.enable": true,
   "rust-analyzer.checkOnSave": true,
 
@@ -54,18 +74,20 @@
   "volar.inlayHints.optionsWrapper": true,
   "volar.inlayHints.vBindShorthand": true,
 
-"javascript.preferences.quoteStyle": "single",
+  "javascript.preferences.quoteStyle": "single",
   "typescript.preferences.quoteStyle": "single",
   "typescript.format.enable": false,
   "javascript.format.enable": false,
   "tsserver.enable": false,
+  "vtsls.enable": true,
 
+  "prettier.enable": false,
   "prettier.requireConfig": true,
   "prettier.singleQuote": true,
   "prettier.eslintIntegration": false,
 
   "eslint.enable": true,
-  "eslint.autoFixOnSave": true,
+  "eslint.autoFixOnSave": false,
   "eslint.validate": [
     "javascript",
     "javascriptreact",
@@ -77,6 +99,7 @@
   "eslint.packageManager": "bun",
   "eslint.workingDirectories": [{"mode": "auto"}],
   "eslint.useESLintRC": true,
+  "eslint.codeActionsOnSave.mode": "all",
 
   "workspace.workspaceFolderControl": "local",
 
@@ -123,7 +146,13 @@
   "diagnostic.virtualTextPrefix": " ❯❯❯ ",
   "diagnostic.virtualText": true,
 
-  "coc.preferences.formatOnSave": true,
+  "coc.preferences.formatOnSave": false,
+  "[javascript][javascriptreact][typescript][typescriptreact][vue]": {
+    "coc.preferences.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": true
+    }
+  },
 
   "clangd.fallbackFlags": ["-std=c++17", "-Wall"],
 
@@ -222,7 +251,5 @@
     "<<": "gitStage",
     ">>": "gitUnstage"
   },
-  "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": true
-  }
+  "editor.codeActionsOnSave": {}
 }

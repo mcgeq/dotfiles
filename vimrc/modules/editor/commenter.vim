@@ -1,14 +1,14 @@
 vim9script
 # ============================================================================
-# Editor 模块 - 注释功能 (NERDCommenter)
-# 作者：mcge <mcgeq@outlook.com>
+# 模块: Editor / Commenter
+# 作者: mcge <mcgeq@outlook.com>
+# 说明: 配置 NERDCommenter 注释行为。
 # ============================================================================
 
 # 防止重复加载
-if exists('g:mcge_commenter_loaded')
+if g:MarkModuleLoaded('commenter')
   finish
 endif
-g:mcge_commenter_loaded = true
 
 # 配置
 var config = {
@@ -26,37 +26,33 @@ var config = {
 
 # 初始化 NERDCommenter
 def g:InitNERDCommenter(user_config: dict<any> = {})
-  # 合并用户配置
-  extend(config, user_config)
+  config = g:ResolveModuleConfigDeep('commenter', config, user_config)
 
-  if !config.enabled
-    call g:ErrDebug('NERDCommenter is disabled')
+  if g:ModuleIsDisabled(config, 'NERDCommenter')
     return
   endif
 
   # 基础设置
-  g:NERDCreateDefaultMappings = config.create_default_mappings
-  g:NERDSpaceDelims = config.space_delims
-  g:NERDCompactSexyComs = config.compact_sexy_coms
-  g:NERDDefaultAlign = config.default_align
-  g:NERDAltDelims_java = config.alt_delims_java
-  g:NERDCustomDelimiters = config.custom_delimiters
-  g:NERDCommentEmptyLines = config.comment_empty_lines
-  g:NERDTrimTrailingWhitespace = config.trim_trailing_whitespace
-  g:NERDToggleCheckAllLines = config.toggle_check_all_lines
+  g:ApplyGlobalVars({
+    NERDCreateDefaultMappings: config.create_default_mappings,
+    NERDSpaceDelims: config.space_delims,
+    NERDCompactSexyComs: config.compact_sexy_coms,
+    NERDDefaultAlign: config.default_align,
+    NERDAltDelims_java: config.alt_delims_java,
+    NERDCustomDelimiters: config.custom_delimiters,
+    NERDCommentEmptyLines: config.comment_empty_lines,
+    NERDTrimTrailingWhitespace: config.trim_trailing_whitespace,
+    NERDToggleCheckAllLines: config.toggle_check_all_lines,
+  })
 
   call g:ErrDebug('NERDCommenter initialized')
 enddef
 
 # 健康检查
 def g:NERDCommenterHealthCheck(): dict<any>
-  return {
-    name: 'NERDCommenter',
-    available: exists(':NERDCommenterToggle'),
-    enabled: config.enabled,
+  return g:BuildManagedCommandModuleHealth('commenter', 'NERDCommenter', config, 'NERDCommenterToggle', {
     mappings_configured: config.create_default_mappings,
-    status: config.enabled ? 'running' : 'disabled',
-  }
+  })
 enddef
 
 # 获取配置

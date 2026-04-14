@@ -1,24 +1,49 @@
 vim9script
 # ============================================================================
-# 配色方案配置
-# 作者：mcge <mcgeq@outlook.com>
+# 模块: UI / Colorscheme
+# 作者: mcge <mcgeq@outlook.com>
+# 说明: 配置主题、背景和相关高亮样式。
 # ============================================================================
 
-# 默认配置
+# 防止重复加载
+if g:MarkModuleLoaded('colorscheme')
+  finish
+endif
+
+# 配置
 var config = {
+  enabled: true,
   scheme: 'molokai',
   background: 'dark',
   enable_italic: false,
   transparent: false,
 }
 
+def ApplyHighlight(group: string, specs: list<string>)
+  execute 'highlight ' .. group .. ' ' .. join(specs, ' ')
+enddef
+
+def g:ApplyColorschemeExtras()
+  if config.transparent
+    highlight Normal guibg=NONE ctermbg=NONE
+    highlight NonText guibg=NONE ctermbg=NONE
+    highlight LineNr guibg=NONE ctermbg=NONE
+    highlight SignColumn guibg=NONE ctermbg=NONE
+  endif
+
+  ApplyClapHighlights()
+enddef
+
 # 初始化配色方案
 def g:InitColorscheme(user_config: dict<any> = {})
-  # 合并用户配置
-  extend(config, user_config)
+  config = g:ResolveModuleConfig('colorscheme', config, user_config)
+
+  if g:ModuleIsDisabled(config, 'Colorscheme')
+    return
+  endif
 
   # 设置背景
-  execute 'set background=' .. config.background
+  &background = config.background
 
   # Molokai 特定设置
   if config.scheme == 'molokai'
@@ -32,7 +57,7 @@ def g:InitColorscheme(user_config: dict<any> = {})
 
   # 应用配色方案
   try
-    execute 'colorscheme ' .. config.scheme
+    execute 'colorscheme ' .. fnameescape(config.scheme)
   catch
     call g:ErrWarn($'配色方案 {config.scheme} 未找到，使用默认方案')
     try
@@ -42,44 +67,35 @@ def g:InitColorscheme(user_config: dict<any> = {})
     endtry
   endtry
 
-  # 透明背景设置
-  if config.transparent
-    hi Normal guibg=NONE ctermbg=NONE
-    hi NonText guibg=NONE ctermbg=NONE
-    hi LineNr guibg=NONE ctermbg=NONE
-    hi SignColumn guibg=NONE ctermbg=NONE
-  endif
-
-  # Clap UI 自定义高亮（更美观的配色）
-  call g:SetupClapHighlights()
+  g:ApplyColorschemeExtras()
 enddef
 
 # Clap 自定义高亮配置
-def g:SetupClapHighlights()
+def ApplyClapHighlights()
   # 输入框样式
-  hi ClapInput guifg=#C0CAF5 guibg=#1f2335 gui=bold
-  hi ClapSpinner guifg=#7dcfff gui=bold
-  hi ClapSearchText guifg=#ff9e64 gui=bold
+  ApplyHighlight('ClapInput', ['guifg=#C0CAF5', 'ctermfg=153', 'guibg=#1f2335', 'ctermbg=235', 'gui=bold', 'cterm=bold'])
+  ApplyHighlight('ClapSpinner', ['guifg=#7dcfff', 'ctermfg=117', 'gui=bold', 'cterm=bold'])
+  ApplyHighlight('ClapSearchText', ['guifg=#ff9e64', 'ctermfg=215', 'gui=bold', 'cterm=bold'])
 
   # 显示区域
-  hi ClapDisplay guibg=#1a1b26
-  hi ClapPreview guibg=#24283b
+  ApplyHighlight('ClapDisplay', ['guibg=#1a1b26', 'ctermbg=234'])
+  ApplyHighlight('ClapPreview', ['guibg=#24283b', 'ctermbg=236'])
 
   # 匹配高亮
-  hi ClapMatches guifg=#ff9e64 gui=bold,underline
-  hi ClapNoMatchesFound guifg=#f7768e gui=bold
+  ApplyHighlight('ClapMatches', ['guifg=#ff9e64', 'ctermfg=215', 'gui=bold,underline', 'cterm=bold,underline'])
+  ApplyHighlight('ClapNoMatchesFound', ['guifg=#f7768e', 'ctermfg=210', 'gui=bold', 'cterm=bold'])
 
   # 选中项
-  hi ClapSelected guifg=#7dcfff guibg=#283457 gui=bold
-  hi ClapCurrentSelection guifg=#7dcfff guibg=#364A82 gui=bold
+  ApplyHighlight('ClapSelected', ['guifg=#7dcfff', 'ctermfg=117', 'guibg=#283457', 'ctermbg=24', 'gui=bold', 'cterm=bold'])
+  ApplyHighlight('ClapCurrentSelection', ['guifg=#7dcfff', 'ctermfg=117', 'guibg=#364A82', 'ctermbg=60', 'gui=bold', 'cterm=bold'])
 
   # 分隔符和边框
-  hi ClapSeparator guifg=#565f89
-  hi ClapBorder guifg=#565f89
+  ApplyHighlight('ClapSeparator', ['guifg=#565f89', 'ctermfg=60'])
+  ApplyHighlight('ClapBorder', ['guifg=#565f89', 'ctermfg=60'])
 
   # Provider 相关
-  hi ClapProviderColon guifg=#9d7cd8
-  hi ClapProviderAbout guifg=#9ece6a
+  ApplyHighlight('ClapProviderColon', ['guifg=#9d7cd8', 'ctermfg=140'])
+  ApplyHighlight('ClapProviderAbout', ['guifg=#9ece6a', 'ctermfg=114'])
 enddef
 
 # 切换背景色
@@ -100,6 +116,15 @@ enddef
 # 获取当前配置
 def g:GetColorschemeConfig(): dict<any>
   return config
+enddef
+
+def g:ColorschemeHealthCheck(): dict<any>
+  return g:BuildManagedModuleHealth('colorscheme', 'Colorscheme', config, {
+    scheme: config.scheme,
+    background: config.background,
+    transparent: config.transparent,
+    active_scheme: exists('g:colors_name') ? g:colors_name : '',
+  })
 enddef
 
 # 命令定义

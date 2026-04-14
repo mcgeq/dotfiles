@@ -1,15 +1,14 @@
 vim9script
 # ============================================================================
-# Terminal 模块 - 浮动终端
-# 作者：mcge <mcgeq@outlook.com>
-# 插件：vim-floaterm
+# 模块: Terminal / Floaterm
+# 作者: mcge <mcgeq@outlook.com>
+# 说明: 配置 Floaterm 浮动终端行为。
 # ============================================================================
 
 # 防止重复加载
-if exists('g:mcge_floaterm_loaded')
+if g:MarkModuleLoaded('floaterm')
   finish
 endif
-g:mcge_floaterm_loaded = true
 
 # 配置
 var config = {
@@ -25,59 +24,31 @@ var config = {
 
 # 初始化 Floaterm
 def g:InitFloaterm(user_config: dict<any> = {})
-  # 合并用户配置
-  extend(config, user_config)
+  config = g:ResolveModuleConfig('floaterm', config, user_config)
 
-  if !config.enabled
-    call g:ErrDebug('Floaterm is disabled')
+  if g:ModuleIsDisabled(config, 'Floaterm')
     return
   endif
 
-  # 设置 shell
-  g:floaterm_shell = config.shell
-
-  # 窗口外观
-  g:floaterm_width = config.width
-  g:floaterm_height = config.height
-  g:floaterm_title = config.title
-  g:floaterm_position = config.position
-  g:floaterm_autofocus = config.autofocus
-  g:floaterm_autoinsert = config.autoinsert
-
-  # 设置快捷键
-  SetupMappings()
+  # 设置 shell 和窗口外观
+  g:ApplyGlobalVars({
+    floaterm_shell: config.shell,
+    floaterm_width: config.width,
+    floaterm_height: config.height,
+    floaterm_title: config.title,
+    floaterm_position: config.position,
+    floaterm_autofocus: config.autofocus,
+    floaterm_autoinsert: config.autoinsert,
+  })
 
   call g:ErrDebug('Floaterm initialized')
 enddef
 
-# 设置快捷键
-def SetupMappings()
-  # F7: 新建终端
-  nnoremap <silent> <F7> :FloatermNew<CR>
-  tnoremap <silent> <F7> <C-\><C-n>:FloatermNew<CR>
-
-  # F8: 上一个终端
-  nnoremap <silent> <F8> :FloatermPrev<CR>
-  tnoremap <silent> <F8> <C-\><C-n>:FloatermPrev<CR>
-
-  # F9: 下一个终端
-  nnoremap <silent> <F9> :FloatermNext<CR>
-  tnoremap <silent> <F9> <C-\><C-n>:FloatermNext<CR>
-
-  # F12: 切换终端
-  nnoremap <silent> <F12> :FloatermToggle<CR>
-  tnoremap <silent> <F12> <C-\><C-n>:FloatermToggle<CR>
-enddef
-
 # 健康检查
 def g:FloatermHealthCheck(): dict<any>
-  return {
-    name: 'Floaterm',
-    available: exists(':FloatermNew'),
-    enabled: config.enabled,
+  return g:BuildManagedCommandModuleHealth('floaterm', 'Floaterm', config, 'FloatermNew', {
     shell: config.shell,
-    status: config.enabled ? 'running' : 'disabled',
-  }
+  })
 enddef
 
 # 获取配置

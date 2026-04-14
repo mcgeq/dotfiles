@@ -1,14 +1,14 @@
 vim9script
 # ============================================================================
-# Editor 模块 - Tab 和缩进配置
-# 作者：mcge <mcgeq@outlook.com>
+# 模块: Editor / TabSize
+# 作者: mcge <mcgeq@outlook.com>
+# 说明: 配置全局与文件类型缩进参数。
 # ============================================================================
 
 # 防止重复加载
-if exists('g:mcge_tabsize_loaded')
+if g:MarkModuleLoaded('tabsize')
   finish
 endif
-g:mcge_tabsize_loaded = true
 
 # 配置
 var config = {
@@ -18,59 +18,72 @@ var config = {
   softtabstop: 4,
   shiftwidth: 4,
   filetypes: {
-    rust: { tabstop: 4, shiftwidth: 4 },
-    python: { tabstop: 4, shiftwidth: 4 },
-    javascript: { tabstop: 2, shiftwidth: 2 },
-    javascriptreact: { tabstop: 2, shiftwidth: 2 },
-    typescript: { tabstop: 2, shiftwidth: 2 },
-    typescriptreact: { tabstop: 2, shiftwidth: 2 },
-    csharp: { tabstop: 4, shiftwidth: 4 },
-    html: { tabstop: 2, shiftwidth: 2 },
+    rust: { tabstop: 4, softtabstop: 4, shiftwidth: 4 },
+    python: { tabstop: 4, softtabstop: 4, shiftwidth: 4 },
+    javascript: { tabstop: 2, softtabstop: 2, shiftwidth: 2 },
+    javascriptreact: { tabstop: 2, softtabstop: 2, shiftwidth: 2 },
+    typescript: { tabstop: 2, softtabstop: 2, shiftwidth: 2 },
+    typescriptreact: { tabstop: 2, softtabstop: 2, shiftwidth: 2 },
+    csharp: { tabstop: 4, softtabstop: 4, shiftwidth: 4 },
+    html: { tabstop: 2, softtabstop: 2, shiftwidth: 2 },
+    css: { tabstop: 2, softtabstop: 2, shiftwidth: 2 },
+    scss: { tabstop: 2, softtabstop: 2, shiftwidth: 2 },
   },
 }
 
-# 初始化 Tab 配置
-def g:InitTabSize(user_config: dict<any> = {})
-  # 合并用户配置
-  extend(config, user_config)
+def ApplyGlobalTabOptions()
+  &g:expandtab = config.expandtab
+  &g:tabstop = config.tabstop
+  &g:softtabstop = config.softtabstop
+  &g:shiftwidth = config.shiftwidth
+enddef
 
-  if !config.enabled
-    call g:ErrDebug('TabSize is disabled')
+def ApplyLocalTabOptions(options: dict<any>)
+  &l:tabstop = options.tabstop
+  &l:softtabstop = get(options, 'softtabstop', options.shiftwidth)
+  &l:shiftwidth = options.shiftwidth
+enddef
+
+def g:ApplyTabSizeForFiletype(filetype: string)
+  if !has_key(config.filetypes, filetype)
     return
   endif
 
-  # 基础设置（使用 execute 设置选项）
-  execute 'set expandtab'
-  execute 'set tabstop=' .. config.tabstop
-  execute 'set softtabstop=' .. config.softtabstop
-  execute 'set shiftwidth=' .. config.shiftwidth
+  ApplyLocalTabOptions(config.filetypes[filetype])
+enddef
+
+# 初始化 Tab 配置
+def g:InitTabSize(user_config: dict<any> = {})
+  config = g:ResolveModuleConfigDeep('tabsize', config, user_config)
+
+  if g:ModuleIsDisabled(config, 'TabSize')
+    return
+  endif
+
+  # 基础设置
+  ApplyGlobalTabOptions()
 
   # 按文件类型设置
-  SetupFileTypeAutocmds()
+  RegisterFileTypeAutocmds()
 
   call g:ErrDebug('TabSize initialized')
 enddef
 
 # 设置文件类型自动命令
-def SetupFileTypeAutocmds()
+def RegisterFileTypeAutocmds()
   augroup mcge_tabsize
     autocmd!
-    for [ft, opts] in items(config.filetypes)
-      execute 'autocmd FileType ' .. ft .. ' setlocal tabstop=' .. opts.tabstop .. ' shiftwidth=' .. opts.shiftwidth
-    endfor
+    autocmd FileType * call g:ApplyTabSizeForFiletype(expand('<amatch>'))
   augroup END
 enddef
 
 # 健康检查
 def g:TabSizeHealthCheck(): dict<any>
-  return {
-    name: 'TabSize',
-    enabled: config.enabled,
+  return g:BuildManagedModuleHealth('tabsize', 'TabSize', config, {
     tabstop: config.tabstop,
     shiftwidth: config.shiftwidth,
     filetypes_configured: len(config.filetypes),
-    status: config.enabled ? 'running' : 'disabled',
-  }
+  })
 enddef
 
 # 获取配置

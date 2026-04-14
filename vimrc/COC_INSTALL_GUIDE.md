@@ -34,6 +34,13 @@
 :CocInstall coc-cmake coc-sql coc-markdownlint coc-markdown-preview-enhanced
 ```
 
+说明：
+- 前端格式化默认走 `coc-eslint`，`prettier.enable` 默认为 `false`。
+- `coc-prettier` 仍可保留安装，方便在个别项目里手动开启 Prettier 配置入口。
+- 保存时的自动格式化当前只对前端文件类型启用：
+  `javascript`、`javascriptreact`、`typescript`、`typescriptreact`、`vue`。
+  其中 `jsx` 对应 `javascriptreact`，`tsx` 对应 `typescriptreact`。
+
 ### 方案二：禁用自动安装，改为手动安装
 
 编辑 `modules/lsp/coc.vim`，将：
