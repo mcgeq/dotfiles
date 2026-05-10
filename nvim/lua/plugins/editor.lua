@@ -23,6 +23,11 @@ function M.setup()
     return frontend_state.get()
   end
 
+  local ok_pairs, mini_pairs = pcall(require, "mini.pairs")
+  if ok_pairs then
+    mini_pairs.setup()
+  end
+
   local ok_spider, spider = pcall(require, "spider")
   if ok_spider then
     spider.setup({
@@ -66,6 +71,11 @@ function M.setup()
       completion = {
         documentation = { auto_show = true },
         list = { selection = { preselect = false, auto_insert = false } },
+        accept = {
+          auto_brackets = {
+            enabled = true,
+          },
+        },
       },
       fuzzy = {
         prebuilt_binaries = {

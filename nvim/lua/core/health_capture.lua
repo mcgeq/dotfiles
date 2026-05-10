@@ -34,6 +34,23 @@ local function skipped_system_obj()
   }
 end
 
+local function prepare_headless_snacks_health()
+  if #vim.api.nvim_list_uis() ~= 0 then return end
+
+  local ok_snacks, snacks = pcall(require, "snacks")
+  if not ok_snacks or not snacks.did_setup then return end
+  if not (snacks.config.dashboard and snacks.config.dashboard.enabled) then return end
+
+  local ok_dashboard, dashboard = pcall(require, "snacks.dashboard")
+  if not ok_dashboard or type(dashboard.setup) ~= "function" then return end
+  if dashboard.status and dashboard.status.did_setup then return end
+
+  -- `Snacks.dashboard` normally initializes on `UIEnter`, which never fires in
+  -- our background headless health process. Run its setup once so health can
+  -- report the real headless reason instead of a false "setup did not run".
+  pcall(dashboard.setup)
+end
+
 function M.run()
   local old_echo = vim.api.nvim_echo
   local old_system = vim.system
@@ -50,6 +67,8 @@ function M.run()
     end
     return old_system(cmd, opts, on_exit)
   end
+
+  prepare_headless_snacks_health()
 
   local ok, err = pcall(function()
     require("vim.health")._check("", vim.env.NVIM_HEALTH_ARGS or "")

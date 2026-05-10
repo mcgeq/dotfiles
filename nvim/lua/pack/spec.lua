@@ -10,6 +10,7 @@ function M.get_base_specs()
     { src = "https://github.com/folke/snacks.nvim", name = "snacks.nvim" },
     { src = "https://github.com/folke/flash.nvim", name = "flash.nvim" },
     { src = "https://github.com/chrisgrieser/nvim-spider", name = "nvim-spider" },
+    { src = "https://github.com/echasnovski/mini.nvim", name = "mini.nvim" },
     { src = "https://github.com/folke/noice.nvim", name = "noice.nvim" },
     { src = "https://github.com/akinsho/bufferline.nvim", name = "bufferline.nvim" },
     { src = "https://github.com/lewis6991/gitsigns.nvim", name = "gitsigns.nvim" },
