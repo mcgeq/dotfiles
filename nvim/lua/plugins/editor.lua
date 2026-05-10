@@ -75,6 +75,9 @@ function M.setup()
       keymap = {
         preset = "default",
         ["<C-space>"] = { "show", "show_documentation", "hide_documentation" },
+        ["<CR>"] = { "select_and_accept", "fallback" },
+        ["<Tab>"] = { "select_next", "snippet_forward", "fallback" },
+        ["<S-Tab>"] = { "select_prev", "snippet_backward", "fallback" },
       },
       snippets = {
         preset = "default",
