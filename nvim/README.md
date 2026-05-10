@@ -49,6 +49,7 @@ LSP is configured directly in [lua/lsp/servers.lua](/d:/config/dotfiles/nvim/lua
 
 Built-in base support includes:
 
+- C / C++: `clangd` via [lua/user/lsp/clangd.lua](/d:/config/dotfiles/nvim/lua/user/lsp/clangd.lua)
 - Lua: `lua_ls`
 - Bash: `bashls`
 - JSON: `jsonls`
@@ -64,6 +65,8 @@ Built-in base support includes:
 - Vue: `vue_ls` with `@vue/typescript-plugin` wired into `vtsls`
 
 Frontend formatting defaults to ESLint-driven workflows so projects using `@antfu/eslint-config` can keep one source of truth. Non-frontend filetypes continue to use Conform.
+
+For C++, the user override prefers a system LLVM toolchain when available and falls back to Mason's `clangd`. See [docs/cpp-clangd.md](/d:/config/dotfiles/nvim/docs/cpp-clangd.md) for C++20/23 defaults, `query-driver`, and project-level module setup.
 
 ## Useful Commands
 
@@ -99,6 +102,11 @@ Plugin management:
 - `:PackSync` write the current resolved state to [nvim-pack-lock.json](/d:/config/dotfiles/nvim/nvim-pack-lock.json)
 - `:PackOpenLog` open the lightweight `vim.pack` activity log
 - `:MarkdownTableFormat` format the markdown table under cursor
+
+C++ / CMake extras:
+
+- `clangd_extensions.nvim` adds source/header switching plus AST, symbol, hierarchy, and memory views
+- `cmake-tools.nvim` adds in-editor generate / build / run workflows for CMake projects
 
 `PackRepair` is especially useful when a plugin directory is corrupted and only contains `.git`.
 
@@ -279,8 +287,13 @@ Frontend save behavior is too aggressive:
 Need a quick health snapshot:
 
 - `:NvimStatus`
-- `:checkhealth`
+- `:Health`
+- `:Health vim.lsp`
 - `:messages`
+
+Windows note:
+
+- If plain `:checkhealth` used to freeze, this config now ships a local Mason health shim to avoid an upstream Windows log-permission hang in `:checkhealth mason`
 
 ## Notes From `cap153-nvim`
 

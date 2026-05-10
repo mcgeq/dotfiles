@@ -26,7 +26,7 @@ return {
   },
 
   -- Add extra treesitter parsers here.
-  treesitter = {},
+  treesitter = { "c", "cmake", "cpp", "cuda", "objc", "proto" },
 
   -- Add or override conform formatters_by_ft entries here.
   -- Example: switch Vue/CSS/HTML back to prettier without touching the base config.
@@ -49,5 +49,5 @@ return {
   formatters = {},
 
   -- Add extra Mason tools here, for example: { "prettier" }.
-  mason = {},
+  mason = { "codelldb" },
 }

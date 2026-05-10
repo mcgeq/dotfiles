@@ -13,6 +13,8 @@ This directory now only documents parts of the current native `vim.pack`-based c
 
 ## Optional Reference
 
+- [cpp-clangd.md](./cpp-clangd.md)
+  C++20/23, clangd, query-driver, and module workflow notes
 - [python-ty-configuration.md](./python-ty-configuration.md)
   `ty` remains an optional Python LSP / type-checking path
 - [snacks-picker-optimization.md](./snacks-picker-optimization.md)

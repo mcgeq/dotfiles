@@ -3,6 +3,8 @@ local M = {}
 function M.setup()
   local ok, snacks = pcall(require, "snacks")
   if not ok then return end
+  local ok_picker, picker = pcall(require, "snacks.picker")
+  local ok_input, input = pcall(require, "snacks.input")
 
   snacks.setup({
     bigfile = {},
@@ -100,6 +102,13 @@ function M.setup()
     scope = {},
     statuscolumn = {},
   })
+
+  if ok_picker and picker and picker.select then
+    vim.ui.select = picker.select
+  end
+  if ok_input and input and input.input then
+    vim.ui.input = input.input
+  end
 
   local map = require("core.keymaps").map
   map("n", "<leader><space>", function() snacks.picker.smart() end, "Smart find files")
