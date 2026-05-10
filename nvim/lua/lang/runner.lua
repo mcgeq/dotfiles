@@ -1,7 +1,20 @@
 local M = {}
 
+local function is_windows()
+  return vim.fn.has("win32") == 1 or vim.fn.has("win64") == 1
+end
+
+local function executable_suffix()
+  return is_windows() and ".exe" or ""
+end
+
 local function powershell_quote(value)
   return "'" .. tostring(value):gsub("'", "''") .. "'"
+end
+
+local function shell_quote(value)
+  if is_windows() then return powershell_quote(value) end
+  return "'" .. tostring(value):gsub("'", [['"'"']]) .. "'"
 end
 
 local function first_executable(names)
@@ -56,15 +69,31 @@ local function open_command(cmd, opts)
   require("core.terminal").open_float(cmd, opts)
 end
 
-local function pwsh_command(command, cwd, title)
+local function shell_command(command, cwd, title)
+  if is_windows() then
+    return {
+      cmd = {
+        "powershell.exe",
+        "-NoLogo",
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-Command",
+        command,
+      },
+      opts = {
+        cwd = cwd,
+        title = title,
+      },
+    }
+  end
+
+  local shell = vim.o.shell ~= "" and vim.o.shell or "sh"
+  local shellcmdflag = vim.o.shellcmdflag ~= "" and vim.o.shellcmdflag or "-c"
   return {
     cmd = {
-      "powershell.exe",
-      "-NoLogo",
-      "-NoProfile",
-      "-ExecutionPolicy",
-      "Bypass",
-      "-Command",
+      shell,
+      shellcmdflag,
       command,
     },
     opts = {
@@ -90,8 +119,8 @@ end
 
 local function find_local_python(start_dir)
   local path = select(1, find_upward(start_dir, {
-    ".venv\\Scripts\\python.exe",
-    "venv\\Scripts\\python.exe",
+    is_windows() and ".venv\\Scripts\\python.exe" or ".venv/bin/python",
+    is_windows() and "venv\\Scripts\\python.exe" or "venv/bin/python",
   }))
   return path
 end
@@ -177,8 +206,8 @@ local function rust_single_file_command(bufnr, action)
   local file = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(bufnr), ":p")
   local dir = vim.fn.fnamemodify(file, ":h")
   local stem = vim.fn.fnamemodify(file, ":t:r")
-  local output = vim.fs.joinpath(dir, stem .. ".exe")
-  local test_output = vim.fs.joinpath(dir, stem .. "_test.exe")
+  local output = vim.fs.joinpath(dir, stem .. executable_suffix())
+  local test_output = vim.fs.joinpath(dir, stem .. "_test" .. executable_suffix())
   local rustc = first_executable({ "rustc" })
   if not rustc then
     return nil, "No `rustc` executable found on PATH."
@@ -192,27 +221,37 @@ local function rust_single_file_command(bufnr, action)
     }
   end
 
-  local pieces = { "& " .. powershell_quote(rustc) }
+  local pieces = { shell_quote(rustc) }
   if action == "build" then
-    pieces[#pieces + 1] = powershell_quote(file)
+    pieces[#pieces + 1] = shell_quote(file)
     pieces[#pieces + 1] = "-o"
-    pieces[#pieces + 1] = powershell_quote(output)
+    pieces[#pieces + 1] = shell_quote(output)
   elseif action == "run" then
-    pieces[#pieces + 1] = powershell_quote(file)
+    pieces[#pieces + 1] = shell_quote(file)
     pieces[#pieces + 1] = "-o"
-    pieces[#pieces + 1] = powershell_quote(output)
-    pieces[#pieces + 1] = ";"
-    pieces[#pieces + 1] = "if ($LASTEXITCODE -eq 0) { & " .. powershell_quote(output) .. " }"
+    pieces[#pieces + 1] = shell_quote(output)
+    if is_windows() then
+      pieces[#pieces + 1] = ";"
+      pieces[#pieces + 1] = "if ($LASTEXITCODE -eq 0) { & " .. powershell_quote(output) .. " }"
+    else
+      pieces[#pieces + 1] = "&&"
+      pieces[#pieces + 1] = shell_quote(output)
+    end
   elseif action == "test" then
     pieces[#pieces + 1] = "--test"
-    pieces[#pieces + 1] = powershell_quote(file)
+    pieces[#pieces + 1] = shell_quote(file)
     pieces[#pieces + 1] = "-o"
-    pieces[#pieces + 1] = powershell_quote(test_output)
-    pieces[#pieces + 1] = ";"
-    pieces[#pieces + 1] = "if ($LASTEXITCODE -eq 0) { & " .. powershell_quote(test_output) .. " }"
+    pieces[#pieces + 1] = shell_quote(test_output)
+    if is_windows() then
+      pieces[#pieces + 1] = ";"
+      pieces[#pieces + 1] = "if ($LASTEXITCODE -eq 0) { & " .. powershell_quote(test_output) .. " }"
+    else
+      pieces[#pieces + 1] = "&&"
+      pieces[#pieces + 1] = shell_quote(test_output)
+    end
   end
 
-  return pwsh_command(table.concat(pieces, " "), dir, " Rust ")
+  return shell_command(table.concat(pieces, " "), dir, " Rust ")
 end
 
 local function rust_command(bufnr, action)
@@ -220,13 +259,13 @@ local function rust_command(bufnr, action)
   if root and file_exists(vim.fs.joinpath(root, "Cargo.toml")) then
     local title = " Rust "
     if action == "build" then
-      return pwsh_command("cargo build", root, title)
+      return shell_command("cargo build", root, title)
     elseif action == "run" then
-      return pwsh_command("cargo run", root, title)
+      return shell_command("cargo run", root, title)
     elseif action == "test" then
-      return pwsh_command("cargo test", root, title)
+      return shell_command("cargo test", root, title)
     elseif action == "clean" then
-      return pwsh_command("cargo clean", root, title)
+      return shell_command("cargo clean", root, title)
     end
   end
 
@@ -237,7 +276,7 @@ local function zig_single_file_command(bufnr, action)
   local file = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(bufnr), ":p")
   local dir = vim.fn.fnamemodify(file, ":h")
   local stem = vim.fn.fnamemodify(file, ":t:r")
-  local output = vim.fs.joinpath(dir, stem .. ".exe")
+  local output = vim.fs.joinpath(dir, stem .. executable_suffix())
   local zig = first_executable({ "zig" })
   if not zig then
     return nil, "No `zig` executable found on PATH."
@@ -251,32 +290,32 @@ local function zig_single_file_command(bufnr, action)
     }
   end
 
-  local pieces = { "& " .. powershell_quote(zig) }
+  local pieces = { shell_quote(zig) }
   if action == "build" then
     pieces[#pieces + 1] = "build-exe"
-    pieces[#pieces + 1] = powershell_quote(file)
+    pieces[#pieces + 1] = shell_quote(file)
   elseif action == "run" then
     pieces[#pieces + 1] = "run"
-    pieces[#pieces + 1] = powershell_quote(file)
+    pieces[#pieces + 1] = shell_quote(file)
   elseif action == "test" then
     pieces[#pieces + 1] = "test"
-    pieces[#pieces + 1] = powershell_quote(file)
+    pieces[#pieces + 1] = shell_quote(file)
   else
     return nil, "Single-file Zig clean is not configured."
   end
 
-  return pwsh_command(table.concat(pieces, " "), dir, " Zig ")
+  return shell_command(table.concat(pieces, " "), dir, " Zig ")
 end
 
 local function zig_command(bufnr, action)
   local root = is_zig_project(bufnr)
   if root and vim.fn.filereadable(vim.fs.joinpath(root, "build.zig")) == 1 then
     if action == "build" then
-      return pwsh_command("zig build", root, " Zig ")
+      return shell_command("zig build", root, " Zig ")
     elseif action == "run" then
-      return pwsh_command("zig build run", root, " Zig ")
+      return shell_command("zig build run", root, " Zig ")
     elseif action == "test" then
-      return pwsh_command("zig build test", root, " Zig ")
+      return shell_command("zig build test", root, " Zig ")
     elseif action == "clean" then
       return nil, "Zig project clean is not configured. `zig build` has no universal clean command."
     end
@@ -292,19 +331,19 @@ local function go_command(bufnr, action)
 
   if action == "build" then
     if root and vim.fn.filereadable(vim.fs.joinpath(root, "go.mod")) == 1 then
-      return pwsh_command("go build .", dir, " Go ")
+      return shell_command("go build .", dir, " Go ")
     end
-    return pwsh_command("& go build " .. powershell_quote(file), dir, " Go ")
+    return shell_command("go build " .. shell_quote(file), dir, " Go ")
   elseif action == "run" then
     if root and vim.fn.filereadable(vim.fs.joinpath(root, "go.mod")) == 1 then
-      return pwsh_command("go run .", dir, " Go ")
+      return shell_command("go run .", dir, " Go ")
     end
-    return pwsh_command("& go run " .. powershell_quote(file), dir, " Go ")
+    return shell_command("go run " .. shell_quote(file), dir, " Go ")
   elseif action == "test" then
-    return pwsh_command("go test", dir, " Go ")
+    return shell_command("go test", dir, " Go ")
   elseif action == "clean" then
     if root and vim.fn.filereadable(vim.fs.joinpath(root, "go.mod")) == 1 then
-      return pwsh_command("go clean", dir, " Go ")
+      return shell_command("go clean", dir, " Go ")
     end
     return nil, "Single-file Go clean is not configured."
   end
@@ -330,11 +369,11 @@ local function python_command(bufnr, action)
 
   if uv_lock and vim.fn.executable("uv") == 1 then
     if action == "build" then
-      return pwsh_command("uv run python -m py_compile " .. powershell_quote(file), cwd, " Python ")
+      return shell_command("uv run python -m py_compile " .. shell_quote(file), cwd, " Python ")
     elseif action == "run" then
-      return pwsh_command("uv run python " .. powershell_quote(file), cwd, " Python ")
+      return shell_command("uv run python " .. shell_quote(file), cwd, " Python ")
     elseif action == "test" then
-      return pwsh_command("uv run pytest", cwd, " Python ")
+      return shell_command("uv run pytest", cwd, " Python ")
     end
   end
 
@@ -342,13 +381,13 @@ local function python_command(bufnr, action)
     return nil, "No Python executable found on PATH."
   end
 
-  local quoted_python = powershell_quote(python)
+  local quoted_python = shell_quote(python)
   if action == "build" then
-    return pwsh_command("& " .. quoted_python .. " -m py_compile " .. powershell_quote(file), cwd, " Python ")
+    return shell_command(quoted_python .. " -m py_compile " .. shell_quote(file), cwd, " Python ")
   elseif action == "run" then
-    return pwsh_command("& " .. quoted_python .. " " .. powershell_quote(file), cwd, " Python ")
+    return shell_command(quoted_python .. " " .. shell_quote(file), cwd, " Python ")
   elseif action == "test" then
-    return pwsh_command("& " .. quoted_python .. " -m pytest", cwd, " Python ")
+    return shell_command(quoted_python .. " -m pytest", cwd, " Python ")
   end
 end
 
@@ -372,7 +411,7 @@ local function frontend_command(bufnr, action)
     return nil, "No supported package manager found on PATH. Expected pnpm, bun, yarn, or npm."
   end
 
-  return pwsh_command(package_manager_command(manager, action), root, " Frontend ")
+  return shell_command(package_manager_command(manager, action), root, " Frontend ")
 end
 
 local function backend_command(bufnr, filetype, action)

@@ -5,15 +5,69 @@ local M = {
   },
 }
 
+local function is_windows()
+  return vim.fn.has("win32") == 1 or vim.fn.has("win64") == 1
+end
+
+local function executable_suffix()
+  return is_windows() and ".exe" or ""
+end
+
+local function is_usable_executable_path(path)
+  if type(path) ~= "string" or path == "" then return false end
+  if not is_windows() then return true end
+
+  local lower = path:lower()
+  return path:match("^[A-Za-z]:[\\/]")
+    or path:match("^\\\\")
+    or lower:match("%.exe$")
+    or lower:match("%.cmd$")
+    or lower:match("%.bat$")
+end
+
 local function first_executable(names)
   for _, name in ipairs(names) do
     local path = vim.fn.exepath(name)
-    if path ~= nil and path ~= "" then return path end
+    if is_usable_executable_path(path) then return path end
+    if vim.fn.executable(name) == 1 then return name end
   end
 end
 
 local function powershell_quote(value)
   return "'" .. tostring(value):gsub("'", "''") .. "'"
+end
+
+local function shell_quote(value)
+  if is_windows() then return powershell_quote(value) end
+  return "'" .. tostring(value):gsub("'", [['"'"']]) .. "'"
+end
+
+local function shell_command(command, cwd, title)
+  if is_windows() then
+    return {
+      "powershell.exe",
+      "-NoLogo",
+      "-NoProfile",
+      "-ExecutionPolicy",
+      "Bypass",
+      "-Command",
+      command,
+    }, {
+      cwd = cwd,
+      title = title,
+    }
+  end
+
+  local shell = vim.o.shell ~= "" and vim.o.shell or "sh"
+  local shellcmdflag = vim.o.shellcmdflag ~= "" and vim.o.shellcmdflag or "-c"
+  return {
+    shell,
+    shellcmdflag,
+    command,
+  }, {
+    cwd = cwd,
+    title = title,
+  }
 end
 
 local function cmake_root(bufnr)
@@ -22,6 +76,90 @@ local function cmake_root(bufnr)
     "CMakePresets.json",
     "CMakeUserPresets.json",
   })
+end
+
+local function make_root(bufnr)
+  return vim.fs.root(bufnr, {
+    "GNUmakefile",
+    "makefile",
+    "Makefile",
+  })
+end
+
+local function makefile_path(root)
+  if not root then return end
+  for _, name in ipairs({ "GNUmakefile", "makefile", "Makefile" }) do
+    local path = vim.fs.joinpath(root, name)
+    if vim.uv.fs_stat(path) then return path end
+  end
+end
+
+local function make_targets(root)
+  local targets = {}
+  local path = makefile_path(root)
+  if not path then return targets end
+
+  local ok, lines = pcall(vim.fn.readfile, path)
+  if not ok then return targets end
+
+  for _, line in ipairs(lines) do
+    if not line:match("^%s*#") and not line:match("^%s*[A-Za-z0-9_%.%-]+%s*[%+%?%!:]?=") then
+      local target = line:match("^([A-Za-z0-9_%.%-]+)%s*:")
+      if target and not target:match("^%.") then
+        targets[target] = true
+      end
+    end
+  end
+
+  return targets
+end
+
+local function preferred_make_target(root, names)
+  local targets = make_targets(root)
+  for _, name in ipairs(names) do
+    if targets[name] then return name end
+  end
+end
+
+local function make_action_command(bufnr, action)
+  local root = make_root(bufnr)
+  if not root then return nil, nil, nil end
+
+  local make = first_executable({ "make", "mingw32-make", "gmake" })
+  if not make then
+    return nil, "No `make` executable found on PATH.", root
+  end
+
+  local target
+  if action == "run" then
+    target = preferred_make_target(root, { "run" })
+    if not target then
+      return nil, "No `run` target found in Makefile. Add `run:` or use `,cb` to build only.", root
+    end
+  elseif action == "clean" then
+    target = preferred_make_target(root, { "clean", "distclean", "mrproper" })
+    if not target then
+      return nil, "No clean target found in Makefile. Expected `clean:`.", root
+    end
+  elseif action == "test" then
+    target = preferred_make_target(root, { "test", "check" })
+    if not target then
+      return nil, "No `test` or `check` target found in Makefile.", root
+    end
+  end
+
+  local pieces = { shell_quote(make) }
+  if target then
+    pieces[#pieces + 1] = shell_quote(target)
+  end
+
+  return shell_command(table.concat(pieces, " "), root, " Make "), root
+end
+
+local function cpp_mode_label(bufnr)
+  if cmake_root(bufnr) then return "CMake project" end
+  if make_root(bufnr) then return "Make project" end
+  return "Single file"
 end
 
 local function ensure_file_is_saved(bufnr)
@@ -45,7 +183,7 @@ local function single_file_command(bufnr, run_after_build)
   local file = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(bufnr), ":p")
   local dir = vim.fn.fnamemodify(file, ":h")
   local stem = vim.fn.fnamemodify(file, ":t:r")
-  local output = vim.fs.joinpath(dir, stem .. ".exe")
+  local output = vim.fs.joinpath(dir, stem .. executable_suffix())
   local filetype = vim.bo[bufnr].filetype
 
   local compiler
@@ -81,28 +219,25 @@ local function single_file_command(bufnr, run_after_build)
     return nil, "No compiler found on PATH. Expected clang/clang++ or gcc/g++."
   end
 
-  local pieces = { "& " .. powershell_quote(compiler) }
+  local pieces = { shell_quote(compiler) }
   for _, arg in ipairs(args) do
-    pieces[#pieces + 1] = powershell_quote(arg)
+    pieces[#pieces + 1] = shell_quote(arg)
   end
 
   local script = table.concat(pieces, " ")
   if run_after_build then
-    script = script .. "; if ($LASTEXITCODE -eq 0) { & " .. powershell_quote(output) .. " }"
+    if is_windows() then
+      script = script .. "; if ($LASTEXITCODE -eq 0) { & " .. powershell_quote(output) .. " }"
+    else
+      script = script .. " && " .. shell_quote(output)
+    end
   end
 
-  return {
-    "powershell.exe",
-    "-NoLogo",
-    "-NoProfile",
-    "-ExecutionPolicy",
-    "Bypass",
-    "-Command",
+  return shell_command(
     script,
-  }, {
-    cwd = dir,
-    title = run_after_build and (" run: " .. vim.fn.fnamemodify(file, ":t") .. " ") or (" build: " .. vim.fn.fnamemodify(file, ":t") .. " "),
-  }
+    dir,
+    run_after_build and (" run: " .. vim.fn.fnamemodify(file, ":t") .. " ") or (" build: " .. vim.fn.fnamemodify(file, ":t") .. " ")
+  )
 end
 
 local function build_or_run_file(bufnr, run_after_build)
@@ -115,6 +250,17 @@ local function build_or_run_file(bufnr, run_after_build)
   end
 
   local terminal = require("core.terminal")
+  local make_command, make_opts_or_error, make_project_root = make_action_command(bufnr, run_after_build and "run" or "build")
+  if make_project_root then
+    if not make_command then
+      vim.notify(make_opts_or_error, vim.log.levels.WARN, { title = "C/C++" })
+      return
+    end
+
+    terminal.open_float(make_command, make_opts_or_error)
+    return
+  end
+
   local command, opts_or_error = single_file_command(bufnr, run_after_build)
   if not command then
     vim.notify(opts_or_error, vim.log.levels.WARN, { title = "C/C++" })
@@ -130,6 +276,18 @@ local function clean_file_or_target(bufnr)
     return
   end
 
+  local terminal = require("core.terminal")
+  local make_command, make_opts_or_error, make_project_root = make_action_command(bufnr, "clean")
+  if make_project_root then
+    if not make_command then
+      vim.notify(make_opts_or_error, vim.log.levels.WARN, { title = "C/C++" })
+      return
+    end
+
+    terminal.open_float(make_command, make_opts_or_error)
+    return
+  end
+
   local file = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(bufnr), ":p")
   if file == "" then
     vim.notify("Current buffer has no file path yet.", vim.log.levels.WARN, { title = "C/C++" })
@@ -138,7 +296,7 @@ local function clean_file_or_target(bufnr)
 
   local dir = vim.fn.fnamemodify(file, ":h")
   local stem = vim.fn.fnamemodify(file, ":t:r")
-  local output = vim.fs.joinpath(dir, stem .. ".exe")
+  local output = vim.fs.joinpath(dir, stem .. executable_suffix())
 
   if vim.uv.fs_stat(output) then
     local ok, err = pcall(vim.fn.delete, output)
@@ -158,6 +316,18 @@ local function run_tests(bufnr)
     return
   end
 
+  local terminal = require("core.terminal")
+  local make_command, make_opts_or_error, make_project_root = make_action_command(bufnr, "test")
+  if make_project_root then
+    if not make_command then
+      vim.notify(make_opts_or_error, vim.log.levels.INFO, { title = "C/C++" })
+      return
+    end
+
+    terminal.open_float(make_command, make_opts_or_error)
+    return
+  end
+
   vim.notify("No test command is configured for single-file C/C++. Open a CMake project to use CTest.", vim.log.levels.INFO, {
     title = "C/C++",
   })
@@ -169,25 +339,39 @@ local function cpp_key_lines(bufnr)
     "C/C++ keymaps",
     "",
     "Buffer: " .. (file ~= "" and file or "[No Name]"),
-    "Mode:   " .. (cmake_root(bufnr) and "CMake project" or "Single file"),
+    "Mode:   " .. cpp_mode_label(bufnr),
     "",
-    ",cb  Build current file or CMake target",
-    ",cr  Run current file or CMake target",
-    ",cc  Clean current .exe or CMake target",
-    ",ct  Run tests",
+    ",cb  Build current file / make / CMake target",
+    ",cr  Run current file / make run / CMake target",
+    ",cc  Clean current artifact / make clean / CMake target",
+    ",ct  Run tests / make test / CTest",
     ",ch  Switch source/header",
     ",ca  Show Clangd AST",
     ",ci  Show Clangd symbol info",
     ",cT  Show Clangd type hierarchy",
     ",cm  Show Clangd memory usage",
-    "",
-    "CMake file extras",
-    ",cg  Generate CMake project",
-    ",cs  Select build target",
-    ",cl  Select launch target",
-    ",cv  Select build type",
-    ",cp  Select configure preset",
   }
+
+  local make_project_root = make_root(bufnr)
+  if make_project_root then
+    lines[#lines + 1] = ""
+    lines[#lines + 1] = "Makefile mode"
+    lines[#lines + 1] = ",cb  Uses default `make` target"
+    lines[#lines + 1] = ",cr  " .. (preferred_make_target(make_project_root, { "run" }) and "Uses `make run`" or "Needs a `run:` target")
+    lines[#lines + 1] = ",cc  " .. (preferred_make_target(make_project_root, { "clean", "distclean", "mrproper" }) and "Uses clean target" or "Needs a `clean:` target")
+    lines[#lines + 1] = ",ct  " .. (preferred_make_target(make_project_root, { "test", "check" }) and "Uses `make test/check`" or "Needs a `test:` or `check:` target")
+  end
+
+  if cmake_root(bufnr) then
+    lines[#lines + 1] = ""
+    lines[#lines + 1] = "CMake file extras"
+    lines[#lines + 1] = ",cg  Generate CMake project"
+    lines[#lines + 1] = ",cs  Select build target"
+    lines[#lines + 1] = ",cl  Select launch target"
+    lines[#lines + 1] = ",cv  Select build type"
+    lines[#lines + 1] = ",cp  Select configure preset"
+  end
+
   return lines
 end
 
