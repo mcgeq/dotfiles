@@ -3,6 +3,8 @@ local M = {}
 function M.setup()
   local map = require("core.keymaps").map
 
+  require("lang.runner").setup()
+
   local ok_go, go = pcall(require, "go")
   if ok_go then
     go.setup({
@@ -18,7 +20,7 @@ function M.setup()
         map("n", "<localleader>fs", "<cmd>GoFillStruct<cr>", "Fill struct", { buffer = event.buf })
         map("n", "<localleader>ie", "<cmd>GoIfErr<cr>", "Add if err", { buffer = event.buf })
         map("n", "<localleader>at", "<cmd>GoAddTag<cr>", "Add tags", { buffer = event.buf })
-        map("n", "<localleader>rt", "<cmd>GoRmTag<cr>", "Remove tags", { buffer = event.buf })
+        map("n", "<localleader>aT", "<cmd>GoRmTag<cr>", "Remove tags", { buffer = event.buf })
         map("n", "<localleader>im", "<cmd>GoImpl<cr>", "Generate implementation", { buffer = event.buf })
         map("n", "<localleader>tf", "<cmd>GoTestFunc<cr>", "Test function", { buffer = event.buf })
         map("n", "<localleader>ta", "<cmd>GoTest<cr>", "Test package", { buffer = event.buf })
