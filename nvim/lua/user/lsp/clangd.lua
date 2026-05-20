@@ -10,6 +10,25 @@ local function first_executable(names)
   end
 end
 
+local function executable_sibling(path, sibling)
+  path = normalize(path)
+  if not path then return nil end
+  local parent = vim.fs.dirname(path)
+  if not parent then return nil end
+  local candidate = normalize(vim.fs.joinpath(parent, sibling))
+  if candidate and vim.fn.executable(candidate) == 1 then return candidate end
+end
+
+local function system_clangd()
+  local direct = first_executable({ "clangd", "clangd.exe" })
+  if direct then return direct end
+
+  local sibling = executable_sibling(vim.fn.exepath("clang++"), "clangd.exe")
+    or executable_sibling(vim.fn.exepath("clang-cl"), "clangd.exe")
+    or executable_sibling(vim.fn.exepath("clang"), "clangd.exe")
+  if sibling then return sibling end
+end
+
 local function mason_clangd()
   local patterns = {
     vim.fs.joinpath(vim.fn.stdpath("data"), "mason", "packages", "clangd", "*", "bin", "clangd.exe"),
@@ -36,7 +55,7 @@ local function unique(list)
 end
 
 local function build_cmd()
-  local clangd = first_executable({ "clangd", "clangd.exe" }) or mason_clangd() or "clangd"
+  local clangd = system_clangd() or mason_clangd() or "clangd"
   local drivers = unique({
     normalize(vim.fn.exepath("clang++")),
     normalize(vim.fn.exepath("clang-cl")),

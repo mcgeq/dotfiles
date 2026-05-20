@@ -42,6 +42,11 @@ local function shell_quote(value)
   return "'" .. tostring(value):gsub("'", [['"'"']]) .. "'"
 end
 
+local function shell_executable(value)
+  if is_windows() then return "& " .. powershell_quote(value) end
+  return shell_quote(value)
+end
+
 local function shell_command(command, cwd, title)
   if is_windows() then
     return {
@@ -76,6 +81,77 @@ local function cmake_root(bufnr)
     "CMakePresets.json",
     "CMakeUserPresets.json",
   })
+end
+
+local function expand_cmake_path(value, root)
+  if type(value) ~= "string" or value == "" then return nil end
+
+  return value
+    :gsub("%${sourceDir}", root)
+    :gsub("%${sourceParentDir}", vim.fn.fnamemodify(root, ":h"))
+    :gsub("%${sourceDirName}", vim.fn.fnamemodify(root, ":t"))
+end
+
+local function cmake_preset_binary_dir(root, preset)
+  local path = vim.fs.joinpath(root, "CMakePresets.json")
+  local ok, lines = pcall(vim.fn.readfile, path)
+  if ok then
+    local decoded_ok, data = pcall(vim.json.decode, table.concat(lines, "\n"))
+    if decoded_ok and type(data) == "table" then
+      for _, item in ipairs(data.configurePresets or {}) do
+        if item.name == preset and item.binaryDir then
+          return expand_cmake_path(item.binaryDir, root)
+        end
+      end
+    end
+  end
+
+  return vim.fs.joinpath(root, "build", preset)
+end
+
+local function cmake_project_name(root)
+  local path = vim.fs.joinpath(root, "CMakeLists.txt")
+  local ok, lines = pcall(vim.fn.readfile, path)
+  if not ok then return vim.fn.fnamemodify(root, ":t") end
+
+  local in_project = false
+  for _, line in ipairs(lines) do
+    local inline_name = line:match("project%s*%(%s*([%w_%.%-]+)")
+    if inline_name then return inline_name end
+
+    if in_project then
+      local name = line:match("^%s*([%w_%.%-]+)")
+      if name then return name end
+    elseif line:match("project%s*%(") then
+      in_project = true
+    end
+  end
+
+  return vim.fn.fnamemodify(root, ":t")
+end
+
+local function cmake_build_or_run_command(root, preset, run_after_build)
+  local cmake = first_executable({ "cmake" })
+  if not cmake then return nil, "No `cmake` executable found on PATH." end
+
+  local pieces = {
+    shell_executable(cmake),
+    "--build",
+    "--preset",
+    shell_quote(preset),
+  }
+
+  local script = table.concat(pieces, " ")
+  if run_after_build then
+    local output = vim.fs.joinpath(cmake_preset_binary_dir(root, preset), cmake_project_name(root) .. executable_suffix())
+    if is_windows() then
+      script = script .. "; if ($LASTEXITCODE -eq 0) { & " .. powershell_quote(output) .. " }"
+    else
+      script = script .. " && " .. shell_quote(output)
+    end
+  end
+
+  return shell_command(script, root, run_after_build and " CMake run " or " CMake build ")
 end
 
 local function make_root(bufnr)
@@ -219,7 +295,7 @@ local function single_file_command(bufnr, run_after_build)
     return nil, "No compiler found on PATH. Expected clang/clang++ or gcc/g++."
   end
 
-  local pieces = { shell_quote(compiler) }
+  local pieces = { shell_executable(compiler) }
   for _, arg in ipairs(args) do
     pieces[#pieces + 1] = shell_quote(arg)
   end
@@ -250,6 +326,18 @@ local function build_or_run_file(bufnr, run_after_build)
   end
 
   local terminal = require("core.terminal")
+  local cmake_project_root = cmake_root(bufnr)
+  if cmake_project_root then
+    local command, opts_or_error = cmake_build_or_run_command(cmake_project_root, "default-debug", run_after_build)
+    if not command then
+      vim.notify(opts_or_error, vim.log.levels.WARN, { title = "C/C++" })
+      return
+    end
+
+    terminal.open_float(command, opts_or_error)
+    return
+  end
+
   local make_command, make_opts_or_error, make_project_root = make_action_command(bufnr, run_after_build and "run" or "build")
   if make_project_root then
     if not make_command then
