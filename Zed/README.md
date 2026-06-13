@@ -1,3 +1,5 @@
+[中文](README.zh.md)
+
 # Zed Editor Configuration
 
 Configuration files for the Zed editor.

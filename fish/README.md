@@ -1,3 +1,5 @@
+[中文](README.zh.md)
+
 # Fish Shell Configuration
 
 Minimal fish config as a cross-platform fallback shell, primarily used on Arch Linux (WSL).

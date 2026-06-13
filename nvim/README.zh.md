@@ -1,3 +1,5 @@
+[English](README.md)
+
 # Neovim 配置
 
 此目录为当前活跃的 Neovim 配置文件。基于 Neovim 0.12+ 原生特性和 `vim.pack` 重建，通过 `lua/user/` 提供稳定的覆盖层。

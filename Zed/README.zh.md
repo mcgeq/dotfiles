@@ -1,3 +1,5 @@
+[English](README.md)
+
 # Zed 编辑器配置说明
 
 本目录包含 Zed 编辑器的配置文件。

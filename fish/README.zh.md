@@ -1,3 +1,5 @@
+[English](README.md)
+
 # Fish Shell 配置
 
 轻量级 fish 配置，作为跨平台备用 shell，主要在 Arch Linux（WSL）上使用。

@@ -1,3 +1,5 @@
+[中文](README.zh.md)
+
 # AutoHotkey Configuration
 
 Windows AutoHotkey scripts for custom keyboard mappings and automation.

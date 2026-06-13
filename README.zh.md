@@ -1,3 +1,5 @@
+[English](README.md)
+
 # Dotfiles
 
 个人跨平台开发环境配置文件。以 Windows 为主，覆盖多 Shell 和多编辑器。

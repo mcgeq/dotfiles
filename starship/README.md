@@ -1,3 +1,5 @@
+[中文](README.zh.md)
+
 # Starship Configuration
 
 Cross-shell prompt configuration. Minimal, fast, and informative.

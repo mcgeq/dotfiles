@@ -1,3 +1,5 @@
+[English](README.md)
+
 # Scoop 配置
 
 Windows 包管理器 Scoop 的配置。

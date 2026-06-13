@@ -1,3 +1,5 @@
+[English](README.md)
+
 # Starship 配置
 
 跨 Shell 提示符配置。简洁、快速、信息丰富。

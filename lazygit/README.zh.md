@@ -1,3 +1,5 @@
+[English](README.md)
+
 # Lazygit 配置
 
 Git 终端 UI。支持 Nerd Font 图标、自定义主题和快捷键。

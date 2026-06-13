@@ -1,3 +1,5 @@
+[中文](README.zh.md)
+
 # PowerShell Configuration — Modular Edition
 
 [![PowerShell](https://img.shields.io/badge/PowerShell-7.5+-blue?logo=powershell)](https://github.com/PowerShell/PowerShell)

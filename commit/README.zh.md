@@ -1,3 +1,5 @@
+[English](README.md)
+
 # 提交规范化
 
 Commitizen + commitlint + husky，用于在项目中实现标准化的 Git 提交信息。

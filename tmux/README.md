@@ -1,3 +1,5 @@
+[中文](README.zh.md)
+
 # tmux Configuration
 
 Forked from [gpakosz/.tmux](https://github.com/gpakosz/.tmux). Customized status bar, keybindings, and defaults.

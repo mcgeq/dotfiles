@@ -1,3 +1,5 @@
+[中文](README.zh.md)
+
 # Scoop Configuration
 
 Windows package manager configuration for Scoop.

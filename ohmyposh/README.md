@@ -1,3 +1,5 @@
+[中文](README.zh.md)
+
 # oh-my-posh Configuration
 
 Custom prompt theme for PowerShell with diamond-shaped block layout.

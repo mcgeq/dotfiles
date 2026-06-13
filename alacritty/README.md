@@ -1,3 +1,5 @@
+[中文](README.zh.md)
+
 # Alacritty Configuration
 
 GPU-accelerated terminal emulator config with JetBrainsMono Nerd Font, WSL Arch integration, and Catppuccin Mocha theme.

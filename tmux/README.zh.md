@@ -1,3 +1,5 @@
+[English](README.md)
+
 # tmux 配置
 
 Fork 自 [gpakosz/.tmux](https://github.com/gpakosz/.tmux)。自定义了状态栏、快捷键和默认行为。

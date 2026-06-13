@@ -1,3 +1,5 @@
+[中文](README.zh.md)
+
 # lf File Manager Configuration
 
 Terminal file manager with custom keybindings and preview support.

@@ -1,3 +1,5 @@
+[English](README.md)
+
 # PowerShell 配置 - 模块化版本
 
 [![PowerShell](https://img.shields.io/badge/PowerShell-7.5+-blue?logo=powershell)](https://github.com/PowerShell/PowerShell)

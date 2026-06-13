@@ -1,3 +1,5 @@
+[中文](README.zh.md)
+
 # Wezterm Configuration
 
 This is a modular and maintainable Wezterm configuration that separates concerns into logical modules for better extensibility and maintainability.

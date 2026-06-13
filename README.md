@@ -1,3 +1,5 @@
+[中文](README.zh.md)
+
 # Dotfiles
 
 Personal cross-platform configuration files for development environment. Windows-centric, with cross-shell and cross-editor coverage.

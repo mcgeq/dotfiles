@@ -1,3 +1,5 @@
+[English](README.md)
+
 # Jujutsu 配置
 
 Jujutsu（`jj`）版本控制系统配置。包含丰富的 revset 别名、自定义日志模板、Meld 差异工具集成和 Gerrit 支持。

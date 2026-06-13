@@ -1,3 +1,5 @@
+[中文](README.zh.md)
+
 # Git Configuration
 
 Global `.gitconfig` with user info, aliases, and diff settings.

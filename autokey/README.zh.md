@@ -1,3 +1,5 @@
+[English](README.md)
+
 # AutoHotkey 配置
 
 Windows AutoHotkey 脚本，用于自定义键盘映射和自动化。

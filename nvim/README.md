@@ -1,3 +1,5 @@
+[中文](README.zh.md)
+
 # Neovim Configuration
 
 This directory is the active Neovim config. It has been rebuilt around native Neovim 0.12+ features and `vim.pack`, with a stable override layer under `lua/user/`.

@@ -1,3 +1,5 @@
+[中文](README.zh.md)
+
 # Lazygit Configuration
 
 Terminal UI for Git with Nerd Font icons, custom theme, and keybindings.

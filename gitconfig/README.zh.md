@@ -1,3 +1,5 @@
+[English](README.md)
+
 # Git 配置
 
 全局 `.gitconfig`，包含用户信息、别名和差异设置。

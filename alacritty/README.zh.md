@@ -1,3 +1,5 @@
+[English](README.md)
+
 # Alacritty 配置
 
 GPU 加速终端模拟器配置。使用 JetBrainsMono Nerd Font 字体，集成 WSL Arch，Catppuccin Mocha 配色。

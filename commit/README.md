@@ -1,3 +1,5 @@
+[中文](README.zh.md)
+
 # Commit Standardization
 
 Commitizen + commitlint + husky for standardized Git commit messages across projects.

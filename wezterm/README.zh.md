@@ -1,3 +1,5 @@
+[English](README.md)
+
 # Wezterm 配置
 
 模块化、易维护的 Wezterm 配置，按逻辑模块分离关注点，便于扩展和维护。

@@ -1,3 +1,5 @@
+[中文](README.zh.md)
+
 # Jujutsu Configuration
 
 Jujutsu (`jj`) version control system config with rich revset aliases, custom log templates, Meld difftool integration, and Gerrit support.

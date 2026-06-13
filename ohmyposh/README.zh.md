@@ -1,3 +1,5 @@
+[English](README.md)
+
 # oh-my-posh 配置
 
 PowerShell 自定义提示符主题，使用菱形块布局。
