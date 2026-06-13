@@ -1,0 +1,75 @@
+#+TITLE: Easy Hugo Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-easy-hugo.el :lexical t
+
+* Easy Hugo Module
+
+Easy Hugo - manage Hugo blogs.
+
+** File Header
+
+#+begin_src emacs-lisp
+;;; init-easy-hugo.el --- Easy Hugo for MCG Emacs -*- lexical-binding: t; -*-
+
+;; Copyright (C) 2024-2026 MCG
+;; Author: mcge <mcgeq@outlook.com>
+;; Keywords: hugo, blog
+#+end_src
+
+** Require
+
+#+begin_src emacs-lisp
+;;; Code:
+
+(require 'core-lib)
+#+end_src
+
+** Variables
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Variables
+;;; ============================================================
+
+(defcustom mcg-blog-base-directory
+  (expand-file-name "~/blog")
+  "Hugo blog root directory."
+  :type 'directory
+  :group 'mcg-org)
+
+(defcustom mcg-org-enable-hugo-integration t
+  "Whether to enable Hugo blog integration."
+  :type 'boolean
+  :group 'mcg-org)
+#+end_src
+
+** Configuration
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Configuration
+;;; ============================================================
+
+(defun mcg--setup-easy-hugo ()
+  "Set up easy-hugo."
+  (when (and mcg-org-enable-hugo-integration
+             (mcg-require-extension "easy-hugo" t))
+    (setq easy-hugo-postdir "content-org"
+          easy-hugo-default-ext ".org"
+          easy-hugo-url "https://www.gemc.club"
+          easy-hugo-basedir (concat mcg-blog-base-directory "/"))
+    (mcg-log "Easy hugo configured")))
+#+end_src
+
+** Initialize
+
+#+begin_src emacs-lisp
+(mcg--setup-easy-hugo)
+#+end_src
+
+** Provide
+
+#+begin_src emacs-lisp
+(provide 'init-easy-hugo)
+;;; init-easy-hugo.el ends here
+#+end_src

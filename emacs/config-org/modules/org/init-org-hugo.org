@@ -1,0 +1,211 @@
+#+TITLE: Org Hugo Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-org-hugo.el :lexical t
+
+* Org Hugo Module
+
+Hugo 博客集成配置，整合 easy-hugo、ox-hugo 和 org-capture。
+
+** File Header
+
+#+begin_src emacs-lisp
+;;; init-org-hugo.el --- Hugo Blog Integration for MCG Emacs -*- lexical-binding: t; -*-
+
+;; Copyright (C) 2024-2026 MCG
+;; Author: mcge <mcgeq@outlook.com>
+;; Keywords: org, hugo, blog, ox-hugo, easy-hugo
+;; Compatibility: GNU Emacs 29.0+
+
+;;; Commentary:
+;; Hugo blog integration module for MCG Emacs, combining:
+;; - easy-hugo for blog management
+;; - ox-hugo for Org to Hugo export
+;; - org-capture templates for Hugo posts
+#+end_src
+
+** Require
+
+#+begin_src emacs-lisp
+;;; Code:
+
+(require 'core-lib)
+(require 'org-capture)
+#+end_src
+
+** Variables
+
+Hugo 博客相关的配置变量。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Variables
+;;; ============================================================
+
+(defgroup mcg-org-hugo nil
+  "Hugo blog configuration variables."
+  :group 'mcg-org
+  :prefix "mcg-org-hugo-")
+
+(defcustom mcg-blog-base-directory
+  (expand-file-name "~/blog")
+  "Hugo blog root directory."
+  :type 'directory
+  :group 'mcg-org-hugo)
+
+(defcustom mcg-org-hugo-enable t
+  "Whether to enable Hugo blog integration."
+  :type 'boolean
+  :group 'mcg-org-hugo)
+
+(defcustom mcg-org-hugo-url "https://www.gemc.club"
+  "Hugo blog URL."
+  :type 'string
+  :group 'mcg-org-hugo)
+
+(defcustom mcg-org-hugo-postdir "content-org"
+  "Hugo content directory (relative to blog base)."
+  :type 'string
+  :group 'mcg-org-hugo)
+
+(defcustom mcg-org-hugo-default-ext ".org"
+  "Default file extension for Hugo posts."
+  :type 'string
+  :group 'mcg-org-hugo)
+
+(defcustom mcg-org-blog-development-file
+  (expand-file-name "development.org" (expand-file-name "blog" mcg-org-directory))
+  "Development blog org file."
+  :type 'file
+  :group 'mcg-org-hugo)
+
+(defcustom mcg-org-blog-emacs-file
+  (expand-file-name "emacs.org" (expand-file-name "blog" mcg-org-directory))
+  "Emacs blog org file."
+  :type 'file
+  :group 'mcg-org-hugo)
+#+end_src
+
+** Easy Hugo Configuration
+
+easy-hugo 配置，用于管理 Hugo 博客。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Easy Hugo Configuration
+;;; ============================================================
+
+(defun mcg-org-hugo-setup-easy-hugo ()
+  "Set up easy-hugo for blog management."
+  (when (and mcg-org-hugo-enable
+             (mcg-require-extension "easy-hugo" t))
+    (setq easy-hugo-postdir mcg-org-hugo-postdir
+          easy-hugo-default-ext mcg-org-hugo-default-ext
+          easy-hugo-url mcg-org-hugo-url
+          easy-hugo-basedir (file-name-as-directory mcg-blog-base-directory))
+    (mcg-log "Easy Hugo configured: %s" mcg-blog-base-directory)))
+#+end_src
+
+** Ox Hugo Configuration
+
+ox-hugo 配置，用于 Org 到 Hugo 的导出。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Ox Hugo Configuration
+;;; ============================================================
+
+(defun mcg-org-hugo-setup-ox-hugo ()
+  "Set up ox-hugo for Org to Hugo export."
+  (when (and mcg-org-hugo-enable
+             (mcg-require-extension "ox-hugo" t))
+    (setq org-hugo-base-dir (file-name-as-directory mcg-blog-base-directory))
+    (mcg-log "Ox Hugo configured")))
+#+end_src
+
+** Hugo Capture Templates
+
+Hugo 博客的 org-capture 模板。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Hugo Capture Templates
+;;; ============================================================
+
+(defun mcg/org-hugo-new-subtree-post-capture-template ()
+  "Return org-capture template string for new Hugo post."
+  (let* ((date (format-time-string (org-time-stamp-format :long :inactive)))
+         (title (read-from-minibuffer "Post Title: "))
+         (fname (org-hugo-slug title)))
+    (mapconcat #'identity
+               `(,(concat "* TODO " title)
+                 ":PROPERTIES:"
+                 ,(concat ":EXPORT_FILE_NAME: " fname)
+                 ,(concat ":EXPORT_DATE: " date)
+                 ":END:"
+                 "%?\n")
+               "\n")))
+#+end_src
+
+** Hugo Integration
+
+Hugo 集成配置，包括 capture 模板。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Hugo Integration
+;;; ============================================================
+
+(defun mcg-org-hugo-setup-capture-templates ()
+  "Setup Hugo blog capture templates."
+  (when mcg-org-hugo-enable
+    ;; Add Hugo post category
+    (add-to-list 'org-capture-templates '("h" "Hugo Post"))
+    (add-to-list 'org-capture-templates '("hl" "About Development Language"))
+
+    ;; Language-specific templates
+    (dolist (topic '(("hla" "ArkTS" "ArkTS")
+                     ("hle" "React" "React")
+                     ("hlr" "Rust" "Rust")
+                     ("hlv" "Vue" "Vue")))
+      (add-to-list 'org-capture-templates
+                   `(,(nth 0 topic)
+                     ,(concat "About " (nth 1 topic))
+                     entry
+                     (file+headline mcg-org-blog-development-file ,(nth 2 topic))
+                     (function mcg/org-hugo-new-subtree-post-capture-template))))
+
+    ;; Emacs template
+    (add-to-list 'org-capture-templates
+                 '("he" "About Emacs"
+                   entry
+                   (file+olp mcg-org-blog-emacs-file "Emacs")
+                   (function mcg/org-hugo-new-subtree-post-capture-template)))
+
+    (mcg-log "Hugo capture templates configured")))
+#+end_src
+
+** Initialize
+
+模块初始化。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Initialize
+;;; ============================================================
+
+(defun mcg-org-hugo-init ()
+  "Initialize Hugo blog integration."
+  (when mcg-org-hugo-enable
+    (mcg-org-hugo-setup-easy-hugo)
+    (mcg-org-hugo-setup-ox-hugo)
+    (mcg-org-hugo-setup-capture-templates)))
+
+(mcg-org-hugo-init)
+#+end_src
+
+** Provide Feature
+
+#+begin_src emacs-lisp
+(provide 'init-org-hugo)
+;;; init-org-hugo.el ends here
+#+end_src

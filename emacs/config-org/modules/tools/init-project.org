@@ -1,0 +1,195 @@
+#+TITLE: Project Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-project.el :lexical t
+
+* Project Module
+
+Built-in project workflow helpers.
+
+** File Header
+
+#+begin_src emacs-lisp
+;;; init-project.el --- Project workflow for MCG Emacs -*- lexical-binding: t; -*-
+
+;; Copyright (C) 2024-2026 MCG
+;; Author: mcge <mcgeq@outlook.com>
+;; Keywords: project, workflow
+;; Compatibility: GNU Emacs 29.0+
+
+;;; Commentary:
+;; Provides a small project workflow layer on top of built-in project.el.
+;;
+;;; Code:
+
+(require 'core-lib)
+(require 'project)
+(require 'subr-x)
+#+end_src
+
+** Options
+
+#+begin_src emacs-lisp
+(defcustom mcg-project-extra-root-markers
+  '("build.zig" "Cargo.toml" "go.mod" "package.json" "pnpm-lock.yaml"
+    "bun.lock" "bun.lockb" "deno.json" "pyproject.toml" "Makefile")
+  "Extra files that should identify a project root for `project.el'."
+  :type '(repeat string)
+  :group 'mcg)
+#+end_src
+
+** Helpers
+
+#+begin_src emacs-lisp
+;;;###autoload
+(defun mcg-project-current-root (&optional maybe-prompt)
+  "Return current project root.
+When MAYBE-PROMPT is non-nil, ask the user to select a project if needed."
+  (when-let* ((project (project-current maybe-prompt)))
+    (file-name-as-directory (project-root project))))
+
+(defun mcg-project--require-root ()
+  "Return current project root or raise a user error."
+  (or (mcg-project-current-root)
+      (user-error "Not inside a project")))
+#+end_src
+
+** Commands
+
+#+begin_src emacs-lisp
+;;;###autoload
+(defun mcg/project-switch ()
+  "Switch project."
+  (interactive)
+  (call-interactively #'project-switch-project))
+
+;;;###autoload
+(defun mcg/project-find-file ()
+  "Find a file in the current project."
+  (interactive)
+  (call-interactively #'project-find-file))
+
+;;;###autoload
+(defun mcg/project-switch-buffer ()
+  "Switch to a buffer in the current project."
+  (interactive)
+  (if (fboundp 'project-switch-to-buffer)
+      (call-interactively #'project-switch-to-buffer)
+    (call-interactively #'switch-to-buffer)))
+
+;;;###autoload
+(defun mcg/project-dired ()
+  "Open current project root in Dired."
+  (interactive)
+  (if (fboundp 'project-dired)
+      (call-interactively #'project-dired)
+    (dired (mcg-project--require-root))))
+
+;;;###autoload
+(defun mcg/project-eshell ()
+  "Open Eshell in current project."
+  (interactive)
+  (if (fboundp 'project-eshell)
+      (call-interactively #'project-eshell)
+    (let ((default-directory (mcg-project--require-root)))
+      (eshell t))))
+
+;;;###autoload
+(defun mcg/project-search ()
+  "Search text in current project.
+Prefer `consult-ripgrep' when available; otherwise use `project-find-regexp'."
+  (interactive)
+  (let ((root (mcg-project--require-root)))
+    (cond
+     ((fboundp 'consult-ripgrep)
+      (consult-ripgrep root))
+     ((fboundp 'project-find-regexp)
+      (call-interactively #'project-find-regexp))
+     (t
+      (user-error "No project search command available")))))
+
+;;;###autoload
+(defun mcg/project-replace ()
+  "Run query replace across current project."
+  (interactive)
+  (if (fboundp 'project-query-replace-regexp)
+      (call-interactively #'project-query-replace-regexp)
+    (user-error "project-query-replace-regexp is unavailable")))
+
+;;;###autoload
+(defun mcg/project-kill-buffers ()
+  "Kill buffers belonging to current project."
+  (interactive)
+  (if (fboundp 'project-kill-buffers)
+      (call-interactively #'project-kill-buffers)
+    (user-error "project-kill-buffers is unavailable")))
+
+;;;###autoload
+(defun mcg/project-root ()
+  "Show current project root."
+  (interactive)
+  (message "%s" (mcg-project--require-root)))
+
+;;;###autoload
+(defun mcg/project-build ()
+  "Build current project.
+Prefer `mcg-compile-build' when the compile module is loaded."
+  (interactive)
+  (cond
+   ((fboundp 'mcg-compile-build)
+    (call-interactively #'mcg-compile-build))
+   ((fboundp 'project-compile)
+    (call-interactively #'project-compile))
+   (t
+    (call-interactively #'compile))))
+
+;;;###autoload
+(defun mcg/project-test ()
+  "Test current project.
+Prefer `mcg-compile-test' when the compile module is loaded."
+  (interactive)
+  (if (fboundp 'mcg-compile-test)
+      (call-interactively #'mcg-compile-test)
+    (user-error "No project test command available")))
+#+end_src
+
+** Initialize
+
+#+begin_src emacs-lisp
+(when (boundp 'project-vc-extra-root-markers)
+  (setq project-vc-extra-root-markers
+        (append mcg-project-extra-root-markers
+                project-vc-extra-root-markers)))
+
+(when (boundp 'project-switch-commands)
+  (setq project-switch-commands
+        '((mcg/project-find-file "Find file")
+          (mcg/project-switch-buffer "Switch buffer")
+          (mcg/project-search "Search")
+          (mcg/project-dired "Dired")
+          (mcg/project-eshell "Eshell")
+          (mcg/project-build "Build")
+          (mcg/project-test "Test"))))
+
+(define-prefix-command 'mcg-project-map)
+(mcg-bind-key "C-c p" 'mcg-project-map "tools/project")
+(mcg-bind-key "C-c p p" #'mcg/project-switch "tools/project")
+(mcg-bind-key "C-c p f" #'mcg/project-find-file "tools/project")
+(mcg-bind-key "C-c p b" #'mcg/project-switch-buffer "tools/project")
+(mcg-bind-key "C-c p d" #'mcg/project-dired "tools/project")
+(mcg-bind-key "C-c p e" #'mcg/project-eshell "tools/project")
+(mcg-bind-key "C-c p s" #'mcg/project-search "tools/project")
+(mcg-bind-key "C-c p r" #'mcg/project-replace "tools/project")
+(mcg-bind-key "C-c p c" #'mcg/project-build "tools/project")
+(mcg-bind-key "C-c p t" #'mcg/project-test "tools/project")
+(mcg-bind-key "C-c p k" #'mcg/project-kill-buffers "tools/project")
+(mcg-bind-key "C-c p ." #'mcg/project-root "tools/project")
+
+(mcg-log "project module configured")
+#+end_src
+
+** Provide Feature
+
+#+begin_src emacs-lisp
+(provide 'init-project)
+;;; init-project.el ends here
+#+end_src

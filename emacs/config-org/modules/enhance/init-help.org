@@ -1,0 +1,118 @@
+#+TITLE: Help Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-help.el :lexical t
+
+* Help Module
+
+Discoverability and help commands.
+
+** File Header
+
+#+begin_src emacs-lisp
+;;; init-help.el --- Help and key discovery for MCG Emacs -*- lexical-binding: t; -*-
+
+;; Copyright (C) 2024-2026 MCG
+;; Author: mcge <mcgeq@outlook.com>
+;; Keywords: help, discoverability
+;; Compatibility: GNU Emacs 29.0+
+
+;;; Commentary:
+;; Configures built-in which-key and optional helpful.
+;;
+;;; Code:
+
+(require 'core-lib)
+(require 'which-key nil t)
+#+end_src
+
+** Options
+
+#+begin_src emacs-lisp
+(defcustom mcg-help-enable-which-key t
+  "Whether to enable `which-key-mode'."
+  :type 'boolean
+  :group 'mcg)
+
+(defcustom mcg-help-which-key-delay 0.4
+  "Idle delay before showing which-key hints."
+  :type 'number
+  :group 'mcg)
+#+end_src
+
+** Helpers
+
+#+begin_src emacs-lisp
+(defun mcg-help--helpful-available-p ()
+  "Return non-nil when helpful is available."
+  (require 'helpful nil t))
+
+(defun mcg-help-describe-function ()
+  "Describe a function, using helpful when available."
+  (interactive)
+  (if (and (mcg-help--helpful-available-p)
+           (fboundp 'helpful-callable))
+      (call-interactively #'helpful-callable)
+    (call-interactively #'describe-function)))
+
+(defun mcg-help-describe-variable ()
+  "Describe a variable, using helpful when available."
+  (interactive)
+  (if (and (mcg-help--helpful-available-p)
+           (fboundp 'helpful-variable))
+      (call-interactively #'helpful-variable)
+    (call-interactively #'describe-variable)))
+
+(defun mcg-help-describe-key ()
+  "Describe a key, using helpful when available."
+  (interactive)
+  (if (and (mcg-help--helpful-available-p)
+           (fboundp 'helpful-key))
+      (call-interactively #'helpful-key)
+    (call-interactively #'describe-key)))
+
+(defun mcg-help-describe-symbol ()
+  "Describe a symbol, using helpful when available."
+  (interactive)
+  (if (and (mcg-help--helpful-available-p)
+           (fboundp 'helpful-symbol))
+      (call-interactively #'helpful-symbol)
+    (call-interactively #'describe-symbol)))
+#+end_src
+
+** Initialize
+
+#+begin_src emacs-lisp
+(when (and mcg-help-enable-which-key
+           (featurep 'which-key))
+  (setq which-key-idle-delay mcg-help-which-key-delay)
+  (setq which-key-idle-secondary-delay 0.05)
+  (setq which-key-show-early-on-C-h t)
+  (setq which-key-sort-order 'which-key-key-order-alpha)
+  (which-key-mode 1))
+
+(define-prefix-command 'mcg-help-map)
+(mcg-bind-key "C-c h" 'mcg-help-map "enhance/help")
+(mcg-bind-key "C-c h f" #'mcg-help-describe-function "enhance/help")
+(mcg-bind-key "C-c h v" #'mcg-help-describe-variable "enhance/help")
+(mcg-bind-key "C-c h k" #'mcg-help-describe-key "enhance/help")
+(mcg-bind-key "C-c h o" #'mcg-help-describe-symbol "enhance/help")
+(mcg-bind-key "C-c h b" #'describe-bindings "enhance/help")
+(mcg-bind-key "C-c h m" #'describe-mode "enhance/help")
+(mcg-bind-key "C-c h w" #'where-is "enhance/help")
+(mcg-bind-key "C-c h c" #'describe-char "enhance/help")
+(mcg-bind-key "C-c h l" #'view-lossage "enhance/help")
+
+(mcg-bind-key "C-h f" #'mcg-help-describe-function "enhance/help")
+(mcg-bind-key "C-h v" #'mcg-help-describe-variable "enhance/help")
+(mcg-bind-key "C-h k" #'mcg-help-describe-key "enhance/help")
+(mcg-bind-key "C-h o" #'mcg-help-describe-symbol "enhance/help")
+
+(mcg-log "help module configured")
+#+end_src
+
+** Provide Feature
+
+#+begin_src emacs-lisp
+(provide 'init-help)
+;;; init-help.el ends here
+#+end_src

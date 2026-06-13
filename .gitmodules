@@ -1,0 +1,246 @@
+[submodule "vim-airline"]
+	path = vimrc/pack/mcge/start/vim-airline
+	url = https://github.com/vim-airline/vim-airline.git
+[submodule "vim-which-key"]
+	path = vimrc/pack/mcge/start/vim-which-key
+	url = https://github.com/liuchengxu/vim-which-key.git
+[submodule "vim-startify"]
+	path = vimrc/pack/mcge/start/vim-startify
+	url = https://github.com/mhinz/vim-startify.git
+[submodule "vim-devicons"]
+	path = vimrc/pack/mcge/start/vim-devicons
+	url = https://github.com/ryanoasis/vim-devicons.git
+[submodule "vim-coc.nvim"]
+	path = vimrc/pack/mcge/start/coc.nvim
+	url = https://github.com/neoclide/coc.nvim.git
+[submodule "vim-surround"]
+	path = vimrc/pack/mcge/start/vim-surround
+	url = https://github.com/tpope/vim-surround.git
+[submodule "vim-fugitive"]
+	path = vimrc/pack/mcge/start/fugitive
+	url = https://github.com/tpope/vim-fugitive.git
+[submodule "vim-nerdcommenter"]
+	path = vimrc/pack/mcge/start/nerdcommenter
+	url = https://github.com/preservim/nerdcommenter.git
+[submodule "vim-snippets"]
+	path = vimrc/pack/mcge/start/vim-snippets
+	url = https://github.com/honza/vim-snippets.git
+[submodule "vim-ultisnips"]
+	path = vimrc/pack/mcge/start/ultisnips
+	url = https://github.com/SirVer/ultisnips.git
+[submodule "vim-vista.vim"]
+	path = vimrc/pack/mcge/start/vista.vim
+	url = https://github.com/liuchengxu/vista.vim.git
+[submodule "vim-clap"]
+	path = vimrc/pack/mcge/start/vim-clap
+	url = https://github.com/liuchengxu/vim-clap.git
+[submodule "vim-css-color"]
+	path = vimrc/pack/mcge/start/vim-css-color
+	url = https://github.com/ap/vim-css-color.git
+[submodule "vim-gruvbox"]
+	path = vimrc/pack/mcge/start/vim-gruvbox
+	url = https://github.com/morhetz/gruvbox.git
+[submodule "vim-airline-themes"]
+	path = vimrc/pack/mcge/start/vim-airline-themes
+	url = https://github.com/vim-airline/vim-airline-themes.git
+[submodule "vim-floaterm"]
+	path = vimrc/pack/mcge/start/vim-floaterm
+	url = https://github.com/voldikss/vim-floaterm.git
+[submodule "vim-molokai"]
+	path = vimrc/pack/mcge/start/molokai
+	url = https://github.com/tomasr/molokai.git
+[submodule "vim-gutentags"]
+	path = vimrc/pack/mcge/start/vim-gutentags
+	url = https://github.com/ludovicchabant/vim-gutentags.git
+[submodule "vim-gitgutter"]
+	path = vimrc/pack/mcge/start/vim-gitgutter
+	url = https://github.com/airblade/vim-gitgutter.git
+[submodule "vim-matchup"]
+	path = vimrc/pack/mcge/start/vim-matchup
+	url = https://github.com/andymass/vim-matchup.git
+[submodule "vim-better-whitespace"]
+	path = vimrc/pack/mcge/start/vim-better-whitespace
+	url = https://github.com/ntpeters/vim-better-whitespace.git
+[submodule "emacs-lsp-bridge"]
+	path = emacs/site-lisp/extensions/lsp/lsp-bridge
+	url = https://github.com/manateelazycat/lsp-bridge.git
+[submodule "emacs-yasnippet"]
+	path = emacs/site-lisp/extensions/snippets/yasnippet
+	url = https://github.com/joaotavora/yasnippet.git
+[submodule "emacs-yasnippet-snippets"]
+	path = emacs/site-lisp/extensions/snippets/yasnippet-snippets
+	url = https://github.com/AndreaCrotti/yasnippet-snippets.git
+[submodule "emacs-auto-save"]
+	path = emacs/site-lisp/extensions/utils/auto-save
+	url = https://github.com/manateelazycat/auto-save.git
+[submodule "emacs-markdown-mode"]
+	path = emacs/site-lisp/extensions/lsp/markdown-mode
+	url = https://github.com/jrblevin/markdown-mode.git
+[submodule "emacs-ef-themes"]
+	path = emacs/site-lisp/extensions/ui/themes/ef-themes
+	url = https://github.com/protesilaos/ef-themes.git
+[submodule "emacs-posframe"]
+	path = emacs/site-lisp/extensions/input/posframe
+	url = https://github.com/tumashu/posframe.git
+[submodule "emacs-nerd-icons"]
+	path = emacs/site-lisp/extensions/ui/themes/nerd-icons
+	url = https://github.com/rainstormstudio/nerd-icons.el.git
+[submodule "emacs-nerd-icons-completion"]
+	path = emacs/site-lisp/extensions/ui/themes/nerd-icons-completion
+	url = https://github.com/rainstormstudio/nerd-icons-completion.git
+[submodule "emacs-sort-tab"]
+	path = emacs/site-lisp/extensions/utils/sort-tab
+	url = https://github.com/manateelazycat/sort-tab.git
+[submodule "emacs-consult"]
+	path = emacs/site-lisp/extensions/completion/consult
+	url = https://github.com/minad/consult.git
+[submodule "emacs-marginalia"]
+	path = emacs/site-lisp/extensions/completion/marginalia
+	url = https://github.com/minad/marginalia.git
+[submodule "emacs-vertico"]
+	path = emacs/site-lisp/extensions/completion/vertico
+	url = https://github.com/minad/vertico.git
+[submodule "emacs-orderless"]
+	path = emacs/site-lisp/extensions/completion/orderless
+	url = https://github.com/oantolin/orderless.git
+[submodule "emacs-embark"]
+	path = emacs/site-lisp/extensions/completion/embark
+	url = https://github.com/oantolin/embark.git
+[submodule "emacs-pinyinlib"]
+	path = emacs/site-lisp/extensions/completion/pinyinlib
+	url = https://github.com/cute-jumper/pinyinlib.el.git
+[submodule "emacs-modus-themes"]
+	path = emacs/site-lisp/extensions/ui/themes/modus-themes
+	url = https://github.com/protesilaos/modus-themes.git
+[submodule "emacs-awesome-tray"]
+	path = emacs/site-lisp/extensions/ui/awesome-tray
+	url = https://github.com/manateelazycat/awesome-tray.git
+[submodule "emacs-vundo"]
+	path = emacs/site-lisp/extensions/editor/vundo
+	url = https://github.com/casouri/vundo.git
+[submodule "emacs-blink-search"]
+	path = emacs/site-lisp/extensions/search/blink-search
+	url = https://github.com/manateelazycat/blink-search.git
+[submodule "emacs-color-rg"]
+	path = emacs/site-lisp/extensions/search/color-rg
+	url = https://github.com/manateelazycat/color-rg.git
+[submodule "emacs-reformatter"]
+	path = emacs/site-lisp/extensions/lsp/zig/emacs-reformatter
+	url = https://github.com/purcell/emacs-reformatter.git
+[submodule "emacs-zig-mode"]
+	path = emacs/site-lisp/extensions/lsp/zig/zig-mode
+	url = https://codeberg.org/ziglang/zig-mode.git
+[submodule "emacs-markdown-ts-mode"]
+	path = emacs/site-lisp/extensions/docs/markdown-ts-mode
+	url = https://github.com/LionyxML/markdown-ts-mode.git
+[submodule "emacs-magit"]
+	path = emacs/site-lisp/extensions/git/magit
+	url = https://github.com/magit/magit.git
+[submodule "emacs-magit-with-editor"]
+	path = emacs/site-lisp/extensions/git/with-editor
+	url = https://github.com/magit/with-editor.git
+[submodule "emacs-holo-layer"]
+	path = emacs/site-lisp/extensions/ui/holo-layer
+	url = https://github.com/manateelazycat/holo-layer.git
+[submodule "emacs-hydra"]
+	path = emacs/site-lisp/extensions/utils/hydra
+	url = https://github.com/abo-abo/hydra.git
+[submodule "emacs-compat"]
+	path = emacs/site-lisp/extensions/git/compat
+	url = https://github.com/emacs-compat/compat.git
+[submodule "emacs-cond-let"]
+	path = emacs/site-lisp/extensions/git/cond-let
+	url = https://github.com/tarsius/cond-let.git
+[submodule "emacs-llama"]
+	path = emacs/site-lisp/extensions/git/llama
+	url = https://github.com/tarsius/llama.git
+[submodule "emacs-transient"]
+	path = emacs/site-lisp/extensions/git/transient
+	url = https://github.com/magit/transient.git
+[submodule "emacs-ox-hugo"]
+	path = emacs/site-lisp/extensions/org/ox-hugo
+	url = https://github.com/kaushalmodi/ox-hugo.git
+[submodule "emacs-tomelr"]
+	path = emacs/site-lisp/extensions/org/tomelr
+	url = https://github.com/kaushalmodi/tomelr.git
+[submodule "emacs-easy-hugo"]
+	path = emacs/site-lisp/extensions/org/easy-hugo
+	url = https://github.com/masasam/emacs-easy-hugo.git
+[submodule "emacs-request"]
+	path = emacs/site-lisp/extensions/org/emacs-request
+	url = https://github.com/tkf/emacs-request.git
+[submodule "emacs-org-modern"]
+	path = emacs/site-lisp/extensions/org/org-modern
+	url = https://github.com/minad/org-modern.git
+[submodule "emacs-visual-fill-column"]
+	path = emacs/site-lisp/extensions/org/visual-fill-column
+	url = https://codeberg.org/joostkremers/visual-fill-column.git
+[submodule "emacs-mixed-pitch"]
+	path = emacs/site-lisp/extensions/org/mixed-pitch
+	url = https://gitlab.com/jabranham/mixed-pitch.git
+[submodule "emacs-org-appear"]
+	path = emacs/site-lisp/extensions/org/org-appear
+	url = https://github.com/awth13/org-appear.git
+[submodule "emacs-org-superstar-mode"]
+	path = emacs/site-lisp/extensions/org/org-superstar-mode
+	url = https://github.com/integral-dw/org-superstar-mode.git
+[submodule "emacs-org-supertag"]
+	path = emacs/site-lisp/extensions/org/org-supertag
+	url = https://github.com/yibie/org-supertag.git
+[submodule "emacs-ht"]
+	path = emacs/site-lisp/extensions/org/ht
+	url = https://github.com/Wilfred/ht.el.git
+[submodule "emacs-org-download"]
+	path = emacs/site-lisp/extensions/org/org-download
+	url = https://github.com/abo-abo/org-download.git
+[submodule "emacs-async"]
+	path = emacs/site-lisp/extensions/org/emacs-async
+	url = https://github.com/jwiegley/emacs-async.git
+[submodule "emacs-cal-china-x"]
+	path = emacs/site-lisp/extensions/org/cal-china-x
+	url = https://github.com/mcgeq/cal-china-x.git
+[submodule "emacs-org-numbering"]
+	path = emacs/site-lisp/extensions/org/org-numbering
+	url = https://github.com/yibie/org-numbering.git
+[submodule "emacs-ox-gfm"]
+	path = emacs/site-lisp/extensions/org/ox-gfm
+	url = https://github.com/larstvei/ox-gfm.git
+[submodule "emacs-mwim"]
+	path = emacs/site-lisp/extensions/utils/mwim
+	url = https://github.com/alezost/mwim.el.git
+[submodule "emacs-json-mode"]
+	path = emacs/site-lisp/extensions/utils/json-mode
+	url = https://github.com/json-emacs/json-mode.git
+[submodule "emacs-json-snatcher"]
+	path = emacs/site-lisp/extensions/utils/json-snatcher
+	url = https://github.com/Sterlingg/json-snatcher.git
+[submodule "emacs-web-mode"]
+	path = emacs/site-lisp/extensions/lsp/web-mode
+	url = https://github.com/fxbois/web-mode.git
+[submodule "emacs-instant-rename-tag"]
+	path = emacs/site-lisp/extensions/utils/instant-rename-tag
+	url = https://github.com/manateelazycat/instant-rename-tag.git
+[submodule "emacs-treesit-auto"]
+	path = emacs/site-lisp/extensions/lsp/treesit-auto
+	url = https://github.com/renzmann/treesit-auto.git
+[submodule "emacs-acm-terminal"]
+	path = emacs/site-lisp/extensions/lsp/acm-terminal
+	url = https://github.com/twlz0ne/acm-terminal.git
+[submodule "emacs-popon"]
+	path = emacs/site-lisp/extensions/lsp/popon
+	url = https://codeberg.org/akib/emacs-popon.git
+[submodule "emacs-majutsu"]
+	path = emacs/site-lisp/extensions/git/majutsu
+	url = https://github.com/0WD0/majutsu.git
+[submodule "vim-easymotion"]
+	path = vimrc/pack/mcge/start/vim-easymotion
+	url = https://github.com/easymotion/vim-easymotion.git
+[submodule "vim-visual-multi"]
+	path = vimrc/pack/mcge/start/vim-visual-multi
+	url = https://github.com/mg979/vim-visual-multi.git
+[submodule "emacs-dirvish"]
+	path = emacs/site-lisp/extensions/tools/dirvish
+	url = https://github.com/alexluigit/dirvish.git
+[submodule "emacs-clutch"]
+	path = emacs/site-lisp/extensions/tools/clutch
+	url = https://github.com/LuciusChen/clutch.git

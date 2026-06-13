@@ -1,0 +1,54 @@
+#+TITLE: Org Appear Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-org-appear.el :lexical t
+
+* Org Appear Module
+
+Org Appear - inline display of org syntax.
+
+** File Header
+
+#+begin_src emacs-lisp
+;;; init-org-appear.el --- Org Appear for MCG Emacs -*- lexical-binding: t; -*-
+
+;; Copyright (C) 2024-2026 MCG
+;; Author: mcge <mcgeq@outlook.com>
+;; Keywords: org, org-appear
+#+end_src
+
+** Require
+
+#+begin_src emacs-lisp
+;;; Code:
+
+(require 'core-lib)
+#+end_src
+
+** Configuration
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Configuration
+;;; ============================================================
+
+(defun mcg--setup-org-appear ()
+  "Set up org-appear."
+  (when (mcg-require-extension "org-appear" t)
+    (org-appear-mode 1)
+    (setq org-appear-autosubmarkers t
+          org-appear-autolinks t)
+    (mcg-log "Org appear configured")))
+#+end_src
+
+** Initialize
+
+#+begin_src emacs-lisp
+(mcg--setup-org-appear)
+#+end_src
+
+** Provide
+
+#+begin_src emacs-lisp
+(provide 'init-org-appear)
+;;; init-org-appear.el ends here
+#+end_src

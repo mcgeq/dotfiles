@@ -1,0 +1,51 @@
+#+TITLE: Ox GFM Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-ox-gfm.el :lexical t
+
+* Ox GFM Module
+
+Ox GFM - GitHub Flavored Markdown exporter.
+
+** File Header
+
+#+begin_src emacs-lisp
+;;; init-ox-gfm.el --- Ox GFM for MCG Emacs -*- lexical-binding: t; -*-
+
+;; Copyright (C) 2024-2026 MCG
+;; Author: mcge <mcgeq@outlook.com>
+;; Keywords: org, ox-gfm, markdown
+#+end_src
+
+** Require
+
+#+begin_src emacs-lisp
+;;; Code:
+
+(require 'core-lib)
+#+end_src
+
+** Configuration
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Configuration
+;;; ============================================================
+
+(defun mcg--setup-ox-gfm ()
+  "Set up ox-gfm."
+  (when (mcg-require-extension "ox-gfm" t)
+    (mcg-log "Ox gfm configured")))
+#+end_src
+
+** Initialize
+
+#+begin_src emacs-lisp
+(mcg--setup-ox-gfm)
+#+end_src
+
+** Provide
+
+#+begin_src emacs-lisp
+(provide 'init-ox-gfm)
+;;; init-ox-gfm.el ends here
+#+end_src

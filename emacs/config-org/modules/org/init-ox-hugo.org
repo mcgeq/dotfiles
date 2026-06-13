@@ -1,0 +1,51 @@
+#+TITLE: Ox Hugo Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-ox-hugo.el :lexical t
+
+* Ox Hugo Module
+
+Ox-hugo - Org to Hugo exporter.
+
+** File Header
+
+#+begin_src emacs-lisp
+;;; init-ox-hugo.el --- Ox Hugo for MCG Emacs -*- lexical-binding: t; -*-
+
+;; Copyright (C) 2024-2026 MCG
+;; Author: mcge <mcgeq@outlook.com>
+;; Keywords: org, ox-hugo, hugo
+#+end_src
+
+** Require
+
+#+begin_src emacs-lisp
+;;; Code:
+
+(require 'core-lib)
+#+end_src
+
+** Configuration
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Configuration
+;;; ============================================================
+
+(defun mcg--setup-ox-hugo ()
+  "Set up ox-hugo."
+  (when (mcg-require-extension "ox-hugo" t)
+    (mcg-log "Ox hugo configured")))
+#+end_src
+
+** Initialize
+
+#+begin_src emacs-lisp
+(mcg--setup-ox-hugo)
+#+end_src
+
+** Provide
+
+#+begin_src emacs-lisp
+(provide 'init-ox-hugo)
+;;; init-ox-hugo.el ends here
+#+end_src

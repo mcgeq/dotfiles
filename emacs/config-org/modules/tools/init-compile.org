@@ -1,0 +1,212 @@
+#+TITLE: Compile Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-compile.el :lexical t
+
+* Compile Module
+
+Unified compile, build, test, and run commands.
+
+** File Header
+
+#+begin_src emacs-lisp
+;;; init-compile.el --- Compile workflow for MCG Emacs -*- lexical-binding: t; -*-
+
+;; Copyright (C) 2024-2026 MCG
+;; Author: mcge <mcgeq@outlook.com>
+;; Keywords: compile, build, test
+;; Compatibility: GNU Emacs 29.0+
+
+;;; Commentary:
+;; Provides project-aware wrappers around built-in compile.el.
+;;
+;;; Code:
+
+(require 'core-lib)
+(require 'compile)
+(require 'project)
+(require 'subr-x)
+#+end_src
+
+** Options
+
+#+begin_src emacs-lisp
+(defcustom mcg-compile-save-buffers t
+  "Whether MCG compile commands save modified buffers before running."
+  :type 'boolean
+  :group 'mcg)
+
+(defcustom mcg-compile-scroll-output t
+  "Non-nil means compilation buffers scroll as output arrives."
+  :type 'boolean
+  :group 'mcg)
+#+end_src
+
+** Helpers
+
+#+begin_src emacs-lisp
+(defun mcg-compile--project-root ()
+  "Return current project root or `default-directory'."
+  (file-name-as-directory
+   (or (and (fboundp 'mcg-project-current-root)
+            (mcg-project-current-root))
+       (when-let* ((project (project-current nil)))
+         (project-root project))
+       default-directory)))
+
+(defun mcg-compile--root-has-p (root file)
+  "Return non-nil when ROOT contains FILE."
+  (file-exists-p (expand-file-name file root)))
+
+(defun mcg-compile--js-runner (root)
+  "Return preferred JavaScript package manager for ROOT."
+  (cond
+   ((and (or (mcg-compile--root-has-p root "pnpm-lock.yaml")
+             (mcg-compile--root-has-p root "pnpm-workspace.yaml"))
+         (executable-find "pnpm"))
+    "pnpm")
+   ((and (or (mcg-compile--root-has-p root "bun.lock")
+             (mcg-compile--root-has-p root "bun.lockb"))
+         (executable-find "bun"))
+    "bun")
+   ((and (mcg-compile--root-has-p root "yarn.lock")
+         (executable-find "yarn"))
+    "yarn")
+   (t "npm")))
+
+(defun mcg-compile--js-command (root action)
+  "Return JavaScript command for ROOT and ACTION."
+  (let ((runner (mcg-compile--js-runner root)))
+    (pcase (list runner action)
+      (`("bun" build) "bun run build")
+      (`("bun" test) "bun test")
+      (`("bun" run) "bun run start")
+      (`("npm" build) "npm run build")
+      (`("npm" test) "npm test")
+      (`("npm" run) "npm start")
+      (`(,runner build) (format "%s build" runner))
+      (`(,runner test) (format "%s test" runner))
+      (`(,runner run) (format "%s start" runner)))))
+
+(defun mcg-compile--guess-command (root action)
+  "Guess a shell command for ROOT and ACTION."
+  (cond
+   ((mcg-compile--root-has-p root "build.zig")
+    (pcase action
+      ('build "zig build")
+      ('test "zig build test")
+      ('run "zig build run")))
+   ((mcg-compile--root-has-p root "Cargo.toml")
+    (pcase action
+      ('build "cargo build")
+      ('test "cargo test")
+      ('run "cargo run")))
+   ((mcg-compile--root-has-p root "go.mod")
+    (pcase action
+      ('build "go build ./...")
+      ('test "go test ./...")
+      ('run "go run .")))
+   ((mcg-compile--root-has-p root "package.json")
+    (mcg-compile--js-command root action))
+   ((or (mcg-compile--root-has-p root "Makefile")
+        (mcg-compile--root-has-p root "makefile"))
+    (pcase action
+      ('build "make")
+      ('test "make test")
+      ('run "make run")))
+   ((mcg-compile--root-has-p root "pyproject.toml")
+    (pcase action
+      ('build "python -m build")
+      ('test "python -m pytest")
+      ('run "python -m pytest")))))
+
+(defun mcg-compile--read-command (prompt default)
+  "Read a shell command with PROMPT and DEFAULT."
+  (read-shell-command prompt default 'compile-history))
+
+(defun mcg-compile--run (command root)
+  "Run compile COMMAND in ROOT."
+  (when mcg-compile-save-buffers
+    (save-some-buffers t))
+  (let ((default-directory root)
+        (compile-command command))
+    (compile command)))
+
+(defun mcg-compile--dispatch (action edit)
+  "Run ACTION command.
+When EDIT is non-nil, prompt before running the guessed command."
+  (let* ((root (mcg-compile--project-root))
+         (guess (or (mcg-compile--guess-command root action)
+                    compile-command))
+         (command (if edit
+                      (mcg-compile--read-command
+                       (format "%s command: " (capitalize (symbol-name action)))
+                       guess)
+                    guess)))
+    (mcg-compile--run command root)))
+#+end_src
+
+** Commands
+
+#+begin_src emacs-lisp
+;;;###autoload
+(defun mcg-compile ()
+  "Run a compile command in the current project."
+  (interactive)
+  (let* ((root (mcg-compile--project-root))
+         (command (mcg-compile--read-command "Compile command: " compile-command)))
+    (mcg-compile--run command root)))
+
+;;;###autoload
+(defun mcg-recompile ()
+  "Re-run the last compilation."
+  (interactive)
+  (if (get-buffer "*compilation*")
+      (recompile)
+    (call-interactively #'mcg-compile)))
+
+;;;###autoload
+(defun mcg-compile-build (&optional edit)
+  "Build current project.
+With prefix EDIT, edit the guessed command before running."
+  (interactive "P")
+  (mcg-compile--dispatch 'build edit))
+
+;;;###autoload
+(defun mcg-compile-test (&optional edit)
+  "Test current project.
+With prefix EDIT, edit the guessed command before running."
+  (interactive "P")
+  (mcg-compile--dispatch 'test edit))
+
+;;;###autoload
+(defun mcg-compile-run (&optional edit)
+  "Run current project.
+With prefix EDIT, edit the guessed command before running."
+  (interactive "P")
+  (mcg-compile--dispatch 'run edit))
+#+end_src
+
+** Initialize
+
+#+begin_src emacs-lisp
+(setq compilation-scroll-output mcg-compile-scroll-output)
+(setq compilation-always-kill t)
+(setq compilation-ask-about-save nil)
+
+(define-prefix-command 'mcg-compile-map)
+(mcg-bind-key "C-c c" 'mcg-compile-map "tools/compile")
+(mcg-bind-key "C-c c c" #'mcg-compile "tools/compile")
+(mcg-bind-key "C-c c r" #'mcg-recompile "tools/compile")
+(mcg-bind-key "C-c c b" #'mcg-compile-build "tools/compile")
+(mcg-bind-key "C-c c t" #'mcg-compile-test "tools/compile")
+(mcg-bind-key "C-c c R" #'mcg-compile-run "tools/compile")
+
+(mcg-log "compile module configured")
+#+end_src
+
+** Provide Feature
+
+#+begin_src emacs-lisp
+(provide 'init-compile)
+;;; init-compile.el ends here
+#+end_src

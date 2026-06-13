@@ -1,0 +1,74 @@
+# Catppuccin Mocha Theme for Alacritty
+# 与 Wezterm 颜色配置一致
+
+[colors.primary]
+foreground = "#cdd6f4"
+background = "#1f1f28"
+dim_foreground = "#a6adc8"
+bright_foreground = "#cdd6f4"
+
+[colors.cursor]
+text = "#1f1f28"
+cursor = "#f5e0dc"
+
+[colors.vi_mode_cursor]
+text = "#1f1f28"
+cursor = "#f5e0dc"
+
+[colors.search.matches]
+foreground = "#1f1f28"
+background = "#f38ba8"
+
+[colors.search.focused_match]
+foreground = "#1f1f28"
+background = "#a6e3a1"
+
+[colors.hints.start]
+foreground = "#1f1f28"
+background = "#f9e2af"
+
+[colors.hints.end]
+foreground = "#1f1f28"
+background = "#f38ba8"
+
+[colors.line_indicator]
+foreground = "#cba6f7"
+background = "#1f1f28"
+
+[colors.footer_bar]
+foreground = "#cdd6f4"
+background = "#45475a"
+
+[colors.selection]
+text = "#cdd6f4"
+background = "#585b70"
+
+[colors.normal]
+black = "#45475a"
+red = "#f38ba8"
+green = "#a6e3a1"
+yellow = "#f9e2af"
+blue = "#89b4fa"
+magenta = "#cba6f7"
+cyan = "#94e2d5"
+white = "#cdd6f4"
+
+[colors.bright]
+black = "#585b70"
+red = "#f38ba8"
+green = "#a6e3a1"
+yellow = "#f9e2af"
+blue = "#89b4fa"
+magenta = "#cba6f7"
+cyan = "#94e2d5"
+white = "#ffffff"
+
+[colors.dim]
+black = "#313244"
+red = "#f38ba8"
+green = "#a6e3a1"
+yellow = "#f9e2af"
+blue = "#89b4fa"
+magenta = "#cba6f7"
+cyan = "#94e2d5"
+white = "#bac2de"

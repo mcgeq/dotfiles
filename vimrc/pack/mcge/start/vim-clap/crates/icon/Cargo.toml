@@ -1,0 +1,19 @@
+[package]
+name = "icon"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+include = ["/Cargo.toml", "src/*.rs"]
+homepage.workspace = true
+description = """
+icon is a tool for drawing an icon according to the path name for vim-clap.
+"""
+
+[dependencies]
+pattern = { workspace = true }
+
+[build-dependencies]
+itertools = { workspace = true }
+serde_json = { workspace = true }

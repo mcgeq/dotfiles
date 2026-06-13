@@ -1,0 +1,180 @@
+#+TITLE: Private Configuration Example
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle config.el :lexical t
+
+* Private Configuration Example
+
+This file is an example template for private configuration.
+Copy this file to ~config.org~ and customize it to your needs.
+
+#+begin_quote
+Note: This file is tracked by git as an example.
+Your actual configuration should be in ~config.org~, which is ignored by git.
+#+end_quote
+
+** LSP Bridge Configuration
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; LSP Bridge Configuration
+;;; ============================================================
+
+;; Python LSP Server
+;; Options: "ty" (ty + ruff), "basedpyright" (basedpyright + ruff)
+;; Default: "ty"
+;; (setq mcg-lsp-python-server "ty")
+;; (setq mcg-lsp-python-server "basedpyright")
+
+;; Use biome for Web development (instead of ESLint)
+;; Default: nil
+;; (setq mcg-lsp-enable-biome t)
+
+;; Enable lsp-bridge in TRAMP buffers
+;; Default: t
+;; (setq mcg-lsp-enable-with-tramp nil)
+
+;; Enable inlay hints
+;; Default: nil
+;; (setq mcg-lsp-enable-inlay-hint t)
+
+#+end_src
+
+** UI Configuration
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; UI Configuration
+;;; ============================================================
+
+;; Theme (ef-themes)
+;; Available themes: ef-dream, ef-winter, ef-light, ef-dark, etc.
+;; Default: 'ef-dream
+;; (setq mcg-ui-theme 'ef-winter)
+
+;; Awesome Tray position
+;; Options: 'left, 'center, 'right
+;; Default: 'center
+;; (setq mcg-awesome-tray-position 'left)
+
+;; Awesome Tray active modules
+;; Default: (quote (mode process gc))
+;; (setq mcg-awesome-tray-active-modules '(mode process gc mal))
+
+;; Font configuration
+;; Default: auto-detect
+;; (setq mcg-font-default-candidates '("JetBrains Mono" "Fira Code"))
+
+#+end_src
+
+** Editor Configuration
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Editor Configuration
+;;; ============================================================
+
+;; Auto-save idle time (seconds)
+;; Default: 1
+;; (setq mcg-auto-save-idle 2)
+
+;; Delete trailing whitespace on save
+;; Default: nil
+;; (setq mcg-auto-save-delete-trailing-whitespace t)
+
+#+end_src
+
+** Org Configuration
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Org Configuration
+;;; ============================================================
+
+;; Org directory
+;; (setq mcg-org-directory "~/org/")
+
+;; Org Agenda directory
+;; (setq mcg-org-agenda-directory "~/org/agenda/")
+
+;; Default notes file
+;; (setq mcg-org-default-notes-file "notes.org")
+
+;; Enable mixed-pitch mode
+;; Default: nil
+;; (setq mcg-org-enable-mixed-pitch t)
+
+;; Enable org-modern
+;; Default: t
+;; (setq mcg-org-enable-org-modern nil)
+
+#+end_src
+
+** Clutch Database Configuration
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Clutch Database Configuration
+;;; ============================================================
+
+;; Configure database connections here (sensitive data)
+;; Uncomment and modify as needed:
+
+;; (setq mcg-tools-clutch-connections
+;;       '(("dev-mysql" . (:backend mysql
+;;                           :host "127.0.0.1" :port 3306
+;;                           :user "root" :password "test"
+;;                           :database "mydb"
+;;                           :connect-timeout 5
+;;                           :read-idle-timeout 60))
+;;         ("dev-pg" . (:backend pg
+;;                          :host "127.0.0.1" :port 5432
+;;                          :user "postgres" :password "test"
+;;                          :database "mydb"))
+;;         ("dev-sqlite" . (:backend sqlite
+;;                             :database "/path/to/my.db"))))
+
+;; PostgreSQL 连接示例
+;; (setq mcg-tools-clutch-connections
+;;       '(("dev-pg" . (:backend pg
+;;                       :host "localhost"
+;;                       :port 5432
+;;                       :user "postgres"
+;;                       :password "your-password"
+;;                       :database "mydb"))
+;;         ("prod-pg" . (:backend pg
+;;                        :host "prod-db.example.com"
+;;                        :port 5432
+;;                        :user "app"
+;;                        :password "prod-password"
+;;                        :database "production"))))
+
+;; MySQL 连接示例
+;; (setq mcg-tools-clutch-connections
+;;       '(("dev-mysql" . (:backend mysql
+;;                          :host "localhost"
+;;                          :port 3306
+;;                          :user "root"
+;;                          :password "your-password"
+;;                          :database "mydb"))
+;;         ("prod-mysql" . (:backend mysql
+;;                           :host "prod-db.example.com"
+;;                           :port 3306
+;;                           :user "app"
+;;                           :password "prod-password"
+;;                           :database "production"))))
+
+;; SQLite 连接示例
+;; (setq mcg-tools-clutch-connections
+;;       '(("local-sqlite" . (:backend sqlite
+;;                             :database "~/.config/myapp/data.db"))
+;;         ("project-sqlite" . (:backend sqlite
+;;                               :database "~/projects/myapp/data.db"))))
+
+#+end_src
+
+** Provide
+
+#+begin_src emacs-lisp
+(provide 'private-config)
+;;; config.el ends here
+#+end_src

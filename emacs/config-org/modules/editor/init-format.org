@@ -1,0 +1,224 @@
+#+TITLE: Format Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-format.el :lexical t
+
+* Format Module
+
+统一的代码格式化入口。优先使用已经启动的 LSP 能力；没有 LSP 时，按当前 mode 调用本地 formatter。
+
+** File Header
+
+#+begin_src emacs-lisp
+;;; init-format.el --- Unified formatting commands for MCG Emacs -*- lexical-binding: t; -*-
+
+;; Copyright (C) 2024-2026 MCG
+;; Author: mcge <mcgeq@outlook.com>
+;; Keywords: tools, format, convenience
+;; Compatibility: GNU Emacs 29.0+
+
+;;; Commentary:
+;; Provides one formatting command for daily development:
+;; - prefer lsp-bridge when an LSP server is active
+;; - fall back to language-specific formatter functions
+;; - optionally format on save for selected major modes
+;;
+;;; Code:
+
+(require 'core-lib)
+(require 'cl-lib)
+(require 'subr-x)
+#+end_src
+
+** Custom Options
+
+#+begin_src emacs-lisp
+(defcustom mcg-format-on-save nil
+  "Whether `mcg-format-buffer' should run before saving supported buffers."
+  :type 'boolean
+  :group 'mcg)
+
+(defcustom mcg-format-on-save-modes
+  '(zig-mode zig-ts-mode
+    web-mode html-mode css-mode css-ts-mode scss-mode less-css-mode
+    js-mode js-ts-mode js-jsx-mode typescript-mode typescript-ts-mode tsx-ts-mode
+    json-mode json-ts-mode yaml-mode yaml-ts-mode)
+  "Major modes where `mcg-format-on-save' is allowed."
+  :type '(repeat symbol)
+  :group 'mcg)
+
+(defcustom mcg-format-prefer-lsp t
+  "Whether to try lsp-bridge formatting before local formatter functions."
+  :type 'boolean
+  :group 'mcg)
+
+(defcustom mcg-format-command-alist
+  '((zig-mode . zig-format-buffer)
+    (zig-ts-mode . zig-format-buffer)
+    (web-mode . mcg-format-with-external-command)
+    (html-mode . mcg-format-with-external-command)
+    (css-mode . mcg-format-with-external-command)
+    (css-ts-mode . mcg-format-with-external-command)
+    (scss-mode . mcg-format-with-external-command)
+    (less-css-mode . mcg-format-with-external-command)
+    (js-mode . mcg-format-with-external-command)
+    (js-ts-mode . mcg-format-with-external-command)
+    (js-jsx-mode . mcg-format-with-external-command)
+    (typescript-mode . mcg-format-with-external-command)
+    (typescript-ts-mode . mcg-format-with-external-command)
+    (tsx-ts-mode . mcg-format-with-external-command)
+    (json-mode . mcg-format-with-external-command)
+    (json-ts-mode . mcg-format-with-external-command)
+    (yaml-mode . mcg-format-with-external-command)
+    (yaml-ts-mode . mcg-format-with-external-command))
+  "Alist mapping major modes to formatter functions."
+  :type '(alist :key-type symbol :value-type function)
+  :group 'mcg)
+
+(defcustom mcg-format-external-command-alist
+  '((web-mode . (("biome" "format" "--write")
+                 ("prettier" "--write")))
+    (html-mode . (("prettier" "--write")))
+    (css-mode . (("prettier" "--write")))
+    (css-ts-mode . (("prettier" "--write")))
+    (scss-mode . (("prettier" "--write")))
+    (less-css-mode . (("prettier" "--write")))
+    (js-mode . (("biome" "format" "--write")
+                ("prettier" "--write")))
+    (js-ts-mode . (("biome" "format" "--write")
+                   ("prettier" "--write")))
+    (js-jsx-mode . (("biome" "format" "--write")
+                    ("prettier" "--write")))
+    (typescript-mode . (("biome" "format" "--write")
+                        ("prettier" "--write")))
+    (typescript-ts-mode . (("biome" "format" "--write")
+                           ("prettier" "--write")))
+    (tsx-ts-mode . (("biome" "format" "--write")
+                    ("prettier" "--write")))
+    (json-mode . (("biome" "format" "--write")
+                  ("prettier" "--write")))
+    (json-ts-mode . (("biome" "format" "--write")
+                     ("prettier" "--write")))
+    (yaml-mode . (("prettier" "--write")))
+    (yaml-ts-mode . (("prettier" "--write"))))
+  "External formatter command candidates for each major mode.
+Each candidate is a list whose car is the executable and cdr is the fixed args."
+  :type '(alist :key-type symbol :value-type (repeat (repeat string)))
+  :group 'mcg)
+#+end_src
+
+** Helpers
+
+#+begin_src emacs-lisp
+(defvar-local mcg-format--inhibit-on-save nil
+  "Non-nil means skip format-on-save in the current buffer.")
+
+(defun mcg-format--supported-mode-p ()
+  "Return non-nil when current `major-mode' supports format-on-save."
+  (memq major-mode mcg-format-on-save-modes))
+
+(defun mcg-format--lsp-available-p ()
+  "Return non-nil when lsp-bridge can format the current buffer."
+  (and mcg-format-prefer-lsp
+       (bound-and-true-p lsp-bridge-mode)
+       (fboundp 'lsp-bridge-has-lsp-server-p)
+       (lsp-bridge-has-lsp-server-p)
+       (fboundp 'lsp-bridge-code-format)))
+
+(defun mcg-format--command-for-mode ()
+  "Return formatter function for current `major-mode'."
+  (cdr (assq major-mode mcg-format-command-alist)))
+
+(defun mcg-format--external-candidates ()
+  "Return external formatter candidates for current `major-mode'."
+  (cdr (assq major-mode mcg-format-external-command-alist)))
+
+(defun mcg-format--select-external-command ()
+  "Return the first available external formatter command for current buffer."
+  (cl-find-if (lambda (candidate)
+                (and (consp candidate)
+                     (executable-find (car candidate))))
+              (mcg-format--external-candidates)))
+
+(defun mcg-format--call-process (program args file)
+  "Run PROGRAM with ARGS against FILE and return non-nil on success."
+  (let ((buffer (get-buffer-create "*MCG Format*")))
+    (with-current-buffer buffer
+      (erase-buffer))
+    (let ((exit-code
+           (apply #'call-process program nil buffer nil
+                  (append args (list file)))))
+      (if (zerop exit-code)
+          t
+        (display-buffer buffer)
+        (mcg-log-warning "Formatter failed: %s %s" program (string-join args " "))
+        nil))))
+#+end_src
+
+** Commands
+
+#+begin_src emacs-lisp
+;;;###autoload
+(defun mcg-format-with-external-command ()
+  "Format current file with the first available external formatter."
+  (interactive)
+  (unless buffer-file-name
+    (user-error "Current buffer is not visiting a file"))
+  (let ((candidate (mcg-format--select-external-command)))
+    (unless candidate
+      (user-error "No formatter found for %s" major-mode))
+    (save-buffer)
+    (when (mcg-format--call-process (car candidate) (cdr candidate) buffer-file-name)
+      (revert-buffer :ignore-auto :noconfirm)
+      (mcg-log "Formatted %s with %s" buffer-file-name (car candidate))
+      t)))
+
+;;;###autoload
+(defun mcg-format-buffer ()
+  "Format current buffer using the best available formatter."
+  (interactive)
+  (cond
+   ((mcg-format--lsp-available-p)
+    (call-interactively #'lsp-bridge-code-format)
+    t)
+   ((let ((formatter (mcg-format--command-for-mode)))
+      (when (and formatter (fboundp formatter))
+        (call-interactively formatter)
+        t)))
+   (t
+    (user-error "No formatter available for %s" major-mode))))
+
+(defun mcg-format-buffer-maybe ()
+  "Format current buffer before saving when enabled and supported."
+  (when (and mcg-format-on-save
+             (not mcg-format--inhibit-on-save)
+             (mcg-format--supported-mode-p)
+             (not buffer-read-only))
+    (let ((mcg-format--inhibit-on-save t))
+      (ignore-errors
+        (mcg-format-buffer)))))
+
+;;;###autoload
+(defun mcg-format-toggle-on-save ()
+  "Toggle global MCG format-on-save."
+  (interactive)
+  (setq mcg-format-on-save (not mcg-format-on-save))
+  (message "MCG format-on-save %s" (if mcg-format-on-save "enabled" "disabled")))
+#+end_src
+
+** Initialize
+
+#+begin_src emacs-lisp
+(add-hook 'before-save-hook #'mcg-format-buffer-maybe)
+
+(mcg-bind-key "C-c r f" #'mcg-format-buffer "editor/format")
+(mcg-bind-key "C-c r F" #'mcg-format-toggle-on-save "editor/format")
+
+(mcg-log "format module configured")
+#+end_src
+
+** Provide Feature
+
+#+begin_src emacs-lisp
+(provide 'init-format)
+;;; init-format.el ends here
+#+end_src

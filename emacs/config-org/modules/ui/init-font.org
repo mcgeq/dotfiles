@@ -1,0 +1,133 @@
+#+TITLE: Font Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-font.el :lexical t
+
+* Font Module
+
+字体与图标字体配置（解决 Nerd Icons 乱码）。
+
+** File Header
+
+#+begin_src emacs-lisp
+;;; init-font.el --- font configuration -*- lexical-binding: t; -*-
+
+;;; Commentary:
+;; Configure default/cjk/emoji/icon fonts.
+
+;;; Code:
+
+(require 'cl-lib)
+(require 'core-lib)
+(require 'subr-x)
+#+end_src
+
+** Variables
+
+#+begin_src emacs-lisp
+(defcustom mcg-font-default-candidates
+  '("Cascadia Mono" "FiraCode Nerd Font" "Consolas")
+  "Default monospace font candidates."
+  :type '(repeat string)
+  :group 'mcg)
+
+(defcustom mcg-font-cjk-candidates
+  '("Microsoft YaHei UI" "Microsoft YaHei" "KaiTi")
+  "CJK font candidates."
+  :type '(repeat string)
+  :group 'mcg)
+
+(defcustom mcg-font-emoji-candidates
+  '("Segoe UI Emoji" "Noto Color Emoji")
+  "Emoji font candidates."
+  :type '(repeat string)
+  :group 'mcg)
+
+(defcustom mcg-ui-icon-font-family "FiraCode Nerd Font"
+  "Nerd icons font family."
+  :type 'string
+  :group 'mcg)
+
+(defcustom mcg-font-height
+  (cond (mcg-is-windows 115)
+        (mcg-is-mac 150)
+        (t 130))
+  "Default font height."
+  :type 'integer
+  :group 'mcg)
+#+end_src
+
+** Setup
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Font Utility Functions
+;;; ============================================================
+
+(defun mcg--font-available-p (font)
+  "Return non-nil when FONT is available."
+  (find-font (font-spec :family font)))
+
+(defun mcg--pick-font (candidates)
+  "Pick the first available font from CANDIDATES."
+  (cl-loop for f in candidates
+           when (mcg--font-available-p f)
+           return f))
+
+(defun mcg-get-monospace-font ()
+  "Get the configured monospace font family."
+  (mcg--pick-font mcg-font-default-candidates))
+
+(defun mcg-get-cjk-font ()
+  "Get the configured CJK font family."
+  (mcg--pick-font mcg-font-cjk-candidates))
+
+(defun mcg-get-emoji-font ()
+  "Get the configured emoji font family."
+  (mcg--pick-font mcg-font-emoji-candidates))
+
+(defun mcg-get-icon-font ()
+  "Get the configured icon font family."
+  (if (mcg--font-available-p mcg-ui-icon-font-family)
+      mcg-ui-icon-font-family
+    (mcg--pick-font mcg-font-default-candidates)))
+
+(defun mcg-get-serif-font ()
+  "Get a serif font for variable-pitch faces."
+  (or (mcg--pick-font '("Noto Serif" "Georgia" "serif"))
+      "serif"))
+#+end_src
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Font Setup
+;;; ============================================================
+
+(defun mcg--setup-fonts ()
+  "Setup default/CJK/emoji fonts."
+  (when (display-graphic-p)
+    (when-let* ((main (mcg-get-monospace-font)))
+      (set-face-attribute 'default nil :family main :height mcg-font-height))
+    (when-let* ((cjk (mcg-get-cjk-font)))
+      (dolist (charset '(han kana cjk-misc bopomofo))
+        (set-fontset-font t charset (font-spec :family cjk) nil 'prepend)))
+    (when-let* ((emoji (mcg-get-emoji-font)))
+      (set-fontset-font t 'emoji (font-spec :family emoji) nil 'prepend))
+    (if (mcg--font-available-p mcg-ui-icon-font-family)
+        (mcg-log "font configured, icon font: %s" mcg-ui-icon-font-family)
+      (mcg-log-warning "icon font not found: %s (icons may be garbled)"
+                       mcg-ui-icon-font-family))))
+#+end_src
+
+** Initialize
+
+#+begin_src emacs-lisp
+(mcg--setup-fonts)
+(add-hook 'server-after-make-frame-hook #'mcg--setup-fonts)
+#+end_src
+
+** Provide
+
+#+begin_src emacs-lisp
+(provide 'init-font)
+;;; init-font.el ends here
+#+end_src

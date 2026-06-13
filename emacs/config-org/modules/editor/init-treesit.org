@@ -1,0 +1,124 @@
+#+TITLE: Tree-sitter Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-treesit.el :lexical t
+
+* Tree-sitter Module
+
+** File Header
+
+#+begin_src emacs-lisp
+;;; init-treesit.el --- Tree-sitter Configuration for MCG Emacs -*- lexical-binding: t; -*-
+
+;; Copyright (C) 2024-2026 MCG
+;; Author: mcge <mcgeq@outlook.com>
+;; Keywords: tree-sitter, syntax, highlighting
+;; Compatibility: GNU Emacs 29.0+
+
+;;; Commentary:
+;; Tree-sitter configuration module for MCG Emacs, using treesit-auto for:
+;; - automatic language grammar installation
+;; - major-mode remapping
+;; - file type associations
+#+end_src
+
+** Require
+
+#+begin_src emacs-lisp
+;;; Code:
+
+(require 'core-lib)
+(require 'seq)
+(require 'treesit)
+#+end_src
+
+** Prevent typescript-mode Package Loading
+
+外部 typescript-mode 包与内置 typescript-ts-mode 的模式层次结构不同，会导致 "Inconsistent hierarchy" 错误。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Prevent typescript-mode Package Loading
+;;; ============================================================
+
+(with-eval-after-load 'typescript-mode
+  (message "Warning: typescript-mode package loaded. This may cause hierarchy conflicts with typescript-ts-mode."))
+
+(defun mcg--remove-typescript-mode-from-auto-mode-alist ()
+  "Remove typescript-mode entries from auto-mode-alist."
+  (setq auto-mode-alist
+        (seq-remove (lambda (pair)
+                      (eq (cdr pair) 'typescript-mode))
+                    auto-mode-alist)))
+
+(add-hook 'after-init-hook #'mcg--remove-typescript-mode-from-auto-mode-alist)
+#+end_src
+
+** Load treesit-auto
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Load treesit-auto
+;;; ============================================================
+
+(mcg-require-extension 'treesit-auto t)
+#+end_src
+
+** Extra Language Sources
+
+treesit-auto 没有的语言需要手动添加。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Extra Language Sources
+;;; ============================================================
+
+(add-to-list 'treesit-language-source-alist
+             '(mojo . ("https://github.com/HerringtonDarkholme/tree-sitter-mojo")))
+
+(add-to-list 'treesit-language-source-alist
+             '(markdown-inline . ("https://github.com/tree-sitter-grammars/tree-sitter-markdown"
+                                  "split_parser" "tree-sitter-markdown-inline/src")))
+#+end_src
+
+** Initialize
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Initialize
+;;; ============================================================
+
+;; Set tree-sitter grammar install directory
+(setq treesit-extra-load-path
+      (list (expand-file-name "tree-sitter" user-emacs-directory)))
+
+;; Enable treesit-auto
+(treesit-auto-add-to-auto-mode-alist 'all)
+(global-treesit-auto-mode)
+
+;; Syntax highlighting level (1-4)
+(setq treesit-font-lock-level 4)
+#+end_src
+
+** Commands
+
+*** Explore
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Commands
+;;; ============================================================
+
+(defun mcg/treesit-explore ()
+  "Open tree-sitter syntax tree explorer for current buffer."
+  (interactive)
+  (if (treesit-parser-list)
+      (treesit-explore-mode)
+    (message "No tree-sitter parser active in this buffer")))
+#+end_src
+
+** Provide Feature
+
+#+begin_src emacs-lisp
+(provide 'init-treesit)
+;;; init-treesit.el ends here
+#+end_src

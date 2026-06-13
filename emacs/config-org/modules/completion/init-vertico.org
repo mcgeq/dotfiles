@@ -1,0 +1,101 @@
+#+TITLE: Vertico Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-vertico.el :lexical t
+
+* Vertico Module
+
+配置 vertico 补全前端。
+
+** File Header
+
+#+begin_src emacs-lisp
+;;; init-vertico.el --- vertico configuration -*- lexical-binding: t; -*-
+
+;;; Commentary:
+;; Configure vertico from:
+;; emacs/site-lisp/extensions/completion/vertico
+
+;;; Code:
+
+(require 'core-lib)
+
+;; 添加 vertico 扩展目录到 load-path
+(let ((vertico-dir (file-name-directory (locate-library "vertico"))))
+  (when vertico-dir
+    (add-to-list 'load-path (expand-file-name "extensions" vertico-dir))))
+#+end_src
+
+** Setup
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Variables
+;;; ============================================================
+
+(defvar mcg-completion-vertico-count 15
+  "Number of candidates displayed by Vertico.")
+
+(defvar mcg-completion-preview-key 'any
+  "Consult preview trigger key.
+Options: 'any, nil, or specific key.")
+#+end_src
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Vertico Configuration
+;;; ============================================================
+
+ (defun mcg--setup-vertico ()
+  "Setup Vertico vertical completion interface."
+   (when (mcg-require-extension "vertico" t)
+    ;; Display settings
+    (setq vertico-count mcg-completion-vertico-count)
+    (setq vertico-resize nil)              ; Fixed height
+    (setq vertico-cycle t)                 ; Enable cycling (top <-> bottom)
+    (setq vertico-scroll-margin 2)         ; Scroll margin
+
+    ;; Enable vertico-mode
+     (vertico-mode 1)
+
+    ;; Load vertico-directory extension
+    (require 'vertico-directory nil t)
+
+    ;; Load vertico-sort extension and set history sorting
+    (when (require 'vertico-sort nil t)
+      (setq vertico-sort-function #'vertico-sort-history-length-alpha))
+
+    (mcg-log "Vertico configured")))
+#+end_src
+
+*** Setup Vertico Keybindings
+
+#+begin_src emacs-lisp
+(defun mcg--setup-vertico-keybindings ()
+  "Setup Vertico keybindings."
+  (when (and (featurep 'vertico) (boundp 'vertico-map))
+    (define-key vertico-map (kbd "<tab>") #'vertico-insert)
+    (define-key vertico-map (kbd "<escape>") #'vertico-exit)
+    (define-key vertico-map (kbd "RET") #'vertico-exit)
+    (define-key vertico-map (kbd "C-M-n") #'vertico-next-group)
+    (define-key vertico-map (kbd "C-M-p") #'vertico-previous-group)
+    (define-key vertico-map (kbd "M-<") #'vertico-first)
+    (define-key vertico-map (kbd "M->") #'vertico-last)
+
+    ;; vertico-directory keybindings
+    (when (featurep 'vertico-directory)
+      (define-key vertico-map (kbd "DEL") #'vertico-directory-delete-char))))
+#+end_src
+
+** Initialize
+
+#+begin_src emacs-lisp
+  (mcg--setup-vertico)
+  (mcg--setup-vertico-keybindings)
+#+end_src
+
+** Provide
+
+#+begin_src emacs-lisp
+(provide 'init-vertico)
+;;; init-vertico.el ends here
+#+end_src

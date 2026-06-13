@@ -1,0 +1,199 @@
+{
+  // editor
+  // font
+  "editor.fontFamily": "DejaVuSansM Nerd Font Mono, Fira Code, Consolas, 'Courier New', monospace",
+  "editor.fontSize": 16,
+  "editor.lineHeight": 22,
+  "editor.letterSpacing": 0.5,
+  "editor.tabSize": 4,
+  "editor.insertSpaces": true,
+  "editor.lineNumbers": "relative",
+  "editor.wordWrap": "on",
+  "editor.minimap.enabled": true,
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  // terminal
+  "terminal.integrated.fontFamily": "Fira Code, Consolas, 'Courier New', monospace",
+  "terminal.integrated.fontSize": 14,
+  "terminal.integrated.lineHeight": 1.2,
+  "terminal.integrated.letterSpacing": 0.5,
+  // files
+  "files.autoSave": "afterDelay",
+  "files.autoSaveDelay": 500,
+  "files.exclude": {
+    "**/.git": true,
+    "**/.svn": true,
+    "**/.hg": true,
+    "**/CVS": true,
+    "**/.DS_Store": true,
+    "**/Thumbs.db": true,
+    "**/node_modules": true
+  },
+
+  "workbench.startupEditor": "newUntitledFile",
+  // config vim
+  // 绑定
+  "vim.leader": "<space>",
+  "vim.easymotion": true,
+  "vim.useSystemClipboard": true,
+  "vim.useCtrlKeys": true,
+  "vim.hlsearch": true,
+  "vim.flash.enable": true,
+  "vim.cursorStylePerMode.normal": "line",
+  "vim.handleKeys": {
+    "<C-a>": false,
+    "<C-f>": false,
+    "<C-d>": true,
+    "<C-s>": false,
+    "<C-z>": false
+  },
+  "vim.autoSwitchInputMethod.enable": true,
+"vim.autoSwitchInputMethod.defaultIM": "1033",
+  "vim.autoSwitchInputMethod.obtainIMCmd": "D:\\devTools\\im-select.exe",
+  "vim.autoSwitchInputMethod.switchIMCmd": "D:\\devTools\\im-select.exe {im}",
+  // vim 快捷键
+  // 插入模式下的非递归快捷键绑定
+  "vim.insertModeKeyBindings": [
+    {
+      "before": ["j", "j"],
+      "after": ["<Esc>"]
+    }
+  ],
+  // 普通模式下的非递归按键绑定
+  "vim.normalModeKeyBindingsNonRecursive": [
+    {
+      "before": ["<leader>", "d"],
+      "after": ["d", "d"]
+    },
+    {
+      // 取消高亮搜索
+      "before": ["<C-n>"],
+      "commands": [":nohl"]
+    },
+    {
+      "before": ["K"],
+      "commands": ["lineBreakInsert"],
+      "silent": true
+    },
+    {
+      "before": [
+        "H"
+      ],
+      "after": [
+        "^"
+      ]
+    },
+    {
+      "before": [
+        "L"
+      ],
+      "after": [
+        "$"
+      ]
+    },
+    {
+      "before": [
+        "z",
+        "z",
+      ],
+      "commands": [
+        "editor.toggleFold"
+      ]
+    },
+    {
+      "before": [
+        "g",
+        "[",
+      ],
+      "commands": [
+        "editor.action.marker.prevInFiles"
+      ]
+    },
+    {
+      "before": [
+        "g",
+        "]",
+      ],
+      "commands": [
+        "editor.action.marker.nextInFiles"
+      ]
+    },
+    {
+      "before": ["<leader>", "g", "c"],
+      "commands": ["workbench.action.showCommands"]
+    }
+  ],
+  // prettier
+  "[javascript]": {
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true,
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": "explicit",
+      "source.fixAll.stylelint": "explicit",
+      "source.organizeImports": "explicit"
+    }
+  },
+  "[typescript]": {
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true,
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": "explicit",
+      "source.fixAll.stylelint": "explicit",
+      "source.organizeImports": "explicit"
+    }
+  },
+  "[html]": {
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true,
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[css]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[python]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "ms-python.python",
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": "explicit"
+    },
+    "python.formatting.provider": "autopep8", // 选择代码格式化工具，如 black, autopep8 等
+    "python.linting.enabled": true,
+    "python.linting.pylintEnabled": true,
+    "python.linting.flake8Enabled": false,
+    "python.linting.mypyEnabled": false
+  },
+  "[c]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "ms-vscode.cpptools"
+  },
+  "[cpp]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "ms-vscode.cpptools"
+  },
+  "[json]": {
+    "editor.tabSize": 2,
+    "editor.formatOnSave": true,
+    "editor.insertSpaces": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.quickSuggestions": {
+      "strings": true
+    },
+    "editor.suggest.insertMode": "replace"
+  },
+  "[jsonc]": {
+    "editor.tabSize": 2,
+    "editor.formatOnSave": true,
+    "editor.insertSpaces": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.quickSuggestions": {
+      "strings": true
+    },
+    "editor.suggest.insertMode": "replace"
+  }
+}

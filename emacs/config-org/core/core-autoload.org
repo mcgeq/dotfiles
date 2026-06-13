@@ -1,0 +1,381 @@
+#+TITLE: Core Autoload Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle core-autoload.el :lexical t
+
+* Core Autoload Module
+
+本模块为 MCG Emacs 配置系统提供自动加载生成功能。它扫描扩展目录中的 =;;;###autoload= 标记，并生成可在启动时加载的自动加载文件。
+
+自动加载系统支持：
+- 扫描扩展中的自动加载定义
+- 生成合并的自动加载文件
+- 缓存自动加载以加快启动速度
+- 与 Borg 包管理集成
+
+** File Header
+
+#+begin_src emacs-lisp
+;;; core-autoload.el --- Autoload generation for MCG Emacs -*- lexical-binding: t; -*-
+
+;; Copyright (C) 2024 MCG
+;; Author: MCG
+;; Keywords: configuration, autoload
+
+;;; Commentary:
+;; This module provides autoload generation for extensions in the MCG Emacs
+;; configuration system. It scans extension directories for ;;;###autoload
+;; cookies and generates autoload files that can be loaded at startup.
+;;
+;; The autoload system supports:
+;; - Scanning extensions for autoload definitions
+;; - Generating consolidated autoload files
+;; - Caching autoloads for faster startup
+;; - Integration with Borg package management
+
+;;; Code:
+#+end_src
+
+** Require
+
+#+begin_src emacs-lisp
+(require 'core-bootstrap)
+(require 'core-lib)
+(require 'cl-lib)
+
+;; Use loaddefs-gen for Emacs 29+, fall back to autoload for older versions
+(if (and (fboundp 'loaddefs-generate)
+         (>= emacs-major-version 29))
+    (require 'loaddefs-gen)
+  (require 'autoload))
+#+end_src
+
+** Autoload Variables
+
+自动加载系统的配置变量。
+
+#+begin_src emacs-lisp
+(defvar mcg-autoload-file nil
+  "Path to the generated autoload file.
+Set during initialization based on mcg-cache-dir.")
+
+(defvar mcg-autoload-timestamp-file nil
+  "Path to the autoload timestamp file.
+Used to track when autoloads were last generated.")
+
+(defvar mcg-autoload-excluded-dirs
+  '(".git" ".github" "test" "tests" "doc" "docs" "examples")
+  "List of directory names to exclude when scanning for autoloads.")
+
+(defvar mcg-autoload-excluded-files
+  '("-test.el" "-tests.el" "-pkg.el")
+  "List of file suffixes to exclude when scanning for autoloads.")
+
+(defvar mcg-autoloads-loaded nil
+  "Non-nil if autoloads have been loaded.")
+#+end_src
+
+** Autoload File Paths
+
+初始化自动加载文件路径。
+
+#+begin_src emacs-lisp
+(defun mcg-autoload-init ()
+  "Initialize autoload file paths.
+Sets up paths for the autoload file and timestamp file."
+  (unless mcg-cache-dir
+    (mcg-init-paths))
+  (setq mcg-autoload-file
+        (expand-file-name "mcg-autoloads.el" mcg-cache-dir))
+  (setq mcg-autoload-timestamp-file
+        (expand-file-name "mcg-autoloads.timestamp" mcg-cache-dir)))
+#+end_src
+
+** Extension Scanning
+
+扩展目录扫描功能，用于查找需要生成自动加载的文件。
+
+*** Exclusion Checks
+
+#+begin_src emacs-lisp
+(defun mcg--autoload-excluded-dir-p (dir)
+  "Check if DIR should be excluded from autoload scanning."
+  (let ((name (file-name-nondirectory (directory-file-name dir))))
+    (member name mcg-autoload-excluded-dirs)))
+
+(defun mcg--autoload-excluded-file-p (file)
+  "Check if FILE should be excluded from autoload scanning."
+  (let ((name (file-name-nondirectory file)))
+    (or (string-prefix-p "." name)
+        (cl-some (lambda (suffix)
+                   (string-suffix-p suffix name))
+                 mcg-autoload-excluded-files))))
+#+end_src
+
+*** File Discovery
+
+#+begin_src emacs-lisp
+(defun mcg--find-el-files-for-autoload (dir)
+  "Find all .el files in DIR suitable for autoload generation.
+Excludes test files, package files, and hidden files."
+  (let ((files nil))
+    (when (and (file-directory-p dir)
+               (not (mcg--autoload-excluded-dir-p dir)))
+      ;; Get .el files in this directory
+      (dolist (file (directory-files dir t "\\.el$"))
+        (unless (mcg--autoload-excluded-file-p file)
+          (push file files)))
+      ;; Recurse into subdirectories
+      (dolist (subdir (directory-files dir t "^[^.]"))
+        (when (and (file-directory-p subdir)
+                   (not (mcg--autoload-excluded-dir-p subdir)))
+          (setq files (append files (mcg--find-el-files-for-autoload subdir))))))
+    files))
+
+(defun mcg-list-extension-files ()
+  "List all .el files in extensions directory suitable for autoload generation.
+Returns a list of absolute file paths."
+  (unless mcg-extensions-dir
+    (mcg-init-paths))
+  (if (file-directory-p mcg-extensions-dir)
+      (mcg--find-el-files-for-autoload mcg-extensions-dir)
+    (mcg-log-warning "Extensions directory not found: %s" mcg-extensions-dir)
+    nil))
+#+end_src
+
+** Autoload Generation
+
+自动加载文件生成功能。
+
+*** Check for Autoload Cookies
+
+#+begin_src emacs-lisp
+(defun mcg--file-has-autoloads-p (file)
+  "Check if FILE contains any ;;;###autoload cookies."
+  (with-temp-buffer
+    (insert-file-contents file)
+    (goto-char (point-min))
+    (re-search-forward "^;;;###autoload" nil t)))
+#+end_src
+
+*** Generate Autoloads
+
+#+begin_src emacs-lisp
+(defun mcg-generate-autoloads (&optional force)
+  "Generate autoloads for all extensions.
+If FORCE is non-nil, regenerate even if autoloads are up to date.
+Returns t if autoloads were generated, nil otherwise."
+  (interactive "P")
+  (mcg-autoload-init)
+
+  (let ((files (mcg-list-extension-files))
+        (generated-count 0)
+        (start-time (current-time)))
+
+    (if (null files)
+        (progn
+          (mcg-log-warning "No extension files found for autoload generation")
+          nil)
+
+      ;; Check if regeneration is needed
+      (if (and (not force)
+               (mcg--autoloads-up-to-date-p files))
+          (progn
+            (mcg-log "Autoloads are up to date")
+            nil)
+
+        ;; Generate autoloads
+        (mcg-log "Generating autoloads for %d files..." (length files))
+
+        ;; Create or clear the autoload file
+        (with-temp-file mcg-autoload-file
+          (insert ";; -*- lexical-binding: t; -*-\n")
+          (insert ";; MCG Autoloads - Auto-generated, do not edit\n")
+          (insert (format ";; Generated: %s\n" (current-time-string)))
+          (insert (format ";; Files scanned: %d\n\n" (length files)))
+          (insert "(provide 'mcg-autoloads)\n\n"))
+
+        ;; Process each file
+        (dolist (file files)
+          (when (mcg--file-has-autoloads-p file)
+            (condition-case err
+                (progn
+                  (mcg--generate-autoloads-for-file file)
+                  (setq generated-count (1+ generated-count)))
+              (error
+               (mcg-log-warning "Failed to generate autoloads for %s: %s"
+                                file (error-message-string err))))))
+
+        ;; Update timestamp
+        (mcg--update-autoload-timestamp)
+
+        (let ((elapsed (float-time (time-subtract (current-time) start-time))))
+          (mcg-log "Generated autoloads for %d files in %.2fs"
+                   generated-count elapsed)
+          (message "MCG: Generated autoloads for %d files in %.2fs"
+                   generated-count elapsed))
+
+        t))))
+#+end_src
+
+*** Generate Autoloads for Single File
+
+#+begin_src emacs-lisp
+(defun mcg--generate-autoloads-for-file (file)
+  "Generate autoloads for FILE and append to mcg-autoload-file."
+  (let ((backup-inhibited t))
+    (if (and (fboundp 'loaddefs-generate)
+             (>= emacs-major-version 29))
+        ;; Use modern loaddefs-generate for Emacs 29+
+        (loaddefs-generate (file-name-directory file)
+                           mcg-autoload-file
+                           nil nil nil t)
+      ;; Fall back to update-file-autoloads for older Emacs
+      (let ((generated-autoload-file mcg-autoload-file)
+            (autoload-timestamps nil))
+        (update-file-autoloads file t mcg-autoload-file)))))
+#+end_src
+
+** Autoload Timestamp Management
+
+时间戳管理，用于判断自动加载文件是否需要更新。
+
+#+begin_src emacs-lisp
+(defun mcg--get-newest-file-time (files)
+  "Get the modification time of the newest file in FILES."
+  (let ((newest nil))
+    (dolist (file files)
+      (let ((mtime (file-attribute-modification-time (file-attributes file))))
+        (when (or (null newest)
+                  (time-less-p newest mtime))
+          (setq newest mtime))))
+    newest))
+
+(defun mcg--autoloads-up-to-date-p (files)
+  "Check if autoloads are up to date for FILES.
+Returns t if the autoload file exists and is newer than all source files."
+  (and mcg-autoload-file
+       (file-exists-p mcg-autoload-file)
+       mcg-autoload-timestamp-file
+       (file-exists-p mcg-autoload-timestamp-file)
+       (let ((autoload-time (file-attribute-modification-time
+                             (file-attributes mcg-autoload-file)))
+             (newest-source (mcg--get-newest-file-time files)))
+         (and autoload-time newest-source
+              (time-less-p newest-source autoload-time)))))
+
+(defun mcg--update-autoload-timestamp ()
+  "Update the autoload timestamp file."
+  (when mcg-autoload-timestamp-file
+    (with-temp-file mcg-autoload-timestamp-file
+      (insert (format-time-string "%Y-%m-%d %H:%M:%S")))))
+#+end_src
+
+** Autoload Loading
+
+加载生成的自动加载文件。
+
+#+begin_src emacs-lisp
+(defun mcg-load-autoloads (&optional regenerate)
+  "Load the generated autoloads file.
+If REGENERATE is non-nil, regenerate autoloads first if needed.
+Returns t if autoloads were loaded successfully."
+  (interactive "P")
+  (mcg-autoload-init)
+
+  ;; Regenerate if requested or if file doesn't exist
+  (when (or regenerate
+            (not (file-exists-p mcg-autoload-file)))
+    (mcg-generate-autoloads))
+
+  ;; Load the autoloads
+  (if (file-exists-p mcg-autoload-file)
+      (condition-case err
+          (progn
+            (load mcg-autoload-file nil t)
+            (setq mcg-autoloads-loaded t)
+            (mcg-log "Loaded autoloads from %s" mcg-autoload-file)
+            t)
+        (error
+         (mcg-log-error "Failed to load autoloads: %s" (error-message-string err))
+         nil))
+    (mcg-log-warning "Autoload file not found: %s" mcg-autoload-file)
+    nil))
+#+end_src
+
+** Autoload Commands
+
+用户交互命令。
+
+#+begin_src emacs-lisp
+(defun mcg-regenerate-autoloads ()
+  "Force regeneration of autoloads."
+  (interactive)
+  (mcg-generate-autoloads t)
+  (mcg-load-autoloads))
+
+(defun mcg-show-autoload-info ()
+  "Display information about the autoload system."
+  (interactive)
+  (mcg-autoload-init)
+  (let ((buf (get-buffer-create "*MCG Autoloads*")))
+    (with-current-buffer buf
+      (erase-buffer)
+      (insert "=== MCG Autoload System ===\n\n")
+      (insert (format "Autoload file: %s\n" mcg-autoload-file))
+      (insert (format "  Exists: %s\n" (if (and mcg-autoload-file
+                                                (file-exists-p mcg-autoload-file))
+                                           "yes" "no")))
+      (insert (format "Timestamp file: %s\n" mcg-autoload-timestamp-file))
+      (insert (format "  Exists: %s\n" (if (and mcg-autoload-timestamp-file
+                                                (file-exists-p mcg-autoload-timestamp-file))
+                                           "yes" "no")))
+      (insert (format "Autoloads loaded: %s\n\n" (if mcg-autoloads-loaded "yes" "no")))
+
+      ;; Show extension files count
+      (let ((files (mcg-list-extension-files)))
+        (insert (format "Extension files found: %d\n" (length files)))
+        (let ((with-autoloads 0))
+          (dolist (file files)
+            (when (mcg--file-has-autoloads-p file)
+              (setq with-autoloads (1+ with-autoloads))))
+          (insert (format "Files with autoloads: %d\n\n" with-autoloads))))
+
+      ;; Show excluded patterns
+      (insert "Excluded directories:\n")
+      (dolist (dir mcg-autoload-excluded-dirs)
+        (insert (format "  %s\n" dir)))
+      (insert "\nExcluded file suffixes:\n")
+      (dolist (suffix mcg-autoload-excluded-files)
+        (insert (format "  %s\n" suffix))))
+    (display-buffer buf)))
+#+end_src
+
+** Integration with Borg
+
+与 Borg 包管理器的集成。
+
+#+begin_src emacs-lisp
+(defun mcg-autoload-after-borg-build ()
+  "Regenerate autoloads after Borg builds packages.
+This function can be added to borg-build-hook."
+  (mcg-generate-autoloads t))
+#+end_src
+
+** Initialization
+
+自动加载系统初始化。
+
+#+begin_src emacs-lisp
+(defun mcg-autoload-setup ()
+  "Set up the autoload system.
+Initializes paths and optionally loads existing autoloads."
+  (mcg-autoload-init)
+  (mcg-log "Autoload system initialized"))
+#+end_src
+
+** Provide Feature
+
+#+begin_src emacs-lisp
+(provide 'core-autoload)
+;;; core-autoload.el ends here
+#+end_src

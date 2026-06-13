@@ -1,0 +1,123 @@
+#+TITLE: Recentf Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-recentf.el :lexical t
+
+* Recentf Module
+
+** File Header
+
+#+begin_src emacs-lisp
+;;; init-recentf.el --- Recentf Configuration for MCG Emacs -*- lexical-binding: t; -*-
+
+;; Filename: init-recentf.el
+;; Description: Recentf recent files module
+;; Author: mcge <mcgeq@outlook.com>
+;; Copyright (C) 2024-2026, mcge, all rights reserved.
+;; Create   Date: 2026-01-10
+;; Keywords: recentf, recent-files
+;; Compatibility: GNU Emacs 29.0+
+
+;;; Commentary:
+;;
+;; Recentf module for MCG Emacs, responsible for:
+;; - Tracking recently opened files
+;; - Configuring exclusion patterns
+;;
+;; Module metadata:
+;; :depends ()
+;; :defer nil
+;;
+#+end_src
+
+** Require
+
+#+begin_src emacs-lisp
+;;; Code:
+
+(require 'core-lib)
+(require 'recentf)
+#+end_src
+
+** Recentf Configuration
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Recentf Configuration
+;;; ============================================================
+
+(defun mcg--setup-recentf ()
+  "Setup Recentf recent files tracking."
+  ;; Maximum number of saved items
+  (setq recentf-max-saved-items 300)
+  
+  ;; Don't auto-cleanup (can be slow)
+  (setq recentf-auto-cleanup 'never)
+  
+  ;; Use abbreviated file names
+  (setq recentf-filename-handlers '(abbreviate-file-name))
+  
+  ;; Exclude patterns - files/directories to ignore
+  (setq recentf-exclude
+        '(".cache"
+          ".cask"
+          ".elfeed"
+          "bookmarks"
+          "cache"
+          "ido.*"
+          "recentf"
+          "undo-tree-hist"
+          "url"
+          "^/tmp/"
+          "/ssh\\(x\\)?:"
+          "/su\\(do\\)?:"
+          "^/usr/include/"
+          "/TAGS\\'"
+          "COMMIT_EDITMSG\\'"
+          ;; Emacs internal files
+          "\\.elc\\'"
+          "loaddefs\\.el\\'"
+          ;; Package directories
+          "/elpa/"
+          "/straight/"
+          ;; Temporary files
+          "\\.tmp\\'"
+          "\\.bak\\'"
+          "~\\'"))
+  
+  ;; Enable recentf mode
+  (recentf-mode 1)
+  
+  (mcg-log "Recentf configured (max items: %d)" recentf-max-saved-items))
+#+end_src
+
+** Commands
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Commands
+;;; ============================================================
+
+(defun mcg/recentf-open ()
+  "Open a recent file using completing-read."
+  (interactive)
+  (let ((file (completing-read "Recent file: " recentf-list nil t)))
+    (when file
+      (find-file file))))
+#+end_src
+
+** Initialize
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Initialize
+;;; ============================================================
+
+(mcg--setup-recentf)
+#+end_src
+
+** Provide Feature
+
+#+begin_src emacs-lisp
+(provide 'init-recentf)
+;;; init-recentf.el ends here
+#+end_src

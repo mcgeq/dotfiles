@@ -1,0 +1,114 @@
+#+TITLE: Org Download Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-org-download.el :lexical t
+
+* Org Download Module
+
+Org Download - download images to org files.
+
+** File Header
+
+#+begin_src emacs-lisp
+;;; init-org-download.el --- Org Download for MCG Emacs -*- lexical-binding: t; -*-
+
+;; Copyright (C) 2024-2026 MCG
+;; Author: mcge <mcgeq@outlook.com>
+;; Keywords: org, org-download
+#+end_src
+
+** Require
+
+#+begin_src emacs-lisp
+;;; Code:
+
+(require 'core-lib)
+#+end_src
+
+** Configuration
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Configuration
+;;; ============================================================
+
+(defun mcg--setup-org-download ()
+  "Set up org-download."
+  (with-eval-after-load 'org
+    (when (mcg-require-extension "org-download" t)
+      (add-hook 'dired-mode-hook 'org-download-enable)
+      (add-hook 'org-mode-hook 'org-download-enable)
+      (setq org-download-display-inline-images 'posframe)
+      (mcg-log "Org download configured"))))
+#+end_src
+
+** Clipboard Image Function
+
+#+begin_src emacs-lisp
+;;; Clipboard Image Function
+
+(defun mcg/org-insert-clipboard-image (width)
+  "Insert image from clipboard into Org file.
+WIDTH is the image width, default 800.
+Images are saved in a .assets directory named after the Org file."
+  (interactive (list
+                (read-string (format "Input image width, default is 800: ")
+                             nil nil "800")))
+  (let* ((foldername (concat (file-name-base (buffer-file-name)) ".assets/"))
+         (imgName (concat "img_" (format-time-string "%Y%m%d_%H%M%S") ".png"))
+         (relativeFilename (concat (file-name-base (buffer-name)) ".assets/" imgName)))
+
+    (unless (file-exists-p foldername)
+      (mkdir foldername))
+
+    (cond
+     ((eq system-type 'windows-nt)
+      (setq org-download-screenshot-method
+            (concat "magick clipboard: " relativeFilename)))
+     ((eq system-type 'gnu/linux)
+      (setq org-download-screenshot-method
+            (concat "xclip -selection clipboard -t image/png -o > " relativeFilename)))
+     ((eq system-type 'darwin)
+      (setq org-download-screenshot-method
+            (concat "pngpaste " relativeFilename))))
+
+    (insert (concat "\n#+DOWNLOADED: screenshot @ "
+                    (format-time-string "%Y-%m-%d %a %H:%M:%S" (current-time))
+                    "\n#+CAPTION: \n#+ATTR_ORG: :width "
+                    width
+                    "\n#+ATTR_LATEX: :width "
+                    (if (>= (/ (string-to-number width) 800.0) 1.0)
+                        "1.0"
+                      (number-to-string (/ (string-to-number width) 800.0)))
+                    "\\linewidth :float nil\n"
+                    "#+ATTR_HTML: :width "
+                    width
+                    "\n[[file:" relativeFilename "]]\n"))
+
+    (when (fboundp 'org-download-screenshot)
+      (org-download-screenshot))))
+#+end_src
+
+** Keybindings
+
+#+begin_src emacs-lisp
+;;; Keybindings
+
+(defun mcg--setup-org-download-keybindings ()
+  "Set up org-download keybindings."
+  (with-eval-after-load 'org
+    (define-key org-mode-map (kbd "C-c n v") 'mcg/org-insert-clipboard-image)))
+#+end_src
+
+** Initialize
+
+#+begin_src emacs-lisp
+(mcg--setup-org-download)
+(mcg--setup-org-download-keybindings)
+#+end_src
+
+** Provide
+
+#+begin_src emacs-lisp
+(provide 'init-org-download)
+;;; init-org-download.el ends here
+#+end_src

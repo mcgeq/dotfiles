@@ -1,0 +1,255 @@
+#+TITLE: Majutsu NEWS -- History of notable and user-visible changes
+#+AUTHOR: 0WD0
+
+* [Unreleased]
+
+** Added
+
+- Add ~majutsu-revert~ transient for =jj revert= with source revision selection
+  and destination placement options (=--onto= / =--insert-after= /
+  =--insert-before=).
+- Add ~majutsu-metaedit~ transient for =jj metaedit= with a single-revision
+  default from point and metadata flags (message/author/timestamp/update).
+- Add ~majutsu-simplify-parents~ transient for =jj simplify-parents= with
+  both =--source= and =--revisions= options.
+
+** Changed
+
+** Fixed
+
+- Add a consistent ~RET~ execute binding to ~majutsu-squash~ and
+  ~majutsu-split~ transients (while keeping ~s~), so selection-driven command
+  transients share the same confirm/execute key.
+- Prevent =majutsu-ediff-resolve= from auto-resolving conflicts on no-op quit,
+  and preserve partial conflict resolution by using git-style conflict markers
+  that jj can parse as still-unresolved regions. Edited merge sessions now ask
+  whether to save on quit, so users can discard edits intentionally.
+
+* [0.6.0] - 2026-02-09
+
+** Added
+
+- Prompt for passwords/passphrases in the minibuffer during jj operations, with auth-source support.
+- In ~majutsu-squash~ transient:
+  - Add toggle-option for ~-r~.
+- In ~majutsu-diff~ transient:
+  - Support ~--ignore-space-change~ (~-b~) and ~--ignore-all-space~ (~-w~) arguments.
+  - Add fileset limiting via ~--~.
+- Revset completion candidates now show source labels (pseudo/workspace/bookmark/tag).
+- In ~majutsu-diff~ buffers:
+  - Add ~majutsu-color-words~ backend with ~-W~ toggle in the diff transient.
+  - Add color-words line/column-aware navigation for ~RET~ / ~C-j~ visits.
+  - Add a shadow cursor for refined color-words hunks (uses ~smerge-refine-shadow-cursor~).
+- Add ~majutsu-file~ blob inspection workflow:
+  - Add ~majutsu-find-file~ / ~majutsu-find-file-at-point~ for revision-aware file viewing.
+  - Add blob buffer history navigation (~p~ / ~n~) and workspace jump (~V~).
+  - Add ~e~ to edit a blob's revision via =jj diffedit= (no =jj edit=).
+- Add ~majutsu-annotate~ workflow with chunk navigation, style cycling, and
+  forward recursive tracing toward parent revisions.
+- Add ~majutsu-blob-visit-magit~ to open magit blob buffers in majutsu blob buffers.
+- Add ~majutsu-ediff~ transient:
+  - Add context-aware compare (~majutsu-ediff-dwim~).
+  - Add =jj diffedit= integration using Emacs/Ediff as diff editor.
+  - Add conflict resolve entrypoints (~m~ / ~M~).
+- Add ~majutsu-sparse~ transient and list buffer for =jj sparse= pattern management.
+- Add ~majutsu-conflict~ parser/minor-mode for JJ conflict markers:
+  - Add conflict navigation, keep-side commands, and word-level refine.
+  - Auto-select =majutsu-conflict-mode= vs =smerge-mode= based on marker style.
+- Highlight JJ description buffers (summary, JJ comments, change list) using git-commit faces.
+  - Add global mode to manage JJ description setup hooks.
+  - Allow configuring JJ description major mode and Change ID face.
+  - Allow configuring JJ description comment prefix for comment commands.
+  - Highlight JJ ignore-rest and diffstat summary lines.
+- Add ~majutsu-absorb~ transient for =jj absorb= with =--from= / =--into= plus fileset limiting.
+- Workspace root detection now uses =jj workspace root --name= to leverage
+  newer jj workspace-name-aware root resolution behavior.
+
+** Changed
+
+- Keybinding changes:
+  - ~a~ now runs ~majutsu-absorb~ in Emacs and Evil Majutsu buffers.
+  - Emacs ~k~ remains ~majutsu-abandon~; Evil keeps ~x~ for abandon.
+  - ~O~ now runs ~majutsu-new-dwim~ in log mode (was ~N~ globally).
+  - ~D~ now runs ~majutsu-diff-dwim~ in log mode (was global).
+  - ~Y~ now runs ~majutsu-duplicate-dwim~ in log mode (was global).
+  - ~o~ now runs ~majutsu-new~ transient globally.
+- ~majutsu-abandon~ now respects active region selection to abandon multiple changesets at once.
+- In ~majutsu-new~ transient:
+  - Parent revision key changed from ~p~ to ~r~.
+  - Action key changed from ~n~ to ~o~.
+  - ~majutsu-new-execute~ now auto-fills ~-r~ from the commit at point when invoked outside the transient.
+- Buffer display now follows Magit’s display-buffer model:
+  - Replaced ~majutsu-display-functions~ with ~majutsu-display-buffer-function~ (traditional/same-window-except-diff/fullframe/topleft/fullcolumn).
+  - Added ~majutsu-pre-display-buffer-hook~ and ~majutsu-post-display-buffer-hook~.
+  - Added ~majutsu-bury-buffer-function~ with Magit-style window lifecycle handling and ~majutsu-mode-quit-window~.
+  - Updated ~q~ to use ~majutsu-mode-bury-buffer~ in Majutsu buffers and blob buffers.
+  - Switched JJ description buffers to use ~switch-to-buffer~ display behavior.
+- Diffedit buffers now finish on save by default (see ~majutsu-edit-finish-on-save~).
+- Blob buffers now use a wdired-style editable mode:
+  - ~e~ (or ~C-x C-q~) enters editable blob mode.
+  - Saving applies changes through ~jj diffedit~ and exits edit mode.
+  - ~majutsu-blob-edit-exit~ (~C-x C-q~ in editable mode) mirrors wdired exit behavior.
+  - In Evil normal state, ~i~ enters editable blob mode and stays in normal state.
+  - Editable mode uses Dirvish-style cursor hints: both ~cursor-type~ and Evil normal cursor are updated.
+
+** Fixed
+
+- Diff DWIM now only inherits range/filesets from the current diff buffer,
+  and context adjustments (+/-/0) no longer update global defaults.
+- ~majutsu-tpl~ now evaluates embedded Elisp in templates at runtime.
+
+* [0.5.0] - 2026-01-09
+
+** Release highlights
+
+- *Interactive Patching*: Select specific hunks, files, or regions within diff buffers for Split, Squash, and Restore operations. Provides Magit-style partial staging workflow for Jujutsu.
+- *Workspace Support*: Full ~jj workspace~ integration with list/add/forget/rename/visit commands.
+- *Split & Restore Transients*: New transients for ~jj split~ and ~jj restore~ with visual revision selection.
+
+** Added
+
+- Added ~majutsu-split~ transient (~S~) for splitting revisions with interactive hunk/region selection.
+- Added ~majutsu-restore~ transient (~R~) with ~--from~, ~--to~, and ~--changes-in~ support.
+- Added interactive patching in diff buffers for partial split/squash/restore operations (~majutsu-interactive.el~).
+- Added workspace support (~jj workspace~): list/add/forget/rename/visit and log integration via the ~Z~ / ~%~ menu (~majutsu-workspace.el~).
+- Added ~majutsu-workspace-search-directories~ to help ~Visit~ locate workspace directories on disk.
+- Added DWIM variants: ~majutsu-new-dwim~, ~majutsu-duplicate-dwim~, ~majutsu-diff-dwim~.
+- Added buffer lifecycle hooks: ~majutsu-create-buffer-hook~, ~majutsu-setup-buffer-hook~, ~majutsu-post-create-buffer-hook~, ~majutsu-refresh-buffer-hook~.
+- Added locked buffer support via ~majutsu-buffer-locked-p~ and ~majutsu-buffer-value~.
+- Added ~majutsu-display-functions~ for customizable buffer display per buffer kind.
+- Added ~majutsu-log-field-faces~ for customizable log field colors.
+- Added ~--stat~ and ~--git~ as default diff arguments.
+- Added ~-r~ (revision) argument support in squash transient.
+- Added ~-o~, ~-A~, ~-B~ (onto/after/before) support in squash transient.
+- Added split ~-r~, ~-b~, ~-s~ arguments in rebase transient.
+- Added ~majutsu-confirm~ for confirmation prompts.
+
+** Changed
+
+- Renamed transient commands: removed ~-transient~ suffix (e.g., ~majutsu-squash-transient~ → ~majutsu-squash~, ~majutsu-rebase-transient~ → ~majutsu-rebase~).
+- Keybinding changes in dispatcher (~?~):
+  - ~C~ now runs ~majutsu-commit~ (was ~c~)
+  - ~c~ now runs ~majutsu-describe~ (was ~d~)
+  - ~C-?~ now runs ~majutsu-redo~ (was ~R~)
+  - ~N~ now runs ~majutsu-new-dwim~ (was ~majutsu-new~)
+  - ~n~ now runs ~majutsu-new~ (was ~majutsu-new-transient~)
+  - ~Y~ now runs ~majutsu-duplicate-dwim~ (was ~majutsu-duplicate~)
+  - ~y~ now runs ~majutsu-duplicate~ (was ~majutsu-duplicate-transient~)
+  - Added ~S~ for ~majutsu-split~
+  - Added ~R~ for ~majutsu-restore~
+  - Added ~Z~ for ~majutsu-workspace~
+- Evil keybinding changes:
+  - ~R~ now runs ~majutsu-restore~ (was ~majutsu-refresh~, use ~g r~ instead)
+  - ~O~ now runs ~majutsu-new-dwim~ in log mode (was ~majutsu-new~)
+  - ~o~ now runs ~majutsu-new~ transient
+  - ~*~ now runs ~majutsu-workspace~
+  - ~S~ now runs ~majutsu-split~
+- Refactored core modules:
+  - Extracted ~majutsu-jj.el~ for JJ executable and toplevel utilities.
+  - Extracted ~majutsu-jjdescription.el~ for description editing.
+  - Extracted ~majutsu-selection.el~ from ~majutsu-log.el~.
+  - Added ~majutsu-section.el~ for section utilities.
+  - Added ~majutsu-config.el~ for jj config access.
+- Renamed ~majutsu-run-jj~ to ~majutsu-jj-string~.
+- Use ~jj workspace root~ to get repository root instead of internal ~.jj~ inspection.
+- Selection sessions are now stored in transient scope instead of buffer-local.
+- Log template now uses ~join~ template function.
+- Updated bookmark transient for jj v0.37.0 compatibility.
+- Diff context control: ~0~ now resets to default (was ~=~ for set), reads default from ~jj config~.
+
+** Fixed
+
+- Fixed diffstat truncated paths by resolving via diff headers.
+- Fixed diffstat binary file display (jj style).
+- Fixed bookmark list ~font-lock-mode~ not enabled.
+- Fixed log template unicode character issue on Windows.
+- Fixed jjdescription files excluded from recentf and better-jumper.
+- Fixed selection session end not working properly.
+- Fixed region toggle in selection.
+- Fixed path expand in git-init.
+
+* [0.4.0] - 2025-12-18
+
+** Added
+
+- Support for global =--ignore-immutable= flag in rebase, squash, new, and bookmark transients.
+- Support for =--ignore-immutable= in ~majutsu-describe~ and ~majutsu-edit~ via prefix argument (~C-u~).
+- Region sections selection in transient for commands now supports toggling more than one commits at once.
+- Magit-style per-repository process buffer (~majutsu-process-buffer~, bond to ~$~, or ~`~ for evil) for inspecting jj command output and failures.
+
+** Changed
+
+- Significant improvements to diff view rendering speed and memory usage.
+  - Implemented "washing" to parse =jj diff= output directly in the buffer.
+  - Added lazy font-locking (JIT) for diff highlighting.
+  - Whitespace painting is now disabled for very large hunks to preserve responsiveness.
+- Removed deprecated =--allow-new= flag from ~majutsu-git-push~.
+- Keybinding of ~majutsu-abandon~ changed from ~k~ to ~k~ / ~a~.
+- Replaced ~majutsu-enter-dwim~ with ~majutsu-visit-thing~, and use section keymaps so ~RET~ does the right thing in log/diff buffers (edit commit, visit file, jump to hunk).
+- Diffstat summary line is now displayed as the diffstat section heading.
+- ~majutsu-log-refresh~ now restores point using section successors, keeping navigation stable across operations like abandon.
+
+** Fixed
+
+- Trimmed timestamp strings (e.g., removing " ago") in right-margin display.
+- In majutsu transients, pressing ~ESC~ / ~C-g~ while there is an active region deactivates the region (or exits visual state in evil) first instead of immediately quitting the transient.
+- Fixed diffstat rendering (misaligned stat lines) in ~majutsu-diff~ when using combined =jj diff --git --stat= output.
+
+* [0.3.0] - 2025-11-25
+
+** Added
+
+- Native evil support.
+- Add asynchronous support for ~majutsu-log~, ~majutsu-diff~, ~majutsu-git-fetch~ and ~majutsu-git-push~.
+- Basic ~majutsu-op-log~ implementation.
+- Added ~majutsu-hack-dir-local-variables~, ignore trailing whitespace in majutsu buffers.
+- ~majutsu-rebase-transient~ now can toggle source and destination argument type (~-b~ ~-r~ ~-s~ / ~-o~ ~-A~ ~-B~).
+- ~majutsu-tpl~ (main entry of ~majutsu-template~) add a optional ~self-type~ argument.
+- Bound ~majutsu-diff~ to ~d~.
+
+** Changed
+
+- Keybinding of ~majutsu-describe~ changed from ~d~ to ~c~.
+- Keybinding of ~majutsu-commit~ changed from ~c~ to ~C~.
+- Keybinding of ~majutsu-undo~ changed from ~u~ to ~C-/~.
+- Keybinding of ~majutsu-redo~ changed from ~R~ to ~C-?~.
+- Keybinding of ~majutsu-abandon~ changed from ~a~ to ~k~.
+- Renamed ~majutsu-mode-transient~ to ~majutsu-dispatch~.
+- Renamed ~majutsu-goto-current~ to ~majutsu-log-goto-@~.
+
+** Fixed
+
+- ~majutsu-log-got-@~ works based on output of =jj log= command.
+- Keyword parsing in ~majutsu-template~ respects zero argument method chains.
+
+* [0.2.0] - 2025-11-20
+
+** Added
+
+- Added a confirm action customization for abandon/redo/undo.
+- Added ~majutsu-diff-transient~.
+- Added ~majutsu-new-transient~.
+- Added ~majutsu-duplicate-transient~.
+- Added revset, line limit and path filter argument for ~majutsu-log-transient~.
+- Added support for =jj bookmark move --allow-backwards=.
+  Use ~m~ in ~majutsu-bookmark-transient~ to denote commands without flags,
+  and use ~M~ for commands that include =--allow-backwards=.
+
+** Changed
+
+- Depend on with-editor.
+- ~majutsu-diff~ and ~majutsu-describe~ now can run outside of majutsu-log buffer.
+- ~majutsu-log-refresh~ tracks the section from before the refresh to keep the visuals consistent.
+
+** Fixed
+
+- Fixed an issue where diff sections couldn’t be toggled/collapsed.
+- Don’t strip leading spaces when parsing log graphs.
+- Prefer change ID, and for divergent commits (with "??" as suffix) fallback to commit ID.
+
+* [0.1.0] - 2025-10-15
+
+** Added
+
+- forked form [[https://github.com/bolivier/jj-mode.el][bolivier/jj-mode.el]]
+- ~majutsu-template~

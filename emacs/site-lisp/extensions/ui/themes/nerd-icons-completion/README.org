@@ -1,0 +1,45 @@
+#+TITLE: nerd-icons-completion - Use nerd-icons for completion
+#+AUTHOR: Hongyu Ding
+#+LANGUAGE: en
+
+[[https://melpa.org/#/nerd-icons-completion][file:https://melpa.org/packages/nerd-icons-completion-badge.svg]]
+
+nerd-icons-completion is inspired by [[https://github.com/iyefrat/all-the-icons-completion][all-the-icons-completion]].
+
+* Screenshots
+** default completion in terminal
+[[file:screenshots/demo1.png]]
+** default completion in GUI
+[[file:screenshots/demo3.png]]
+** vertico + marginalia in terminal
+[[file:screenshots/demo2.png]]
+** vertico + marginalia in GUI
+[[file:screenshots/demo4.png]]
+
+* Usage
+#+BEGIN_SRC emacs-lisp
+  (require 'nerd-icons-completion)
+  (nerd-icons-completion-mode)
+#+END_SRC
+or with ~use-package~
+#+BEGIN_SRC emacs-lisp
+  (use-package nerd-icons-completion
+    :config
+    (nerd-icons-completion-mode))
+#+END_SRC
+
+* Setup
+
+If you want to use it with [[https://github.com/minad/marginalia/][marginalia]], add the following to your init file
+
+#+BEGIN_SRC emacs-lisp
+  (add-hook 'marginalia-mode-hook #'nerd-icons-completion-marginalia-setup)
+#+END_SRC
+or, with ~use-package~:
+#+BEGIN_SRC emacs-lisp
+  (use-package nerd-icons-completion
+    :after marginalia
+    :config
+    (nerd-icons-completion-mode)
+    (add-hook 'marginalia-mode-hook #'nerd-icons-completion-marginalia-setup))
+#+END_SRC

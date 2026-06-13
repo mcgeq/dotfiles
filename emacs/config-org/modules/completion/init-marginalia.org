@@ -1,0 +1,70 @@
+#+TITLE: Marginalia Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-marginalia.el :lexical t
+
+* Marginalia Module
+
+配置 marginalia 注解增强。
+
+** File Header
+
+#+begin_src emacs-lisp
+;;; init-marginalia.el --- marginalia configuration -*- lexical-binding: t; -*-
+
+;;; Commentary:
+;; Configure marginalia from:
+;; emacs/site-lisp/extensions/completion/marginalia
+
+;;; Code:
+
+(require 'core-lib)
+#+end_src
+
+** Setup
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Marginalia Configuration
+;;; ============================================================
+
+(defun mcg--setup-marginalia ()
+  "Setup marginalia annotations."
+  (when (mcg-require-extension "marginalia" t)
+    ;; Alignment settings
+    (setq marginalia-align 'right
+          marginalia-align-offset 0
+          marginalia-max-relative-age 3600)
+    ;; Enable marginalia-mode
+    (marginalia-mode 1)
+    ;; Keybinding for cycling annotation levels
+    (define-key minibuffer-local-map (kbd "M-A") #'marginalia-cycle)
+    (mcg-bind-key "M-A" #'marginalia-cycle "completion/marginalia")
+    (mcg-log "marginalia configured")))
+
+;;; ============================================================
+;;; Commands
+;;; ============================================================
+
+(defun mcg/toggle-marginalia ()
+  "Toggle Marginalia mode."
+  (interactive)
+  (if marginalia-mode
+      (progn
+        (marginalia-mode -1)
+        (message "Marginalia disabled"))
+    (marginalia-mode 1)
+    (message "Marginalia enabled")))
+#+end_src
+
+** Initialize
+
+#+begin_src emacs-lisp
+(mcg--setup-marginalia)
+#+end_src
+
+** Provide
+
+#+begin_src emacs-lisp
+(provide 'init-marginalia)
+;;; init-marginalia.el ends here
+#+end_src

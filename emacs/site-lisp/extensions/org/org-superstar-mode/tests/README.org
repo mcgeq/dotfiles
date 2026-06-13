@@ -1,0 +1,52 @@
+#+TITLE: Testing Routines: There be Dragons
+
+* Purpose
+This is where I will put cleaned up testing routines meant for testing
+and debugging ~org-superstar-mode~.  However, as the title suggests,
+*none of these files are meant for normal package usage*.  Consequently,
+I advise to run these files with a minimal setup (think =emacs -Q=).  To
+further emphasize that I do not intend to ship any of these functions
+as part of my package, I use the non-standard (yet popular) naming
+convention ~org-superstar/variable-name~.  See below for the purpose of
+the individual files included here.
+
+** =sample.org=
+A harmless sample file.  An earlier version was used for the sample
+image in the top-level README.
+
+** =sample-todo.org=
+   Another sample file, this time to test TODO keywords.
+** =minimal-setup.el=
+This file contains a minimal setup useful for testing.  Just run:
+#+BEGIN_SRC bash
+emacs -Q -l ../org-superstar.el -l minimal-setup.el sample.org
+#+END_SRC
+
+To run additional test files, it is easiest to just =-l= them as well.
+
+** =composure-test.el=
+This file adds lots of information regarding calls to ~compose-region~
+for functions defined in =org-superstar.el=.  They are written to the
+=*Messages*= buffer.  It also makes sure all ~--prettify-~ functions
+return proper faces (or ~nil~).  This module auto-enables
+~column-number-mode~ as well as ~linum-mode~ for org to allow for manual,
+character-wise comparison of the characters prettified.
+
+** =face-test.el=
+This file sets all faces to strongly contrasting colors and adds many
+different face properties to see if and how they work.  It essentially
+serves as a test image for quick visual confirmation that all faces
+are applied consistently.
+
+** =font-lock-test.el=
+A proper [[https://www.gnu.org/software/emacs/manual/html_node/ert/index.html][ERT]]-based testing module for testing basic fontification
+using [[https://github.com/Lindydancer/faceup][the ~faceup~ package]].  Simply run either ~make font-lock~ or ~make
+font-lock-inlinetask~ to test whether ~org-superstar-mode~ applies the
+correct faces.
+
+*Note:* Due to the flexibility of Org, I advise against running this
+test in a live Emacs session, as false positives may occur from
+unexpected customization.
+
+
+#  LocalWords:  README el

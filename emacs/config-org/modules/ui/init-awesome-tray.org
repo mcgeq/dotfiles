@@ -1,0 +1,94 @@
+#+TITLE: Awesome Tray Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-awesome-tray.el :lexical t
+
+* Awesome Tray Module
+
+配置 awesome-tray 作为状态栏（modeline）。
+
+** File Header
+
+#+begin_src emacs-lisp
+;;; init-awesome-tray.el --- awesome-tray configuration -*- lexical-binding: t; -*-
+
+;;; Commentary:
+;; Configure awesome-tray from:
+;; emacs/site-lisp/extensions/ui/awesome-tray
+
+;;; Code:
+
+(require 'core-lib)
+#+end_src
+
+** Variables
+
+#+begin_src emacs-lisp
+(defcustom mcg-awesome-tray-position 'center
+  "Display position of awesome-tray."
+  :type '(choice (const left) (const center) (const right))
+  :group 'mcg)
+
+(defcustom mcg-awesome-tray-active-modules
+  '("buffer-name" "mode-name" "location" "belong" "input-method" "date")
+  "Modules displayed by awesome-tray."
+  :type '(repeat string)
+  :group 'mcg)
+
+(defcustom mcg-awesome-tray-date-format "[%Y-%m-%d %a %H:%M]"
+  "Date format used by awesome-tray."
+  :type 'string
+  :group 'mcg)
+
+(defcustom mcg-awesome-tray-second-line t
+  "Whether to show awesome-tray in second line."
+  :type 'boolean
+  :group 'mcg)
+
+(defvar mcg--mode-line-format-backup nil
+  "Backup of the default mode-line format before awesome-tray is enabled.")
+#+end_src
+
+** Setup
+
+#+begin_src emacs-lisp
+(defun mcg--setup-awesome-tray ()
+  "Setup awesome-tray."
+  (if (mcg-require-extension "awesome-tray" t)
+      (progn
+        (setq awesome-tray-position mcg-awesome-tray-position)
+        (setq awesome-tray-active-modules mcg-awesome-tray-active-modules)
+        (setq awesome-tray-date-format mcg-awesome-tray-date-format)
+        (setq awesome-tray-second-line mcg-awesome-tray-second-line)
+        (setq awesome-tray-info-padding-right 1)
+        (unless mcg--mode-line-format-backup
+          (setq mcg--mode-line-format-backup (default-value 'mode-line-format)))
+        (setq-default mode-line-format nil)
+        (awesome-tray-mode 1)
+        (mcg-log "awesome-tray configured"))
+    (mcg-log-warning "awesome-tray not available")))
+
+(defun mcg/toggle-awesome-tray ()
+  "Toggle awesome-tray."
+  (interactive)
+  (if (bound-and-true-p awesome-tray-mode)
+      (progn
+        (awesome-tray-mode -1)
+        (when mcg--mode-line-format-backup
+          (setq-default mode-line-format mcg--mode-line-format-backup))
+        (message "awesome-tray disabled"))
+    (mcg--setup-awesome-tray)
+    (message "awesome-tray enabled")))
+#+end_src
+
+** Initialize
+
+#+begin_src emacs-lisp
+(mcg--setup-awesome-tray)
+#+end_src
+
+** Provide
+
+#+begin_src emacs-lisp
+(provide 'init-awesome-tray)
+;;; init-awesome-tray.el ends here
+#+end_src

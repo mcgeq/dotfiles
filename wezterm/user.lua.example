@@ -1,0 +1,26 @@
+-- User personal overrides
+-- Copy this file to user.lua and customize.
+-- user.lua is gitignored, so your personal settings stay local.
+
+local M = {}
+
+-- Example: customize WSL domain
+-- M.WSL = {
+--   DISTRIBUTION = "Ubuntu",
+--   USERNAME = "yourname",
+--   DEFAULT_CWD = "/home/yourname",
+--   DEFAULT_PROG = { "zsh" },
+-- }
+
+-- Example: change color scheme
+-- M.APPEARANCE = {
+--   COLOR_SCHEME = "Catppuccin Mocha",
+-- }
+
+-- Example: window size and position
+-- M.WINDOW = {
+--   SIZE = { width = 1400, height = 1000 },
+--   POSITION = { x = 0, y = 0 },
+-- }
+
+return M

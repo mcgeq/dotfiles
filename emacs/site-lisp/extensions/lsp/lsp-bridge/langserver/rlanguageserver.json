@@ -1,0 +1,11 @@
+{
+  "name": "rlanguageserver",
+  "languageId": "r",
+  "command": [
+      "R",
+      "--no-echo",
+      "-e",
+      "languageserver::run()"
+  ],
+  "settings": {}
+}

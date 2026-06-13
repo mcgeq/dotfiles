@@ -1,0 +1,108 @@
+#+TITLE: markdown-ts-mode
+#+AUTHOR: Rahul M. Juliato
+#+EMAIL: rahul.juliato@gmail.com
+
+[[https://melpa.org/#/markdown-ts-mode][file:https://melpa.org/packages/markdown-ts-mode-badge.svg]]
+
+A major mode for Emacs providing really BASIC syntax highlight for
+markdown files using Treesitter.
+
+Please note this provides very basic functionality. If you're looking
+for a fully featured mature mode, please consider [[https://jblevins.org/projects/markdown-mode/][markdown-mode]].
+
+
+** Install
+
+This package is available on MELPA. If you already have it set, add to your ~init.el~ file:
+
+#+BEGIN_SRC elisp
+  (use-package markdown-ts-mode
+    :mode ("\\.md\\'" . markdown-ts-mode)
+    :defer 't
+    :config
+    (add-to-list 'treesit-language-source-alist '(markdown "https://github.com/tree-sitter-grammars/tree-sitter-markdown" "split_parser" "tree-sitter-markdown/src"))
+    (add-to-list 'treesit-language-source-alist '(markdown-inline "https://github.com/tree-sitter-grammars/tree-sitter-markdown" "split_parser" "tree-sitter-markdown-inline/src")))
+#+END_SRC
+
+
+Alternatively, download the ~markdown-ts-mode.el~ file to a directory
+of your liking. And add to your ~init.el~ file the path:
+
+#+BEGIN_SRC elisp
+  (add-to-list 'load-path "~/you_liked_dir/")
+
+  (use-package markdown-ts-mode
+    :mode ("\\.md\\'" . markdown-ts-mode)
+    :defer 't
+    :config
+    (add-to-list 'treesit-language-source-alist '(markdown "https://github.com/tree-sitter-grammars/tree-sitter-markdown" "split_parser" "tree-sitter-markdown/src"))
+    (add-to-list 'treesit-language-source-alist '(markdown-inline "https://github.com/tree-sitter-grammars/tree-sitter-markdown" "split_parser" "tree-sitter-markdown-inline/src")))
+#+END_SRC
+
+** Don't skip this
+Before using it, be sure you have BOTH ~markdown~ and ~markdown-inline~ grammars installed.
+
+#+BEGIN_SRC elisp
+  M-x treesit-install-language-grammar RET markdown RET
+  M-x treesit-install-language-grammar RET markdown-inline RET
+#+END_SRC
+
+** FAQ
+**** Why not use the "main" branch of tree-sitter-grammars repository?
+Visit the tree-sitter-grammars repository, you'll get redirected to
+the ~split_parser~ branch, since this is the default branch nowadays.
+
+If you visit the ~main~ branch, there's a note communicating it is not
+used anymore on the ~README.md~ file.
+
+**** Why do I have to install TWO grammars?
+Not my fault. The developers of tree-sitter-markdown decided so some
+years ago there would be 2 parsers, one to the "body" part of
+documents and one for "inline" statements.
+
+So if you're only seeing part of your markdown files highlighted, one
+of the grammars might be missing.
+
+
+** Usage
+
+Visit a markdown file. Turn on the mode with ~markdown-ts-mode~.
+
+Navigate trough headings with ~imenu~.
+
+
+** Screenshots
+
+This shows the text provided by [[https://github.com/mxstbr/markdown-test-file/blob/master/TEST.md][TEST.md]] file, with syntax highlighting using Treesitter.
+
+[[./doc/demo01.png]]
+
+[[./doc/demo02.png]]
+
+[[./doc/demo03.png]]
+
+[[./doc/demo04.png]]
+
+[[./doc/demo05.png]]
+
+[[./doc/demo06.png]]
+
+[[./doc/demo07.png]]
+
+[[./doc/demo08.png]]
+
+[[./doc/demo09.png]]
+
+[[./doc/demo10.png]]
+
+[[./doc/demo11.png]]
+
+[[./doc/demo12.png]]
+
+
+** Contributing
+
+To contribute, submit a pull request or report a bug. This package is
+aspiring to be part of GNU ELPA. Major contributions must be from
+someone with FSF papers.
+

@@ -1,0 +1,106 @@
+name: ci
+
+on: [push, pull_request]
+
+jobs:
+  vimscript:
+    name: VimScript
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Ensure each vim source file declares cpoptions
+      run: test/autoload_should_check_cpo.sh
+    - name: Run vint with reviewdog
+      uses: reviewdog/action-vint@v1
+      with:
+        github_token: ${{ secrets.github_token }}
+        reporter: github-pr-review
+
+  fmt:
+    name: Rustfmt
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+            toolchain: nightly
+            components: rustfmt
+      - name: Run fmt
+        run: cargo +nightly fmt --all -- --check
+
+  clippy:
+    name: Clippy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Run clippy
+        run: |
+          cargo clippy --locked --all-features --all-targets --manifest-path Cargo.toml -- -D warnings
+
+  crates:
+    name: Rust Tests
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+    - name: Run tests under crates
+      run: bash ci/run_test.sh
+
+  maple:
+    name: Rust Build
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+    - name: Build maple
+      run: cargo build --release
+
+  docs:
+    name: Docs Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - run: (test -x $HOME/.cargo/bin/mdbook || cargo install --vers "^0.4" mdbook)
+      - run: mdbook test docs
+
+  python_dynamic_module:
+    name: Python Dynamic Module
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Run Cargo test
+      run: |
+        cd pythonx/clap/fuzzymatch-rs
+        cargo test --no-default-features

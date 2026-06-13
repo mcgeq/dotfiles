@@ -1,0 +1,150 @@
+#+TITLE: Early Init Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle early-init.el :lexical t
+
+* Early Init Module
+
+** File Header
+
+#+begin_src emacs-lisp
+;;; early-init.el --- Early Init for MCG Emacs -*- lexical-binding: t; -*-
+
+;; Filename: early-init.el
+;; Description: Early initialization before GUI
+;; Author: mcge <mcgeq@outlook.com>
+;; Copyright (C) 2024-2026, mcge, all rights reserved.
+;; Create   Date: 2026-01-08
+;; Version: 3.0
+;; Keywords: early-init, frame, startup, performance
+;; Compatibility: GNU Emacs 29.0+
+
+;;; Commentary:
+;;
+;; This file is loaded before the GUI is initialized.
+;; Settings here take effect before the first frame is created.
+;;
+;; Includes:
+;; - Package initialization control
+;; - GC and performance optimization
+;; - Frame size and UI elements
+;; - Native compilation settings
+;;
+;; Copy generated early-init.el to ~/.emacs.d/early-init.el
+;;
+#+end_src
+
+** Package Initialization
+
+** Performance Optimization
+
+启动期间设置高 GC 阈值以防止 GC 暂停，这将在 core-bootstrap 中恢复为正常值。
+
+#+begin_src emacs-lisp
+;;; Performance Optimization
+
+;; Save original values for restoration after startup
+(defvar mcg--file-name-handler-alist-original file-name-handler-alist
+  "Original file-name-handler-alist.")
+
+;; Disable GC and file-name-handler during startup for faster loading
+(setq gc-cons-threshold most-positive-fixnum
+      gc-cons-percentage 0.6
+      file-name-handler-alist nil)
+
+;; Prevent the glimpse of un-styled Emacs
+(setq inhibit-redisplay t
+      inhibit-message t)
+
+(add-hook 'window-setup-hook
+          (lambda ()
+            (setq inhibit-redisplay nil
+                  inhibit-message nil)
+            (redisplay)))
+#+end_src
+
+** Native Compilation
+
+配置原生编译（Emacs 28+）。
+
+#+begin_src emacs-lisp
+;;; Native Compilation
+
+(when (featurep 'native-compile)
+  ;; Silence compiler warnings
+  (setq native-comp-async-report-warnings-errors nil)
+  ;; Set compilation speed (2 = maximum optimization)
+  (setq native-comp-speed 2))
+
+;; Prefer loading newer files
+(setq load-prefer-newer t)
+#+end_src
+
+** Frame Configuration
+
+初始帧参数设置。
+
+#+begin_src emacs-lisp
+;;; Frame Configuration
+
+(defvar mcg-frame-width 140
+  "Default frame width in characters.")
+
+(defvar mcg-frame-height 56
+  "Default frame height in lines.")
+
+;; Set frame size and disable UI elements for initial and default frames
+(setq default-frame-alist
+      `((width . ,mcg-frame-width)
+        (height . ,mcg-frame-height)
+        (vertical-scroll-bars . nil)
+        (horizontal-scroll-bars . nil)
+        (tool-bar-lines . 0)
+        (menu-bar-lines . 0)))
+
+(setq initial-frame-alist default-frame-alist)
+
+;; Disable UI elements (must set variables before modes are loaded)
+(setq tool-bar-mode nil
+      menu-bar-mode nil
+      scroll-bar-mode nil)
+
+;; Frame resize behavior
+(setq frame-resize-pixelwise t)
+(setq frame-inhibit-implied-resize t)
+#+end_src
+
+** Startup Screen
+
+禁用启动屏幕和消息。
+
+#+begin_src emacs-lisp
+;;; Startup Screen
+
+;; Disable startup screen and messages
+(setq inhibit-startup-screen t)
+(setq inhibit-startup-message t)
+(setq inhibit-startup-echo-area-message user-login-name)
+#+end_src
+
+** Windows Encoding
+
+Windows 平台 UTF-8 编码配置（在早期加载以确保正确的编码处理）。
+
+#+begin_src emacs-lisp
+;;; Windows Encoding
+
+(when (eq system-type 'windows-nt)
+  (setq locale-coding-system 'utf-8)
+  (set-default-coding-systems 'utf-8)
+  (prefer-coding-system 'utf-8)
+  (setq process-coding-system-alist
+        (append '(("grep" . (utf-8 . utf-8))
+                  ("rg" . (utf-8 . utf-8)))
+                process-coding-system-alist)))
+#+end_src
+
+** Provide Feature
+
+#+begin_src emacs-lisp
+;;; early-init.el ends here
+#+end_src

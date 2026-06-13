@@ -1,0 +1,60 @@
+vimrc/coc-data/*
+vimrc/pack/mcge/start/ultisnips/tags
+!vimrc/coc-data/ultisnips/
+!vimrc/coc-data/ultisnips/*
+vimrc/cache/*
+vimrc/backup/*
+vimrc/swap/*
+vimrc/undo/*
+vimrc/tmp/*
+
+emacs/site-lisp/.data/*
+emacs/site-lisp/.cache/*
+emacs/site-lisp/config/*
+emacs/config-org/**/*.md
+emacs/config-org/**/*.el
+emacs/custom.el
+emacs/site-lisp/packages-lock.el
+emacs/config-org/private/config.org
+
+# nushell
+nushell/history.*
+scoop/config.json
+
+# wezterm user overrides
+wezterm/user.lua
+
+# nvim lazy
+nvim/lazy-lock.json
+nvim/nvim-data/*
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/keybindings.json
+!.vscode/update_timestamp.py
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.lsp/
+.clj-kondo/
+.kiro

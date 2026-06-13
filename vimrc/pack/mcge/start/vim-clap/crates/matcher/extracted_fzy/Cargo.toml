@@ -1,0 +1,8 @@
+[package]
+name = "extracted_fzy"
+authors = ["ImmConCon <43708554+ImmemorConsultrixContrarie@users.noreply.github.com>"]
+description = "OS independent fzy algorithm from \"rff\" crate."
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+publish.workspace = true

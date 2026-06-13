@@ -1,0 +1,174 @@
+#+TITLE: Git Integration Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-magit.el :lexical t
+
+* Git Integration Module
+
+** File Header
+
+#+begin_src emacs-lisp
+;;; init-magit.el --- Git Integration for MCG Emacs -*- lexical-binding: t; -*-
+
+;; Filename: init-magit.el
+;; Description: Git integration module (Magit)
+;; Author: mcge <mcgeq@outlook.com>
+;; Copyright (C) 2024-2026, mcge, all rights reserved.
+;; Create   Date: 2026-01-10
+;; Version: 3.0
+;; Keywords: git, magit, version-control
+;; Compatibility: GNU Emacs 29.0+
+
+;;; Commentary:
+;;
+;; Git integration module for MCG Emacs, responsible for:
+;; - Magit configuration
+;; - Custom transient menus
+;; - Git commit mode enhancements
+;;
+;; Module metadata:
+;; :depends ()
+;; :defer t
+;;
+#+end_src
+
+** Require
+
+#+begin_src emacs-lisp
+;;; Code:
+
+(require 'core-lib)
+#+end_src
+
+** Variables
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Variables
+;;; ============================================================
+
+(defvar mcg-tools-magit-diff-refine t
+  "Whether to enable diff refined highlighting.")
+
+(defvar mcg-tools-magit-ediff-dwim t
+  "Whether to show ediff on hunks.")
+
+(defvar mcg-tools-magit-flyspell t
+  "Whether to enable spell checking in commit messages.")
+#+end_src
+
+** Magit Configuration
+
+Magit 核心配置。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Magit Configuration
+;;; ============================================================
+
+;; Configuration is done in Initialize section
+#+end_src
+
+** Transient Menus
+
+Custom transient menus for Magit operations. 定义在magit加载后避免宏展开错误。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Transient Menus
+;;; ============================================================
+;; Transient menu will be defined in Initialize section
+#+end_src
+
+** Keybindings
+
+Quick key bindings handled in Initialize section.
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Keybindings
+;;; ============================================================
+;; Keybindings set in Initialize section
+#+end_src
+
+** Initialize
+
+模块初始化。Load magit and setup configuration, menu, and keybindings.
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Initialize
+;;; ============================================================
+
+;; Load magit dependencies explicitly first
+;; According to magit package-requires
+;; Using improved mcg-require-extension that handles nested paths
+(mcg-require-extension 'compat t)
+(mcg-require-extension 'cond-let t)
+(mcg-require-extension 'llama t)
+(require 'seq nil t)  ;; Built-in with Emacs 24.1+
+(mcg-require-extension 'transient t)
+(mcg-require-extension 'with-editor t)
+
+;; Load magit (which includes magit-section)
+(if (mcg-require-extension 'magit t)
+    (progn
+      ;; Setup basic magit configuration
+      (setq magit-diff-refine-hunk mcg-tools-magit-diff-refine)
+      (setq magit-ediff-dwim-show-on-hunks mcg-tools-magit-ediff-dwim)
+      
+      ;; Commit mode settings
+      (when mcg-tools-magit-flyspell
+        (add-hook 'git-commit-mode-hook #'flyspell-mode))
+      
+      ;; Define the transient menu after magit is loaded
+      (transient-define-prefix mcg/magit-menu ()
+        "MCG Magit operations menu."
+        [["Status & Log"
+          ("s" "Status" magit-status)
+          ("l" "Log" magit-log)
+          ("r" "Reflog" magit-reflog)]
+         ["Commit & Stage"
+          ("c" "Commit" magit-commit)
+          ("a" "Stage" magit-stage)
+          ("u" "Unstage" magit-unstage)
+          ("d" "Diff" magit-diff)]
+         ["Push & Pull"
+          ("p" "Push" magit-push)
+          ("P" "Pull" magit-pull)
+          ("f" "Fetch" magit-fetch)]
+         ["Branch & Tags"
+          ("b" "Branch" magit-branch)
+          ("t" "Tag" magit-tag)]
+         ["Other"
+          ("m" "Merge" magit-merge)
+          ("M" "Rebase" magit-rebase)
+          ("!" "Run git command" magit-git-command)
+          ("?" "Dispatch" magit-dispatch)]])
+      
+      ;; Setup keybindings
+      (mcg-bind-key "C-x g" 'magit-status "tools/magit")
+      (mcg-bind-key "C-x M-g" 'magit-dispatch "tools/magit")
+      (mcg-bind-key "C-c g s" 'magit-status "tools/magit")
+      (mcg-bind-key "C-c g l" 'magit-log "tools/magit")
+      (mcg-bind-key "C-c g d" 'magit-dispatch "tools/magit")
+      (mcg-bind-key "C-c g f" 'magit-file-dispatch "tools/magit")
+      (mcg-bind-key "C-c g p" 'magit-push "tools/magit")
+      (mcg-bind-key "C-c g P" 'magit-pull "tools/magit")
+      (mcg-bind-key "C-c g b b" 'magit-branch-create "tools/magit")
+      (mcg-bind-key "C-c g b r" 'magit-branch-rename "tools/magit")
+      (mcg-bind-key "C-c g b d" 'magit-branch-delete "tools/magit")
+      (mcg-bind-key "C-c g m a" 'magit-submodule-add "tools/magit")
+      (mcg-bind-key "C-c g m r" 'magit-submodule-remove "tools/magit")
+      (mcg-bind-key "C-c g m u" 'magit-submodule-update "tools/magit")
+      (mcg-bind-key "C-c g ?" 'mcg/magit-menu "tools/magit")
+      
+      (mcg-log "Magit configured with keybindings"))
+  (mcg-log-error "Failed to load Magit"))
+#+end_src
+
+** Provide Feature
+
+#+begin_src emacs-lisp
+(provide 'init-magit)
+;;; init-magit.el ends here
+#+end_src

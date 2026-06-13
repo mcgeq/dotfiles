@@ -1,0 +1,9 @@
+[package]
+name = "types"
+authors.workspace = true
+edition.workspace = true
+version.workspace = true
+
+[dependencies]
+icon = { workspace = true }
+pattern = { workspace = true }

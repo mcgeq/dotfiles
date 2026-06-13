@@ -1,0 +1,74 @@
+#+TITLE: Orderless Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-orderless.el :lexical t
+
+* Orderless Module
+
+配置 orderless 匹配风格。
+
+** File Header
+
+#+begin_src emacs-lisp
+;;; init-orderless.el --- orderless configuration -*- lexical-binding: t; -*-
+
+;;; Commentary:
+;; Configure orderless from:
+;; emacs/site-lisp/extensions/completion/orderless
+
+;;; Code:
+
+(require 'core-lib)
+#+end_src
+
+** Setup
+
+** Orderless Configuration
+
+Orderless 模糊匹配引擎配置。
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Orderless Configuration
+;;; ============================================================
+
+(defun mcg--setup-orderless ()
+  "Setup Orderless fuzzy matching engine."
+  (when (mcg-require-extension "orderless" t)
+    ;; Core completion styles
+    (setq completion-styles '(orderless partial-completion basic)
+          completion-category-defaults nil)
+
+    ;; Component separator (space or &)
+    (setq orderless-component-separator "[ &]")
+
+    ;; File completion uses partial-completion style
+    (setq completion-category-overrides
+          '((file (styles partial-completion))
+            (buffer (styles orderless))
+            (info-menu (styles orderless))))
+
+    ;; Matching styles
+    (setq orderless-matching-styles
+          '(orderless-literal
+            orderless-regexp
+            orderless-initialism))
+
+    ;; Style dispatchers (! negation, = literal, ~ flex)
+    (setq orderless-style-dispatchers
+          '(orderless-affix-dispatch))
+
+    (mcg-log "Orderless configured")))
+#+end_src
+
+** Initialize
+
+#+begin_src emacs-lisp
+(mcg--setup-orderless)
+#+end_src
+
+** Provide
+
+#+begin_src emacs-lisp
+(provide 'init-orderless)
+;;; init-orderless.el ends here
+#+end_src

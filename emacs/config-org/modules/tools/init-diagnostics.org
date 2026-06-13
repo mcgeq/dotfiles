@@ -1,0 +1,135 @@
+#+TITLE: Diagnostics Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-diagnostics.el :lexical t
+
+* Diagnostics Module
+
+Flymake diagnostics helpers.
+
+** File Header
+
+#+begin_src emacs-lisp
+;;; init-diagnostics.el --- Diagnostics workflow for MCG Emacs -*- lexical-binding: t; -*-
+
+;; Copyright (C) 2024-2026 MCG
+;; Author: mcge <mcgeq@outlook.com>
+;; Keywords: diagnostics, flymake
+;; Compatibility: GNU Emacs 29.0+
+
+;;; Commentary:
+;; Provides lightweight diagnostics commands around built-in Flymake.
+;;
+;;; Code:
+
+(require 'core-lib)
+(require 'flymake)
+(require 'project)
+#+end_src
+
+** Options
+
+#+begin_src emacs-lisp
+(defcustom mcg-diagnostics-enable-flymake t
+  "Whether to enable Flymake automatically when the current mode provides backends."
+  :type 'boolean
+  :group 'mcg)
+#+end_src
+
+** Helpers
+
+#+begin_src emacs-lisp
+(defun mcg-diagnostics--consult-flymake-p ()
+  "Return non-nil when `consult-flymake' is available."
+  (or (fboundp 'consult-flymake)
+      (require 'consult-flymake nil t)))
+
+(defun mcg-diagnostics--maybe-enable-flymake ()
+  "Enable Flymake when the current buffer has diagnostic backends."
+  (when (and mcg-diagnostics-enable-flymake
+             flymake-diagnostic-functions
+             (not (minibufferp)))
+    (flymake-mode 1)))
+#+end_src
+
+** Commands
+
+#+begin_src emacs-lisp
+;;;###autoload
+(defun mcg-diagnostics-list ()
+  "List diagnostics for the current buffer."
+  (interactive)
+  (cond
+   ((mcg-diagnostics--consult-flymake-p)
+    (consult-flymake))
+   ((fboundp 'flymake-show-buffer-diagnostics)
+    (flymake-show-buffer-diagnostics))
+   (t
+    (user-error "No diagnostics list command available"))))
+
+;;;###autoload
+(defun mcg-diagnostics-project ()
+  "List diagnostics for the current project."
+  (interactive)
+  (cond
+   ((fboundp 'flymake-show-project-diagnostics)
+    (flymake-show-project-diagnostics))
+   ((mcg-diagnostics--consult-flymake-p)
+    (consult-flymake t))
+   (t
+    (user-error "No project diagnostics command available"))))
+
+;;;###autoload
+(defun mcg-diagnostics-next ()
+  "Jump to next diagnostic."
+  (interactive)
+  (if (fboundp 'flymake-goto-next-error)
+      (flymake-goto-next-error)
+    (next-error)))
+
+;;;###autoload
+(defun mcg-diagnostics-previous ()
+  "Jump to previous diagnostic."
+  (interactive)
+  (if (fboundp 'flymake-goto-prev-error)
+      (flymake-goto-prev-error)
+    (previous-error)))
+
+;;;###autoload
+(defun mcg-diagnostics-toggle-flymake ()
+  "Toggle Flymake in the current buffer."
+  (interactive)
+  (if (bound-and-true-p flymake-mode)
+      (flymake-mode -1)
+    (flymake-mode 1))
+  (message "Flymake %s" (if flymake-mode "enabled" "disabled")))
+#+end_src
+
+** Initialize
+
+#+begin_src emacs-lisp
+(setq flymake-start-on-save-buffer t)
+(setq flymake-start-on-flymake-mode t)
+(setq flymake-no-changes-timeout 0.8)
+
+(add-hook 'prog-mode-hook #'mcg-diagnostics--maybe-enable-flymake)
+(add-hook 'conf-mode-hook #'mcg-diagnostics--maybe-enable-flymake)
+
+(define-prefix-command 'mcg-diagnostics-map)
+(mcg-bind-key "C-c !" 'mcg-diagnostics-map "tools/diagnostics")
+(mcg-bind-key "C-c ! !" #'mcg-diagnostics-list "tools/diagnostics")
+(mcg-bind-key "C-c ! b" #'flymake-show-buffer-diagnostics "tools/diagnostics")
+(mcg-bind-key "C-c ! p" #'mcg-diagnostics-project "tools/diagnostics")
+(mcg-bind-key "C-c ! n" #'mcg-diagnostics-next "tools/diagnostics")
+(mcg-bind-key "C-c ! N" #'mcg-diagnostics-previous "tools/diagnostics")
+(mcg-bind-key "C-c ! s" #'flymake-start "tools/diagnostics")
+(mcg-bind-key "C-c ! m" #'mcg-diagnostics-toggle-flymake "tools/diagnostics")
+
+(mcg-log "diagnostics module configured")
+#+end_src
+
+** Provide Feature
+
+#+begin_src emacs-lisp
+(provide 'init-diagnostics)
+;;; init-diagnostics.el ends here
+#+end_src

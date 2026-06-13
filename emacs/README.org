@@ -1,0 +1,565 @@
+#+title: Emacs Configuration
+#+author: mcge
+#+email: mcgeq@outlook.com
+#+date: 2025-02-16
+#+language: en
+
+[[file:README_CN.org][中文文档]]
+
+* Welcome to My Emacs Configuration
+
+This is a modern, modular Emacs configuration written using literate programming
+with Org Mode. It's designed for Emacs 29+ with extensive language support,
+LSP integration, and productivity features.
+
+* Philosophy
+
+** Built-in First
+   Reconfigure Emacs to use as many built-in features as possible and use fewer
+   unnecessary plugins.
+
+** Modular Design
+   Configuration split into logical modules organized by functionality
+
+** Literate Programming
+   Written in Org Mode for easy documentation and maintenance
+
+** Performance Optimized
+   Lazy loading, fast startup, and minimal overhead
+
+* 🎯 Features
+
+** Core Stack
+   - Emacs 29+ with tree-sitter support
+   - LSP Bridge for language server integration
+   - Vertico + Marginalia + Embark for completions
+   - Magit for Git operations
+
+** Language Support
+   Full development support for:
+   - *Systems*: C/C++, Rust (rust-analyzer), Lua
+   - *Web*: TypeScript, JavaScript, HTML/CSS, JSX/React
+   - *Dynamic*: Python, Bash
+   - *Markup*: Markdown, Org Mode
+
+** Key Features
+   - [[https://github.com/minad/vertico][Vertico]]: Modern minibuffer completions
+   - [[https://github.com/minad/marginalia][Marginalia]]: Rich annotations
+   - [[https://github.com/oantolin/embark][Embark]]: Contextual actions
+   - [[https://github.com/manateelazycat/lsp-bridge][LSP Bridge]]: Blazing fast LSP
+   - [[https://magit.vc/][Magit]]: Git interface
+   - [[https://github.com/manateelazycat/blink-search][Blink-search]]: Universal search
+   - [[https://github.com/manateelazycat/color-rg][Color-rg]]: Fast grep
+   - [[https://github.com/manateelazycat/awesome-tray][Awesome-tray]]: Lightweight status display
+   - [[https://github.com/manateelazycat/emacs-rime][Rime]]: Chinese input
+   - [[https://github.com/justbur/emacs-which-key][Which-key]]: Keybinding hints
+   - [[https://github.com/abo-abo/ace-window][Ace-window]]: Quick window switching
+   - [[https://github.com/abo-abo/avy][Avy]]: Fast navigation
+
+* 📦 Installation
+
+** Prerequisites
+   - Emacs 29+ (recommended) or Emacs 28+ with tree-sitter
+   - Git for package management
+   - Node.js for lsp-bridge
+   - (Optional) Universal Ctags for symbol navigation
+
+** Quick Install
+
+*** Step 1: Clone Repository
+    #+begin_src bash
+    git clone <repository-url> ~/dotfiles
+    cd ~/dotfiles/emacs
+    #+end_src
+
+*** Step 2: Initialize Git Submodules
+    #+begin_src bash
+    make init
+    #+end_src
+
+*** Step 3: Create User Configuration
+    #+begin_src bash
+    cp custom-example.el custom.el
+    #+end_src
+
+*** Step 4: Generate Configuration
+    #+begin_src bash
+    make generate
+    #+end_src
+
+*** Step 5: Link to Emacs
+
+**** Option A: Symlink (Recommended)
+     #+begin_src bash
+     # Linux/macOS
+     ln -s ~/dotfiles/emacs ~/.emacs.d
+     
+     # Windows (PowerShell as Administrator)
+     New-Item -ItemType SymbolicLink -Path $env:USERPROFILE\.emacs.d -Target D:\config\dotfiles\emacs
+     #+end_src
+
+**** Option B: Manual Load
+     #+begin_src emacs-lisp
+     (load-file "~/dotfiles/emacs/site-lisp/config/init.el")
+     #+end_src
+
+*** Step 6: First Launch
+    #+begin_src bash
+    emacs
+    #+end_src
+
+** Troubleshooting
+   #+begin_src bash
+   make st        # Check package status
+   make clean     # Clean generated files
+   make generate  # Regenerate config
+   make h         # View all commands
+   #+end_src
+
+* 🗂️ Configuration Structure
+
+For detailed directory structure and module system documentation, see [[file:config-org/README.org][config-org/README.org]].
+
+** Overview
+
+#+begin_src text
+emacs/
+├── Makefile                     # Build system
+├── README.org                   # This file (English)
+├── README_CN.org                # Chinese documentation
+├── config-org/                  # Source: Org Mode literate config
+│   ├── README.org               # Detailed module documentation
+│   ├── init.org                 # Main entry point
+│   ├── core/                    # Core configuration (4 files)
+│   ├── modules/                 # Feature modules (8 categories, 35 modules)
+│   └── private/                 # Private configuration
+├── site-lisp/                   # Generated: Compiled EL files
+│   ├── config/                  # Same structure as config-org/
+│   └── extensions/              # Git submodules
+├── snippets/                    # Snippets
+└── langservers/                 # Language server configs
+#+end_src
+
+** Module Categories
+
+| Category   | Modules | Description                       |
+|------------+---------+-----------------------------------|
+| ui         |       4 | Theme, modeline, font, icons      |
+| editor     |       8 | Editing features                  |
+| completion |       2 | Vertico, yasnippet                |
+| tools      |       5 | Magit, search, rime, tabs, eshell |
+| enhance    |       5 | Autosave, which-key, helpful, etc.|
+| org        |       5 | Org Mode ecosystem                |
+| writing    |       2 | Markdown, vale                    |
+| lang       |       9 | LSP and language support          |
+
+* ⚙️ Configuration Management
+
+** Makefile Commands
+
+| Command           | Description                    |
+|-------------------+--------------------------------|
+| make              | Generate config from Org files |
+| make clean        | Clean generated files          |
+| make test         | Run all tests                  |
+| make init         | Initialize Git Submodules      |
+| make st           | Check package status           |
+| make up           | Update packages safely         |
+| make lock-packages| Lock current package versions  |
+| make h            | Show help                      |
+
+* 📦 Git Submodule Package Management
+
+This configuration uses Git Submodules to manage third-party Emacs packages. All packages are stored in =site-lisp/extensions/= organized by category.
+
+** Extension Directory Organization
+
+Extensions are organized into category subdirectories:
+
+#+begin_src text
+site-lisp/extensions/
+├── core/           # Core libraries (dash, s.el, f.el, compat, lazy-load)
+├── completion/     # Completion system (vertico, consult, marginalia, orderless, embark)
+├── editor/         # Editor features (avy, ace-window, vundo, markmacro, fingertip)
+├── git/            # Git integration (magit, with-editor, jujutsu)
+├── input/          # Input methods (emacs-rime, posframe)
+├── lsp/            # LSP and language support (lsp-bridge, rust-mode, lua-mode, etc.)
+├── org/            # Org-mode extensions (org-modern, ox-hugo, org-download)
+├── search/         # Search tools (blink-search, color-rg, consult-todo)
+├── snippets/       # Snippet libraries (yasnippet, yasnippet-snippets)
+├── ui/             # UI components (awesome-tray, themes/, nerd-icons)
+├── utils/          # Utility packages (helpful, json-mode, hydra)
+└── docs/           # Documentation tools (markdown-ts-mode, flymake-vale)
+#+end_src
+
+** Submodule Commands
+
+| Command    | Alias | Description                                    |
+|------------+-------+------------------------------------------------|
+| make gsb   | init  | Initialize all submodules (bootstrap)          |
+| make gsbr  |       | Switch submodules to main/master branch        |
+| make gsu   | up    | Update all submodules to latest                |
+| make gss   |       | Full sync: init + branch + update              |
+| make gsr   |       | Reset submodules to remote HEAD                |
+| make gsst  | st    | Check submodule status                         |
+| make gsync |       | Sync .gitmodules URLs after manual edits       |
+| make gsa   |       | Add new submodule (requires URL, CAT, NAME)    |
+| make gsrm  |       | Remove submodule (requires CAT, NAME)          |
+
+** Adding New Packages
+
+To add a new package as a Git submodule:
+
+#+begin_src bash
+# Syntax: make gsa URL=<repo-url> CAT=<category> NAME=<package-name>
+
+# Example: Add a new theme package
+make gsa URL=https://github.com/hlissner/emacs-doom-themes CAT=ui/themes NAME=doom-themes
+
+# Example: Add a new editor package
+make gsa URL=https://github.com/abo-abo/swiper CAT=editor NAME=swiper
+
+# Example: Add a new LSP language support
+make gsa URL=https://github.com/emacs-lsp/lsp-mode CAT=lsp NAME=lsp-mode
+#+end_src
+
+After adding a package:
+1. The submodule is added to =.gitmodules=
+2. The package is cloned to =site-lisp/extensions/<CAT>/<NAME>=
+3. Commit the changes: =git add .gitmodules site-lisp/extensions/<CAT>/<NAME> && git commit=
+
+** Updating Packages
+
+To update all packages to their latest versions:
+
+#+begin_src bash
+# Update all submodules
+make gsu
+
+# Or use the alias
+make up
+#+end_src
+
+For a complete sync (recommended after cloning or when submodules are out of sync):
+
+#+begin_src bash
+# Full sync: initialize + switch to main branch + pull latest
+make gss
+#+end_src
+
+** Removing Packages
+
+To remove a package:
+
+#+begin_src bash
+# Syntax: make gsrm CAT=<category> NAME=<package-name>
+
+# Example: Remove a package
+make gsrm CAT=ui/themes NAME=doom-themes
+#+end_src
+
+This will:
+1. Deinitialize the submodule
+2. Remove it from the Git index
+3. Clean up the =.git/modules= directory
+
+** Checking Package Status
+
+#+begin_src bash
+# View status of all submodules
+make gsst
+
+# Or use the alias
+make st
+#+end_src
+
+** Best Practices
+
+1. *Choose the right category*: Place packages in appropriate category directories
+2. *Use descriptive names*: Package names should match the repository name
+3. *Commit after changes*: Always commit =.gitmodules= and the submodule directory together
+4. *Regular updates*: Run =make gsu= periodically to keep packages updated
+5. *Test after updates*: Run =make test= after updating to catch any breaking changes
+
+** Module Declaration
+
+Use =mcg!= macro in =init.org= to declare enabled modules:
+
+#+begin_src emacs-lisp
+(mcg! :ui
+      theme modeline font icons
+      
+      :editor
+      defaults treesit navigation keybindings
+      paredit format undo multicursor
+      
+      :completion
+      vertico yasnippet
+      
+      :tools
+      magit search rime tabs eshell
+      
+      :enhance
+      autosave which-key helpful recentf symbol
+      
+      :org
+      org org-agenda org-babel org-capture org-extras
+      
+      :writing
+      markdown vale
+      
+      :lang
+      lsp rust python typescript web cpp lua zig)
+#+end_src
+
+** Migration Guide
+
+If migrating from an older configuration version:
+
+*** Category Changes
+
+| Old Category | New Category | Notes                          |
+|--------------+--------------+--------------------------------|
+| :input       | :editor      | Input modules merged to editor |
+| :docs        | :writing     | Docs renamed to writing        |
+| (none)       | :enhance     | New enhancement category       |
+
+*** Module Renames
+
+| Old Module          | New Module        |
+|---------------------+-------------------|
+| :input fingertip    | :editor paredit   |
+| :input wraplish     | :editor format    |
+| :docs markdown      | :writing markdown |
+| :tools sort-tab     | :tools tabs       |
+
+The system automatically detects old names and shows warnings.
+
+* ⚡ Performance Optimization
+
+** Module Loading Strategy
+
+The configuration uses a three-tier loading strategy for optimal startup performance:
+
+| Loading Type | When Loaded | Modules |
+|--------------+-------------+---------|
+| Immediate    | At startup  | core, ui (theme, modeline, font), editor (defaults, keybindings) |
+| Idle         | After 2s idle | completion (vertico, yasnippet), enhance (which-key, helpful) |
+| Deferred     | On demand   | lang (rust, python, etc.), tools (magit), writing (markdown) |
+
+** Idle Loading Configuration
+
+Non-essential modules are loaded during idle time to speed up startup:
+
+#+begin_src emacs-lisp
+;; Configure idle loading delay (default: 2 seconds)
+(setq mcg-idle-load-delay 2)
+
+;; Modules loaded during idle time are defined in init.org
+;; You can add modules to idle loading:
+(mcg-add-idle-load-module :completion 'vertico)
+(mcg-add-idle-load-category :enhance)  ; Add entire category
+#+end_src
+
+** Deferred Loading
+
+Language modules are loaded on-demand when you open a file:
+
+| File Extension | Module Loaded |
+|----------------+---------------|
+| =.rs=          | rust          |
+| =.py=          | python        |
+| =.ts=, =.tsx=  | typescript    |
+| =.vue=         | web           |
+| =.lua=         | lua           |
+| =.zig=         | zig           |
+| =.cpp=, =.h=   | cpp           |
+
+** Startup Time Diagnostics
+
+#+begin_src emacs-lisp
+;; View detailed module loading times
+M-x mcg/show-load-times
+
+;; Check which modules are loaded
+M-x mcg-list-modules
+#+end_src
+
+* 🔑 Keybinding Registry
+
+The configuration uses a centralized keybinding registry system for conflict detection and documentation.
+
+** Using the Registry
+
+#+begin_src emacs-lisp
+;; Register a keybinding (instead of global-set-key)
+(mcg-bind-key "C-c s l" consult-line "init-keybindings")
+
+;; With optional keymap
+(mcg-bind-key "C-c C-b" eval-buffer "init-keybindings" emacs-lisp-mode-map)
+#+end_src
+
+** Conflict Detection
+
+When a keybinding conflict is detected, a warning is displayed:
+
+#+begin_example
+Warning: Keybinding conflict: C-c s l
+  Was: old-command (from module-a)
+  Now: new-command (from module-b)
+#+end_example
+
+** Query Keybindings
+
+#+begin_src emacs-lisp
+;; Show all registered keybindings
+M-x mcg/show-keybindings  ; or C-h K
+
+;; Get keybindings from a specific module
+(mcg-keybindings-by-source "init-keybindings")
+
+;; Check which module defined a keybinding
+(mcg-keybinding-source "C-c s l")
+#+end_src
+
+* 📚 Help System
+
+Press =C-h M= to access the unified help menu:
+
+** Help Menu (C-h M)
+
+| Section       | Key | Command                    |
+|---------------+-----+----------------------------|
+| Documentation | k   | Show keybindings reference |
+|               | m   | List all modules           |
+|               | e   | List extensions            |
+| Diagnostics   | d   | Run doctor                 |
+|               | t   | Show load times            |
+|               | l   | Show logs                  |
+| Configuration | c   | Open config file           |
+|               | r   | Reload module              |
+|               | R   | Rebuild extension cache    |
+
+** Diagnostic Commands
+
+| Command                        | Description                          |
+|--------------------------------+--------------------------------------|
+| =M-x mcg-doctor=               | Check for configuration issues       |
+| =M-x mcg/show-load-times=      | View module loading performance      |
+| =M-x mcg/show-logs=            | View recent log messages             |
+| =M-x mcg-show-startup-errors=  | Show startup error summary           |
+| =M-x mcg/list-extensions=      | Show extension status with icons     |
+
+** Module Management
+
+| Command                   | Description                    |
+|---------------------------+--------------------------------|
+| =M-x mcg-list-modules=    | Show all modules and status    |
+| =M-x mcg/reload-module=   | Reload a specific module       |
+| =M-x mcg/describe-module= | Show detailed module info      |
+
+* ⌨️ Key Bindings
+
+All custom bindings use =C-c= prefix (user reserved area) with which-key descriptions.
+
+** Quick Reference
+
+| Prefix  | Description      |
+|---------+------------------|
+| C-c g   | Git (Magit)      |
+| C-c w   | Window           |
+| C-c s   | Search           |
+| C-c r   | Refactor         |
+| C-c t   | Tabs             |
+| C-c n   | Notes/Org        |
+| C-c m   | Multi-cursor     |
+| M-g     | Goto (Avy)       |
+
+** LSP Navigation
+
+| Key   | Description          |
+|-------+----------------------|
+| M-.   | Go to definition     |
+| M-,   | Return               |
+| M-?   | Find references      |
+| C-h . | Show documentation   |
+
+** Window Operations
+
+| Key     | Description        |
+|---------+--------------------|
+| M-O     | Quick switch (ace) |
+| C-c w w | Switch window      |
+| C-c w d | Delete window      |
+| C-c w s | Swap windows       |
+| C-c w u | Undo layout        |
+| C-c w r | Redo layout        |
+| C-c w ? | Window menu        |
+
+** Search
+
+| Key     | Description                    |
+|---------+--------------------------------|
+| C-c s l | Search line (consult-line)     |
+| C-c s r | Search with ripgrep (consult)  |
+| C-c s i | Search imenu (consult)         |
+| C-c s o | Search outline (consult)       |
+| C-c s g | Search content (color-rg)      |
+| C-c s G | Search project (color-rg)      |
+| C-c s s | Search symbol (color-rg)       |
+| C-c s b | Blink search                   |
+| C-c s d | Search current directory       |
+| C-c s p | Search project root            |
+
+** Buffers & Files
+
+| Key     | Description                    |
+|---------+--------------------------------|
+| C-c b b | Switch buffer (consult)        |
+| C-c b m | Switch bookmark                |
+| C-c b r | Open recent file               |
+| C-c f f | Find file                      |
+
+** Help
+
+| Key   | Description              |
+|-------+--------------------------|
+| C-h K | Show keybindings         |
+| C-h M | Help menu (transient)    |
+
+For complete keybinding reference, press =C-h K= in Emacs.
+
+* 🔧 Customization
+
+** User Settings
+
+Edit =custom.el= for personal settings:
+
+#+begin_src emacs-lisp
+(setq mcg-theme 'doom-one)
+(setq mcg-font-size 14)
+#+end_src
+
+** Adding New Modules
+
+1. Create an Org file in =config-org/modules/CATEGORY/=
+2. Use =:tangle= directive for code blocks
+3. Add module to =mcg!= declaration in =init.org=
+4. Run =make generate=
+
+* 📚 Resources
+
+** Documentation
+   - [[https://www.gnu.org/software/emacs/manual/][Emacs Manual]]
+   - [[https://orgmode.org/manual/][Org Mode Manual]]
+   - [[https://github.com/manateelazycat/lsp-bridge][lsp-bridge]]
+   - [[https://magit.vc/][Magit]]
+
+** Tips
+   - Use =C-h v= to view variables
+   - Use =C-h k= to see what a key does
+   - Check =*Messages*= buffer for errors
+
+* 📄 License
+
+Same as the parent dotfiles repository.

@@ -1,0 +1,14 @@
+# -*- mode: snippet -*-
+# name: Rust File Header
+# key: header
+# --
+// -----------------------------------------------------------------------------
+//    Copyright (C) `(format-time-string "%Y")` ${1:`(get-git-user-name)`}. All rights reserved.
+// Author:         ${1:`(get-git-user-name)`}
+// Email:          <${3:`(get-git-user-email)`}>
+// File:           ${2:`(file-name-nondirectory (buffer-file-name))`}
+// Description:    ${4:}
+// Create   Date:  `(format-time-string "%Y-%m-%d %H:%M:%S")`
+// Last Modified:  2024-09-09 13:02:54
+// Modified   By:  mcge <ge942812@gmail.com>
+// ----------------------------------------------------------------------------

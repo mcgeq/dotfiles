@@ -1,0 +1,86 @@
+[[https://melpa.org/#/org-appear][file:https://melpa.org/packages/org-appear-badge.svg]]
+[[https://github.com/awth13/org-appear/actions/workflows/check.yml][file:https://github.com/awth13/org-appear/actions/workflows/check.yml/badge.svg?branch=master]]
+
+* ~org-appear~
+
+Make invisible parts of Org elements appear visible.
+
+** About
+
+[[https://orgmode.org/][Org mode]] provides a way to toggle visibility of hidden elements such as emphasis markers, links, etc. by customising specific variables, e.g., ~org-hide-emphasis-markers~. However, it is currently not possible to do this interactively and on an element-by-element basis. This package, inspired by [[https://github.com/io12/org-fragtog][org-fragtog]], enables automatic visibility toggling depending on cursor position. Hidden element parts appear when the cursor enters an element and disappear when it leaves.
+
+[[file:demo.gif]]
+
+** Installation
+
+The easiest way to install ~org-appear~ is from MELPA, using your favourite package manager or ~package-install~. For Guix users, ~org-appear~ is also available in the official GNU Guix channel.
+
+** Manual installation
+
+With [[https://github.com/raxod502/straight.el][straight.el]], simply put the following line in ~init.el~:
+
+#+begin_src emacs-lisp
+
+  (straight-use-package '(org-appear :type git :host github :repo "awth13/org-appear"))
+
+#+end_src
+
+Alternatively, git clone this repository and point Emacs to it using the ~:load-path~ keyword of ~use-package~ or ~require~.
+
+** Usage
+
+The package can be enabled interactively or automatically on Org mode start-up:
+
+#+begin_src emacs-lisp
+
+  (add-hook 'org-mode-hook 'org-appear-mode)
+
+#+end_src
+
+By default, toggling is instantaneous and only emphasis markers are toggled. The following custom variables can be changed to enable additional functionality.
+
+- org-appear-autoemphasis :: if non-nil and ~org-hide-emphasis-markers~ is on, toggle emphasis markers
+- org-appear-autolinks :: if non-nil and ~org-link-descriptive~ is on, toggle links
+- org-appear-autosubmarkers :: if non-nil and ~org-pretty-entities~ is on, toggle subscripts and superscripts
+- org-appear-autoentities :: if non-nil and ~org-pretty-entities~ is on, toggle Org entitites
+- org-appear-autokeywords :: if non-nil and ~org-hidden-keywords~ is on, toggle keywords in ~org-hidden-keywords~
+- org-appear-inside-latex :: if non-nil, toggle entities and sub/superscripts in LaTeX fragments
+- org-appear-delay :: seconds of delay before toggling
+- org-appear-trigger :: when to toggle elements
+
+If Org mode custom variables that control visibility of elements are configured to show hidden parts, the respective ~org-appear~ settings do not have an effect.
+
+~org-appear-trigger~ can be set to ~always~, ~on-change~, or ~manual~. With ~on-change~, elements will be toggled only when the buffer is modified or on mouse click. This option disables delayed toggling. With ~manual~, toggling must be enabled by calling ~org-appear-manual-start~. ~org-appear-manual-stop~ is used to disable toggling with this option.
+
+The ~manual~ option is useful for, e.g., integrating ~org-appear~ with ~evil-mode~. Below is an example configuration for toggling elements in Insert mode only. Note that ~org-appear~ expects to be enabled in Org mode buffers only, which is why the example attaches ~evil-mode~ hooks to the Org mode startup hook.
+
+#+begin_src emacs-lisp
+
+  (setq org-appear-trigger 'manual)
+  (add-hook 'org-mode-hook (lambda ()
+                             (add-hook 'evil-insert-state-entry-hook
+                                       #'org-appear-manual-start
+                                       nil
+                                       t)
+                             (add-hook 'evil-insert-state-exit-hook
+                                       #'org-appear-manual-stop
+                                       nil
+                                       t)))
+
+#+end_src
+
+** Acknowledgements
+
+Special thanks to [[https://github.com/SPFabGerman][SPFabGerman]], who came up with the idea and extended ~org-appear~ beyond emphasis marker toggling, and [[https://github.com/daviwil][daviwil]], who proposed the ~org-appear~ name.
+
+** Known Issues
+
+~org-appear~ does not handle overlapping emphasis elements correctly, e.g.,
+
+#+begin_example
+  *Why would someone /nest emphasis* like that?/
+#+end_example
+
+In the above example, ~org-appear~ can only detect and reveal the first (bold) element. This is due to the reliance on the ~org-element~ API -- ~org-element-context~ in particular -- which also fails to detect the second (italic) element.
+
+~org-appear~ will fail to detect elements nested inside certain other elements, such as comments or document titles.
