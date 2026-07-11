@@ -173,9 +173,7 @@
 
 (defvar mcg-idle-modules
   '((:tools . lsp-bridge)
-    (:tools . blink-search)
     (:tools . color-rg)
-    (:tools . magit)
     (:tools . majutsu))
   "Individual modules to load during idle time.")
 

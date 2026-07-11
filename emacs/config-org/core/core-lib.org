@@ -416,35 +416,94 @@ Handles both string and vector key representations."
 *** Bind and Unbind Keys
 
 #+begin_src emacs-lisp
+(defcustom mcg-keybinding-conflict-policy 'reject
+  "How `mcg-bind-key' handles conflicting bindings.
+When set to `reject', conflicting bindings are recorded but not installed.
+When set to `overwrite', conflicting bindings are recorded and installed."
+  :type '(choice (const :tag "Reject conflicts" reject)
+                 (const :tag "Overwrite conflicts" overwrite))
+  :group 'mcg)
+
+(defun mcg--key-vector (key)
+  "Return KEY as a vector accepted by `lookup-key'."
+  (kbd (mcg-normalize-key key)))
+
+(defun mcg--key-prefix-vector-p (prefix key)
+  "Return non-nil when PREFIX vector is a proper prefix of KEY vector."
+  (and (< (length prefix) (length key))
+       (cl-loop for i below (length prefix)
+                always (equal (aref prefix i) (aref key i)))))
+
+(defun mcg--keymap-command-p (command)
+  "Return non-nil when COMMAND denotes a keymap prefix."
+  (or (keymapp command)
+      (and (symbolp command)
+           (boundp command)
+           (keymapp (symbol-value command)))
+      (and (symbolp command)
+           (fboundp command)
+           (keymapp (symbol-function command)))))
+
+(defun mcg--registered-prefix-conflict (normalized-key command)
+  "Return prefix conflict info for NORMALIZED-KEY and COMMAND.
+The return value is (CONFLICT-KIND CONFLICT-KEY CONFLICT-BINDING), or nil.
+Prefix maps are allowed to have child bindings."
+  (let ((new-vector (mcg--key-vector normalized-key))
+        conflict)
+    (when mcg-keybinding-registry
+      (maphash
+       (lambda (registered-key registered-binding)
+         (let* ((registered-vector (mcg--key-vector registered-key))
+                (registered-command (car registered-binding)))
+           (cond
+            ;; Existing shorter non-keymap command blocks the new longer key.
+            ((and (mcg--key-prefix-vector-p registered-vector new-vector)
+                  (not (mcg--keymap-command-p registered-command)))
+             (setq conflict (list :blocked-by-shorter registered-key registered-binding)))
+            ;; New shorter non-keymap command would block an existing longer key.
+            ((and (mcg--key-prefix-vector-p new-vector registered-vector)
+                  (not (mcg--keymap-command-p command)))
+             (setq conflict (list :would-block-longer registered-key registered-binding))))))
+       mcg-keybinding-registry))
+    conflict))
+
 (defun mcg-bind-key (key command source &optional keymap)
   "Bind KEY to COMMAND, registering it from SOURCE.
 SOURCE is a string identifying where the binding comes from (e.g., module name).
 KEYMAP is the keymap to bind in (defaults to global-map).
-Returns t if binding was successful, nil if there was a conflict."
+Returns t if binding was installed, nil if it was rejected due to conflict."
   (mcg-keybinding-init)
   (let* ((normalized-key (mcg-normalize-key key))
          (existing (gethash normalized-key mcg-keybinding-registry))
          (new-binding (cons command source))
-         (keymap (or keymap global-map)))
+         (keymap (or keymap global-map))
+         (prefix-conflict (mcg--registered-prefix-conflict normalized-key command))
+         (has-conflict nil))
 
-    ;; Check for conflicts
     (when (and existing
                (not (eq (car existing) command)))
-      ;; Record the conflict
+      (setq has-conflict t)
       (push (list normalized-key existing new-binding) mcg-keybinding-conflicts)
       (mcg-log-warning "Keybinding conflict for %s: %s (%s) -> %s (%s)"
                        normalized-key
                        (car existing) (cdr existing)
                        command source))
 
-    ;; Register the binding
-    (puthash normalized-key new-binding mcg-keybinding-registry)
+    (when prefix-conflict
+      (setq has-conflict t)
+      (push (list normalized-key prefix-conflict new-binding) mcg-keybinding-conflicts)
+      (mcg-log-warning "Keybinding prefix conflict for %s: %S -> %s (%s)"
+                       normalized-key prefix-conflict command source))
 
-    ;; Actually bind the key
-    (define-key keymap (kbd key) command)
-
-    (mcg-log "Bound %s to %s (from %s)" normalized-key command source)
-    t))
+    (if (and has-conflict
+             (eq mcg-keybinding-conflict-policy 'reject))
+        (progn
+          (mcg-log-warning "Rejected keybinding %s from %s" normalized-key source)
+          nil)
+      (puthash normalized-key new-binding mcg-keybinding-registry)
+      (define-key keymap (kbd key) command)
+      (mcg-log "Bound %s to %s (from %s)" normalized-key command source)
+      t)))
 
 (defun mcg-unbind-key (key &optional keymap)
   "Unbind KEY and remove it from the registry.

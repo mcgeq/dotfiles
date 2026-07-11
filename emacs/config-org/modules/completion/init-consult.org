@@ -92,8 +92,11 @@
         (mcg-bind-key "M-y" #'consult-yank-pop "completion/consult")
 
         ;; 命令与寄存器
+        ;; C-c x is a prefix; binding it directly to a command makes C-c x c unreachable.
+        (define-prefix-command 'mcg-consult-command-map)
+        (mcg-bind-key "C-c x" 'mcg-consult-command-map "completion/consult")
         (mcg-bind-key "C-c x c" #'consult-complex-command "completion/consult")
-        (mcg-bind-key "C-c x" #'consult-mode-command "completion/consult")
+        (mcg-bind-key "C-c x x" #'consult-mode-command "completion/consult")
         (mcg-bind-key "C-c ; r" #'consult-register "completion/consult")
 
         (mcg-log "consult configured")))

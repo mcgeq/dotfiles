@@ -574,6 +574,7 @@ and :message describing the result.")
    (t
      (list :status :warning
            :message (format "Emacs %s (version 29+ recommended)" emacs-version)))))
+#+end_src
 
 *** Doctor Main Function
 
