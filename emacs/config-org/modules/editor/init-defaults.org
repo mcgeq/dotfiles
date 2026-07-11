@@ -402,6 +402,8 @@ OV is the overlay object."
 ;; Default indentation settings
 (setq-default indent-tabs-mode nil)
 (setq-default tab-width 4)
+(setq-default python-indent-offset 4)
+(setq-default python-indent-guess-indent-offset nil)
 
 ;; 确保常用缩进变量已定义（避免 lsp-bridge 等包在 json-mode 等模式下报错）
 (unless (boundp 'js-indent-level)
@@ -440,6 +442,11 @@ OV is the overlay object."
   ;; CSS
   (when (boundp 'css-indent-offset)
     (setq-local css-indent-offset n))
+  ;; Python
+  (when (boundp 'python-indent-offset)
+    (setq-local python-indent-offset n))
+  (when (boundp 'python-indent-guess-indent-offset)
+    (setq-local python-indent-guess-indent-offset nil))
   ;; TypeScript
   (when (boundp 'typescript-indent-level)
     (setq-local typescript-indent-level n)))
@@ -453,7 +460,8 @@ OV is the overlay object."
   ;; Languages with 4-space indentation
   (dolist (hook '(c-mode-hook c++-mode-hook java-mode-hook
                   haskell-mode-hook asm-mode-hook sh-mode-hook
-                  ruby-mode-hook rust-mode-hook python-mode-hook))
+                  ruby-mode-hook rust-mode-hook python-mode-hook
+                  python-ts-mode-hook))
     (add-hook hook (lambda ()
                      (setq indent-tabs-mode nil)
                      (mcg-editor--adjust-languages-indent 4))))
