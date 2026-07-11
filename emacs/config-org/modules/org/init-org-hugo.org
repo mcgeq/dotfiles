@@ -135,14 +135,25 @@ Hugo 博客的 org-capture 模板。
   "Return org-capture template string for new Hugo post."
   (let* ((date (format-time-string (org-time-stamp-format :long :inactive)))
          (title (read-from-minibuffer "Post Title: "))
-         (fname (org-hugo-slug title)))
+         (fname (org-hugo-slug title))
+         (description (read-from-minibuffer "Description: "))
+         (categories (read-from-minibuffer "Categories (space separated): "))
+         (tags (read-from-minibuffer "Tags (space separated): ")))
     (mapconcat #'identity
-               `(,(concat "* TODO " title)
-                 ":PROPERTIES:"
-                 ,(concat ":EXPORT_FILE_NAME: " fname)
-                 ,(concat ":EXPORT_DATE: " date)
-                 ":END:"
-                 "%?\n")
+               (delq nil
+                     `(,(concat "* TODO " title)
+                       ":PROPERTIES:"
+                       ,(concat ":EXPORT_FILE_NAME: " fname)
+                       ,(concat ":EXPORT_DATE: " date)
+                       ,(unless (string= description "")
+                          (concat ":EXPORT_DESCRIPTION: " description))
+                       ,(unless (string= categories "")
+                          (concat ":EXPORT_HUGO_CATEGORIES: " categories))
+                       ,(unless (string= tags "")
+                          (concat ":EXPORT_HUGO_TAGS: " tags))
+                       ":EXPORT_HUGO_CUSTOM_FRONT_MATTER: :image \"\" :hideFromHomePage false"
+                       ":END:"
+                       "%?\n"))
                "\n")))
 #+end_src
 
