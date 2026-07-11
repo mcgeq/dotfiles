@@ -1,8 +1,0 @@
-{
-  "name": "hyprls",
-  "languageId": "hyprlang",
-  "command": [
-    "hyprls"
-  ],
-  "settings": {}
-}

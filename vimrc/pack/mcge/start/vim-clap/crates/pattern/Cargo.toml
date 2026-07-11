@@ -1,9 +1,0 @@
-[package]
-name = "pattern"
-authors.workspace = true
-edition.workspace = true
-version.workspace = true
-
-[dependencies]
-once_cell = { workspace = true }
-regex = { workspace = true }

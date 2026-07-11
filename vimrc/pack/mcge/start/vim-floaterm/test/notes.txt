@@ -1,2 +1,0 @@
-- For vim8, `:FloatermHide` is required before `[N]FloatermKill`, otherwise the
-  corresponding floaterm won't be closed

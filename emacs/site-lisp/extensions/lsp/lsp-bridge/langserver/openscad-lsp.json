@@ -1,9 +1,0 @@
-{
-  "name": "openscad-lsp",
-  "languageId": "openscad",
-  "command": [
-    "openscad-lsp",
-    "--stdio"
-  ],
-  "settings": {}
-}

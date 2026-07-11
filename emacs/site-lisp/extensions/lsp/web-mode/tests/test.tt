@@ -1,5 +1,0 @@
-[% single-line block %]
-
-[%
-   multi-line block
-%]

@@ -1,9 +1,0 @@
-{
-  "name": "ballerina-lang-server",
-  "languageId": "ballerina",
-  "command": [
-    "bal",
-    "start-language-server"
-  ],
-  "settings": {}
-}

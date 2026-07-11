@@ -1,7 +1,0 @@
-{
-  "name": "nil",
-  "languageId": "nix",
-  "command": [ "nil" ],
-  "settings": { },
-  "sendSaveNotification": false
-}

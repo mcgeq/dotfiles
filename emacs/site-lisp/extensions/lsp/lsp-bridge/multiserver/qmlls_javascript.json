@@ -1,5 +1,0 @@
-{
-  "default": "qmlls",
-  "completion": ["qmlls", "javascript"],
-  "completion_item_resolve": ["qmlls", "javascript"],
-}

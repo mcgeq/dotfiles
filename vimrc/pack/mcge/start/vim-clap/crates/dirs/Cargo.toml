@@ -1,7 +1,0 @@
-[package]
-name = "dirs"
-version.workspace = true
-edition.workspace = true
-
-[dependencies]
-directories = { workspace = true }

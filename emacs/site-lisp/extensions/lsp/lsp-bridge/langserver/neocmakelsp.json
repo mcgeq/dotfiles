@@ -1,9 +1,0 @@
-{
-  "name": "neocmakelsp",
-  "languageId": "cmake",
-  "command": [
-    "neocmakelsp",
-    "--stdio"
-  ],
-  "settings": {}
-}

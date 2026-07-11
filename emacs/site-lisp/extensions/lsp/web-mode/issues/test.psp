@@ -1,3 +1,0 @@
-<ul>
-  <img id="1" <?=$titi?> class="2" />
-</ul>

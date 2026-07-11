@@ -1,6 +1,0 @@
-# Compiled
-*.elc
-
-# Added automatically by ‘eldev init’.
-/.eldev
-/Eldev-local

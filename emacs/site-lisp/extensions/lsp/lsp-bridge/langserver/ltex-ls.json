@@ -1,6 +1,0 @@
-{
-  "name": "ltex-ls",
-  "languageId": "tex",
-  "command": ["ltex-ls"],
-  "settings": {}
-}

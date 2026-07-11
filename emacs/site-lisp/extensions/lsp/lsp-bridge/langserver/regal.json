@@ -1,8 +1,0 @@
-{
-  "name": "regal",
-  "languageId": "rego",
-  "command": [
-    "regal"
-  ],
-  "settings": {}
-}

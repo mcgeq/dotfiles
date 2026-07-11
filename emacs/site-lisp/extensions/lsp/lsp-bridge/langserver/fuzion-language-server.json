@@ -1,9 +1,0 @@
-{
-  "name": "fuzion-language-server",
-  "languageId": "fuzion",
-  "command": [
-    "fuzion_language_server",
-    "-stdio"
-  ],
-  "settings": {}
-}
