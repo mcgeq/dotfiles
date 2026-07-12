@@ -31,13 +31,24 @@ Org Appear - inline display of org syntax.
 ;;; Configuration
 ;;; ============================================================
 
+(defcustom mcg-org-enable-org-appear t
+  "Whether to enable org-appear in Org buffers."
+  :type 'boolean
+  :group 'mcg-org)
+
+(defun mcg-org-appear-enable ()
+  "Enable org-appear in the current buffer."
+  (org-appear-mode 1))
+
 (defun mcg--setup-org-appear ()
   "Set up org-appear."
-  (when (mcg-require-extension "org-appear" t)
-    (org-appear-mode 1)
-    (setq org-appear-autosubmarkers t
-          org-appear-autolinks t)
-    (mcg-log "Org appear configured")))
+  (with-eval-after-load 'org
+    (when (and mcg-org-enable-org-appear
+               (mcg-require-extension "org-appear" t))
+      (setq org-appear-autosubmarkers t
+            org-appear-autolinks t)
+      (add-hook 'org-mode-hook #'mcg-org-appear-enable)
+      (mcg-log "Org appear configured"))))
 #+end_src
 
 ** Initialize

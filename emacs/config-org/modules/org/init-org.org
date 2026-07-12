@@ -86,6 +86,12 @@ Org 模式相关的配置变量。
   :type 'boolean
   :group 'mcg-org)
 
+(defcustom mcg-org-ellipsis " ..."
+  "String shown after folded Org headlines and drawers.
+Use an ASCII-safe default to avoid missing-glyph boxes on Windows fonts."
+  :type 'string
+  :group 'mcg-org)
+
 (defcustom mcg-org-bullets-alist
   '(("◉" "○" "✸" "✿" "✤" "✜" "◆" "▶")
     ((43 . "◆")
@@ -96,8 +102,38 @@ Structure: (headline-bullets item-bullet-alist)
 where headline-bullets is a list of symbols for each level,
 and item-bullet-alist is an alist mapping ASCII codes to bullet characters.
 
-Used by both org-modern and org-superstar for consistent appearance."
+Used by org-modern for consistent appearance."
   :type '(list (repeat string) (repeat (cons integer string)))
+  :group 'mcg-org)
+
+(defcustom mcg-org-todo-keywords
+  '((sequence
+     "TODO(t)"
+     "HOLD(h!)"
+     "WIP(i!)"
+     "WAIT(w!)"
+     "|"
+     "DONE(d!)"
+     "CANCELLED(c@/!)")
+    (sequence
+     "REPORT(r)"
+     "BUG(b)"
+     "KNOWNCAUSE(k)"
+     "|"
+     "FIXED(f!)"))
+  "Org TODO keyword workflow definitions."
+  :type 'sexp
+  :group 'mcg-org)
+
+(defcustom mcg-org-todo-keyword-faces
+  '(("TODO"       :foreground "#7c7c75" :weight bold)
+    ("HOLD"       :foreground "#feb24c" :weight bold)
+    ("WIP"        :foreground "#0098dd" :weight bold)
+    ("WAIT"       :foreground "#9f7efe" :weight bold)
+    ("DONE"       :foreground "#50a14f" :weight bold)
+    ("CANCELLED"  :foreground "#ff6480" :weight bold))
+  "Face definitions for Org TODO keywords."
+  :type 'sexp
   :group 'mcg-org)
 
 ;; Blog-related variables are now in init-org-hugo.el
@@ -131,7 +167,7 @@ Org 核心配置。
 
 (defun mcg--setup-org-core ()
   "Set up org mode core configuration."
-  (setq org-ellipsis " ⭍"
+  (setq org-ellipsis mcg-org-ellipsis
         org-tags-column 0
         org-log-into-drawer t
         org-pretty-entities t
@@ -147,27 +183,8 @@ Org 核心配置。
         org-log-reschedule 'note
         org-log-state-notes-insert-after-drawers nil)
 
-  (setq org-todo-keywords '((sequence
-                             "TODO(t)"
-                             "HOLD(h!)"
-                             "WIP(i!)"
-                             "WAIT(w!)"
-                             "|"
-                             "DONE(d!)"
-                             "CANCELLED(c@/!)")
-                            (sequence
-                             "REPORT(r)"
-                             "BUG(b)"
-                             "KNOWNCAUSE(k)"
-                             "|"
-                             "FIXED(f!)")))
-
-  (setq org-todo-keyword-faces '(("TODO"       :foreground "#7c7c75" :weight bold)
-                                 ("HOLD"       :foreground "#feb24c" :weight bold)
-                                 ("WIP"        :foreground "#0098dd" :weight bold)
-                                 ("WAIT"       :foreground "#9f7efe" :weight bold)
-                                 ("DONE"       :foreground "#50a14f" :weight bold)
-                                 ("CANCELLED"  :foreground "#ff6480" :weight bold)))
+  (setq org-todo-keywords mcg-org-todo-keywords)
+  (setq org-todo-keyword-faces mcg-org-todo-keyword-faces)
 
   (custom-set-faces
    '(org-level-1 ((t (:height 1.15))))
@@ -224,7 +241,6 @@ Org 核心配置。
 
 (require 'init-org-modern)
 (require 'init-org-appear)
-(require 'init-org-superstar)
 (require 'init-visual-fill-column)
 (require 'init-org-download)
 (require 'init-mixed-pitch)

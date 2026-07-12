@@ -1,0 +1,146 @@
+#+TITLE: Dashboard Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-dashboard.el :lexical t
+
+* Dashboard Module
+
+配置 dashboard 启动页。
+
+** File Header
+
+#+begin_src emacs-lisp
+;;; init-dashboard.el --- dashboard configuration -*- lexical-binding: t; -*-
+
+;;; Commentary:
+;; Configure dashboard from:
+;; emacs/site-lisp/extensions/ui/dashboard
+
+;;; Code:
+
+(require 'core-lib)
+#+end_src
+
+** Variables
+
+#+begin_src emacs-lisp
+(defcustom mcg-dashboard-enabled t
+  "Whether to enable dashboard."
+  :type 'boolean
+  :group 'mcg)
+
+(defcustom mcg-dashboard-startup t
+  "Whether to show dashboard at startup."
+  :type 'boolean
+  :group 'mcg)
+
+(defcustom mcg-dashboard-items
+  '((recents . 5)
+    (projects . 5)
+    (bookmarks . 5))
+  "Dashboard sections and item counts.
+Agenda is intentionally not enabled by default to keep startup light."
+  :type '(repeat (cons symbol integer))
+  :group 'mcg)
+
+(defcustom mcg-dashboard-icon-type 'nerd-icons
+  "Icon backend used by dashboard.
+The default prefers `nerd-icons'. Set nil to disable dashboard icons."
+  :type '(choice (const :tag "Nerd Icons" nerd-icons)
+                 (const :tag "No icons" nil))
+  :group 'mcg)
+
+(defcustom mcg-dashboard-startup-banner 'ascii
+  "Banner type used by dashboard."
+  :type '(choice (const :tag "ASCII text" ascii)
+                 (const :tag "Official logo" official)
+                 (const :tag "No banner" nil)
+                 (string :tag "Image file path"))
+  :group 'mcg)
+
+(defcustom mcg-dashboard-banner-ascii
+  (concat
+   " _      ____  _____ _____ _      ____  ____  ____ \n"
+   "/ \\__/|/   _\\/  __//  __// \\__/|/  _ \\/   _\\/ ___\\\n"
+   "| |\\/|||  /  | |  _|  \\  | |\\/||| / \\||  /  |    \\\n"
+   "| |  |||  \\_ | |*//|  /* | |  ||| |-|||  \\_ \\___ |\n"
+   "\\_/  \\|\\____/\\____\\\\____\\\\_/  \\|\\_/ \\|\\____/\\____/\n"
+   "                                                  ")
+  "ASCII banner text displayed when `mcg-dashboard-startup-banner' is `ascii'."
+  :type 'string
+  :group 'mcg)
+
+(defcustom mcg-dashboard-banner-title nil
+  "Banner title displayed by dashboard."
+  :type '(choice (const :tag "No title" nil)
+                 (string :tag "Title"))
+  :group 'mcg)
+
+(defcustom mcg-dashboard-footer-messages '("By mcge")
+  "Footer messages displayed by dashboard."
+  :type '(repeat string)
+  :group 'mcg)
+
+(defcustom mcg-dashboard-nerd-icons-heading-icons
+  '((recents . "nf-oct-history")
+    (bookmarks . "nf-oct-bookmark")
+    (agenda . "nf-oct-calendar")
+    (projects . "nf-oct-rocket")
+    (registers . "nf-oct-database"))
+  "Nerd icons used for dashboard section headings."
+  :type '(alist :key-type symbol :value-type string)
+  :group 'mcg)
+#+end_src
+
+** Setup
+
+#+begin_src emacs-lisp
+(defun mcg-dashboard-icons-enabled-p ()
+  "Return non-nil when dashboard icons should be enabled."
+  (and mcg-dashboard-icon-type
+       (require mcg-dashboard-icon-type nil t)))
+
+(defun mcg--setup-dashboard ()
+  "Setup dashboard."
+  (if (and mcg-dashboard-enabled
+           (mcg-require-extension "dashboard" t))
+      (progn
+        (setq dashboard-banner-logo-title mcg-dashboard-banner-title)
+        (setq dashboard-startup-banner mcg-dashboard-startup-banner)
+        (setq dashboard-banner-ascii mcg-dashboard-banner-ascii)
+        (setq dashboard-footer-messages mcg-dashboard-footer-messages)
+        (setq dashboard-items mcg-dashboard-items)
+        (setq dashboard-projects-backend 'project-el)
+        (setq dashboard-center-content t)
+        (setq dashboard-show-shortcuts nil)
+        (setq dashboard-set-heading-icons (mcg-dashboard-icons-enabled-p))
+        (setq dashboard-set-file-icons dashboard-set-heading-icons)
+        (setq dashboard-icon-type
+              (when dashboard-set-heading-icons mcg-dashboard-icon-type))
+        (when (eq dashboard-icon-type 'nerd-icons)
+          (setq dashboard-heading-icons mcg-dashboard-nerd-icons-heading-icons))
+        (when mcg-dashboard-startup
+          (setq initial-buffer-choice #'dashboard-open)
+          (dashboard-setup-startup-hook))
+        (mcg-log "dashboard configured"))
+    (mcg-log-warning "dashboard not available or disabled")))
+
+(defun mcg/dashboard-open ()
+  "Open dashboard."
+  (interactive)
+  (if (fboundp 'dashboard-open)
+      (dashboard-open)
+    (message "dashboard is not available")))
+#+end_src
+
+** Initialize
+
+#+begin_src emacs-lisp
+(mcg--setup-dashboard)
+#+end_src
+
+** Provide
+
+#+begin_src emacs-lisp
+(provide 'init-dashboard)
+;;; init-dashboard.el ends here
+#+end_src

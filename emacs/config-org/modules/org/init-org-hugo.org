@@ -145,6 +145,10 @@ Hugo 博客的 org-capture 模板。
 (defvar mcg-org-hugo-capture--state nil
   "Metadata collected while resolving a Hugo capture target file.")
 
+(defun mcg-org-hugo-capture-reset-state ()
+  "Clear transient metadata collected during Hugo capture."
+  (setq mcg-org-hugo-capture--state nil))
+
 (defun mcg-org-hugo--slugify (value)
   "Return a Hugo-friendly slug for VALUE."
   (if (fboundp 'org-hugo-slug)
@@ -266,6 +270,8 @@ Hugo 集成配置，包括 capture 模板。
                    :jump-to-captured t
                    :unnarrowed t))
 
+    (add-hook 'org-capture-after-finalize-hook
+              #'mcg-org-hugo-capture-reset-state)
     (mcg-log "Hugo capture templates configured")))
 #+end_src
 

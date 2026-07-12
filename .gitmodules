@@ -181,9 +181,6 @@
 [submodule "emacs-org-appear"]
 	path = emacs/site-lisp/extensions/org/org-appear
 	url = https://github.com/awth13/org-appear.git
-[submodule "emacs-org-superstar-mode"]
-	path = emacs/site-lisp/extensions/org/org-superstar-mode
-	url = https://github.com/integral-dw/org-superstar-mode.git
 [submodule "emacs-org-supertag"]
 	path = emacs/site-lisp/extensions/org/org-supertag
 	url = https://github.com/yibie/org-supertag.git
@@ -247,3 +244,6 @@
 [submodule "plz"]
 	path = emacs/site-lisp/extensions/git/plz
 	url = https://github.com/alphapapa/plz.el.git
+[submodule "dashboard"]
+	path = emacs/site-lisp/extensions/ui/dashboard
+	url = https://github.com/emacs-dashboard/dashboard.git

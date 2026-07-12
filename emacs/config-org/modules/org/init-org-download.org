@@ -31,6 +31,16 @@ Org Download - download images to org files.
 ;;; Configuration
 ;;; ============================================================
 
+(defcustom mcg-org-download-default-image-width 800
+  "Default image display width for clipboard images inserted into Org."
+  :type 'integer
+  :group 'mcg-org)
+
+(defcustom mcg-org-download-image-directory-suffix ".assets"
+  "Suffix appended to the Org file base name for image assets."
+  :type 'string
+  :group 'mcg-org)
+
 (defun mcg--setup-org-download ()
   "Set up org-download."
   (with-eval-after-load 'org
@@ -46,30 +56,67 @@ Org Download - download images to org files.
 #+begin_src emacs-lisp
 ;;; Clipboard Image Function
 
+(defun mcg-org-download--org-file-name (&optional org-file)
+  "Return ORG-FILE or the current buffer file name.
+Signal a user-facing error when there is no saved Org file."
+  (let ((file (or org-file buffer-file-name)))
+    (unless (and file (not (string= file "")))
+      (user-error "Save current Org buffer before inserting images"))
+    (expand-file-name file)))
+
+(defun mcg-org-download-assets-directory (&optional org-file)
+  "Return the image assets directory for ORG-FILE or current Org buffer."
+  (let ((file (mcg-org-download--org-file-name org-file)))
+    (expand-file-name
+     (concat (file-name-base file) mcg-org-download-image-directory-suffix)
+     (file-name-directory file))))
+
+(defun mcg-org-download-image-file (image-name &optional org-file)
+  "Return absolute image path for IMAGE-NAME beside ORG-FILE assets."
+  (expand-file-name image-name (mcg-org-download-assets-directory org-file)))
+
+(defun mcg-org-download-relative-image-file (image-file &optional org-file)
+  "Return IMAGE-FILE as an Org-friendly relative path from ORG-FILE."
+  (let* ((file (mcg-org-download--org-file-name org-file))
+         (relative (file-relative-name image-file (file-name-directory file))))
+    (replace-regexp-in-string "\\\\" "/" relative)))
+
+(defun mcg-org-download-screenshot-method (image-file)
+  "Return clipboard screenshot command writing to IMAGE-FILE."
+  (let ((quoted-file (shell-quote-argument image-file)))
+    (cond
+     ((eq system-type 'windows-nt)
+      (format "magick clipboard: %s" quoted-file))
+     ((eq system-type 'gnu/linux)
+      (format "xclip -selection clipboard -t image/png -o > %s" quoted-file))
+     ((eq system-type 'darwin)
+      (format "pngpaste %s" quoted-file))
+     (t
+      (user-error "Unsupported system for clipboard image capture: %s"
+                  system-type)))))
+
 (defun mcg/org-insert-clipboard-image (width)
   "Insert image from clipboard into Org file.
 WIDTH is the image width, default 800.
 Images are saved in a .assets directory named after the Org file."
   (interactive (list
-                (read-string (format "Input image width, default is 800: ")
-                             nil nil "800")))
-  (let* ((foldername (concat (file-name-base (buffer-file-name)) ".assets/"))
-         (imgName (concat "img_" (format-time-string "%Y%m%d_%H%M%S") ".png"))
-         (relativeFilename (concat (file-name-base (buffer-name)) ".assets/" imgName)))
+                (read-string
+                 (format "Input image width, default is %s: "
+                         mcg-org-download-default-image-width)
+                 nil nil
+                 (number-to-string mcg-org-download-default-image-width))))
+  (let* ((width (if (string= width "")
+                    (number-to-string mcg-org-download-default-image-width)
+                  width))
+         (image-name (concat "img_" (format-time-string "%Y%m%d_%H%M%S") ".png"))
+         (image-file (mcg-org-download-image-file image-name))
+         (relative-file (mcg-org-download-relative-image-file image-file)))
 
-    (unless (file-exists-p foldername)
-      (mkdir foldername))
+    (unless (file-directory-p (file-name-directory image-file))
+      (make-directory (file-name-directory image-file) t))
 
-    (cond
-     ((eq system-type 'windows-nt)
-      (setq org-download-screenshot-method
-            (concat "magick clipboard: " relativeFilename)))
-     ((eq system-type 'gnu/linux)
-      (setq org-download-screenshot-method
-            (concat "xclip -selection clipboard -t image/png -o > " relativeFilename)))
-     ((eq system-type 'darwin)
-      (setq org-download-screenshot-method
-            (concat "pngpaste " relativeFilename))))
+    (setq org-download-screenshot-method
+          (mcg-org-download-screenshot-method image-file))
 
     (insert (concat "\n#+DOWNLOADED: screenshot @ "
                     (format-time-string "%Y-%m-%d %a %H:%M:%S" (current-time))
@@ -82,7 +129,7 @@ Images are saved in a .assets directory named after the Org file."
                     "\\linewidth :float nil\n"
                     "#+ATTR_HTML: :width "
                     width
-                    "\n[[file:" relativeFilename "]]\n"))
+                    "\n[[file:" relative-file "]]\n"))
 
     (when (fboundp 'org-download-screenshot)
       (org-download-screenshot))))

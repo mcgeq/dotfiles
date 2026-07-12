@@ -31,10 +31,22 @@ Org Numbering - numbering mode for org.
 ;;; Configuration
 ;;; ============================================================
 
+(defcustom mcg-org-enable-org-numbering nil
+  "Whether to enable org-numbering in Org buffers."
+  :type 'boolean
+  :group 'mcg-org)
+
+(defun mcg-org-numbering-enable ()
+  "Enable org-numbering in the current buffer."
+  (org-numbering-mode 1))
+
 (defun mcg--setup-org-numbering ()
   "Set up org-numbering."
-  (when (mcg-require-extension "org-numbering" t)
-    (mcg-log "Org numbering configured")))
+  (with-eval-after-load 'org
+    (when (and mcg-org-enable-org-numbering
+               (mcg-require-extension "org-numbering" t))
+      (add-hook 'org-mode-hook #'mcg-org-numbering-enable)
+      (mcg-log "Org numbering configured"))))
 #+end_src
 
 ** Initialize

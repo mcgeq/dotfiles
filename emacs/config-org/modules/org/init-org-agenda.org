@@ -33,19 +33,133 @@ Org Agenda configuration with time grid, lunar calendar support, and custom view
 ;;; Variables
 ;;; ============================================================
 
-(defvar mcg-org-agenda-files
+(defcustom mcg-org-agenda-files
   (list (expand-file-name "agenda" mcg-org-directory))
-  "Org agenda file list or directories to scan.")
+  "Org agenda file list or directories to scan."
+  :type '(repeat (choice file directory))
+  :group 'mcg-org)
 
-(defvar mcg-org-agenda-diary-file
+(defcustom mcg-org-agenda-diary-file
   (expand-file-name "diary.org" (expand-file-name "agenda" mcg-org-directory))
-  "Org agenda diary file.")
+  "Org agenda diary file."
+  :type 'file
+  :group 'mcg-org)
 
-(defvar mcg-calendar-location-longitude 116.9962
-  "Current location longitude (for sunrise/sunset calculation).")
+(defcustom mcg-calendar-location-longitude 116.9962
+  "Current location longitude for sunrise and sunset calculation."
+  :type 'number
+  :group 'mcg-org)
 
-(defvar mcg-calendar-location-latitude 39.91
-  "Current location latitude (for sunrise/sunset calculation).")
+(defcustom mcg-calendar-location-latitude 39.91
+  "Current location latitude for sunrise and sunset calculation."
+  :type 'number
+  :group 'mcg-org)
+
+(defcustom mcg-org-agenda-use-time-grid t
+  "Whether Org agenda should use the time grid."
+  :type 'boolean
+  :group 'mcg-org)
+
+(defcustom mcg-org-agenda-current-time-string "⏰------------now"
+  "Current time marker string in Org agenda."
+  :type 'string
+  :group 'mcg-org)
+
+(defcustom mcg-org-agenda-time-grid
+  '((daily today require-timed)
+    (300 600 900 1200 1500 1800 2100 2400)
+    "......"
+    "-----------------------------------------------------")
+  "Time grid specification for Org agenda."
+  :type 'sexp
+  :group 'mcg-org)
+
+(defcustom mcg-org-agenda-include-diary t
+  "Whether Org agenda includes diary entries."
+  :type 'boolean
+  :group 'mcg-org)
+
+(defcustom mcg-org-agenda-prefix-format
+  '((agenda . " %i %-25:c %5t %s")
+    (todo   . " %i %-25:c ")
+    (tags   . " %i %-25:c ")
+    (search . " %i %-25:c "))
+  "Prefix format used by Org agenda views."
+  :type 'sexp
+  :group 'mcg-org)
+
+(defcustom mcg-org-agenda-scheduled-leaders
+  '("Scheduled " "Should have started %02d days ago ")
+  "Scheduled item leaders used by Org agenda."
+  :type '(repeat string)
+  :group 'mcg-org)
+
+(defcustom mcg-org-agenda-deadline-leaders
+  '("Deadline " "%02d days until deadline " "Overdue by %02d days ")
+  "Deadline item leaders used by Org agenda."
+  :type '(repeat string)
+  :group 'mcg-org)
+
+(defcustom mcg-org-time-stamp-formats
+  '("<%Y-%m-%d %A>" . "<%Y-%m-%d %A %H:%M>")
+  "Org timestamp formats."
+  :type '(cons string string)
+  :group 'mcg-org)
+
+(defcustom mcg-org-cycle-separator-lines 2
+  "Number of empty lines between collapsed Org subtrees."
+  :type 'integer
+  :group 'mcg-org)
+
+(defcustom mcg-org-agenda-insert-diary-extract-time t
+  "Whether agenda extracts time while inserting diary entries."
+  :type 'boolean
+  :group 'mcg-org)
+
+(defcustom mcg-org-agenda-sticky t
+  "Whether Org agenda buffers should be sticky."
+  :type 'boolean
+  :group 'mcg-org)
+
+(defcustom mcg-org-agenda-time-leading-zero t
+  "Whether agenda times should use a leading zero."
+  :type 'boolean
+  :group 'mcg-org)
+
+(defcustom mcg-org-agenda-tags-column -80
+  "Column used for tags in Org agenda buffers."
+  :type 'integer
+  :group 'mcg-org)
+
+(defcustom mcg-org-deadline-warning-days 3
+  "Number of days before deadline to start warning."
+  :type 'integer
+  :group 'mcg-org)
+
+(defcustom mcg-org-agenda-custom-commands
+  '(("d" "Daily agenda and all TODOs"
+     ((agenda "" ((org-agenda-span 'day)))
+      (alltodo "" ((org-agenda-overriding-header "All TODOs")))))
+    ("w" "Weekly review"
+     ((agenda "" ((org-agenda-span 'week)))
+      (todo "DONE" ((org-agenda-overriding-header "Completed this week")))
+      (todo "TODO" ((org-agenda-overriding-header "Still to do")))))
+    ("p" "Priority tasks"
+     ((tags-todo "+PRIORITY=\"A\""
+                 ((org-agenda-overriding-header "High Priority")))
+      (tags-todo "+PRIORITY=\"B\""
+                 ((org-agenda-overriding-header "Medium Priority")))
+      (tags-todo "+PRIORITY=\"C\""
+                 ((org-agenda-overriding-header "Low Priority")))))
+    ("W" "Work tasks"
+     ((tags-todo "+work"
+                 ((org-agenda-overriding-header "Work Tasks")))))
+    ("h" "Home tasks"
+     ((tags-todo "+home"
+                 ((org-agenda-overriding-header "Home Tasks"))))))
+  "Custom Org agenda commands."
+  :type 'sexp
+  :group 'mcg-org)
 #+end_src
 
 ** Agenda Files Configuration
@@ -59,8 +173,8 @@ Org Agenda configuration with time grid, lunar calendar support, and custom view
   "Setup Org Agenda file configuration."
   (with-eval-after-load 'org
     (setq org-agenda-files mcg-org-agenda-files)
-    (setq org-agenda-use-time-grid t)
-    (setq org-agenda-current-time-string "⏰------------now")
+    (setq org-agenda-use-time-grid mcg-org-agenda-use-time-grid)
+    (setq org-agenda-current-time-string mcg-org-agenda-current-time-string)
     (mcg-log "Configured org-agenda files")))
 #+end_src
 
@@ -123,11 +237,7 @@ Org Agenda configuration with time grid, lunar calendar support, and custom view
 (defun mcg-org-agenda-setup-time-grid ()
   "Setup Agenda time grid."
   (with-eval-after-load 'org
-    (setq org-agenda-time-grid
-          '((daily today require-timed)
-            (300 600 900 1200 1500 1800 2100 2400)
-            "......"
-            "-----------------------------------------------------"))
+    (setq org-agenda-time-grid mcg-org-agenda-time-grid)
     (mcg-log "Configured org-agenda time grid")))
 #+end_src
 
@@ -139,25 +249,19 @@ Org Agenda configuration with time grid, lunar calendar support, and custom view
 (defun mcg-org-agenda-setup-display ()
   "Setup Agenda display format."
   (with-eval-after-load 'org
-    (setq org-agenda-include-diary t
+    (setq org-agenda-include-diary mcg-org-agenda-include-diary
           org-agenda-diary-file mcg-org-agenda-diary-file
           diary-file mcg-org-agenda-diary-file)
-    (setq org-agenda-prefix-format
-          '((agenda . " %i %-25:c %5t %s")
-            (todo   . " %i %-25:c ")
-            (tags   . " %i %-25:c ")
-            (search . " %i %-25:c ")))
-    (setq org-agenda-scheduled-leaders
-          '("Scheduled " "Should have started %02d days ago "))
-    (setq org-agenda-deadline-leaders
-          '("Deadline " "%02d days until deadline " "Overdue by %02d days "))
-    (setq org-time-stamp-formats '("<%Y-%m-%d %A>" . "<%Y-%m-%d %A %H:%M>"))
-    (setq org-cycle-separator-lines 2
-          org-agenda-insert-diary-extract-time t
-          org-agenda-sticky t
-          org-agenda-time-leading-zero t
-          org-agenda-tags-column -80
-          org-deadline-warning-days 3)
+    (setq org-agenda-prefix-format mcg-org-agenda-prefix-format)
+    (setq org-agenda-scheduled-leaders mcg-org-agenda-scheduled-leaders)
+    (setq org-agenda-deadline-leaders mcg-org-agenda-deadline-leaders)
+    (setq org-time-stamp-formats mcg-org-time-stamp-formats)
+    (setq org-cycle-separator-lines mcg-org-cycle-separator-lines
+          org-agenda-insert-diary-extract-time mcg-org-agenda-insert-diary-extract-time
+          org-agenda-sticky mcg-org-agenda-sticky
+          org-agenda-time-leading-zero mcg-org-agenda-time-leading-zero
+          org-agenda-tags-column mcg-org-agenda-tags-column
+          org-deadline-warning-days mcg-org-deadline-warning-days)
     (mcg-log "Configured org-agenda display")))
 #+end_src
 
@@ -233,27 +337,7 @@ Org Agenda configuration with time grid, lunar calendar support, and custom view
 (defun mcg-org-agenda-setup-custom-views ()
   "Setup custom agenda views."
   (with-eval-after-load 'org
-    (setq org-agenda-custom-commands
-          '(("d" "Daily agenda and all TODOs"
-             ((agenda "" ((org-agenda-span 'day)))
-              (alltodo "" ((org-agenda-overriding-header "All TODOs")))))
-            ("w" "Weekly review"
-             ((agenda "" ((org-agenda-span 'week)))
-              (todo "DONE" ((org-agenda-overriding-header "Completed this week")))
-              (todo "TODO" ((org-agenda-overriding-header "Still to do")))))
-            ("p" "Priority tasks"
-             ((tags-todo "+PRIORITY=\"A\""
-                         ((org-agenda-overriding-header "High Priority")))
-              (tags-todo "+PRIORITY=\"B\""
-                         ((org-agenda-overriding-header "Medium Priority")))
-              (tags-todo "+PRIORITY=\"C\""
-                         ((org-agenda-overriding-header "Low Priority")))))
-            ("W" "Work tasks"
-             ((tags-todo "+work"
-                         ((org-agenda-overriding-header "Work Tasks")))))
-            ("h" "Home tasks"
-             ((tags-todo "+home"
-                         ((org-agenda-overriding-header "Home Tasks")))))))
+    (setq org-agenda-custom-commands mcg-org-agenda-custom-commands)
     (mcg-log "Configured org-agenda custom views")))
 #+end_src
 
@@ -262,15 +346,17 @@ Org Agenda configuration with time grid, lunar calendar support, and custom view
 #+begin_src emacs-lisp
 ;;; Initialize
 
-(add-hook 'org-agenda-mode-hook
-          (lambda ()
-            (mcg-org-agenda-setup-files)
-            (mcg-org-agenda-setup-date-format)
-            (mcg-org-agenda-setup-time-grid)
-            (mcg-org-agenda-setup-display)
-            (mcg-org-agenda-setup-location)
-            (mcg-org-agenda-setup-chinese-calendar)
-            (mcg-org-agenda-setup-custom-views)))
+(defun mcg-org-agenda-init ()
+  "Initialize Org Agenda configuration."
+  (mcg-org-agenda-setup-files)
+  (mcg-org-agenda-setup-date-format)
+  (mcg-org-agenda-setup-time-grid)
+  (mcg-org-agenda-setup-display)
+  (mcg-org-agenda-setup-location)
+  (mcg-org-agenda-setup-chinese-calendar)
+  (mcg-org-agenda-setup-custom-views))
+
+(mcg-org-agenda-init)
 #+end_src
 
 ** Provide

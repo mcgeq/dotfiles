@@ -186,6 +186,10 @@ PROMPT names the title prompt shown to the user."
 (defun mcg-org-capture-last-title ()
   "Return the last title read for a dynamic capture target."
   (or mcg-org-capture--last-title "Untitled"))
+
+(defun mcg-org-capture-reset-state ()
+  "Clear transient state collected during Org capture."
+  (setq mcg-org-capture--last-title nil))
 #+end_src
 
 ** Password Helper Functions
@@ -255,6 +259,7 @@ PROMPT names the title prompt shown to the user."
             (lambda ()
               (setq-local org-complete-tags-always-offer-all-agenda-tags t)))
   (add-hook 'org-capture-mode-hook 'delete-other-windows)
+  (add-hook 'org-capture-after-finalize-hook #'mcg-org-capture-reset-state)
   (setq org-capture-use-agenda-date nil)
   (mcg-log "Org capture basic configuration done"))
 #+end_src

@@ -12,6 +12,44 @@ Note: This file is tracked by git as an example.
 Your actual configuration should be in ~config.org~, which is ignored by git.
 #+end_quote
 
+** Startup Configuration
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Startup Configuration
+;;; ============================================================
+
+;; Initial frame colors
+;; These colors are applied from early-init before the theme is loaded,
+;; reducing the white flash on Windows GUI startup. Defaults match ef-dream.
+;; For the very first frame, change the defaults in config-org/early-init.org
+;; and run `make all`.
+;; (setq mcg-initial-frame-background "#232025")
+;; (setq mcg-initial-frame-foreground "#efd5c5")
+
+;; Startup loading strategy
+;; Heavy modules are loaded during idle time by default to make the first
+;; scratch frame appear sooner. Org stays immediate so capture/agenda helpers
+;; are available early.
+;; Default:
+;;   '((:ui . holo-layer)
+;;     (:editor . dirvish)
+;;     (:tools . magit)
+;;     (:tools . clutch)
+;;     (:tools . lsp-bridge)
+;;     (:tools . color-rg)
+;;     (:tools . majutsu))
+;; (setq mcg-idle-modules
+;;       '((:ui . holo-layer)
+;;         (:editor . dirvish)
+;;         (:tools . magit)
+;;         (:tools . clutch)
+;;         (:tools . lsp-bridge)
+;;         (:tools . color-rg)
+;;         (:tools . majutsu)))
+
+#+end_src
+
 ** LSP Bridge Configuration
 
 #+begin_src emacs-lisp
@@ -64,6 +102,34 @@ Your actual configuration should be in ~config.org~, which is ignored by git.
 ;; Default: auto-detect
 ;; (setq mcg-font-default-candidates '("JetBrains Mono" "Fira Code"))
 
+;; Dashboard startup screen
+;; Defaults: enabled, shown at startup, icons prefer nerd-icons.
+;; Agenda is not included by default to keep startup light.
+;; (setq mcg-dashboard-enabled t)
+;; (setq mcg-dashboard-startup t)
+;; (setq mcg-dashboard-icon-type 'nerd-icons)
+;; (setq mcg-dashboard-startup-banner 'ascii)
+;; (setq mcg-dashboard-banner-ascii
+;;       (concat
+;;        " _      ____  _____ _____ _      ____  ____  ____ \n"
+;;        "/ \\__/|/   _\\/  __//  __// \\__/|/  _ \\/   _\\/ ___\\\n"
+;;        "| |\\/|||  /  | |  _|  \\  | |\\/||| / \\||  /  |    \\\n"
+;;        "| |  |||  \\_ | |*//|  /* | |  ||| |-|||  \\_ \\___ |\n"
+;;        "\\_/  \\|\\____/\\____\\\\____\\\\_/  \\|\\_/ \\|\\____/\\____/\n"
+;;        "                                                  "))
+;; (setq mcg-dashboard-banner-title nil)
+;; (setq mcg-dashboard-footer-messages '("By mcge"))
+;; (setq mcg-dashboard-items
+;;       '((recents . 5)
+;;         (projects . 5)
+;;         (bookmarks . 5)))
+;; (setq mcg-dashboard-nerd-icons-heading-icons
+;;       '((recents . "nf-oct-history")
+;;         (bookmarks . "nf-oct-bookmark")
+;;         (agenda . "nf-oct-calendar")
+;;         (projects . "nf-oct-rocket")
+;;         (registers . "nf-oct-database")))
+
 #+end_src
 
 ** Editor Configuration
@@ -112,6 +178,103 @@ Your actual configuration should be in ~config.org~, which is ignored by git.
 ;; Enable org-modern
 ;; Default: t
 ;; (setq mcg-org-enable-org-modern nil)
+
+;; Folded headline/drawer ellipsis
+;; Default is ASCII-safe to avoid missing-glyph boxes on Windows.
+;; (setq mcg-org-ellipsis " ...")
+
+;; Org TODO keywords and colors
+;; Defaults keep the built-in MCG workflow. Override both lists together when
+;; adding states such as NEXT, DOING, BLOCKED, or CANCEL.
+;; (setq mcg-org-todo-keywords
+;;       '((sequence
+;;          "TODO(t)" "HOLD(h!)" "WIP(i!)" "WAIT(w!)"
+;;          "|"
+;;          "DONE(d!)" "CANCELLED(c@/!)")
+;;         (sequence
+;;          "REPORT(r)" "BUG(b)" "KNOWNCAUSE(k)"
+;;          "|"
+;;          "FIXED(f!)")))
+;; (setq mcg-org-todo-keyword-faces
+;;       '(("TODO"      :foreground "#7c7c75" :weight bold)
+;;         ("HOLD"      :foreground "#feb24c" :weight bold)
+;;         ("WIP"       :foreground "#0098dd" :weight bold)
+;;         ("WAIT"      :foreground "#9f7efe" :weight bold)
+;;         ("DONE"      :foreground "#50a14f" :weight bold)
+;;         ("CANCELLED" :foreground "#ff6480" :weight bold)))
+;; (setq mcg-org-modern-todo-faces
+;;       '(("TODO" :inverse-video t :inherit org-todo)
+;;         ("HOLD" :inverse-video t)
+;;         ("WIP" :inverse-video t)
+;;         ("WAIT" :inverse-video t)
+;;         ("DONE" :inverse-video t :inherit org-done)
+;;         ("CANCELLED" :inverse-video t)))
+
+;; Enable org-appear
+;; Default: t
+;; (setq mcg-org-enable-org-appear nil)
+
+;; Enable visual-fill-column in Org buffers
+;; Default: nil
+;; (setq mcg-org-enable-visual-fill t)
+;; (setq mcg-org-visual-fill-width 88)
+
+;; Enable org-numbering in Org buffers
+;; Default: nil
+;; (setq mcg-org-enable-org-numbering t)
+
+;; Org download clipboard image defaults
+;; Images are saved beside the current Org file under:
+;;   <org-file-name>.assets/
+;; Default width: 800; default directory suffix: ".assets"
+;; (setq mcg-org-download-default-image-width 800)
+;; (setq mcg-org-download-image-directory-suffix ".assets")
+
+;; Org Babel safety
+;; Default: ask before evaluating code blocks; do not evaluate blocks on export.
+;; (setq mcg-org-babel-confirm-evaluate t)
+;; (setq mcg-org-export-babel-evaluate nil)
+
+;; Org Babel languages
+;; Disable entries here to reduce the languages enabled by default.
+;; Zig is controlled separately because this config defines a custom executor.
+;; (setq mcg-org-babel-load-languages
+;;       '((emacs-lisp . t)
+;;         (shell . t)
+;;         (python . t)
+;;         (js . t)
+;;         (C . t)
+;;         (css . t)
+;;         (dot . t)
+;;         (org . t)
+;;         (plantuml . t)
+;;         (sql . t)))
+;; (setq mcg-org-babel-enable-zig t)
+;; (setq mcg-org-babel-zig-default-header-args
+;;       '((:results . "output")
+;;         (:exports . "both")))
+;; (setq mcg-org-babel-src-block-languages
+;;       '("emacs-lisp" "python" "shell" "zig" "C" "js" "css" "sql"))
+
+;; Agenda calendar location (for sunrise/sunset)
+;; Defaults are near Beijing/Tianjin.
+;; (setq mcg-calendar-location-longitude 116.9962)
+;; (setq mcg-calendar-location-latitude 39.91)
+
+;; Agenda display and time grid
+;; Defaults keep the built-in MCG agenda layout.
+;; (setq mcg-org-agenda-use-time-grid t)
+;; (setq mcg-org-agenda-current-time-string "⏰------------now")
+;; (setq mcg-org-agenda-tags-column -80)
+;; (setq mcg-org-agenda-sticky t)
+;; (setq mcg-org-deadline-warning-days 3)
+
+;; Agenda custom commands
+;; Override this when you want a smaller or project-specific agenda menu.
+;; (setq mcg-org-agenda-custom-commands
+;;       '(("d" "Daily agenda and all TODOs"
+;;          ((agenda "" ((org-agenda-span 'day)))
+;;           (alltodo "" ((org-agenda-overriding-header "All TODOs")))))))
 
 #+end_src
 

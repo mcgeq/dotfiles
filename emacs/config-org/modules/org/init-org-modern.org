@@ -36,6 +36,17 @@ Org Modern - Modern visual style for Org mode.
   :type 'boolean
   :group 'mcg-org)
 
+(defcustom mcg-org-modern-todo-faces
+  '(("TODO" :inverse-video t :inherit org-todo)
+    ("HOLD" :inverse-video t)
+    ("WIP" :inverse-video t)
+    ("WAIT" :inverse-video t)
+    ("DONE" :inverse-video t :inherit org-done)
+    ("CANCELLED" :inverse-video t))
+  "Face definitions for org-modern TODO labels."
+  :type 'sexp
+  :group 'mcg-org)
+
 (defun mcg--setup-org-modern ()
   "Set up org-modern."
   (with-eval-after-load 'org
@@ -48,13 +59,7 @@ Org Modern - Modern visual style for Org mode.
               org-modern-list item-bullets))
       (setq org-modern-table-vertical 1
             org-modern-table-horizontal 0.2
-            org-modern-todo-faces
-            '(("TODO" :inverse-video t :inherit org-todo)
-              ("HOLD" :inverse-video t)
-              ("WIP" :inverse-video t)
-              ("WAIT" :inverse-video t)
-              ("DONE" :inverse-video t :inherit org-done)
-              ("CANCELLED" :inverse-video t))
+            org-modern-todo-faces mcg-org-modern-todo-faces
             org-modern-priority-faces
             '((?A :inverse-video t :inherit org-priority)
               (?B :inverse-video t :inherit org-priority)

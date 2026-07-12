@@ -7,6 +7,7 @@
 
 (add-to-list 'load-path (expand-file-name "site-lisp/config/core" default-directory))
 (add-to-list 'load-path (expand-file-name "site-lisp/config/modules/org" default-directory))
+(add-to-list 'load-path (expand-file-name "site-lisp/config/modules/ui" default-directory))
 
 (defvar mcg-emacs-dir default-directory)
 (defvar mcg-extensions-dir (expand-file-name "site-lisp/extensions" default-directory))
@@ -103,6 +104,269 @@
   (should (mcg-test-capture-template-prop "b" :kill-buffer))
   (should (mcg-test-capture-template-prop "p" :kill-buffer)))
 
+(ert-deftest mcg-org-capture-state-is-reset-after-finalize ()
+  (setq mcg-org-capture--last-title "Old title")
+  (should (fboundp 'mcg-org-capture-reset-state))
+  (should (memq #'mcg-org-capture-reset-state org-capture-after-finalize-hook))
+  (mcg-org-capture-reset-state)
+  (should-not mcg-org-capture--last-title)
+  (should (equal "Untitled" (mcg-org-capture-last-title))))
+
+(ert-deftest mcg-org-hugo-capture-state-is-reset-after-finalize ()
+  (cl-letf (((symbol-function 'mcg-require-extension)
+             (lambda (&rest _args) nil)))
+    (require 'init-org-hugo))
+  (setq mcg-org-hugo-capture--state '(:title "Old post" :slug "old-post"))
+  (should (fboundp 'mcg-org-hugo-capture-reset-state))
+  (should (memq #'mcg-org-hugo-capture-reset-state org-capture-after-finalize-hook))
+  (mcg-org-hugo-capture-reset-state)
+  (should-not mcg-org-hugo-capture--state))
+
+(ert-deftest mcg-org-download-image-path-follows-org-file-directory ()
+  (cl-letf (((symbol-function 'mcg-require-extension)
+             (lambda (&rest _args) nil)))
+    (require 'init-org-download))
+  (let* ((root (make-temp-file "mcg-org-download" t))
+         (org-file (expand-file-name "My Note.org" root))
+         (image-file (mcg-org-download-image-file "img.png" org-file)))
+    (should (equal (expand-file-name "My Note.assets/img.png" root)
+                   image-file))
+    (should (equal "My Note.assets/img.png"
+                   (mcg-org-download-relative-image-file image-file org-file)))))
+
+(ert-deftest mcg-org-download-requires-saved-org-buffer ()
+  (cl-letf (((symbol-function 'mcg-require-extension)
+             (lambda (&rest _args) nil)))
+    (require 'init-org-download))
+  (with-temp-buffer
+    (setq buffer-file-name nil)
+    (should-error (mcg-org-download-assets-directory) :type 'user-error)))
+
+(ert-deftest mcg-org-download-screenshot-method-quotes-image-path ()
+  (cl-letf (((symbol-function 'mcg-require-extension)
+             (lambda (&rest _args) nil)))
+    (require 'init-org-download))
+  (let* ((root (make-temp-file "mcg-org-download" t))
+         (image-file (expand-file-name "My Note.assets/img 1.png" root))
+         (method (mcg-org-download-screenshot-method image-file)))
+    (should (string-match-p
+             (regexp-quote (shell-quote-argument image-file))
+             method))))
+
+(ert-deftest mcg-org-agenda-configuration-is-available-after-require ()
+  (require 'init-org-agenda)
+  (should (equal org-agenda-files mcg-org-agenda-files))
+  (should (eq org-agenda-format-date #'mcg-org-agenda-format-date-aligned))
+  (should (assoc "d" org-agenda-custom-commands))
+  (should (assoc "w" org-agenda-custom-commands)))
+
+(ert-deftest mcg-org-agenda-file-and-time-grid-options-are-configurable ()
+  (require 'init-org-agenda)
+  (dolist (setting '(mcg-org-agenda-use-time-grid
+                     mcg-org-agenda-current-time-string
+                     mcg-org-agenda-time-grid))
+    (should (boundp setting)))
+  (let ((mcg-org-agenda-use-time-grid nil)
+        (mcg-org-agenda-current-time-string "NOW")
+        (mcg-org-agenda-time-grid '((daily today)
+                                    (800 1200 1800)
+                                    "..."
+                                    "-----")))
+    (mcg-org-agenda-setup-files)
+    (mcg-org-agenda-setup-time-grid)
+    (should-not org-agenda-use-time-grid)
+    (should (equal "NOW" org-agenda-current-time-string))
+    (should (equal mcg-org-agenda-time-grid org-agenda-time-grid))))
+
+(ert-deftest mcg-org-agenda-display-options-are-configurable ()
+  (require 'init-org-agenda)
+  (dolist (setting '(mcg-org-agenda-include-diary
+                     mcg-org-agenda-prefix-format
+                     mcg-org-agenda-scheduled-leaders
+                     mcg-org-agenda-deadline-leaders
+                     mcg-org-time-stamp-formats
+                     mcg-org-cycle-separator-lines
+                     mcg-org-agenda-insert-diary-extract-time
+                     mcg-org-agenda-sticky
+                     mcg-org-agenda-time-leading-zero
+                     mcg-org-agenda-tags-column
+                     mcg-org-deadline-warning-days))
+    (should (boundp setting)))
+  (let ((mcg-org-agenda-include-diary nil)
+        (mcg-org-agenda-prefix-format '((agenda . " %s")))
+        (mcg-org-agenda-scheduled-leaders '("S " "Late %d "))
+        (mcg-org-agenda-deadline-leaders '("D " "Soon %d " "Over %d "))
+        (mcg-org-time-stamp-formats '("<%Y-%m-%d>" . "<%Y-%m-%d %H:%M>"))
+        (mcg-org-cycle-separator-lines 1)
+        (mcg-org-agenda-insert-diary-extract-time nil)
+        (mcg-org-agenda-sticky nil)
+        (mcg-org-agenda-time-leading-zero nil)
+        (mcg-org-agenda-tags-column -60)
+        (mcg-org-deadline-warning-days 10))
+    (mcg-org-agenda-setup-display)
+    (should-not org-agenda-include-diary)
+    (should (equal mcg-org-agenda-prefix-format org-agenda-prefix-format))
+    (should (equal mcg-org-agenda-scheduled-leaders org-agenda-scheduled-leaders))
+    (should (equal mcg-org-agenda-deadline-leaders org-agenda-deadline-leaders))
+    (should (equal mcg-org-time-stamp-formats org-time-stamp-formats))
+    (should (= mcg-org-cycle-separator-lines org-cycle-separator-lines))
+    (should-not org-agenda-insert-diary-extract-time)
+    (should-not org-agenda-sticky)
+    (should-not org-agenda-time-leading-zero)
+    (should (= -60 org-agenda-tags-column))
+    (should (= 10 org-deadline-warning-days))))
+
+(ert-deftest mcg-org-agenda-custom-commands-are-configurable ()
+  (require 'init-org-agenda)
+  (should (boundp 'mcg-org-agenda-custom-commands))
+  (let ((mcg-org-agenda-custom-commands
+         '(("x" "Custom agenda" agenda ""))))
+    (mcg-org-agenda-setup-custom-views)
+    (should (equal mcg-org-agenda-custom-commands org-agenda-custom-commands))))
+
+(ert-deftest mcg-org-appear-is-enabled-from-org-mode-hook ()
+  (let ((org-mode-hook nil))
+    (cl-letf (((symbol-function 'mcg-require-extension)
+               (lambda (&rest _args) t))
+              ((symbol-function 'org-appear-mode)
+               (lambda (&optional _arg) nil)))
+      (require 'init-org-appear))
+    (should (fboundp 'mcg-org-appear-enable))
+    (should (memq #'mcg-org-appear-enable org-mode-hook))))
+
+(ert-deftest mcg-org-babel-defaults-are-conservative-and-configurable ()
+  (require 'init-org-babel)
+  (should (boundp 'mcg-org-babel-confirm-evaluate))
+  (should (boundp 'mcg-org-export-babel-evaluate))
+  (should mcg-org-babel-confirm-evaluate)
+  (should-not mcg-org-export-babel-evaluate)
+  (should (eq org-confirm-babel-evaluate mcg-org-babel-confirm-evaluate))
+  (should (eq org-export-babel-evaluate mcg-org-export-babel-evaluate)))
+
+(ert-deftest mcg-org-babel-load-languages-are-configurable ()
+  (require 'init-org-babel)
+  (should (boundp 'mcg-org-babel-load-languages))
+  (let ((mcg-org-babel-load-languages '((emacs-lisp . t)))
+        captured-symbol
+        captured-languages)
+    (cl-letf (((symbol-function 'org-babel-do-load-languages)
+               (lambda (symbol languages)
+                 (setq captured-symbol symbol
+                       captured-languages languages))))
+      (mcg-org-babel-setup-languages))
+    (should (eq captured-symbol 'org-babel-load-languages))
+    (should (equal '((emacs-lisp . t)) captured-languages))))
+
+(ert-deftest mcg-org-babel-zig-support-is-optional ()
+  (require 'init-org-babel)
+  (should (boundp 'mcg-org-babel-enable-zig))
+  (should (boundp 'mcg-org-babel-zig-default-header-args))
+  (let ((mcg-org-babel-enable-zig nil)
+        (org-babel-load-languages nil)
+        (org-babel-default-header-args:zig '((:old . "value"))))
+    (mcg-org-babel-setup-zig)
+    (should-not (assoc 'zig org-babel-load-languages))
+    (should (equal '((:old . "value")) org-babel-default-header-args:zig)))
+  (let ((mcg-org-babel-enable-zig t)
+        (mcg-org-babel-zig-default-header-args '((:results . "silent")))
+        (org-babel-load-languages nil)
+        (org-babel-default-header-args:zig nil))
+    (mcg-org-babel-setup-zig)
+    (should (assoc 'zig org-babel-load-languages))
+    (should (equal '((:results . "silent"))
+                   org-babel-default-header-args:zig))))
+
+(ert-deftest mcg-org-babel-src-block-languages-are-configurable ()
+  (require 'init-org-babel)
+  (should (boundp 'mcg-org-babel-src-block-languages))
+  (let ((mcg-org-babel-src-block-languages '("emacs-lisp" "python"))
+        captured-candidates)
+    (cl-letf (((symbol-function 'completing-read)
+               (lambda (_prompt candidates &rest _args)
+                 (setq captured-candidates candidates)
+                 "python")))
+      (with-temp-buffer
+        (call-interactively #'mcg/org-insert-src-block)
+        (should (equal '("emacs-lisp" "python") captured-candidates))
+        (should (search-backward "#+begin_src python" nil t))))))
+
+(ert-deftest mcg-org-todo-keywords-and-faces-are-configurable ()
+  (cl-letf (((symbol-function 'mcg-require-extension)
+             (lambda (&rest _args) nil)))
+    (require 'init-org))
+  (should (boundp 'mcg-org-todo-keywords))
+  (should (boundp 'mcg-org-todo-keyword-faces))
+  (let ((mcg-org-todo-keywords '((sequence "TODO(t)" "DOING(i!)" "|"
+                                           "DONE(d!)" "CANCEL(c@/!)")))
+        (mcg-org-todo-keyword-faces '(("TODO" :foreground "#7c7c75" :weight bold)
+                                      ("DOING" :foreground "#d79921" :weight bold)
+                                      ("DONE" :foreground "#50a14f" :weight bold)
+                                      ("CANCEL" :foreground "#999999" :weight bold))))
+    (mcg--setup-org-core)
+    (should (equal mcg-org-todo-keywords org-todo-keywords))
+    (should (equal mcg-org-todo-keyword-faces org-todo-keyword-faces))))
+
+(ert-deftest mcg-org-ellipsis-is-configurable-and-ascii-safe ()
+  (cl-letf (((symbol-function 'mcg-require-extension)
+             (lambda (&rest _args) nil)))
+    (require 'init-org))
+  (should (boundp 'mcg-org-ellipsis))
+  (should (stringp mcg-org-ellipsis))
+  (should (cl-every (lambda (char) (< char 128)) mcg-org-ellipsis))
+  (let ((mcg-org-ellipsis " [...]"))
+    (mcg--setup-org-core)
+    (should (equal " [...]" org-ellipsis))))
+
+(ert-deftest mcg-org-modern-todo-faces-are-configurable ()
+  (setq mcg-org-bullets-alist '(("◉" "○")
+                                ((45 . "▸"))))
+  (cl-letf (((symbol-function 'mcg-require-extension)
+             (lambda (&rest _args) t))
+            ((symbol-function 'global-org-modern-mode)
+             (lambda (&optional _arg) nil)))
+    (require 'init-org-modern)
+    (should (boundp 'mcg-org-modern-todo-faces))
+    (let ((mcg-org-enable-org-modern t)
+          (mcg-org-modern-todo-faces '(("DOING" :inverse-video t))))
+      (require 'init-org-modern)
+      (mcg--setup-org-modern)
+      (should (equal mcg-org-modern-todo-faces org-modern-todo-faces)))))
+
+(ert-deftest mcg-org-legacy-bullet-package-is-removed ()
+  (let ((legacy-package (concat "org-" "superstar")))
+    (dolist (path (list (format "config-org/modules/org/init-%s.org" legacy-package)
+                        (format "site-lisp/config/modules/org/init-%s.el" legacy-package)
+                        (format "site-lisp/extensions/org/%s-mode" legacy-package)))
+      (should-not (file-exists-p (expand-file-name path mcg-emacs-dir))))
+    (with-temp-buffer
+      (insert-file-contents (expand-file-name "../.gitmodules" mcg-emacs-dir))
+      (should-not (search-forward legacy-package nil t)))
+    (with-temp-buffer
+      (insert-file-contents (expand-file-name "config-org/modules/org/init-org.org"
+                                              mcg-emacs-dir))
+      (should-not (search-forward legacy-package nil t)))))
+
+(ert-deftest mcg-org-numbering-is-optional-and-disabled-by-default ()
+  (let ((enabled nil)
+        (org-mode-hook nil))
+    (cl-letf (((symbol-function 'mcg-require-extension)
+               (lambda (&rest _args) t))
+              ((symbol-function 'org-numbering-mode)
+               (lambda (&optional arg)
+                 (setq enabled arg))))
+      (require 'init-org-numbering))
+    (should (boundp 'mcg-org-enable-org-numbering))
+    (should-not mcg-org-enable-org-numbering)
+    (should-not enabled)
+    (should-not (memq #'mcg-org-numbering-enable org-mode-hook))))
+
+(ert-deftest mcg-obsolete-hugo-modules-are-removed ()
+  (dolist (path '("config-org/modules/org/init-easy-hugo.org"
+                  "config-org/modules/org/init-ox-hugo.org"
+                  "site-lisp/config/modules/org/init-easy-hugo.el"
+                  "site-lisp/config/modules/org/init-ox-hugo.el"))
+    (should-not (file-exists-p (expand-file-name path mcg-emacs-dir)))))
+
 (ert-deftest mcg-org-hugo-file-template-uses-file-level-metadata ()
   (cl-letf (((symbol-function 'mcg-require-extension)
              (lambda (&rest _args) nil))
@@ -197,6 +461,144 @@
         (insert-file-contents generated-example))
       (should (search-forward "PostgreSQL 连接示例" nil t))
       (should-not (search-forward "杩炴帴绀轰緥" nil t)))))
+
+(ert-deftest mcg-early-init-frame-colors-avoid-white-flash ()
+  (let ((early-init-source
+         (expand-file-name "config-org/early-init.org" mcg-emacs-dir)))
+    (with-temp-buffer
+      (insert-file-contents early-init-source)
+      (dolist (setting '("mcg-initial-frame-background"
+                         "mcg-initial-frame-foreground"
+                         "(background-color . ,mcg-initial-frame-background)"
+                         "(foreground-color . ,mcg-initial-frame-foreground)"))
+        (goto-char (point-min))
+        (should (search-forward setting nil t))))))
+
+(ert-deftest mcg-startup-heavy-modules-are-idle-by-default ()
+  (let ((init-source
+         (expand-file-name "config-org/init.org" mcg-emacs-dir)))
+    (with-temp-buffer
+      (insert-file-contents init-source)
+      (dolist (setting '("mcg-idle-modules"
+                         "(:tools . magit)"
+                         "(:editor . dirvish)"
+                         "(:tools . clutch)"
+                         "(:ui . holo-layer)"))
+        (goto-char (point-min))
+        (should (search-forward setting nil t)))
+      (goto-char (point-min))
+      (should (search-forward ":org" nil t)))))
+
+(ert-deftest mcg-dashboard-module-is-registered-after-nerd-icons ()
+  (let ((init-source
+         (expand-file-name "config-org/init.org" mcg-emacs-dir)))
+    (with-temp-buffer
+      (insert-file-contents init-source)
+      (goto-char (point-min))
+      (should (search-forward "nerd-icons" nil t))
+      (let ((nerd-icons-position (point)))
+        (should (search-forward "dashboard" nil t))
+        (should (> (point) nerd-icons-position))))))
+
+(ert-deftest mcg-dashboard-defaults-prefer-nerd-icons ()
+  (let ((dashboard-source
+         (expand-file-name "config-org/modules/ui/init-dashboard.org" mcg-emacs-dir)))
+    (should (file-exists-p dashboard-source))
+    (with-temp-buffer
+      (insert-file-contents dashboard-source)
+      (dolist (setting '("mcg-dashboard-icon-type"
+                         "'nerd-icons"
+                         "mcg-dashboard-startup-banner"
+                         "'ascii"
+                         "mcg-dashboard-banner-ascii"
+                         "_      ____"
+                         "\\____"
+                         "mcg-dashboard-banner-title"
+                         "nil"
+                         "mcg-dashboard-footer-messages"
+                         "By mcge"
+                         "dashboard-footer-messages"
+                         "dashboard-startup-banner"
+                         "dashboard-banner-ascii"
+                         "dashboard-icon-type"
+                         "dashboard-set-heading-icons"
+                         "dashboard-set-file-icons"
+                         "mcg--setup-dashboard"))
+        (goto-char (point-min))
+        (should (search-forward setting nil t)))
+      (goto-char (point-min))
+      (should-not (search-forward "(require 'all-the-icons" nil t)))))
+
+(ert-deftest mcg-dashboard-setup-configures-nerd-icons-after-dashboard-loads ()
+  (let ((dashboard-setup-called nil))
+    (when (featurep 'init-dashboard)
+      (unload-feature 'init-dashboard t))
+    (provide 'nerd-icons)
+    (setq dashboard-heading-icons nil
+          dashboard-footer-icon nil
+          dashboard-footer-messages nil
+          dashboard-icon-type nil
+          dashboard-set-heading-icons nil
+          dashboard-set-file-icons nil)
+    (cl-letf (((symbol-function 'mcg-require-extension)
+               (lambda (&rest _args) t))
+              ((symbol-function 'dashboard-setup-startup-hook)
+               (lambda () (setq dashboard-setup-called t))))
+      (require 'init-dashboard)
+      (should dashboard-setup-called)
+      (should (eq dashboard-icon-type 'nerd-icons))
+      (should (eq dashboard-startup-banner 'ascii))
+      (should (string-match-p "_      ____" dashboard-banner-ascii))
+      (should (string-match-p "\\\\____" dashboard-banner-ascii))
+      (should-not dashboard-banner-logo-title)
+      (should (equal dashboard-footer-messages '("By mcge")))
+      (should dashboard-set-heading-icons)
+      (should dashboard-set-file-icons)
+      (should (equal "nf-oct-history" (cdr (assq 'recents dashboard-heading-icons))))
+      (should (equal "nf-oct-rocket" (cdr (assq 'projects dashboard-heading-icons)))))))
+
+(ert-deftest mcg-config-example-documents-org-safety-and-appearance-options ()
+  (let ((source-example
+         (expand-file-name "config-org/private/config-example.org" mcg-emacs-dir)))
+    (with-temp-buffer
+      (insert-file-contents source-example)
+      (dolist (setting '("mcg-org-babel-confirm-evaluate"
+                         "mcg-initial-frame-background"
+                         "mcg-initial-frame-foreground"
+                         "mcg-idle-modules"
+                         "mcg-org-export-babel-evaluate"
+                         "mcg-org-babel-load-languages"
+                         "mcg-org-babel-enable-zig"
+                         "mcg-org-babel-src-block-languages"
+                         "mcg-org-todo-keywords"
+                         "mcg-org-todo-keyword-faces"
+                         "mcg-org-ellipsis"
+                         "mcg-org-modern-todo-faces"
+                         "mcg-org-download-default-image-width"
+                         "mcg-org-download-image-directory-suffix"
+                         "mcg-calendar-location-longitude"
+                         "mcg-org-agenda-use-time-grid"
+                         "mcg-org-agenda-tags-column"
+                         "mcg-org-agenda-custom-commands"))
+        (goto-char (point-min))
+        (should (search-forward setting nil t))))))
+
+(ert-deftest mcg-config-example-documents-dashboard-options ()
+  (let ((source-example
+         (expand-file-name "config-org/private/config-example.org" mcg-emacs-dir)))
+    (with-temp-buffer
+      (insert-file-contents source-example)
+      (dolist (setting '("mcg-dashboard-enabled"
+                         "mcg-dashboard-startup"
+                         "mcg-dashboard-items"
+                         "mcg-dashboard-icon-type"
+                         "mcg-dashboard-startup-banner"
+                         "mcg-dashboard-banner-ascii"
+                         "mcg-dashboard-footer-messages"
+                         "mcg-dashboard-nerd-icons-heading-icons"
+                         "nerd-icons"))
+        (goto-char (point-min))
+        (should (search-forward setting nil t))))))
 
 (ert-deftest mcg-tangle-does-not-leave-generated-el-files-in-config-org ()
   (let* ((source-dir (expand-file-name "config-org" mcg-emacs-dir))

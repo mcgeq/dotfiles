@@ -34,16 +34,60 @@ Org Babel - code block execution support.
 ;;; Basic Configuration
 ;;; ============================================================
 
+(defcustom mcg-org-babel-confirm-evaluate t
+  "Whether Org should ask before evaluating Babel code blocks."
+  :type 'boolean
+  :group 'mcg-org)
+
+(defcustom mcg-org-export-babel-evaluate nil
+  "Whether Org export should evaluate Babel code blocks."
+  :type 'boolean
+  :group 'mcg-org)
+
+(defcustom mcg-org-babel-load-languages
+  '((emacs-lisp . t)
+    (shell . t)
+    (python . t)
+    (js . t)
+    (C . t)
+    (css . t)
+    (dot . t)
+    (org . t)
+    (plantuml . t)
+    (sql . t))
+  "Languages enabled for Org Babel.
+Zig is controlled separately by `mcg-org-babel-enable-zig'."
+  :type '(repeat (cons symbol boolean))
+  :group 'mcg-org)
+
+(defcustom mcg-org-babel-enable-zig t
+  "Whether to enable the custom Zig Org Babel executor."
+  :type 'boolean
+  :group 'mcg-org)
+
+(defcustom mcg-org-babel-zig-default-header-args
+  '((:results . "output")
+    (:exports . "both"))
+  "Default header arguments for Zig Org Babel blocks."
+  :type 'sexp
+  :group 'mcg-org)
+
+(defcustom mcg-org-babel-src-block-languages
+  '("emacs-lisp" "python" "shell" "zig" "C" "js" "css" "sql")
+  "Language candidates offered by `mcg/org-insert-src-block'."
+  :type '(repeat string)
+  :group 'mcg-org)
+
 (defun mcg-org-babel-setup-basic ()
   "Setup Org Babel basic configuration."
-  (setq org-confirm-babel-evaluate nil
+  (setq org-confirm-babel-evaluate mcg-org-babel-confirm-evaluate
         org-src-fontify-natively t
         org-src-tab-acts-natively t
         org-src-preserve-indentation t
         org-edit-src-content-indentation 0)
   (setq org-src-window-setup 'current-window)
   (setq org-export-use-babel t
-        org-export-babel-evaluate t)
+        org-export-babel-evaluate mcg-org-export-babel-evaluate)
   (mcg-log "Configured org-babel basic settings"))
 #+end_src
 
@@ -57,16 +101,7 @@ Org Babel - code block execution support.
   (with-eval-after-load 'org
     (org-babel-do-load-languages
      'org-babel-load-languages
-     '((emacs-lisp . t)
-       (shell . t)
-       (python . t)
-       (js . t)
-       (C . t)
-       (css . t)
-       (dot . t)
-       (org . t)
-       (plantuml . t)
-       (sql . t)))
+     mcg-org-babel-load-languages)
     (mcg-log "Configured org-babel languages")))
 #+end_src
 
@@ -133,11 +168,11 @@ BODY is the code content, PARAMS are the parameters."
 (defun mcg-org-babel-setup-zig ()
   "Setup Zig language support."
   (with-eval-after-load 'org
-    (add-to-list 'org-babel-load-languages '(zig . t))
-    (setq org-babel-default-header-args:zig
-          '((:results . "output")
-            (:exports . "both")))
-    (mcg-log "Configured org-babel Zig support")))
+    (when mcg-org-babel-enable-zig
+      (add-to-list 'org-babel-load-languages '(zig . t))
+      (setq org-babel-default-header-args:zig
+            mcg-org-babel-zig-default-header-args)
+      (mcg-log "Configured org-babel Zig support"))))
 #+end_src
 
 ** Helper Functions
@@ -167,8 +202,7 @@ BODY is the code content, PARAMS are the parameters."
   "Insert a code block for the specified language LANG."
   (interactive
    (list (completing-read "Language: "
-                          '("emacs-lisp" "python" "shell" "zig"
-                            "C" "js" "css" "sql")
+                          mcg-org-babel-src-block-languages
                           nil nil)))
   (insert (format "#+begin_src %s\n\n#+end_src" lang))
   (forward-line -1))

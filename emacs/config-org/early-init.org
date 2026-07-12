@@ -92,10 +92,18 @@
 (defvar mcg-frame-height 56
   "Default frame height in lines.")
 
+(defvar mcg-initial-frame-background "#232025"
+  "Initial frame background color used before the theme is loaded.")
+
+(defvar mcg-initial-frame-foreground "#efd5c5"
+  "Initial frame foreground color used before the theme is loaded.")
+
 ;; Set frame size and disable UI elements for initial and default frames
 (setq default-frame-alist
       `((width . ,mcg-frame-width)
         (height . ,mcg-frame-height)
+        (background-color . ,mcg-initial-frame-background)
+        (foreground-color . ,mcg-initial-frame-foreground)
         (vertical-scroll-bars . nil)
         (horizontal-scroll-bars . nil)
         (tool-bar-lines . 0)

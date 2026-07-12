@@ -107,6 +107,7 @@
    font
    ef-themes
    nerd-icons
+   dashboard
    awesome-tray
    holo-layer
 
@@ -165,24 +166,38 @@
 
 #+begin_src emacs-lisp
 ;; Define which categories use which loading strategy
-(defvar mcg-immediate-categories '(:ui :editor :completion :tools :enhance :org)
-  "Categories to load immediately at startup.")
+(defcustom mcg-immediate-categories '(:ui :editor :completion :tools :enhance :org)
+  "Categories to load immediately at startup."
+  :type '(repeat symbol)
+  :group 'mcg)
 
-(defvar mcg-idle-categories nil
-  "Categories to load during idle time.")
+(defcustom mcg-idle-categories nil
+  "Categories to load during idle time."
+  :type '(repeat symbol)
+  :group 'mcg)
 
-(defvar mcg-idle-modules
-  '((:tools . lsp-bridge)
+(defcustom mcg-idle-modules
+  '((:ui . holo-layer)
+    (:editor . dirvish)
+    (:tools . magit)
+    (:tools . clutch)
+    (:tools . lsp-bridge)
     (:tools . color-rg)
     (:tools . majutsu))
-  "Individual modules to load during idle time.")
+  "Individual modules to load during idle time."
+  :type '(repeat (cons symbol symbol))
+  :group 'mcg)
 
-(defvar mcg-immediate-skip-modules mcg-idle-modules
-  "Individual modules to skip while loading immediate categories.")
+(defcustom mcg-immediate-skip-modules mcg-idle-modules
+  "Individual modules to skip while loading immediate categories."
+  :type '(repeat (cons symbol symbol))
+  :group 'mcg)
 
-(defvar mcg-deferred-categories '(:lang)
+(defcustom mcg-deferred-categories '(:lang)
   "Categories eligible for trigger-based deferred loading.
-When nil, all trigger-backed modules are eligible.")
+When nil, all trigger-backed modules are eligible."
+  :type '(repeat symbol)
+  :group 'mcg)
 #+end_src
 
 ** Load Immediate Modules
