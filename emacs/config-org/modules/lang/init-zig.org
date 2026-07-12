@@ -61,11 +61,10 @@
 
   (mcg-log "Zig mode setup complete"))
 
-;; Setup Zig mode hooks (auto-mode-alist is managed in init-treesit.el)
-(mcg-setup-lang-mode
- '(:ts-mode zig-ts-mode
-   :fallback-mode zig-mode
-   :setup-fn mcg-zig-mode-setup))
+;; File associations are managed by treesit-auto in init-treesit.el.
+;; This module only configures mode behavior.
+(add-hook 'zig-mode-hook #'mcg-zig-mode-setup)
+(add-hook 'zig-ts-mode-hook #'mcg-zig-mode-setup)
 
 ;; zig-mode extension
 (let ((zig-mode-path (mcg-extension-path "zig-mode")))

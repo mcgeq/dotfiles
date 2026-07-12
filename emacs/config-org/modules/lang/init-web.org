@@ -145,11 +145,8 @@
   (setq-local css-indent-offset 2)
   (subword-mode 1))
 
-;; css-ts-mode (Emacs 29+)
-(when (and (fboundp 'treesit-available-p)
-           (treesit-available-p))
-  (add-to-list 'auto-mode-alist '("\\.css\\'" . css-ts-mode))
-  (add-hook 'css-ts-mode-hook #'mcg-css-mode-setup))
+;; css-ts-mode file associations are managed by treesit-auto in init-treesit.el.
+(add-hook 'css-ts-mode-hook #'mcg-css-mode-setup)
 
 ;; css-mode fallback
 (add-hook 'css-mode-hook #'mcg-css-mode-setup)

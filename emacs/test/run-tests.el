@@ -557,6 +557,27 @@
       (should (equal "nf-oct-history" (cdr (assq 'recents dashboard-heading-icons))))
       (should (equal "nf-oct-rocket" (cdr (assq 'projects dashboard-heading-icons)))))))
 
+(ert-deftest mcg-treesit-auto-owns-common-mode-associations ()
+  (let ((treesit-source
+         (expand-file-name "config-org/modules/editor/init-treesit.org" mcg-emacs-dir))
+        (web-source
+         (expand-file-name "config-org/modules/lang/init-web.org" mcg-emacs-dir))
+        (zig-source
+         (expand-file-name "config-org/modules/lang/init-zig.org" mcg-emacs-dir)))
+    (with-temp-buffer
+      (insert-file-contents treesit-source)
+      (should (search-forward "(mcg-require-extension 'treesit-auto t)" nil t))
+      (goto-char (point-min))
+      (should (search-forward "(treesit-auto-add-to-auto-mode-alist 'all)" nil t))
+      (goto-char (point-min))
+      (should (search-forward "(global-treesit-auto-mode)" nil t)))
+    (dolist (source (list web-source zig-source))
+      (with-temp-buffer
+        (insert-file-contents source)
+        (should-not (search-forward "(add-to-list 'auto-mode-alist '(\"\\\\.css\\\\'\" . css-ts-mode))" nil t))
+        (goto-char (point-min))
+        (should-not (search-forward "mcg-setup-lang-mode" nil t))))))
+
 (ert-deftest mcg-config-example-documents-org-safety-and-appearance-options ()
   (let ((source-example
          (expand-file-name "config-org/private/config-example.org" mcg-emacs-dir)))
