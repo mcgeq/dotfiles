@@ -15,7 +15,8 @@ endif
 
 # Define Emacs variable
 EM ?= emacs
-EE ?= $(EM) -Q --batch --eval "(progn (require 'ob-tangle) (setq org-confirm-babel-evaluate nil))"
+TANGLE_SETUP = (progn (prefer-coding-system 'utf-8-unix) (setq default-buffer-file-coding-system 'utf-8-unix coding-system-for-read 'utf-8-unix coding-system-for-write 'utf-8-unix org-confirm-babel-evaluate nil) (require 'ob-tangle) (defun mcg-batch-tangle-to-file (source target) (let ((files (org-babel-tangle-file source))) (make-directory (file-name-directory target) t) (if (= (length files) 1) (copy-file (car files) target t) (dolist (file files) (copy-file file (expand-file-name (file-name-nondirectory file) (file-name-directory target)) t))) (dolist (file files) (when (and (file-exists-p file) (not (file-equal-p file target))) (delete-file file))) files)))
+EE ?= $(EM) -Q --batch --eval "$(TANGLE_SETUP)"
 
 # Source and target directories
 SRC_DIR = config-org
@@ -42,8 +43,8 @@ ifeq ($(IS_UNIX),1)
 else
 	@powershell -Command "if (-not (Test-Path '$(DST_DIR)/$(1)')) { New-Item -ItemType Directory -Path '$(DST_DIR)/$(1)' -Force | Out-Null }"
 endif
-	@echo Tangling: $$< -> $$@
-	$(EE) --eval '(org-babel-tangle-publish t "$$<" "$(DST_DIR)/$(1)/")'
+	@echo Tangling: $$< to $$@
+	$(EE) --eval '(mcg-batch-tangle-to-file "$$<" "$$@")'
 endef
 
 # init.el special handling
@@ -53,8 +54,8 @@ ifeq ($(IS_UNIX),1)
 else
 	@powershell -Command "if (-not (Test-Path '$(DST_DIR)')) { New-Item -ItemType Directory -Path '$(DST_DIR)' -Force | Out-Null }"
 endif
-	@echo Tangling: $< -> $@
-	$(EE) --eval '(org-babel-tangle-publish t "$<" "$(DST_DIR)/")'
+	@echo Tangling: $< to $@
+	$(EE) --eval '(mcg-batch-tangle-to-file "$<" "$@")'
 
 # early-init.el special handling (copy to ~/.emacs.d/)
 $(DST_DIR)/early-init.el: $(SRC_DIR)/early-init.org
@@ -63,8 +64,8 @@ ifeq ($(IS_UNIX),1)
 else
 	@powershell -Command "if (-not (Test-Path '$(DST_DIR)')) { New-Item -ItemType Directory -Path '$(DST_DIR)' -Force | Out-Null }"
 endif
-	@echo Tangling: $< -> $@
-	$(EE) --eval '(org-babel-tangle-publish t "$<" "$(DST_DIR)/")'
+	@echo Tangling: $< to $@
+	$(EE) --eval '(mcg-batch-tangle-to-file "$<" "$@")'
 ifeq ($(IS_UNIX),1)
 	@echo Copying early-init.el to ~/.emacs.d/
 	@mkdir -p ~/.emacs.d && cp -f $(DST_DIR)/early-init.el ~/.emacs.d/early-init.el
@@ -97,7 +98,7 @@ else
 endif
 	@for file in $(SRC_DIR)/$(DIR)/*.org; do \
 		echo "Tangling: $$file"; \
-		$(EM) -Q --batch --eval "(progn (require 'ob-tangle) (setq org-confirm-babel-evaluate nil))" --eval "(org-babel-tangle-file \"$$file\")"; \
+		$(EE) --eval "(let* ((source \"$$file\") (target (expand-file-name (concat (file-name-base source) \".el\") \"$(DST_DIR)/$(DIR)/\"))) (mcg-batch-tangle-to-file source target))"; \
 	done
 	@echo [OK] Tangled $(DIR)
 
@@ -108,7 +109,7 @@ ifndef FILE
 	$(error FILE is required. Usage: make tangle-file FILE=config-org/modules/editor/init-defaults.org)
 endif
 	@echo Tangling: $(FILE)
-	$(EE) --eval '(org-babel-tangle-file "$(FILE)")'
+	$(EE) --eval '(let* ((source "$(FILE)") (relative (file-relative-name source "$(SRC_DIR)/")) (target-dir (expand-file-name (or (file-name-directory relative) "") "$(DST_DIR)/")) (target (expand-file-name (concat (file-name-base source) ".el") target-dir))) (mcg-batch-tangle-to-file source target))'
 	@echo [OK] Tangled $(FILE)
 
 # Clean generated files

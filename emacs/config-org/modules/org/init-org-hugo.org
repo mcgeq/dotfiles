@@ -30,6 +30,8 @@ Hugo 博客集成配置，整合 easy-hugo、ox-hugo 和 org-capture。
 
 (require 'core-lib)
 (require 'org-capture)
+(require 'init-org-capture)
+(require 'subr-x)
 #+end_src
 
 ** Variables
@@ -83,6 +85,15 @@ Hugo 博客相关的配置变量。
   "Emacs blog org file."
   :type 'file
   :group 'mcg-org-hugo)
+
+(defcustom mcg-org-blog-capture-directory
+  nil
+  "Directory for one-file-per-capture blog posts.
+
+When nil, use `mcg-blog-base-directory' plus `mcg-org-hugo-postdir'."
+  :type '(choice (const :tag "Use Hugo post directory" nil)
+                 directory)
+  :group 'mcg-org-hugo)
 #+end_src
 
 ** Easy Hugo Configuration
@@ -131,28 +142,100 @@ Hugo 博客的 org-capture 模板。
 ;;; Hugo Capture Templates
 ;;; ============================================================
 
+(defvar mcg-org-hugo-capture--state nil
+  "Metadata collected while resolving a Hugo capture target file.")
+
+(defun mcg-org-hugo--slugify (value)
+  "Return a Hugo-friendly slug for VALUE."
+  (if (fboundp 'org-hugo-slug)
+      (org-hugo-slug value)
+    (mcg-org-capture-slugify-filename value)))
+
+(defun mcg-org-hugo--blank-value-p (value)
+  "Return non-nil when VALUE should be treated as empty."
+  (let ((text (string-trim (format "%s" (or value "")))))
+    (or (string-empty-p text)
+        (string= text "undefined"))))
+
+(defun mcg-org-hugo--clean-value (value fallback)
+  "Return VALUE as a trimmed string, or FALLBACK when VALUE is blank."
+  (if (mcg-org-hugo--blank-value-p value)
+      fallback
+    (string-trim (format "%s" value))))
+
+(defun mcg-org-hugo--read-capture-state ()
+  "Read Hugo capture title and file name, then store them."
+  (let* ((title (mcg-org-hugo--clean-value
+                 (read-string "Post Title: ") "Untitled"))
+         (file-name (mcg-org-hugo--clean-value
+                     (read-string "Slug/File name (empty to auto): ") ""))
+         (slug-source (if (mcg-org-hugo--blank-value-p file-name)
+                          title
+                        file-name))
+         (slug (mcg-org-hugo--slugify slug-source)))
+    (setq mcg-org-hugo-capture--state
+          (list :title title
+                :file-name file-name
+                :slug slug))))
+
+(defun mcg-org-hugo--ensure-capture-state ()
+  "Return current Hugo capture state, prompting when missing."
+  (unless (and (plist-member mcg-org-hugo-capture--state :title)
+               (plist-member mcg-org-hugo-capture--state :slug))
+    (mcg-org-hugo--read-capture-state))
+  mcg-org-hugo-capture--state)
+
+(defun mcg-org-hugo-capture-directory ()
+  "Return the directory where Hugo capture files should be created."
+  (file-name-as-directory
+   (or mcg-org-blog-capture-directory
+       (expand-file-name mcg-org-hugo-postdir mcg-blog-base-directory))))
+
+(defun mcg-org-hugo-capture-post-file ()
+  "Return a new one-file-per-capture Hugo post file."
+  (let* ((state (mcg-org-hugo--ensure-capture-state))
+         (title (plist-get state :title))
+         (file-name (plist-get state :file-name))
+         (file (mcg-org-capture-build-file
+                (mcg-org-hugo-capture-directory) nil title file-name)))
+    (make-directory (file-name-directory file) t)
+    file))
+
 (defun mcg/org-hugo-new-subtree-post-capture-template ()
   "Return org-capture template string for new Hugo post."
-  (let* ((date (format-time-string (org-time-stamp-format :long :inactive)))
-         (title (read-from-minibuffer "Post Title: "))
-         (fname (org-hugo-slug title))
-         (description (read-from-minibuffer "Description: "))
-         (categories (read-from-minibuffer "Categories (space separated): "))
-         (tags (read-from-minibuffer "Tags (space separated): ")))
+  (let* ((state (mcg-org-hugo--read-capture-state))
+         (date (format-time-string (org-time-stamp-format :long :inactive)))
+         (title (mcg-org-hugo--clean-value
+                 (plist-get state :title)
+                 "Untitled"))
+         (fname (mcg-org-hugo--clean-value
+                 (plist-get state :slug)
+                 (mcg-org-hugo--slugify title)))
+         (description (mcg-org-hugo--clean-value
+                       (read-from-minibuffer "Description: ") ""))
+         (categories (mcg-org-hugo--clean-value
+                      (read-from-minibuffer "Categories (space separated): ")
+                      ""))
+         (tags (mcg-org-hugo--clean-value
+                (read-from-minibuffer "Tags (space separated): ") "")))
     (mapconcat #'identity
                (delq nil
-                     `(,(concat "* TODO " title)
-                       ":PROPERTIES:"
-                       ,(concat ":EXPORT_FILE_NAME: " fname)
-                       ,(concat ":EXPORT_DATE: " date)
+                     `(,(concat "#+title: " title)
+                       ,(concat "#+date: " date)
+                       ,(concat "#+hugo_base_dir: "
+                                (file-name-as-directory mcg-blog-base-directory))
+                       ,(concat "#+hugo_section: "
+                                (file-name-as-directory mcg-org-hugo-postdir))
+                       ,(concat "#+hugo_slug: " fname)
                        ,(unless (string= description "")
-                          (concat ":EXPORT_DESCRIPTION: " description))
+                          (concat "#+description: " description))
                        ,(unless (string= categories "")
-                          (concat ":EXPORT_HUGO_CATEGORIES: " categories))
+                          (concat "#+hugo_categories: " categories))
                        ,(unless (string= tags "")
-                          (concat ":EXPORT_HUGO_TAGS: " tags))
-                       ":EXPORT_HUGO_CUSTOM_FRONT_MATTER: :image \"\" :hideFromHomePage false"
-                       ":END:"
+                          (concat "#+hugo_tags: " tags))
+                       "#+hugo_custom_front_matter: :image \"\" :hideFromHomePage false"
+                       ""
+                       "* TODO Draft"
                        "%?\n"))
                "\n")))
 #+end_src
@@ -171,26 +254,17 @@ Hugo 集成配置，包括 capture 模板。
   (when mcg-org-hugo-enable
     ;; Add Hugo post category
     (add-to-list 'org-capture-templates '("h" "Hugo Post"))
-    (add-to-list 'org-capture-templates '("hl" "About Development Language"))
 
-    ;; Language-specific templates
-    (dolist (topic '(("hla" "ArkTS" "ArkTS")
-                     ("hle" "React" "React")
-                     ("hlr" "Rust" "Rust")
-                     ("hlv" "Vue" "Vue")))
-      (add-to-list 'org-capture-templates
-                   `(,(nth 0 topic)
-                     ,(concat "About " (nth 1 topic))
-                     entry
-                     (file+headline mcg-org-blog-development-file ,(nth 2 topic))
-                     (function mcg/org-hugo-new-subtree-post-capture-template))))
-
-    ;; Emacs template
+    ;; One-file-per-post blog template. Category and tags are entered
+    ;; during capture, so topic-specific shortcuts are intentionally omitted.
     (add-to-list 'org-capture-templates
-                 '("he" "About Emacs"
-                   entry
-                   (file+olp mcg-org-blog-emacs-file "Emacs")
-                   (function mcg/org-hugo-new-subtree-post-capture-template)))
+                 `("hb" "Blog Post"
+                   plain
+                   (file (lambda ()
+                           (mcg-org-hugo-capture-post-file)))
+                   (function mcg/org-hugo-new-subtree-post-capture-template)
+                   :jump-to-captured t
+                   :unnarrowed t))
 
     (mcg-log "Hugo capture templates configured")))
 #+end_src

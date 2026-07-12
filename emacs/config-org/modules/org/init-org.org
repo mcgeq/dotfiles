@@ -228,12 +228,12 @@ Org 核心配置。
 (require 'init-visual-fill-column)
 (require 'init-org-download)
 (require 'init-mixed-pitch)
-(require 'init-org-hugo)      ; Hugo integration (combines easy-hugo, ox-hugo)
 (require 'init-ox-gfm)
 (require 'init-org-numbering)
 (require 'init-org-agenda)
 (require 'init-org-babel)
 (require 'init-org-capture)
+(require 'init-org-hugo)      ; Hugo integration (combines easy-hugo, ox-hugo)
 (require 'init-org-extras)
 #+end_src
 

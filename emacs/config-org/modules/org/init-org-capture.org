@@ -23,6 +23,7 @@ Org Capture 模板配置。
 
 (require 'core-lib)
 (require 'org-capture)
+(require 'subr-x)
 #+end_src
 
 ** Variables
@@ -55,6 +56,136 @@ Org Capture 模板配置。
   "Password management file."
   :type 'file
   :group 'mcg-org)
+
+(defcustom mcg-org-capture-notes-directory
+  (expand-file-name "capture" mcg-org-notes-directory)
+  "Directory for one-file-per-capture notes."
+  :type 'directory
+  :group 'mcg-org)
+
+(defcustom mcg-org-capture-journal-directory
+  (expand-file-name "journal" mcg-org-notes-directory)
+  "Directory for one-file-per-capture journal entries."
+  :type 'directory
+  :group 'mcg-org)
+#+end_src
+
+** Storage Root Helper Functions
+
+#+begin_src emacs-lisp
+;;; Storage Root Helper Functions
+
+(defun mcg-org-set-storage-root (root)
+  "Set Org storage ROOT and refresh all derived Org capture paths."
+  (let* ((root-dir (file-name-as-directory (expand-file-name root)))
+         (agenda-dir (expand-file-name "agenda" root-dir))
+         (notes-dir (expand-file-name "notes" root-dir)))
+    (setq mcg-org-directory root-dir
+          mcg-org-agenda-directory agenda-dir
+          mcg-org-notes-directory notes-dir
+          mcg-org-default-notes-file (expand-file-name "notes.org" notes-dir)
+          mcg-org-task-file (expand-file-name "tasks.org" agenda-dir)
+          mcg-org-diary-file (expand-file-name "diary.org" agenda-dir)
+          mcg-org-journal-file (expand-file-name "journal.org" notes-dir)
+          mcg-org-billing-file (expand-file-name "billing.org" notes-dir)
+          mcg-org-password-file (expand-file-name "passwords.org" notes-dir)
+          mcg-org-capture-notes-directory (expand-file-name "capture" notes-dir)
+          mcg-org-capture-journal-directory (expand-file-name "journal" notes-dir)
+          mcg-org-agenda-files (list agenda-dir)
+          org-agenda-files mcg-org-agenda-files)
+    (when (boundp 'mcg-org-agenda-diary-file)
+      (setq mcg-org-agenda-diary-file mcg-org-diary-file))
+    (when (boundp 'org-agenda-diary-file)
+      (setq org-agenda-diary-file mcg-org-diary-file))
+    (when (boundp 'diary-file)
+      (setq diary-file mcg-org-diary-file))
+    (mapc (lambda (dir)
+            (unless (file-directory-p dir)
+              (make-directory dir t)))
+          (list root-dir agenda-dir notes-dir
+                mcg-org-capture-notes-directory
+                mcg-org-capture-journal-directory))
+    root-dir))
+#+end_src
+
+** File Capture Helper Functions
+
+#+begin_src emacs-lisp
+;;; File Capture Helper Functions
+
+(defvar mcg-org-capture--last-title nil
+  "Title collected while resolving an Org capture target file.")
+
+(defun mcg-org-capture-slugify-filename (value)
+  "Return a safe, readable Org file base name from VALUE."
+  (let* ((name (downcase (string-trim (or value ""))))
+         (name (replace-regexp-in-string "[[:space:]\n\r\t]+" "-" name))
+         (name (replace-regexp-in-string "[<>:\"/\\\\|?*]+" "-" name))
+         (name (replace-regexp-in-string "-+" "-" name))
+         (name (string-trim name "-+" "-+")))
+    (if (string-empty-p name) "untitled" name)))
+
+(defun mcg-org-capture--timestamp-time (timestamp)
+  "Return time object for TIMESTAMP or the current time."
+  (if (and timestamp (not (string-empty-p timestamp)))
+      (date-to-time timestamp)
+    (current-time)))
+
+(defun mcg-org-capture--unique-file (file)
+  "Return FILE, or a numbered variant if FILE already exists."
+  (let* ((directory (file-name-directory file))
+         (extension (file-name-extension file t))
+         (base (file-name-base file))
+         (candidate file)
+         (index 2))
+    (while (file-exists-p candidate)
+      (setq candidate (expand-file-name
+                       (format "%s-%d%s" base index extension)
+                       directory))
+      (setq index (1+ index)))
+    candidate))
+
+(defun mcg-org-capture-build-file (root timestamp title file-name)
+  "Build an Org capture file under ROOT using TIMESTAMP, TITLE, and FILE-NAME.
+
+ROOT is organized as YYYY/MM.  FILE-NAME wins when non-empty; otherwise
+the generated name uses TIMESTAMP and TITLE."
+  (let* ((time (mcg-org-capture--timestamp-time timestamp))
+         (directory (expand-file-name
+                     (format-time-string "%Y/%m" time)
+                     root))
+         (base (if (string-empty-p (string-trim (or file-name "")))
+                   (format "%s-%s"
+                           (format-time-string "%Y%m%d-%H%M%S" time)
+                           (mcg-org-capture-slugify-filename title))
+                 (mcg-org-capture-slugify-filename file-name)))
+         (file (expand-file-name (concat base ".org") directory)))
+    (mcg-org-capture--unique-file file)))
+
+(defun mcg-org-capture--target-file (root prompt)
+  "Read capture metadata and return a new target file under ROOT.
+
+PROMPT names the title prompt shown to the user."
+  (let* ((title (string-trim (read-string prompt)))
+         (title (if (string-empty-p title) "Untitled" title))
+         (file-name (read-string "File name (empty to auto): "))
+         (file (mcg-org-capture-build-file
+                root nil title file-name)))
+    (setq mcg-org-capture--last-title title)
+    (make-directory (file-name-directory file) t)
+    file))
+
+(defun mcg-org-capture-note-file ()
+  "Return a new one-file-per-capture note file."
+  (mcg-org-capture--target-file mcg-org-capture-notes-directory "Title: "))
+
+(defun mcg-org-capture-journal-file ()
+  "Return a new one-file-per-capture journal file."
+  (mcg-org-capture--target-file mcg-org-capture-journal-directory "Journal title: "))
+
+(defun mcg-org-capture-last-title ()
+  "Return the last title read for a dynamic capture target."
+  (or mcg-org-capture--last-title "Untitled"))
 #+end_src
 
 ** Password Helper Functions
@@ -165,20 +296,25 @@ Org Capture 模板配置。
 
   (add-to-list 'org-capture-templates
                '("n" "Notes"
-                 entry (file mcg-org-default-notes-file)
-                 "* %^{heading} %t %^g\n %?\n"
-                 :empty-lines 1))
+                 entry (file mcg-org-capture-note-file)
+                 "* %(mcg-org-capture-last-title) %t %^g\n%?\n"
+                 :empty-lines 1
+                 :jump-to-captured t
+                 :unnarrowed t))
 
   (add-to-list 'org-capture-templates
                '("j" "Journal"
-                 entry (file+datetree mcg-org-journal-file)
-                 "* %U - %^{heading} %^g\n %?\n"
-                 :empty-lines 1))
+                 entry (file mcg-org-capture-journal-file)
+                 "* %U - %(mcg-org-capture-last-title) %^g\n%?\n"
+                 :empty-lines 1
+                 :jump-to-captured t
+                 :unnarrowed t))
 
   (add-to-list 'org-capture-templates
                '("b" "Billing"
                  plain (file+function mcg-org-billing-file mcg/find-month-tree)
                  " | %U | %^{Category} | %^{Description} | %^{Amount} |"
+                 :immediate-finish t
                  :kill-buffer t))
 
   (add-to-list 'org-capture-templates
@@ -186,6 +322,7 @@ Org Capture 模板配置。
                  entry (file mcg-org-password-file)
                  "* %U - %^{title} %^G\n\n - Username: %^{Username}\n - Password: %(mcg/get-or-create-password)"
                  :empty-lines 1
+                 :immediate-finish t
                  :kill-buffer t))
 
   (mcg-log "Capture templates configured"))

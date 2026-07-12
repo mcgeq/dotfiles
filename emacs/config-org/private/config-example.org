@@ -1,6 +1,6 @@
 #+TITLE: Private Configuration Example
 #+AUTHOR: mcge
-#+PROPERTY: header-args:emacs-lisp :tangle config.el :lexical t
+#+PROPERTY: header-args:emacs-lisp :tangle config-example.el :lexical t
 
 * Private Configuration Example
 
@@ -90,14 +90,20 @@ Your actual configuration should be in ~config.org~, which is ignored by git.
 ;;; Org Configuration
 ;;; ============================================================
 
-;; Org directory
-;; (setq mcg-org-directory "~/org/")
+;; Org storage root
+;; Use this helper instead of setting `mcg-org-directory' alone.
+;; It refreshes the agenda, notes, capture, diary, billing, password,
+;; and `org-agenda-files' paths derived from the root directory.
+;; (mcg-org-set-storage-root "~/org/")
 
-;; Org Agenda directory
-;; (setq mcg-org-agenda-directory "~/org/agenda/")
-
-;; Default notes file
-;; (setq mcg-org-default-notes-file "notes.org")
+;; Hugo blog directory
+;; Blog capture files are created under:
+;;   mcg-blog-base-directory / mcg-org-hugo-postdir / YYYY / MM
+;; Set `mcg-org-blog-capture-directory' only when you want a custom
+;; capture directory unrelated to the Hugo post directory.
+;; (setq mcg-blog-base-directory "~/blog")
+;; (setq mcg-org-hugo-postdir "content-org")
+;; (setq mcg-org-blog-capture-directory nil)
 
 ;; Enable mixed-pitch mode
 ;; Default: nil
