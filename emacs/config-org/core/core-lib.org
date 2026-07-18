@@ -25,13 +25,33 @@
 ;; - Extension cache system for fast path lookups
 ;; - Extension discovery for finding packages in the extensions directory
 ;; - Keybinding registry with conflict detection
+;; - Shared project root fallback helpers
 
 ;;; Code:
 
 (require 'cl-lib)
 (require 'core-bootstrap)
+(require 'project)
 (require 'seq)
 (require 'subr-x)
+#+end_src
+
+** Project Helpers
+
+项目根目录辅助函数。放在 core-lib 中，让 idle 加载的工具模块也能使用统一 fallback，而不依赖
+`init-project` 的加载顺序。
+
+#+begin_src emacs-lisp
+(defun mcg-project-root-or-default ()
+  "Return the current project root or `default-directory'.
+Prefer `mcg-project-current-root' when the project module is loaded.
+Fall back to built-in `project.el', then to `default-directory'."
+  (file-name-as-directory
+   (or (and (fboundp 'mcg-project-current-root)
+            (mcg-project-current-root))
+       (when-let* ((project (project-current nil)))
+         (project-root project))
+       default-directory)))
 #+end_src
 
 ** Extension Cache System

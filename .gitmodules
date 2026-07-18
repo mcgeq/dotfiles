@@ -247,3 +247,9 @@
 [submodule "dashboard"]
 	path = emacs/site-lisp/extensions/ui/dashboard
 	url = https://github.com/emacs-dashboard/dashboard.git
+[submodule "emacs-hl-todo"]
+	path = emacs/site-lisp/extensions/editor/hl-todo
+	url = https://github.com/tarsius/hl-todo.git
+[submodule "emacs-pulsar"]
+	path = emacs/site-lisp/extensions/ui/pulsar
+	url = https://github.com/protesilaos/pulsar.git

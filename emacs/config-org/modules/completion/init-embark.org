@@ -28,6 +28,10 @@
   (when (mcg-require-extension "embark" t)
     (mcg-bind-key "C-." #'embark-act "completion/embark")
     (mcg-bind-key "C-;" #'embark-dwim "completion/embark")
+    (setq prefix-help-command #'embark-prefix-help-command)
+    (define-key global-map [remap describe-bindings] #'embark-bindings)
+    (when (require 'embark-consult nil t)
+      (add-hook 'embark-collect-mode-hook #'consult-preview-at-point-mode))
     (mcg-log "embark configured")))
 #+end_src
 

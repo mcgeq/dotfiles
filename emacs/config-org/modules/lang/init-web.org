@@ -18,6 +18,7 @@
 ;; Web development support module for MCG Emacs:
 ;; - web-mode for Vue/HTML templates
 ;; - instant-rename-tag for tag renaming
+;; - JS/TS/CSS mode setup
 ;; - CSS/SCSS support
 ;; - Emmet integration
 ;;
@@ -29,6 +30,7 @@
 ;;; Code:
 
 (require 'core-lib)
+(require 'seq)
 (mcg-require-extension 'web-mode t)
 #+end_src
 
@@ -41,6 +43,62 @@
 
 (defvar mcg-web-format-on-save t
   "Whether to format web files on save.")
+#+end_src
+
+** Deferred Mode Dispatch
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Deferred Mode Dispatch
+;;; ============================================================
+
+(defun mcg-web--file-extension ()
+  "Return the lowercase extension for the current buffer file."
+  (downcase (or (file-name-extension (or buffer-file-name "")) "")))
+
+(defun mcg-web--treesit-languages-available-p (&rest languages)
+  "Return non-nil when every tree-sitter language in LANGUAGES is available."
+  (and (fboundp 'treesit-language-available-p)
+       (seq-every-p #'treesit-language-available-p languages)))
+
+(defun mcg-web-deferred-mode ()
+  "Select a web-related major mode after the web module is deferred-loaded."
+  (pcase (mcg-web--file-extension)
+    ((or "vue" "html" "htm")
+     (web-mode))
+    ("css"
+     (if (and (fboundp 'css-ts-mode)
+              (mcg-web--treesit-languages-available-p 'css))
+         (css-ts-mode)
+       (css-mode)))
+    ("scss"
+     (scss-mode))
+    ("less"
+     (less-css-mode))
+    ("js"
+     (if (and (fboundp 'js-ts-mode)
+              (mcg-web--treesit-languages-available-p 'javascript 'jsdoc))
+         (js-ts-mode)
+       (js-mode)))
+    ("jsx"
+     (cond
+      ((and (fboundp 'js-ts-mode)
+            (mcg-web--treesit-languages-available-p 'javascript 'jsdoc))
+       (js-ts-mode))
+      ((fboundp 'js-jsx-mode) (js-jsx-mode))
+      (t (web-mode))))
+    ("ts"
+     (if (and (fboundp 'typescript-ts-mode)
+              (mcg-web--treesit-languages-available-p 'typescript))
+         (typescript-ts-mode)
+       (js-mode)))
+    ("tsx"
+     (if (and (fboundp 'tsx-ts-mode)
+              (mcg-web--treesit-languages-available-p 'tsx))
+         (tsx-ts-mode)
+       (web-mode)))
+    (_
+     (web-mode))))
 #+end_src
 
 ** web-mode Configuration
@@ -158,6 +216,37 @@
 ;; Less
 (add-to-list 'auto-mode-alist '("\\.less\\'" . less-css-mode))
 (add-hook 'less-css-mode-hook #'mcg-css-mode-setup)
+#+end_src
+
+** JavaScript / TypeScript Support
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; JavaScript / TypeScript Support
+;;; ============================================================
+
+(defun mcg-js-mode-setup ()
+  "Setup function for JavaScript modes."
+  (setq-local indent-tabs-mode nil)
+  (setq-local tab-width 2)
+  (when (boundp 'js-indent-level)
+    (setq-local js-indent-level 2))
+  (subword-mode 1))
+
+(defun mcg-typescript-mode-setup ()
+  "Setup function for TypeScript modes."
+  (setq-local indent-tabs-mode nil)
+  (setq-local tab-width 2)
+  (when (boundp 'typescript-indent-level)
+    (setq-local typescript-indent-level 2))
+  (subword-mode 1))
+
+(add-hook 'js-mode-hook #'mcg-js-mode-setup)
+(add-hook 'js-ts-mode-hook #'mcg-js-mode-setup)
+(add-hook 'js-jsx-mode-hook #'mcg-js-mode-setup)
+(add-hook 'typescript-mode-hook #'mcg-typescript-mode-setup)
+(add-hook 'typescript-ts-mode-hook #'mcg-typescript-mode-setup)
+(add-hook 'tsx-ts-mode-hook #'mcg-typescript-mode-setup)
 #+end_src
 
 ** Emmet Integration

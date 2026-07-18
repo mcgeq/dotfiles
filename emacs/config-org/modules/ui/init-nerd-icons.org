@@ -33,7 +33,8 @@
         (if (and (boundp 'nerd-icons-font-family)
                  (find-font (font-spec :family nerd-icons-font-family)))
             (mcg-log "nerd-icons configured: %s" nerd-icons-font-family)
-          (mcg-log-warning "nerd-icons font missing, run M-x nerd-icons-install-fonts")))
+          (unless noninteractive
+            (mcg-log-warning "nerd-icons font missing, run M-x nerd-icons-install-fonts"))))
     (mcg-log-warning "nerd-icons not available")))
 #+end_src
 

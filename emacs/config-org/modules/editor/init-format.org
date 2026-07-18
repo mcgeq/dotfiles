@@ -26,6 +26,7 @@
 
 (require 'core-lib)
 (require 'cl-lib)
+(require 'json)
 (require 'subr-x)
 #+end_src
 
@@ -38,7 +39,8 @@
   :group 'mcg)
 
 (defcustom mcg-format-on-save-modes
-  '(zig-mode zig-ts-mode
+  '(python-mode python-ts-mode
+    zig-mode zig-ts-mode
     web-mode html-mode css-mode css-ts-mode scss-mode less-css-mode
     js-mode js-ts-mode js-jsx-mode typescript-mode typescript-ts-mode tsx-ts-mode
     json-mode json-ts-mode yaml-mode yaml-ts-mode)
@@ -52,8 +54,10 @@
   :group 'mcg)
 
 (defcustom mcg-format-command-alist
-  '((zig-mode . zig-format-buffer)
-    (zig-ts-mode . zig-format-buffer)
+  '((python-mode . mcg-format-with-external-command)
+    (python-ts-mode . mcg-format-with-external-command)
+    (zig-mode . mcg-format-zig-buffer)
+    (zig-ts-mode . mcg-format-zig-buffer)
     (web-mode . mcg-format-with-external-command)
     (html-mode . mcg-format-with-external-command)
     (css-mode . mcg-format-with-external-command)
@@ -74,35 +78,39 @@
   :type '(alist :key-type symbol :value-type function)
   :group 'mcg)
 
+(defvar mcg-format-web-modes
+  '(web-mode html-mode css-mode css-ts-mode scss-mode less-css-mode
+    js-mode js-ts-mode js-jsx-mode typescript-mode typescript-ts-mode tsx-ts-mode
+    json-mode json-ts-mode yaml-mode yaml-ts-mode)
+  "Major modes that use project-aware Web formatter detection.")
+
 (defcustom mcg-format-external-command-alist
-  '((web-mode . (("biome" "format" "--write")
-                 ("prettier" "--write")))
-    (html-mode . (("prettier" "--write")))
-    (css-mode . (("prettier" "--write")))
-    (css-ts-mode . (("prettier" "--write")))
-    (scss-mode . (("prettier" "--write")))
-    (less-css-mode . (("prettier" "--write")))
-    (js-mode . (("biome" "format" "--write")
-                ("prettier" "--write")))
-    (js-ts-mode . (("biome" "format" "--write")
-                   ("prettier" "--write")))
-    (js-jsx-mode . (("biome" "format" "--write")
-                    ("prettier" "--write")))
-    (typescript-mode . (("biome" "format" "--write")
-                        ("prettier" "--write")))
-    (typescript-ts-mode . (("biome" "format" "--write")
-                           ("prettier" "--write")))
-    (tsx-ts-mode . (("biome" "format" "--write")
-                    ("prettier" "--write")))
-    (json-mode . (("biome" "format" "--write")
-                  ("prettier" "--write")))
-    (json-ts-mode . (("biome" "format" "--write")
-                     ("prettier" "--write")))
-    (yaml-mode . (("prettier" "--write")))
-    (yaml-ts-mode . (("prettier" "--write"))))
+  '((python-mode . (("ruff" "format")
+                    ("black")))
+    (python-ts-mode . (("ruff" "format")
+                       ("black")))
+    (zig-mode . (("zig" "fmt")))
+    (zig-ts-mode . (("zig" "fmt")))
+    (web-mode . mcg-format--web-external-candidates)
+    (html-mode . mcg-format--web-external-candidates)
+    (css-mode . mcg-format--web-external-candidates)
+    (css-ts-mode . mcg-format--web-external-candidates)
+    (scss-mode . mcg-format--web-external-candidates)
+    (less-css-mode . mcg-format--web-external-candidates)
+    (js-mode . mcg-format--web-external-candidates)
+    (js-ts-mode . mcg-format--web-external-candidates)
+    (js-jsx-mode . mcg-format--web-external-candidates)
+    (typescript-mode . mcg-format--web-external-candidates)
+    (typescript-ts-mode . mcg-format--web-external-candidates)
+    (tsx-ts-mode . mcg-format--web-external-candidates)
+    (json-mode . mcg-format--web-external-candidates)
+    (json-ts-mode . mcg-format--web-external-candidates)
+    (yaml-mode . mcg-format--web-external-candidates)
+    (yaml-ts-mode . mcg-format--web-external-candidates))
   "External formatter command candidates for each major mode.
+Each value is either a list of command candidates or a function returning one.
 Each candidate is a list whose car is the executable and cdr is the fixed args."
-  :type '(alist :key-type symbol :value-type (repeat (repeat string)))
+  :type '(alist :key-type symbol :value-type sexp)
   :group 'mcg)
 #+end_src
 
@@ -128,9 +136,172 @@ Each candidate is a list whose car is the executable and cdr is the fixed args."
   "Return formatter function for current `major-mode'."
   (cdr (assq major-mode mcg-format-command-alist)))
 
+(defun mcg-format--project-root ()
+  "Return current project root for formatter detection."
+  (if (fboundp 'mcg-project-root-or-default)
+      (mcg-project-root-or-default)
+    default-directory))
+
+(defun mcg-format--root-file (root file)
+  "Return FILE expanded under ROOT."
+  (expand-file-name file root))
+
+(defun mcg-format--root-has-file-p (root file)
+  "Return non-nil when ROOT contains FILE."
+  (file-exists-p (mcg-format--root-file root file)))
+
+(defun mcg-format--root-has-any-file-p (root files)
+  "Return non-nil when ROOT contains any file in FILES."
+  (cl-some (lambda (file)
+             (mcg-format--root-has-file-p root file))
+           files))
+
+(defun mcg-format--read-package-json (root)
+  "Read package.json from ROOT as an alist, or nil when unavailable."
+  (let ((file (mcg-format--root-file root "package.json")))
+    (when (file-exists-p file)
+      (condition-case nil
+          (let ((json-object-type 'alist)
+                (json-array-type 'list)
+                (json-key-type 'symbol))
+            (json-read-file file))
+        (error nil)))))
+
+(defun mcg-format--package-section (package section)
+  "Return SECTION from PACKAGE alist."
+  (cdr (assoc section package)))
+
+(defun mcg-format--package-has-key-p (package section key)
+  "Return non-nil when PACKAGE SECTION contains KEY."
+  (assoc-string key (mcg-format--package-section package section) t))
+
+(defun mcg-format--package-has-any-key-p (package sections key)
+  "Return non-nil when PACKAGE has KEY in any of SECTIONS."
+  (cl-some (lambda (section)
+             (mcg-format--package-has-key-p package section key))
+           sections))
+
+(defun mcg-format--file-contains-p (file regexp)
+  "Return non-nil when FILE contains REGEXP."
+  (when (file-exists-p file)
+    (with-temp-buffer
+      (insert-file-contents file)
+      (goto-char (point-min))
+      (re-search-forward regexp nil t))))
+
+(defun mcg-format--root-file-contains-any-p (root files regexp)
+  "Return non-nil when any file in FILES under ROOT contains REGEXP."
+  (cl-some (lambda (file)
+             (mcg-format--file-contains-p
+              (mcg-format--root-file root file)
+              regexp))
+           files))
+
+(defun mcg-format--web-eslint-config-files ()
+  "Return known ESLint config file names."
+  '("eslint.config.js"
+    "eslint.config.mjs"
+    "eslint.config.cjs"
+    "eslint.config.ts"
+    ".eslintrc"
+    ".eslintrc.js"
+    ".eslintrc.cjs"
+    ".eslintrc.json"
+    ".eslintrc.yaml"
+    ".eslintrc.yml"))
+
+(defun mcg-format--web-prettier-config-files ()
+  "Return known Prettier config file names."
+  '(".prettierrc"
+    ".prettierrc.json"
+    ".prettierrc.json5"
+    ".prettierrc.yaml"
+    ".prettierrc.yml"
+    ".prettierrc.js"
+    ".prettierrc.cjs"
+    ".prettierrc.mjs"
+    "prettier.config.js"
+    "prettier.config.cjs"
+    "prettier.config.mjs"))
+
+(defun mcg-format--web-project-has-antfu-eslint-p (&optional root)
+  "Return non-nil when ROOT declares Antfu ESLint configuration."
+  (let* ((root (file-name-as-directory (or root (mcg-format--project-root))))
+         (package (mcg-format--read-package-json root)))
+    (or (and package
+             (mcg-format--package-has-any-key-p
+              package
+              '(dependencies devDependencies optionalDependencies peerDependencies)
+              "@antfu/eslint-config"))
+        (mcg-format--root-file-contains-any-p
+         root
+         (mcg-format--web-eslint-config-files)
+         "@antfu/eslint-config"))))
+
+(defun mcg-format--web-project-has-eslint-p (&optional root)
+  "Return non-nil when ROOT declares ESLint formatting/linting."
+  (let* ((root (file-name-as-directory (or root (mcg-format--project-root))))
+         (package (mcg-format--read-package-json root)))
+    (or (mcg-format--web-project-has-antfu-eslint-p root)
+        (mcg-format--root-has-any-file-p
+         root
+         (mcg-format--web-eslint-config-files))
+        (and package
+             (or (assoc 'eslintConfig package)
+                 (mcg-format--package-has-any-key-p
+                  package
+                  '(dependencies devDependencies optionalDependencies peerDependencies)
+                  "eslint"))))))
+
+(defun mcg-format--web-project-has-prettier-p (&optional root)
+  "Return non-nil when ROOT explicitly declares Prettier."
+  (let* ((root (file-name-as-directory (or root (mcg-format--project-root))))
+         (package (mcg-format--read-package-json root)))
+    (or (mcg-format--root-has-any-file-p
+         root
+         (mcg-format--web-prettier-config-files))
+        (and package
+             (or (assoc 'prettier package)
+                 (mcg-format--package-has-any-key-p
+                  package
+                  '(dependencies devDependencies optionalDependencies peerDependencies)
+                  "prettier"))))))
+
+(defun mcg-format--node-tool-command (root tool args)
+  "Return command candidate for TOOL with ARGS in ROOT."
+  (cond
+   ((or (mcg-format--root-has-file-p root "pnpm-lock.yaml")
+        (mcg-format--root-has-file-p root "pnpm-workspace.yaml"))
+    (append (list "pnpm" "exec" tool) args))
+   ((or (mcg-format--root-has-file-p root "bun.lock")
+        (mcg-format--root-has-file-p root "bun.lockb"))
+    (append (list "bun" "x" tool) args))
+   ((mcg-format--root-has-file-p root "package-lock.json")
+    (append (list "npm" "exec" "--" tool) args))
+   (t
+    (cons tool args))))
+
+(defun mcg-format--web-external-candidates ()
+  "Return project-aware Web formatter candidates.
+ESLint is preferred when the project declares Antfu or any ESLint config.
+Prettier is only used when the project explicitly declares Prettier."
+  (let ((root (file-name-as-directory (mcg-format--project-root))))
+    (cond
+     ((mcg-format--web-project-has-eslint-p root)
+      (list (mcg-format--node-tool-command root "eslint" '("--fix"))))
+     ((mcg-format--web-project-has-prettier-p root)
+      (list (mcg-format--node-tool-command root "prettier" '("--write"))))
+     (t nil))))
+
 (defun mcg-format--external-candidates ()
   "Return external formatter candidates for current `major-mode'."
-  (cdr (assq major-mode mcg-format-external-command-alist)))
+  (let ((entry (cdr (assq major-mode mcg-format-external-command-alist))))
+    (cond
+     ((functionp entry)
+      (funcall entry))
+     ((and (symbolp entry) (fboundp entry))
+      (funcall entry))
+     (t entry))))
 
 (defun mcg-format--select-external-command ()
   "Return the first available external formatter command for current buffer."
@@ -157,6 +328,14 @@ Each candidate is a list whose car is the executable and cdr is the fixed args."
 ** Commands
 
 #+begin_src emacs-lisp
+;;;###autoload
+(defun mcg-format-zig-buffer ()
+  "Format current Zig buffer with zig-mode or external `zig fmt'."
+  (interactive)
+  (if (fboundp 'zig-format-buffer)
+      (call-interactively #'zig-format-buffer)
+    (mcg-format-with-external-command)))
+
 ;;;###autoload
 (defun mcg-format-with-external-command ()
   "Format current file with the first available external formatter."

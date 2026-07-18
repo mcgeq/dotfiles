@@ -62,6 +62,14 @@ Discoverability and help commands.
       (call-interactively #'helpful-variable)
     (call-interactively #'describe-variable)))
 
+(defun mcg-help-describe-command ()
+  "Describe an interactive command, using helpful when available."
+  (interactive)
+  (if (and (mcg-help--helpful-available-p)
+           (fboundp 'helpful-command))
+      (call-interactively #'helpful-command)
+    (call-interactively #'describe-command)))
+
 (defun mcg-help-describe-key ()
   "Describe a key, using helpful when available."
   (interactive)
@@ -77,6 +85,17 @@ Discoverability and help commands.
            (fboundp 'helpful-symbol))
       (call-interactively #'helpful-symbol)
     (call-interactively #'describe-symbol)))
+
+(defun mcg-help-describe-at-point ()
+  "Describe the symbol at point, using helpful when available."
+  (interactive)
+  (if (and (mcg-help--helpful-available-p)
+           (fboundp 'helpful-at-point))
+      (call-interactively #'helpful-at-point)
+    (let ((symbol (symbol-at-point)))
+      (if symbol
+          (describe-symbol symbol)
+        (user-error "No symbol at point")))))
 #+end_src
 
 ** Initialize
@@ -94,7 +113,10 @@ Discoverability and help commands.
 (mcg-bind-key "C-c h" 'mcg-help-map "enhance/help")
 (mcg-bind-key "C-c h f" #'mcg-help-describe-function "enhance/help")
 (mcg-bind-key "C-c h v" #'mcg-help-describe-variable "enhance/help")
+(mcg-bind-key "C-c h x" #'mcg-help-describe-command "enhance/help")
 (mcg-bind-key "C-c h k" #'mcg-help-describe-key "enhance/help")
+(mcg-bind-key "C-c h K" #'describe-keymap "enhance/help")
+(mcg-bind-key "C-c h ." #'mcg-help-describe-at-point "enhance/help")
 (mcg-bind-key "C-c h o" #'mcg-help-describe-symbol "enhance/help")
 (mcg-bind-key "C-c h b" #'describe-bindings "enhance/help")
 (mcg-bind-key "C-c h m" #'describe-mode "enhance/help")
@@ -105,7 +127,21 @@ Discoverability and help commands.
 (mcg-bind-key "C-h f" #'mcg-help-describe-function "enhance/help")
 (mcg-bind-key "C-h v" #'mcg-help-describe-variable "enhance/help")
 (mcg-bind-key "C-h k" #'mcg-help-describe-key "enhance/help")
+(mcg-bind-key "C-h K" #'describe-keymap "enhance/help")
+(mcg-bind-key "C-h ." #'mcg-help-describe-at-point "enhance/help")
 (mcg-bind-key "C-h o" #'mcg-help-describe-symbol "enhance/help")
+
+(define-key global-map [remap describe-command] #'mcg-help-describe-command)
+(define-key global-map [remap describe-function] #'mcg-help-describe-function)
+(define-key global-map [remap describe-variable] #'mcg-help-describe-variable)
+(define-key global-map [remap describe-key] #'mcg-help-describe-key)
+(define-key global-map [remap describe-symbol] #'mcg-help-describe-symbol)
+
+(with-eval-after-load 'helpful
+  (mcg-bind-key "C-c h F" #'helpful-function "enhance/help")
+  (mcg-bind-key "C-h F" #'helpful-function "enhance/help")
+  (define-key helpful-mode-map [remap revert-buffer] #'helpful-update)
+  (define-key helpful-mode-map (kbd "C-x K") #'helpful-kill-buffers))
 
 (mcg-log "help module configured")
 #+end_src

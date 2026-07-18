@@ -66,15 +66,24 @@ When MAYBE-PROMPT is non-nil, ask the user to select a project if needed."
 (defun mcg/project-find-file ()
   "Find a file in the current project."
   (interactive)
-  (call-interactively #'project-find-file))
+  (cond
+   ((fboundp 'consult-find)
+    (consult-find (mcg-project--require-root)))
+   (t
+    (call-interactively #'project-find-file))))
 
 ;;;###autoload
 (defun mcg/project-switch-buffer ()
   "Switch to a buffer in the current project."
   (interactive)
-  (if (fboundp 'project-switch-to-buffer)
+  (cond
+   ((fboundp 'consult-project-buffer)
+    (call-interactively #'consult-project-buffer))
+   ((fboundp 'project-switch-to-buffer)
       (call-interactively #'project-switch-to-buffer)
-    (call-interactively #'switch-to-buffer)))
+    )
+   (t
+    (call-interactively #'switch-to-buffer))))
 
 ;;;###autoload
 (defun mcg/project-dired ()

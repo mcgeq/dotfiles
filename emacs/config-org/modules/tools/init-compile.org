@@ -23,8 +23,6 @@ Unified compile, build, test, and run commands.
 
 (require 'core-lib)
 (require 'compile)
-(require 'project)
-(require 'subr-x)
 #+end_src
 
 ** Options
@@ -44,15 +42,6 @@ Unified compile, build, test, and run commands.
 ** Helpers
 
 #+begin_src emacs-lisp
-(defun mcg-compile--project-root ()
-  "Return current project root or `default-directory'."
-  (file-name-as-directory
-   (or (and (fboundp 'mcg-project-current-root)
-            (mcg-project-current-root))
-       (when-let* ((project (project-current nil)))
-         (project-root project))
-       default-directory)))
-
 (defun mcg-compile--root-has-p (root file)
   "Return non-nil when ROOT contains FILE."
   (file-exists-p (expand-file-name file root)))
@@ -123,6 +112,11 @@ Unified compile, build, test, and run commands.
   "Read a shell command with PROMPT and DEFAULT."
   (read-shell-command prompt default 'compile-history))
 
+(defun mcg-compile--consult-compile-error-p ()
+  "Return non-nil when `consult-compile-error' is available."
+  (or (fboundp 'consult-compile-error)
+      (require 'consult-compile nil t)))
+
 (defun mcg-compile--run (command root)
   "Run compile COMMAND in ROOT."
   (when mcg-compile-save-buffers
@@ -134,7 +128,7 @@ Unified compile, build, test, and run commands.
 (defun mcg-compile--dispatch (action edit)
   "Run ACTION command.
 When EDIT is non-nil, prompt before running the guessed command."
-  (let* ((root (mcg-compile--project-root))
+  (let* ((root (mcg-project-root-or-default))
          (guess (or (mcg-compile--guess-command root action)
                     compile-command))
          (command (if edit
@@ -152,7 +146,7 @@ When EDIT is non-nil, prompt before running the guessed command."
 (defun mcg-compile ()
   "Run a compile command in the current project."
   (interactive)
-  (let* ((root (mcg-compile--project-root))
+  (let* ((root (mcg-project-root-or-default))
          (command (mcg-compile--read-command "Compile command: " compile-command)))
     (mcg-compile--run command root)))
 
@@ -163,6 +157,14 @@ When EDIT is non-nil, prompt before running the guessed command."
   (if (get-buffer "*compilation*")
       (recompile)
     (call-interactively #'mcg-compile)))
+
+;;;###autoload
+(defun mcg-compile-errors ()
+  "Jump to a compilation error."
+  (interactive)
+  (if (mcg-compile--consult-compile-error-p)
+      (call-interactively #'consult-compile-error)
+    (call-interactively #'next-error)))
 
 ;;;###autoload
 (defun mcg-compile-build (&optional edit)
@@ -200,6 +202,7 @@ With prefix EDIT, edit the guessed command before running."
 (mcg-bind-key "C-c c b" #'mcg-compile-build "tools/compile")
 (mcg-bind-key "C-c c t" #'mcg-compile-test "tools/compile")
 (mcg-bind-key "C-c c R" #'mcg-compile-run "tools/compile")
+(mcg-bind-key "M-g e" #'mcg-compile-errors "tools/compile")
 
 (mcg-log "compile module configured")
 #+end_src

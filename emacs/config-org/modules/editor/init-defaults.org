@@ -6,6 +6,7 @@
 
 本模块负责 MCG Emacs 的编辑器默认配置，包括：
 - savehist 历史记录
+- backup/auto-save 文件位置
 - saveplace 位置记忆
 - whitespace 空白字符显示
 - autorevert 自动刷新
@@ -27,6 +28,7 @@
 ;;; Commentary:
 ;; Editor defaults module for MCG Emacs configuration, responsible for:
 ;; - savehist history records
+;; - backup and auto-save files
 ;; - saveplace position memory
 ;; - whitespace character display
 ;; - autorevert auto refresh
@@ -42,6 +44,7 @@
 ;;; Code:
 
 (require 'core-lib)
+(require 'cl-lib)
 (require 'savehist)
 (require 'saveplace)
 (require 'whitespace)
@@ -122,6 +125,8 @@
 (setq column-number-mode t)
 (setq completion-auto-select nil)
 (setq ad-redefinition-action 'accept)
+(setq switch-to-buffer-in-dedicated-window 'pop)
+(setq switch-to-buffer-obey-display-actions t)
 #+end_src
 
 *** Smooth Scrolling
@@ -208,8 +213,12 @@ Options: t (absolute), 'relative (relative), 'visual (visual), nil (disabled)")
 
 (defun mcg-editor-setup-savehist ()
   "Setup savehist history records."
+  (unless mcg-cache-dir
+    (mcg-init-paths))
+  (make-directory mcg-cache-dir t)
   (setq enable-recursive-minibuffers t)
   (setq history-length mcg-editor-history-length)
+  (setq savehist-file (expand-file-name "savehist.el" mcg-cache-dir))
   (setq savehist-additional-variables
         '(mark-ring
           global-mark-ring
@@ -219,6 +228,40 @@ Options: t (absolute), 'relative (relative), 'visual (visual), nil (disabled)")
   (setq savehist-autosave-interval mcg-editor-savehist-interval)
   (savehist-mode 1)
   (mcg-log "Enabled savehist-mode"))
+#+end_src
+
+*** Savehist Cleanup
+
+保存历史前清理 `kill-ring`，避免带 text properties 的字符串让 savehist 文件膨胀或保存失败。
+
+#+begin_src emacs-lisp
+(defun mcg-editor-clean-savehist-kill-ring ()
+  "Strip text properties from string entries in `kill-ring'."
+  (setq kill-ring
+        (mapcar #'substring-no-properties
+                (cl-remove-if-not #'stringp kill-ring))))
+
+(add-hook 'savehist-save-hook #'mcg-editor-clean-savehist-kill-ring)
+#+end_src
+
+*** Backup Configuration
+
+把备份和 auto-save 文件放到缓存目录里。
+
+#+begin_src emacs-lisp
+(defun mcg-editor-setup-backups ()
+  "Store backup and auto-save files under `mcg-cache-dir'."
+  (unless mcg-cache-dir
+    (mcg-init-paths))
+  (let ((backup-dir (expand-file-name "backups/" mcg-cache-dir))
+        (auto-save-dir (expand-file-name "auto-save/" mcg-cache-dir)))
+    (make-directory backup-dir t)
+    (make-directory auto-save-dir t)
+    (setq backup-directory-alist `((".*" . ,backup-dir)))
+    (setq auto-save-file-name-transforms `((".*" ,auto-save-dir t)))
+    (setq auto-save-list-file-prefix (expand-file-name ".saves-" auto-save-dir))
+    (setq create-lockfiles nil)
+    (mcg-log "Configured backup and auto-save directories")))
 #+end_src
 
 ** Saveplace Configuration
@@ -232,6 +275,10 @@ Options: t (absolute), 'relative (relative), 'visual (visual), nil (disabled)")
 
 (defun mcg-editor-setup-saveplace ()
   "Setup saveplace position memory."
+  (unless mcg-cache-dir
+    (mcg-init-paths))
+  (make-directory mcg-cache-dir t)
+  (setq save-place-file (expand-file-name "places.el" mcg-cache-dir))
   (save-place-mode 1)
   (mcg-log "Enabled save-place-mode"))
 #+end_src
@@ -631,6 +678,7 @@ In Org mode, keep default `C-k` behavior and use `C-M-k` for sexp kill."
 
 ;; Setup built-in features
 (mcg-editor-setup-savehist)
+(mcg-editor-setup-backups)
 (mcg-editor-setup-saveplace)
 (mcg-editor-setup-whitespace)
 (mcg-editor-setup-autorevert)

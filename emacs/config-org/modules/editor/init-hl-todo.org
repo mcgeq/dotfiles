@@ -1,0 +1,79 @@
+#+TITLE: Hl-todo Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-hl-todo.el :lexical t
+
+* Hl-todo Module
+
+Highlight TODO-style annotations in code and text buffers.
+
+** File Header
+
+#+begin_src emacs-lisp
+;;; init-hl-todo.el --- TODO keyword highlighting for MCG Emacs -*- lexical-binding: t; -*-
+
+;;; Commentary:
+;; Configure hl-todo from:
+;; emacs/site-lisp/extensions/editor/hl-todo
+
+;;; Code:
+
+(require 'core-lib)
+#+end_src
+
+** Options
+
+#+begin_src emacs-lisp
+(defcustom mcg-hl-todo-keyword-faces
+  '(("TODO"       . "#d0bf8f")
+    ("FIXME"      . "#ff5f59")
+    ("BUG"        . "#ff5f59")
+    ("HACK"       . "#ff9f00")
+    ("NOTE"       . "#44bc44")
+    ("REVIEW"     . "#2fafff")
+    ("DEPRECATED" . "#b6a0ff"))
+  "Keyword faces used by `hl-todo'."
+  :type '(repeat (cons string string))
+  :group 'mcg)
+#+end_src
+
+** Setup
+
+#+begin_src emacs-lisp
+(defun mcg--setup-hl-todo ()
+  "Setup global hl-todo keyword highlighting."
+  (when (and (mcg-require-extension "compat" t)
+             (mcg-require-extension "cond-let" t)
+             (mcg-require-extension "hl-todo" t))
+    (setq hl-todo-keyword-faces mcg-hl-todo-keyword-faces)
+    (setq hl-todo-include-modes '(prog-mode text-mode conf-mode))
+    (setq hl-todo-exclude-modes '(org-mode))
+    (global-hl-todo-mode 1)
+    (mcg-log "hl-todo configured")))
+
+(defun mcg-hl-todo-grep-regexp ()
+  "Return grep-friendly regexp for configured hl-todo keywords."
+  (with-temp-buffer
+    (hl-todo--regexp t)))
+
+(defun mcg/hl-todo-search-project ()
+  "Search TODO-style keywords in the current project."
+  (interactive)
+  (hl-todo-rgrep (mcg-hl-todo-grep-regexp)
+                 "*"
+                 (mcg-project-root-or-default)
+                 nil))
+#+end_src
+
+** Initialize
+
+#+begin_src emacs-lisp
+(mcg--setup-hl-todo)
+(mcg-bind-key "C-c s T" #'mcg/hl-todo-search-project "editor/hl-todo")
+#+end_src
+
+** Provide
+
+#+begin_src emacs-lisp
+(provide 'init-hl-todo)
+;;; init-hl-todo.el ends here
+#+end_src

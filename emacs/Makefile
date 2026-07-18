@@ -15,7 +15,7 @@ endif
 
 # Define Emacs variable
 EM ?= emacs
-TANGLE_SETUP = (progn (prefer-coding-system 'utf-8-unix) (setq default-buffer-file-coding-system 'utf-8-unix coding-system-for-read 'utf-8-unix coding-system-for-write 'utf-8-unix org-confirm-babel-evaluate nil) (require 'ob-tangle) (defun mcg-batch-tangle-to-file (source target) (let ((files (org-babel-tangle-file source))) (make-directory (file-name-directory target) t) (if (= (length files) 1) (copy-file (car files) target t) (dolist (file files) (copy-file file (expand-file-name (file-name-nondirectory file) (file-name-directory target)) t))) (dolist (file files) (when (and (file-exists-p file) (not (file-equal-p file target))) (delete-file file))) files)))
+TANGLE_SETUP = (progn (prefer-coding-system 'utf-8-unix) (setq default-buffer-file-coding-system 'utf-8-unix coding-system-for-read 'utf-8-unix coding-system-for-write 'utf-8-unix org-confirm-babel-evaluate nil) (require 'ob-tangle) (defun mcg-batch-tangle-to-file (source target) (make-directory (file-name-directory target) t) (let* ((temp-dir (make-temp-file (string ?m ?c ?g ?- ?t ?a ?n ?g ?l ?e ?-) t)) (temp-source (expand-file-name (file-name-nondirectory source) temp-dir)) (generated (expand-file-name (file-name-nondirectory target) temp-dir)) files) (unwind-protect (progn (copy-file source temp-source t) (setq files (org-babel-tangle-file temp-source)) (copy-file generated target t) files) (delete-directory temp-dir t)))))
 EE ?= $(EM) -Q --batch --eval "$(TANGLE_SETUP)"
 
 # Source and target directories
@@ -27,11 +27,22 @@ EXT_DIR = site-lisp/extensions
 ROOT_DIR = ..
 
 # Directories to process
-DIRS = core modules/ui modules/editor modules/completion modules/tools modules/enhance modules/org modules/writing modules/lang private
+DIRS = core modules/ui modules/editor modules/completion modules/tools modules/enhance modules/org modules/writing modules/lang
 
 # =============================================================================
 # Build System
 # =============================================================================
+
+.PHONY: ensure-private-config-file
+
+# Create ignored machine-local private config when it does not exist.
+ensure-private-config-file:
+ifeq ($(IS_UNIX),1)
+	@mkdir -p $(DST_DIR)/private
+	@test -f $(DST_DIR)/private/config.el || printf '%s\n' ';; -*- lexical-binding: t; -*-' '' ';; Put machine-local settings and secrets here.' > $(DST_DIR)/private/config.el
+else
+	@powershell -Command "if (-not (Test-Path '$(DST_DIR)/private')) { New-Item -ItemType Directory -Path '$(DST_DIR)/private' -Force | Out-Null }; if (-not (Test-Path '$(DST_DIR)/private/config.el')) { Set-Content -Path '$(DST_DIR)/private/config.el' -Encoding UTF8 -Value @(';; -*- lexical-binding: t; -*-', '', ';; Put machine-local settings and secrets here.') }"
+endif
 
 # Template function - cross-platform
 define tangle_template
@@ -44,7 +55,7 @@ else
 	@powershell -Command "if (-not (Test-Path '$(DST_DIR)/$(1)')) { New-Item -ItemType Directory -Path '$(DST_DIR)/$(1)' -Force | Out-Null }"
 endif
 	@echo Tangling: $$< to $$@
-	$(EE) --eval '(mcg-batch-tangle-to-file "$$<" "$$@")'
+	$(EE) --eval "(mcg-batch-tangle-to-file \"$$<\" \"$$@\")"
 endef
 
 # init.el special handling
@@ -55,7 +66,17 @@ else
 	@powershell -Command "if (-not (Test-Path '$(DST_DIR)')) { New-Item -ItemType Directory -Path '$(DST_DIR)' -Force | Out-Null }"
 endif
 	@echo Tangling: $< to $@
-	$(EE) --eval '(mcg-batch-tangle-to-file "$<" "$@")'
+	$(EE) --eval "(mcg-batch-tangle-to-file \"$<\" \"$@\")"
+
+# top-level init.el entrypoint for using emacs/ as ~/.emacs.d
+init.el: config-org/root-init.org
+	@echo Tangling: $< to $@
+	$(EE) --eval "(mcg-batch-tangle-to-file \"$<\" \"$(abspath init.el)\")"
+
+# top-level early-init.el for using emacs/ as ~/.emacs.d
+early-init.el: config-org/early-init.org
+	@echo Tangling: $< to $@
+	$(EE) --eval "(mcg-batch-tangle-to-file \"$<\" \"$(abspath early-init.el)\")"
 
 # early-init.el special handling (copy to ~/.emacs.d/)
 $(DST_DIR)/early-init.el: $(SRC_DIR)/early-init.org
@@ -65,7 +86,7 @@ else
 	@powershell -Command "if (-not (Test-Path '$(DST_DIR)')) { New-Item -ItemType Directory -Path '$(DST_DIR)' -Force | Out-Null }"
 endif
 	@echo Tangling: $< to $@
-	$(EE) --eval '(mcg-batch-tangle-to-file "$<" "$@")'
+	$(EE) --eval "(mcg-batch-tangle-to-file \"$<\" \"$@\")"
 ifeq ($(IS_UNIX),1)
 	@echo Copying early-init.el to ~/.emacs.d/
 	@mkdir -p ~/.emacs.d && cp -f $(DST_DIR)/early-init.el ~/.emacs.d/early-init.el
@@ -74,6 +95,15 @@ else
 	@powershell -Command "if (-not (Test-Path \"$$env:APPDATA\\.emacs.d\")) { New-Item -ItemType Directory -Path \"$$env:APPDATA\\.emacs.d\" -Force | Out-Null }; Copy-Item '$(DST_DIR)/early-init.el' \"$$env:APPDATA\\.emacs.d\\early-init.el\" -Force"
 endif
 
+$(DST_DIR)/private/config-example.el: $(SRC_DIR)/private/config-example.org
+ifeq ($(IS_UNIX),1)
+	@mkdir -p $(DST_DIR)/private
+else
+	@powershell -Command "if (-not (Test-Path '$(DST_DIR)/private')) { New-Item -ItemType Directory -Path '$(DST_DIR)/private' -Force | Out-Null }"
+endif
+	@echo Tangling: $< to $@
+	$(EE) --eval "(mcg-batch-tangle-to-file \"$<\" \"$@\")"
+
 # Generate all directory rules
 $(foreach dir,$(DIRS),$(eval $(call tangle_template,$(dir))))
 
@@ -81,7 +111,7 @@ $(foreach dir,$(DIRS),$(eval $(call tangle_template,$(dir))))
 $(foreach dir,$(DIRS),$(eval $(call tangle_template,$(dir))))
 
 # 主构建目标
-all: $(DST_DIR)/early-init.el $(DST_DIR)/init.el $(foreach dir,$(DIRS),build-$(subst /,-,$(dir)))
+all: ensure-private-config-file init.el early-init.el $(DST_DIR)/early-init.el $(DST_DIR)/init.el $(DST_DIR)/private/config-example.el $(foreach dir,$(DIRS),build-$(subst /,-,$(dir)))
 	@echo [OK] Configuration generated from Org files!
 
 # Tangle single directory
@@ -109,7 +139,7 @@ ifndef FILE
 	$(error FILE is required. Usage: make tangle-file FILE=config-org/modules/editor/init-defaults.org)
 endif
 	@echo Tangling: $(FILE)
-	$(EE) --eval '(let* ((source "$(FILE)") (relative (file-relative-name source "$(SRC_DIR)/")) (target-dir (expand-file-name (or (file-name-directory relative) "") "$(DST_DIR)/")) (target (expand-file-name (concat (file-name-base source) ".el") target-dir))) (mcg-batch-tangle-to-file source target))'
+	$(EE) --eval "(let* ((source \"$(FILE)\") (relative (file-relative-name source \"$(SRC_DIR)/\"))) (cond ((string= relative \"root-init.org\") (mcg-batch-tangle-to-file source (expand-file-name \"init.el\" default-directory))) ((string= relative \"early-init.org\") (mcg-batch-tangle-to-file source (expand-file-name \"$(DST_DIR)/early-init.el\" default-directory)) (mcg-batch-tangle-to-file source (expand-file-name \"early-init.el\" default-directory))) (t (let* ((target-dir (expand-file-name (or (file-name-directory relative) \"\") \"$(DST_DIR)/\")) (target (expand-file-name (concat (file-name-base source) \".el\") target-dir))) (mcg-batch-tangle-to-file source target)))))"
 	@echo [OK] Tangled $(FILE)
 
 # Clean generated files
@@ -157,7 +187,7 @@ endif
 elc:
 	@echo Byte-compiling configuration files...
 	$(EM) --batch -L "$(DST_DIR)" -L "$(DST_DIR)/core" \
-		--eval '(byte-recompile-directory "$(DST_DIR)" 0 t)'
+		--eval "(byte-recompile-directory \"$(DST_DIR)\" 0 t)"
 	@echo [OK] Byte compilation complete!
 
 clean-elc:
@@ -194,7 +224,17 @@ test-verbose:
 		-l test/run-tests.el \
 		--eval "(ert-run-tests-batch-and-exit t)"
 
-.PHONY: test test-verbose
+profile-startup:
+	@echo Profiling startup module load times...
+ifeq ($(IS_UNIX),1)
+	@mkdir -p .cache
+	@$(EM) -Q --batch -l scripts/profile-startup.el 2>.cache/profile-startup-stderr.log || (cat .cache/profile-startup-stderr.log; exit 1)
+else
+	@cmd /C "if not exist .cache mkdir .cache"
+	@cmd /C "$(EM) -Q --batch -l scripts/profile-startup.el 2>.cache\profile-startup-stderr.log || (type .cache\profile-startup-stderr.log & exit /b 1)"
+endif
+
+.PHONY: test test-verbose profile-startup
 
 # =============================================================================
 # Git Submodule 管理
@@ -279,7 +319,7 @@ compile-ext:
 	@echo Compiling extension .el files...
 	$(EM) -Q --batch \
 		-L "$(EXT_DIR)" \
-		--eval '(byte-recompile-directory "$(EXT_DIR)" 0 t)'
+		--eval "(byte-recompile-directory \"$(EXT_DIR)\" 0 t)"
 	@echo [OK] Extensions compiled!
 
 clean-ext:
@@ -340,6 +380,7 @@ help:
 	@echo.
 	@echo Testing:
 	@echo   make test       - Run all tests
+	@echo   make profile-startup - Show startup module load times
 	@echo.
 	@echo Quick shortcuts: init=gsb, up=gsu, st=gsst, h=help
 

@@ -88,14 +88,14 @@ Clutch 数据库客户端核心配置。
 
 ** Connection Template
 
-数据库连接配置模板说明。实际配置请在 `private/config.org` 中设置。
+数据库连接配置模板说明。实际配置请放在 `site-lisp/config/private/config.el`。
 
 #+begin_src emacs-lisp
 ;;; ============================================================
 ;;; Connection Template
 ;;; ============================================================
 
-;; Database connections should be configured in private/config.org
+;; Database connections should be configured in private/config.el
 ;; to keep sensitive information (passwords, hosts) out of version control.
 ;;
 ;; Example template:

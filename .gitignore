@@ -10,12 +10,14 @@ vimrc/tmp/*
 
 emacs/site-lisp/.data/*
 emacs/site-lisp/.cache/*
+emacs/.cache/
 emacs/site-lisp/config/*
 emacs/config-org/**/*.md
 emacs/config-org/**/*.el
 emacs/custom.el
 emacs/site-lisp/packages-lock.el
 emacs/config-org/private/config.org
+emacs/site-lisp/config/private/config.el
 
 # nushell
 nushell/history.*

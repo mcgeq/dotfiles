@@ -41,6 +41,19 @@
 
 (defvar mcg-zig-format-on-save t
   "Whether to format Zig files on save using zig fmt.")
+
+(defcustom mcg-zig-enable-lsp t
+  "Whether Zig buffers should enable lsp-bridge when zls is available."
+  :type 'boolean
+  :group 'mcg)
+
+(defcustom mcg-zig-warn-missing-zls nil
+  "Whether to show one warning when zls is missing for Zig LSP."
+  :type 'boolean
+  :group 'mcg)
+
+(defvar mcg-zig--missing-zls-warned nil
+  "Non-nil means the missing zls warning has already been shown.")
 #+end_src
 
 ** zig-mode / zig-ts-mode Configuration
@@ -49,6 +62,18 @@
 ;;; ============================================================
 ;;; zig-mode / zig-ts-mode Configuration
 ;;; ============================================================
+
+(defun mcg-zig--treesit-available-p ()
+  "Return non-nil when Zig tree-sitter grammar is available."
+  (and (fboundp 'treesit-language-available-p)
+       (treesit-language-available-p 'zig)))
+
+(defun mcg-zig-deferred-mode ()
+  "Select Zig major mode after the zig module is deferred-loaded."
+  (if (and (fboundp 'zig-ts-mode)
+           (mcg-zig--treesit-available-p))
+      (zig-ts-mode)
+    (zig-mode)))
 
 (defun mcg-zig-mode-setup ()
   "Setup function for zig-mode and zig-ts-mode."
@@ -59,7 +84,26 @@
   ;; Enable subword mode for camelCase navigation
   (subword-mode 1)
 
+  (mcg-zig-maybe-enable-lsp)
+
   (mcg-log "Zig mode setup complete"))
+
+(defun mcg-zig--zls-available-p ()
+  "Return non-nil when the Zig language server executable is available."
+  (executable-find "zls"))
+
+(defun mcg-zig-maybe-enable-lsp ()
+  "Enable lsp-bridge for Zig when zls and lsp-bridge are available."
+  (cond
+   ((not mcg-zig-enable-lsp)
+    nil)
+   ((mcg-zig--zls-available-p)
+    (when (fboundp 'lsp-bridge-mode)
+      (lsp-bridge-mode 1)))
+   ((and mcg-zig-warn-missing-zls
+         (not mcg-zig--missing-zls-warned))
+    (setq mcg-zig--missing-zls-warned t)
+    (mcg-log-warning "zls executable not found; Zig LSP disabled"))))
 
 ;; File associations are managed by treesit-auto in init-treesit.el.
 ;; This module only configures mode behavior.
@@ -88,23 +132,29 @@
   (or (locate-dominating-file default-directory "build.zig")
       default-directory))
 
+(defun mcg-zig--compile (command &optional root)
+  "Run Zig compile COMMAND in ROOT through the unified compile layer."
+  (let ((root (file-name-as-directory
+               (or root (mcg--zig-find-build-root)))))
+    (if (fboundp 'mcg-compile--run)
+        (mcg-compile--run command root)
+      (let ((default-directory root))
+        (compile command)))))
+
 (defun mcg/zig-build ()
   "Run zig build."
   (interactive)
-  (let ((default-directory (mcg--zig-find-build-root)))
-    (compile "zig build")))
+  (mcg-zig--compile "zig build"))
 
 (defun mcg/zig-build-run ()
   "Run zig build run."
   (interactive)
-  (let ((default-directory (mcg--zig-find-build-root)))
-    (compile "zig build run")))
+  (mcg-zig--compile "zig build run"))
 
 (defun mcg/zig-build-test ()
   "Run zig build test."
   (interactive)
-  (let ((default-directory (mcg--zig-find-build-root)))
-    (compile "zig build test")))
+  (mcg-zig--compile "zig build test"))
 
 (defun mcg/zig-test ()
   "Run zig test on current file."
@@ -112,7 +162,7 @@
   (let ((file (buffer-file-name)))
     (when file
       (save-buffer)
-      (compile (format "zig test %s" (shell-quote-argument file))))))
+      (mcg-zig--compile (format "zig test %s" (shell-quote-argument file))))))
 
 (defun mcg/zig-run ()
   "Run current Zig file."
@@ -120,7 +170,7 @@
   (let ((file (buffer-file-name)))
     (when file
       (save-buffer)
-      (compile (format "zig run %s" (shell-quote-argument file))))))
+      (mcg-zig--compile (format "zig run %s" (shell-quote-argument file))))))
 #+end_src
 
 ** Zig Build Steps
@@ -133,20 +183,17 @@
 (defun mcg/zig-build-step (step)
   "Run zig build with STEP."
   (interactive "sBuild step: ")
-  (let ((default-directory (mcg--zig-find-build-root)))
-    (compile (format "zig build %s" step))))
+  (mcg-zig--compile (format "zig build %s" step)))
 
 (defun mcg/zig-build-release ()
   "Run zig build with release mode."
   (interactive)
-  (let ((default-directory (mcg--zig-find-build-root)))
-    (compile "zig build -Doptimize=ReleaseSafe")))
+  (mcg-zig--compile "zig build -Doptimize=ReleaseSafe"))
 
 (defun mcg/zig-build-release-fast ()
   "Run zig build with release-fast mode."
   (interactive)
-  (let ((default-directory (mcg--zig-find-build-root)))
-    (compile "zig build -Doptimize=ReleaseFast")))
+  (mcg-zig--compile "zig build -Doptimize=ReleaseFast"))
 #+end_src
 
 ** Zig Documentation
@@ -183,6 +230,8 @@
     (define-key map (kbd "C-c C-c s") #'mcg/zig-build-step)
     (define-key map (kbd "C-c C-c R") #'mcg/zig-build-release)
     (define-key map (kbd "C-c C-c F") #'mcg/zig-build-release-fast)
+    ;; Formatting
+    (define-key map (kbd "C-c C-f") #'mcg-format-buffer)
     ;; Run/Test single file
     (define-key map (kbd "C-c C-r") #'mcg/zig-run)
     (define-key map (kbd "C-c C-t") #'mcg/zig-test)
@@ -220,7 +269,7 @@
 ╚═══════════════════════════════════════════╝
 
 FORMAT:
-  C-c C-f      - zig fmt
+  C-c C-f      - Format buffer
 
 BUILD (project with build.zig):
   C-c C-c b    - zig build

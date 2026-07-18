@@ -88,6 +88,10 @@ Located at site-lisp/config/private/.")
   "Directory for cache files.
 Located at .cache/ under mcg-emacs-dir.")
 
+(defvar mcg-eln-cache-dir nil
+  "Directory for native-comp ELN cache files.
+Located at .cache/eln-cache/ under mcg-emacs-dir.")
+
 (defvar mcg-data-dir nil
   "Directory for data files.
 Located at .data/ under mcg-emacs-dir.")
@@ -275,15 +279,17 @@ Only records time when `mcg-profile-mode' is enabled."
   "Initialize all MCG path variables.
 BASE-DIR is the root directory of the Emacs configuration.
 If not provided, it defaults to the parent of site-lisp/config/core/."
-  (let ((base (or base-dir
-                  ;; Default: go up from core-bootstrap.el location
-                  (file-name-directory
-                   (directory-file-name
-                    (file-name-directory
-                     (directory-file-name
-                      (file-name-directory
-                       (or load-file-name buffer-file-name
-                           (expand-file-name "emacs" user-emacs-directory))))))))))
+  (let* ((bootstrap-file (or (locate-library "core-bootstrap")
+                             load-file-name
+                             buffer-file-name
+                             (expand-file-name "site-lisp/config/core/core-bootstrap.el"
+                                               user-emacs-directory)))
+         ;; core-bootstrap.el lives at site-lisp/config/core/core-bootstrap.el.
+         (core-dir (file-name-directory bootstrap-file))
+         (config-dir (file-name-directory (directory-file-name core-dir)))
+         (site-lisp-dir (file-name-directory (directory-file-name config-dir)))
+         (inferred-base (file-name-directory (directory-file-name site-lisp-dir)))
+         (base (or base-dir inferred-base)))
     ;; Normalize path
     (setq base (file-name-as-directory (expand-file-name base)))
     
@@ -295,13 +301,29 @@ If not provided, it defaults to the parent of site-lisp/config/core/."
     (setq mcg-extensions-dir (expand-file-name "site-lisp/extensions/" base))
     (setq mcg-private-dir (expand-file-name "private/" mcg-config-dir))
     (setq mcg-cache-dir (expand-file-name ".cache/" base))
+    (setq mcg-eln-cache-dir (expand-file-name "eln-cache/" mcg-cache-dir))
     (setq mcg-data-dir (expand-file-name ".data/" base))
     
     ;; Create cache and data directories if they don't exist
     (unless (file-directory-p mcg-cache-dir)
       (make-directory mcg-cache-dir t))
+    (unless (file-directory-p mcg-eln-cache-dir)
+      (make-directory mcg-eln-cache-dir t))
     (unless (file-directory-p mcg-data-dir)
       (make-directory mcg-data-dir t))
+
+    ;; Keep native-comp artifacts with this configuration instead of ~/.emacs.d.
+    (when (boundp 'native-comp-eln-load-path)
+      (if (fboundp 'startup-redirect-eln-cache)
+          (startup-redirect-eln-cache mcg-eln-cache-dir)
+        (setq native-comp-eln-load-path
+              (cons mcg-eln-cache-dir
+                    (remove mcg-eln-cache-dir native-comp-eln-load-path)))))
+
+    ;; Keep built-in Emacs state files with this configuration.
+    (setq savehist-file (expand-file-name "savehist.el" mcg-cache-dir))
+    (setq save-place-file (expand-file-name "places.el" mcg-cache-dir))
+    (setq recentf-save-file (expand-file-name "recentf.el" mcg-cache-dir))
     
     (mcg-log "Initialized paths with base: %s" base)
     base))

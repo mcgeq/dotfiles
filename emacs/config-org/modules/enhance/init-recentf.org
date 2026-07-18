@@ -35,6 +35,12 @@
 ;;; Code:
 
 (require 'core-lib)
+
+(unless mcg-cache-dir
+  (mcg-init-paths))
+(make-directory mcg-cache-dir t)
+(setq recentf-save-file (expand-file-name "recentf.el" mcg-cache-dir))
+
 (require 'recentf)
 #+end_src
 
@@ -47,8 +53,15 @@
 
 (defun mcg--setup-recentf ()
   "Setup Recentf recent files tracking."
+  (unless mcg-cache-dir
+    (mcg-init-paths))
+  (make-directory mcg-cache-dir t)
+
   ;; Maximum number of saved items
   (setq recentf-max-saved-items 300)
+
+  ;; Keep state files inside the MCG cache directory.
+  (setq recentf-save-file (expand-file-name "recentf.el" mcg-cache-dir))
   
   ;; Don't auto-cleanup (can be slow)
   (setq recentf-auto-cleanup 'never)

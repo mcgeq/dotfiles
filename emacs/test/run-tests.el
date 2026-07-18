@@ -6,6 +6,10 @@
 (require 'cl-lib)
 
 (add-to-list 'load-path (expand-file-name "site-lisp/config/core" default-directory))
+(add-to-list 'load-path (expand-file-name "site-lisp/config/modules/editor" default-directory))
+(add-to-list 'load-path (expand-file-name "site-lisp/config/modules/completion" default-directory))
+(add-to-list 'load-path (expand-file-name "site-lisp/config/modules/tools" default-directory))
+(add-to-list 'load-path (expand-file-name "site-lisp/config/modules/enhance" default-directory))
 (add-to-list 'load-path (expand-file-name "site-lisp/config/modules/org" default-directory))
 (add-to-list 'load-path (expand-file-name "site-lisp/config/modules/ui" default-directory))
 
@@ -17,6 +21,7 @@
 (defvar mcg-org-default-notes-file (expand-file-name "notes.org" mcg-org-notes-directory))
 (defvar mcg-org-task-file (expand-file-name "tasks.org" mcg-org-agenda-directory))
 
+(require 'core-modules)
 (require 'init-org-capture)
 
 (defun mcg-test-capture-template (key)
@@ -462,6 +467,16 @@
       (should (search-forward "PostgreSQL 连接示例" nil t))
       (should-not (search-forward "杩炴帴绀轰緥" nil t)))))
 
+(ert-deftest mcg-generated-private-configs-use-lexical-binding ()
+  (dolist (relative-path '("site-lisp/config/private/config-example.el"
+                           "site-lisp/config/private/config.el"))
+    (let ((path (expand-file-name relative-path mcg-emacs-dir)))
+      (when (file-exists-p path)
+        (with-temp-buffer
+          (insert-file-contents path)
+          (goto-char (point-min))
+          (should (search-forward "lexical-binding: t" (line-end-position) t)))))))
+
 (ert-deftest mcg-early-init-frame-colors-avoid-white-flash ()
   (let ((early-init-source
          (expand-file-name "config-org/early-init.org" mcg-emacs-dir)))
@@ -472,7 +487,71 @@
                          "(background-color . ,mcg-initial-frame-background)"
                          "(foreground-color . ,mcg-initial-frame-foreground)"))
         (goto-char (point-min))
+        (should (search-forward setting nil t)))
+      (goto-char (point-min))
+      (should-not (search-forward "inhibit-redisplay t" nil t)))))
+
+(ert-deftest mcg-early-init-startup-redisplay-is-released-once ()
+  (let ((early-init-source
+         (expand-file-name "config-org/early-init.org" mcg-emacs-dir)))
+    (with-temp-buffer
+      (insert-file-contents early-init-source)
+      (dolist (setting '("mcg--startup-redisplay-released"
+                         "mcg-release-startup-redisplay"
+                         "unless mcg--startup-redisplay-released"
+                         "add-hook 'window-setup-hook #'mcg-release-startup-redisplay"))
+        (goto-char (point-min))
         (should (search-forward setting nil t))))))
+
+(ert-deftest mcg-early-init-redirects-eln-cache-before-native-comp-settings ()
+  (let ((early-init-source
+         (expand-file-name "config-org/early-init.org" mcg-emacs-dir)))
+    (with-temp-buffer
+      (insert-file-contents early-init-source)
+      (let ((redirect-position (progn
+                                 (goto-char (point-min))
+                                 (search-forward "startup-redirect-eln-cache" nil t)))
+            (native-settings-position (progn
+                                        (goto-char (point-min))
+                                        (search-forward "native-comp-async-report-warnings-errors" nil t))))
+        (should redirect-position)
+        (should native-settings-position)
+        (should (< redirect-position native-settings-position))))))
+
+(ert-deftest mcg-generated-early-init-redirects-eln-cache-into-config-cache ()
+  (skip-unless (boundp 'native-comp-eln-load-path))
+  (let* ((early-init-file (expand-file-name "site-lisp/config/early-init.el" mcg-emacs-dir))
+         (expected-eln-cache (expand-file-name ".cache/eln-cache/" mcg-emacs-dir))
+         (original-eln-load-path (symbol-value 'native-comp-eln-load-path))
+         (original-user-init-file user-init-file)
+         (original-user-emacs-directory user-emacs-directory)
+         (original-file-name-handler-alist file-name-handler-alist)
+         (original-gc-cons-threshold gc-cons-threshold)
+         (original-gc-cons-percentage gc-cons-percentage)
+         (original-default-frame-alist default-frame-alist)
+         (original-initial-frame-alist initial-frame-alist)
+         (original-inhibit-redisplay inhibit-redisplay)
+         (original-inhibit-message inhibit-message))
+    (unwind-protect
+        (progn
+          (setq user-init-file (expand-file-name "init.el" mcg-emacs-dir))
+          (setq user-emacs-directory mcg-emacs-dir)
+          (set 'native-comp-eln-load-path
+               (list (expand-file-name ".emacs.d/eln-cache/" temporary-file-directory)
+                     (expand-file-name "system-native-lisp/" temporary-file-directory)))
+          (load early-init-file nil t)
+          (should (equal expected-eln-cache
+                         (car (symbol-value 'native-comp-eln-load-path)))))
+      (set 'native-comp-eln-load-path original-eln-load-path)
+      (setq user-init-file original-user-init-file)
+      (setq user-emacs-directory original-user-emacs-directory)
+      (setq file-name-handler-alist original-file-name-handler-alist)
+      (setq gc-cons-threshold original-gc-cons-threshold)
+      (setq gc-cons-percentage original-gc-cons-percentage)
+      (setq default-frame-alist original-default-frame-alist)
+      (setq initial-frame-alist original-initial-frame-alist)
+      (setq inhibit-redisplay original-inhibit-redisplay)
+      (setq inhibit-message original-inhibit-message))))
 
 (ert-deftest mcg-startup-heavy-modules-are-idle-by-default ()
   (let ((init-source
@@ -483,7 +562,9 @@
                          "(:tools . magit)"
                          "(:editor . dirvish)"
                          "(:tools . clutch)"
-                         "(:ui . holo-layer)"))
+                         "(:ui . holo-layer)"
+                         "(:ui . awesome-tray)"
+                         "(:org . org)"))
         (goto-char (point-min))
         (should (search-forward setting nil t)))
       (goto-char (point-min))
@@ -530,7 +611,8 @@
       (should-not (search-forward "(require 'all-the-icons" nil t)))))
 
 (ert-deftest mcg-dashboard-setup-configures-nerd-icons-after-dashboard-loads ()
-  (let ((dashboard-setup-called nil))
+  (let ((dashboard-setup-called nil)
+        (dashboard-startup-render-called nil))
     (when (featurep 'init-dashboard)
       (unload-feature 'init-dashboard t))
     (provide 'nerd-icons)
@@ -543,9 +625,17 @@
     (cl-letf (((symbol-function 'mcg-require-extension)
                (lambda (&rest _args) t))
               ((symbol-function 'dashboard-setup-startup-hook)
-               (lambda () (setq dashboard-setup-called t))))
+               (lambda () (setq dashboard-setup-called t)))
+              ((symbol-function 'dashboard-insert-startupify-lists)
+               (lambda (&rest _args)
+                 (setq dashboard-startup-render-called t)
+                 (get-buffer-create "*dashboard*")))
+              ((symbol-function 'switch-to-buffer)
+               (lambda (buffer-or-name &rest _args)
+                 (get-buffer-create buffer-or-name))))
       (require 'init-dashboard)
-      (should dashboard-setup-called)
+      (should-not dashboard-setup-called)
+      (should dashboard-startup-render-called)
       (should (eq dashboard-icon-type 'nerd-icons))
       (should (eq dashboard-startup-banner 'ascii))
       (should (string-match-p "_      ____" dashboard-banner-ascii))
@@ -556,6 +646,541 @@
       (should dashboard-set-file-icons)
       (should (equal "nf-oct-history" (cdr (assq 'recents dashboard-heading-icons))))
       (should (equal "nf-oct-rocket" (cdr (assq 'projects dashboard-heading-icons)))))))
+
+(ert-deftest mcg-dashboard-startup-displays-without-after-init-prerender ()
+  (let ((dashboard-source
+         (expand-file-name "config-org/modules/ui/init-dashboard.org" mcg-emacs-dir)))
+    (with-temp-buffer
+      (insert-file-contents dashboard-source)
+      (dolist (setting '("mcg-dashboard-open-startup-buffer"
+                         "mcg-release-startup-redisplay"))
+        (goto-char (point-min))
+        (should (search-forward setting nil t)))
+      (goto-char (point-min))
+      (should-not (search-forward "(dashboard-setup-startup-hook)" nil t))
+      (goto-char (point-min))
+      (should-not (search-forward "initial-buffer-choice" nil t)))))
+
+(ert-deftest mcg-dashboard-configures-recentf-before-startup-render ()
+  (let ((dashboard-source
+         (expand-file-name "config-org/modules/ui/init-dashboard.org" mcg-emacs-dir)))
+    (with-temp-buffer
+      (insert-file-contents dashboard-source)
+      (let ((recentf-position (progn
+                                (goto-char (point-min))
+                                (search-forward "mcg-dashboard-setup-recentf" nil t)))
+            (render-position (progn
+                               (goto-char (point-min))
+                               (search-forward "mcg-dashboard-open-startup-buffer" nil t))))
+        (should recentf-position)
+        (should render-position)
+        (should (< recentf-position render-position)))
+      (dolist (setting '("recentf-save-file"
+                         "recentf-auto-cleanup"
+                         "'never"))
+        (goto-char (point-min))
+        (should (search-forward setting nil t))))))
+
+(ert-deftest mcg-dashboard-early-display-does-not-refresh-twice-at-startup ()
+  (let ((dashboard-source
+         (expand-file-name "config-org/modules/ui/init-dashboard.org" mcg-emacs-dir)))
+    (with-temp-buffer
+      (insert-file-contents dashboard-source)
+      (goto-char (point-min))
+      (should-not
+       (search-forward "add-hook 'emacs-startup-hook #'dashboard-initialize" nil t))
+      (goto-char (point-min))
+      (should-not
+       (search-forward "add-hook 'window-setup-hook #'dashboard-resize-on-hook" nil t))
+      (goto-char (point-min))
+      (should (search-forward "mcg-dashboard-enable-resize-refresh" nil t)))))
+
+(ert-deftest mcg-dashboard-startup-renders-before-switching-once ()
+  (let ((events nil)
+        (initial-buffer-choice nil)
+        (window-size-change-functions nil)
+        (window-setup-hook nil)
+        (dashboard-buffer-name "*dashboard*"))
+    (when (featurep 'init-dashboard)
+      (unload-feature 'init-dashboard t))
+    (provide 'nerd-icons)
+    (cl-letf (((symbol-function 'mcg-require-extension)
+               (lambda (&rest _args) t))
+              ((symbol-function 'dashboard-setup-startup-hook)
+               (lambda ()
+                 (ert-fail "dashboard-setup-startup-hook should not be used")))
+              ((symbol-function 'dashboard-open)
+               (lambda (&rest _args)
+                 (ert-fail "dashboard-open switches before rendering and should not be used at startup")))
+              ((symbol-function 'dashboard-insert-startupify-lists)
+               (lambda (&rest _args)
+                 (push 'render events)
+                 (get-buffer-create dashboard-buffer-name)))
+              ((symbol-function 'switch-to-buffer)
+               (lambda (buffer-or-name &rest _args)
+                 (push (list 'switch buffer-or-name) events)
+                 (get-buffer-create buffer-or-name))))
+      (require 'init-dashboard)
+      (should (equal (reverse events)
+                     (list 'render (list 'switch dashboard-buffer-name))))
+      (should-not initial-buffer-choice)
+      (should (memq #'mcg-dashboard-enable-resize-refresh window-setup-hook)))))
+
+(ert-deftest mcg-consult-integrates-completion-in-region-and-minibuffer-history ()
+  (require 'init-consult)
+  (should (eq (lookup-key global-map (kbd "C-x b")) #'consult-buffer))
+  (should (eq (lookup-key global-map (kbd "C-x 4 b")) #'consult-buffer-other-window))
+  (should (eq (lookup-key global-map (kbd "C-x 5 b")) #'consult-buffer-other-frame))
+  (should (eq completion-in-region-function #'consult-completion-in-region))
+  (should (eq (lookup-key minibuffer-local-map (kbd "C-r")) #'consult-history))
+  (should (eq xref-show-definitions-function #'consult-xref)))
+
+(ert-deftest mcg-consult-owns-explicit-c-c-s-search-prefix ()
+  (let ((source
+         (expand-file-name "config-org/modules/completion/init-consult.org" mcg-emacs-dir)))
+    (with-temp-buffer
+      (insert-file-contents source)
+      (dolist (snippet '("(define-prefix-command 'mcg-search-map)"
+                         "(mcg-bind-key \"C-c s\" 'mcg-search-map \"completion/consult\")"))
+        (goto-char (point-min))
+        (should (search-forward snippet nil t)))))
+  (require 'init-consult)
+  (should (keymapp (lookup-key global-map (kbd "C-c s")))))
+
+(ert-deftest mcg-project-switch-buffer-prefers-consult-project-buffer ()
+  (require 'init-project)
+  (let ((called nil))
+    (cl-letf (((symbol-function 'consult-project-buffer)
+               (lambda ()
+                 (interactive)
+                 (setq called 'consult)))
+              ((symbol-function 'project-switch-to-buffer)
+               (lambda ()
+                 (interactive)
+                 (setq called 'project)))
+              ((symbol-function 'switch-to-buffer)
+               (lambda ()
+                 (interactive)
+                 (setq called 'switch))))
+      (mcg/project-switch-buffer)
+      (should (eq called 'consult)))))
+
+(ert-deftest mcg-project-find-file-prefers-consult-find ()
+  (require 'init-project)
+  (let ((called nil))
+    (cl-letf (((symbol-function 'mcg-project--require-root)
+               (lambda () "/tmp/project/"))
+              ((symbol-function 'consult-find)
+               (lambda (directory)
+                 (interactive)
+                 (setq called (cons 'consult directory))))
+              ((symbol-function 'project-find-file)
+               (lambda ()
+                 (interactive)
+                 (setq called 'project))))
+      (mcg/project-find-file)
+      (should (equal called '(consult . "/tmp/project/"))))))
+
+(ert-deftest mcg-core-project-root-or-default-prefers-project-module-helper ()
+  (require 'core-lib)
+  (let ((fallback-directory "/tmp/fallback/"))
+    (cl-letf (((symbol-function 'mcg-project-current-root)
+               (lambda (&optional _maybe-prompt) "/tmp/mcg-project/"))
+              ((symbol-function 'project-current)
+               (lambda (&optional _maybe-prompt) nil)))
+      (let ((default-directory fallback-directory))
+        (should (equal (mcg-project-root-or-default) "/tmp/mcg-project/"))))))
+
+(ert-deftest mcg-core-project-root-or-default-falls-back-to-default-directory ()
+  (require 'core-lib)
+  (let ((fallback-directory "/tmp/fallback/"))
+    (cl-letf (((symbol-function 'mcg-project-current-root)
+               (lambda (&optional _maybe-prompt) nil))
+              ((symbol-function 'project-current)
+               (lambda (&optional _maybe-prompt) nil)))
+      (let ((default-directory fallback-directory))
+        (should (equal (mcg-project-root-or-default) "/tmp/fallback/"))))))
+
+(ert-deftest mcg-project-root-wrapper-logic-lives-in-core-lib ()
+  (let ((cases '(("config-org/modules/tools/init-compile.org"
+                  "(defun mcg-compile--project-root"
+                  "(mcg-project-root-or-default)")
+                 ("config-org/modules/tools/init-blink-search.org"
+                  "(defun mcg-blink-search-project-root"
+                  "(mcg-project-root-or-default)")
+                 ("config-org/modules/tools/init-color-rg.org"
+                  "(defun mcg-color-rg-project-root"
+                  "(mcg-project-root-or-default)"))))
+    (dolist (case cases)
+      (let ((source (expand-file-name (nth 0 case) mcg-emacs-dir)))
+        (with-temp-buffer
+          (insert-file-contents source)
+          (should-not (search-forward (nth 1 case) nil t))
+          (goto-char (point-min))
+          (should (search-forward (nth 2 case) nil t)))))))
+
+(ert-deftest mcg-compile-errors-prefers-consult-compile-error ()
+  (require 'init-compile)
+  (let ((called nil))
+    (cl-letf (((symbol-function 'mcg-compile--consult-compile-error-p)
+               (lambda () t))
+              ((symbol-function 'consult-compile-error)
+               (lambda ()
+                 (interactive)
+                 (setq called 'consult)))
+              ((symbol-function 'next-error)
+               (lambda ()
+                 (interactive)
+                 (setq called 'next-error))))
+      (mcg-compile-errors)
+      (should (eq called 'consult)))))
+
+(ert-deftest mcg-compile-errors-falls-back-to-next-error ()
+  (require 'init-compile)
+  (let ((called nil))
+    (cl-letf (((symbol-function 'mcg-compile--consult-compile-error-p)
+               (lambda () nil))
+              ((symbol-function 'consult-compile-error)
+               (lambda ()
+                 (interactive)
+                 (setq called 'consult)))
+              ((symbol-function 'next-error)
+               (lambda ()
+                 (interactive)
+                 (setq called 'next-error))))
+      (mcg-compile-errors)
+      (should (eq called 'next-error)))))
+
+(ert-deftest mcg-compile-binds-m-g-e-to-compile-errors-wrapper ()
+  (let ((source
+         (expand-file-name "config-org/modules/tools/init-compile.org" mcg-emacs-dir)))
+    (with-temp-buffer
+      (insert-file-contents source)
+      (should (search-forward "(mcg-bind-key \"M-g e\" #'mcg-compile-errors \"tools/compile\")"
+                              nil t)))))
+
+(ert-deftest mcg-diagnostics-binds-m-g-f-to-diagnostics-list-wrapper ()
+  (let ((source
+         (expand-file-name "config-org/modules/tools/init-diagnostics.org" mcg-emacs-dir)))
+    (with-temp-buffer
+      (insert-file-contents source)
+      (should (search-forward "(mcg-bind-key \"M-g f\" #'mcg-diagnostics-list \"tools/diagnostics\")"
+                              nil t)))))
+
+(ert-deftest mcg-blink-search-org-title-matches-module ()
+  (let ((source
+         (expand-file-name "config-org/modules/tools/init-blink-search.org" mcg-emacs-dir)))
+    (with-temp-buffer
+      (insert-file-contents source)
+      (should (search-forward "#+TITLE: Blink Search Module" nil t))
+      (should (search-forward "* Blink Search Module" nil t))
+      (goto-char (point-min))
+      (should-not (search-forward "Auto Save Module" nil t)))))
+
+(ert-deftest mcg-search-extension-modules-describe-extending-c-c-s-prefix ()
+  (dolist (case '(("config-org/modules/tools/init-blink-search.org"
+                   "Extend the shared C-c s search prefix"
+                   "Blink-search keybindings configured")
+                  ("config-org/modules/tools/init-color-rg.org"
+                   "Extend the shared C-c s search prefix"
+                   "Color-rg keybindings configured")))
+    (let ((source (expand-file-name (car case) mcg-emacs-dir)))
+      (with-temp-buffer
+        (insert-file-contents source)
+        (dolist (snippet (cdr case))
+          (goto-char (point-min))
+          (should (search-forward snippet nil t)))))))
+
+(ert-deftest mcg-blink-search-project-root-prefers-mcg-project-root-helper ()
+  (cl-letf (((symbol-function 'mcg-require-extension)
+             (lambda (&rest _args) nil)))
+    (require 'init-blink-search))
+  (let ((called-directory nil)
+        (fallback-directory "/tmp/fallback/"))
+    (cl-letf (((symbol-function 'mcg-project-current-root)
+               (lambda (&optional _maybe-prompt) "/tmp/mcg-project/"))
+              ((symbol-function 'project-current)
+               (lambda (&optional _maybe-prompt) nil))
+              ((symbol-function 'blink-search)
+               (lambda ()
+                 (interactive)
+                 (setq called-directory default-directory))))
+      (let ((default-directory fallback-directory))
+        (mcg/blink-search-project-root))
+      (should (equal called-directory "/tmp/mcg-project/")))))
+
+(ert-deftest mcg-blink-search-project-root-does-not-depend-on-projectile ()
+  (let ((source
+         (expand-file-name "config-org/modules/tools/init-blink-search.org" mcg-emacs-dir)))
+    (with-temp-buffer
+      (insert-file-contents source)
+      (should-not (search-forward "projectile-project-root" nil t)))))
+
+(ert-deftest mcg-color-rg-project-keybindings-use-mcg-wrappers ()
+  (let ((source
+         (expand-file-name "config-org/modules/tools/init-color-rg.org" mcg-emacs-dir)))
+    (with-temp-buffer
+      (insert-file-contents source)
+      (dolist (snippet '("(mcg-bind-key \"C-c s G\" 'mcg/color-rg-search-project \"tools/color-rg\")"
+                         "(mcg-bind-key \"C-c s S\" 'mcg/color-rg-search-symbol-in-project \"tools/color-rg\")"))
+        (goto-char (point-min))
+        (should (search-forward snippet nil t))))))
+
+(ert-deftest mcg-color-rg-search-project-prefers-mcg-project-root-helper ()
+  (cl-letf (((symbol-function 'mcg-require-extension)
+             (lambda (&rest _args) nil)))
+    (require 'init-color-rg))
+  (let ((called-keyword nil)
+        (called-directory nil)
+        (fallback-directory "/tmp/fallback/"))
+    (cl-letf (((symbol-function 'mcg-project-current-root)
+               (lambda (&optional _maybe-prompt) "/tmp/mcg-project/"))
+              ((symbol-function 'project-current)
+               (lambda (&optional _maybe-prompt) nil))
+              ((symbol-function 'color-rg-read-input)
+               (lambda () "needle"))
+              ((symbol-function 'color-rg-search-input)
+               (lambda (keyword directory &optional _globs _file-list)
+                 (setq called-keyword keyword
+                       called-directory directory))))
+      (let ((default-directory fallback-directory))
+        (mcg/color-rg-search-project))
+      (should (equal called-keyword "needle"))
+      (should (equal called-directory "/tmp/mcg-project/")))))
+
+(ert-deftest mcg-color-rg-search-project-with-type-uses-mcg-project-root-helper ()
+  (cl-letf (((symbol-function 'mcg-require-extension)
+             (lambda (&rest _args) nil)))
+    (require 'init-color-rg))
+  (let ((called-directory nil)
+        (called-globs nil))
+    (cl-letf (((symbol-function 'mcg-project-current-root)
+               (lambda (&optional _maybe-prompt) "/tmp/mcg-project/"))
+              ((symbol-function 'project-current)
+               (lambda (&optional _maybe-prompt) nil))
+              ((symbol-function 'completing-read)
+               (lambda (&rest _args) "*.el"))
+              ((symbol-function 'color-rg-read-input)
+               (lambda () "needle"))
+              ((symbol-function 'color-rg-search-input)
+               (lambda (_keyword directory &optional globs _file-list)
+                 (setq called-directory directory
+                       called-globs globs))))
+      (mcg/color-rg-search-project-with-type)
+      (should (equal called-directory "/tmp/mcg-project/"))
+      (should (equal called-globs "*.el")))))
+
+(ert-deftest mcg-embark-integrates-prefix-help-and-describe-bindings ()
+  (require 'init-embark)
+  (should (eq prefix-help-command #'embark-prefix-help-command))
+  (should (eq (lookup-key global-map [remap describe-bindings]) #'embark-bindings)))
+
+(ert-deftest mcg-embark-consult-enables-preview-in-collect-buffers ()
+  (defvar embark-collect-mode-hook nil)
+  (cl-letf (((symbol-value 'embark-collect-mode-hook) nil))
+    (provide 'embark-consult)
+    (require 'init-embark)
+    (should (memq #'consult-preview-at-point-mode embark-collect-mode-hook))))
+
+(ert-deftest mcg-ef-themes-exposes-consult-theme-switching ()
+  (let ((source
+         (expand-file-name "config-org/modules/ui/init-ef-themes.org" mcg-emacs-dir)))
+    (with-temp-buffer
+      (insert-file-contents source)
+      (dolist (snippet '("(defun mcg-ui-switch-theme ()"
+                         "(if (fboundp 'consult-theme)"
+                         "(call-interactively #'consult-theme)"
+                         "(completing-read \"Theme: \""
+                         "(mcg-bind-key \"C-c T\" #'mcg-ui-switch-theme \"ui/theme\")"
+                         "(consult-customize consult-theme :preview-key '(:debounce 0.5 any))"))
+        (goto-char (point-min))
+        (should (search-forward snippet nil t))))))
+
+(ert-deftest mcg-pulsar-module-is-registered-as-ui ()
+  (let ((source (expand-file-name "config-org/init.org" mcg-emacs-dir)))
+    (with-temp-buffer
+      (insert-file-contents source)
+      (should (search-forward "pulsar" nil t)))))
+
+(ert-deftest mcg-pulsar-enables-global-visual-location-feedback ()
+  (require 'init-pulsar)
+  (should (bound-and-true-p pulsar-global-mode))
+  (should (eq pulsar-face 'pulsar-cyan))
+  (dolist (fn '(recenter-top-bottom
+                other-window
+                next-error
+                previous-error
+                consult-line
+                consult-ripgrep
+                xref-find-definitions
+                xref-go-back))
+    (should (memq fn pulsar-pulse-functions))))
+
+(ert-deftest mcg-nerd-icons-font-warning-is-suppressed-in-batch ()
+  (require 'init-nerd-icons)
+  (let ((captured-warnings nil)
+        (noninteractive t))
+    (cl-letf (((symbol-function 'mcg-require-extension)
+              (lambda (&rest _args) t))
+              ((symbol-function 'mcg-get-icon-font)
+               (lambda () "MCG Definitely Missing Nerd Font"))
+              ((symbol-function 'mcg--log-internal)
+               (lambda (level format-string &rest args)
+                 (when (eq level 'warning)
+                   (push (apply #'format format-string args)
+                         captured-warnings)))))
+      (mcg--setup-nerd-icons))
+    (should-not (member "nerd-icons font missing, run M-x nerd-icons-install-fonts"
+                        captured-warnings))))
+
+(ert-deftest mcg-help-remaps-standard-describe-commands-to-helpful-aware-wrappers ()
+  (let ((source
+         (expand-file-name "config-org/modules/enhance/init-help.org" mcg-emacs-dir)))
+    (with-temp-buffer
+      (insert-file-contents source)
+      (dolist (snippet '("(defun mcg-help-describe-command ()"
+                         "helpful-command"
+                         "(define-key global-map [remap describe-command] #'mcg-help-describe-command)"
+                         "(define-key global-map [remap describe-function] #'mcg-help-describe-function)"
+                         "(define-key global-map [remap describe-variable] #'mcg-help-describe-variable)"
+                         "(define-key global-map [remap describe-key] #'mcg-help-describe-key)"
+                         "(define-key global-map [remap describe-symbol] #'mcg-help-describe-symbol)"
+                         "(with-eval-after-load 'helpful"
+                         "(define-key helpful-mode-map [remap revert-buffer] #'helpful-update)"
+                         "(define-key helpful-mode-map (kbd \"C-x K\") #'helpful-kill-buffers)"))
+        (goto-char (point-min))
+        (should (search-forward snippet nil t))))))
+
+(ert-deftest mcg-help-exposes-describe-keymap ()
+  (let ((source
+         (expand-file-name "config-org/modules/enhance/init-help.org" mcg-emacs-dir)))
+    (with-temp-buffer
+      (insert-file-contents source)
+      (dolist (snippet '("(mcg-bind-key \"C-h K\" #'describe-keymap \"enhance/help\")"
+                         "(mcg-bind-key \"C-c h K\" #'describe-keymap \"enhance/help\")"))
+        (goto-char (point-min))
+        (should (search-forward snippet nil t))))))
+
+(ert-deftest mcg-help-exposes-helpful-function ()
+  (let ((source
+         (expand-file-name "config-org/modules/enhance/init-help.org" mcg-emacs-dir)))
+    (with-temp-buffer
+      (insert-file-contents source)
+      (dolist (snippet '("(with-eval-after-load 'helpful"
+                         "(mcg-bind-key \"C-h F\" #'helpful-function \"enhance/help\")"
+                         "(mcg-bind-key \"C-c h F\" #'helpful-function \"enhance/help\")"))
+        (goto-char (point-min))
+        (should (search-forward snippet nil t))))))
+
+(ert-deftest mcg-help-describe-at-point-prefers-helpful-when-available ()
+  (require 'init-help)
+  (let ((called nil))
+    (cl-letf (((symbol-function 'mcg-help--helpful-available-p)
+               (lambda () t))
+              ((symbol-function 'helpful-at-point)
+               (lambda ()
+                 (interactive)
+                 (setq called 'helpful)))
+              ((symbol-function 'describe-symbol)
+               (lambda (&rest _args)
+                 (setq called 'fallback))))
+      (mcg-help-describe-at-point)
+      (should (eq called 'helpful)))))
+
+(ert-deftest mcg-help-describe-at-point-falls-back-to-describe-symbol ()
+  (require 'init-help)
+  (let ((called nil))
+    (cl-letf (((symbol-function 'mcg-help--helpful-available-p)
+               (lambda () nil))
+              ((symbol-function 'symbol-at-point)
+               (lambda () 'alpha))
+              ((symbol-function 'describe-symbol)
+               (lambda (symbol)
+                 (setq called symbol))))
+      (mcg-help-describe-at-point)
+      (should (eq called 'alpha)))))
+
+(ert-deftest mcg-consult-adds-standard-m-g-navigation-bindings ()
+  (let ((source
+         (expand-file-name "config-org/modules/completion/init-consult.org" mcg-emacs-dir)))
+    (with-temp-buffer
+      (insert-file-contents source)
+      (dolist (snippet '("(mcg-bind-key \"M-g g\" #'consult-goto-line \"completion/consult\")"
+                         "(mcg-bind-key \"M-g M-g\" #'consult-goto-line \"completion/consult\")"
+                         "(mcg-bind-key \"M-g o\" #'consult-outline \"completion/consult\")"
+                         "(mcg-bind-key \"M-g i\" #'consult-imenu \"completion/consult\")"
+                         "(mcg-bind-key \"M-g I\" #'consult-imenu-multi \"completion/consult\")"
+                         "(mcg-bind-key \"M-g m\" #'consult-mark \"completion/consult\")"
+                         "(mcg-bind-key \"M-g k\" #'consult-global-mark \"completion/consult\")"))
+        (goto-char (point-min))
+        (should (search-forward snippet nil t))))))
+
+(ert-deftest mcg-consult-adds-standard-m-s-search-bindings ()
+  (let ((source
+         (expand-file-name "config-org/modules/completion/init-consult.org" mcg-emacs-dir)))
+    (with-temp-buffer
+      (insert-file-contents source)
+      (dolist (snippet '("(mcg-bind-key \"M-s f\" #'consult-find \"completion/consult\")"
+                         "(mcg-bind-key \"M-s g\" #'consult-grep \"completion/consult\")"
+                         "(mcg-bind-key \"M-s G\" #'consult-git-grep \"completion/consult\")"
+                         "(mcg-bind-key \"M-s r\" #'consult-ripgrep \"completion/consult\")"
+                         "(mcg-bind-key \"M-s l\" #'consult-line \"completion/consult\")"
+                         "(mcg-bind-key \"M-s L\" #'consult-line-multi \"completion/consult\")"
+                         "(mcg-bind-key \"M-s k\" #'consult-keep-lines \"completion/consult\")"
+                         "(mcg-bind-key \"M-s u\" #'consult-focus-lines \"completion/consult\")"))
+        (goto-char (point-min))
+        (should (search-forward snippet nil t))))))
+
+(ert-deftest mcg-consult-binds-bookmarks-to-consult-bookmark ()
+  (let ((source
+         (expand-file-name "config-org/modules/completion/init-consult.org" mcg-emacs-dir)))
+    (with-temp-buffer
+      (insert-file-contents source)
+      (dolist (snippet '("(mcg-bind-key \"C-x r b\" #'consult-bookmark \"completion/consult\")"
+                         "(define-key mcg-consult-buffer-map \"m\" #'consult-bookmark)"))
+        (goto-char (point-min))
+        (should (search-forward snippet nil t))))))
+
+(ert-deftest mcg-consult-binds-recent-files-to-consult-recent-file ()
+  (let ((source
+         (expand-file-name "config-org/modules/completion/init-consult.org" mcg-emacs-dir)))
+    (with-temp-buffer
+      (insert-file-contents source)
+      (dolist (snippet '("(mcg-bind-key \"C-c f r\" #'consult-recent-file \"completion/consult\")"
+                         "(define-key mcg-consult-buffer-map \"r\" #'consult-recent-file)"))
+        (goto-char (point-min))
+        (should (search-forward snippet nil t))))))
+
+(ert-deftest mcg-consult-adds-standard-command-and-register-bindings ()
+  (let ((source
+         (expand-file-name "config-org/modules/completion/init-consult.org" mcg-emacs-dir)))
+    (with-temp-buffer
+      (insert-file-contents source)
+      (dolist (snippet '("(require 'consult-register nil t)"
+                         "(mcg-bind-key \"C-x M-:\" #'consult-complex-command \"completion/consult\")"
+                         "(mcg-bind-key \"M-#\" #'consult-register-load \"completion/consult\")"
+                         "(mcg-bind-key \"M-'\" #'consult-register-store \"completion/consult\")"
+                         "(mcg-bind-key \"C-M-#\" #'consult-register \"completion/consult\")"))
+        (goto-char (point-min))
+        (should (search-forward snippet nil t))))))
+
+(ert-deftest mcg-consult-binds-project-buffer-to-consult-project-buffer ()
+  (let ((source
+         (expand-file-name "config-org/modules/completion/init-consult.org" mcg-emacs-dir)))
+    (with-temp-buffer
+      (insert-file-contents source)
+      (dolist (snippet '("(mcg-bind-key \"C-x p b\" #'consult-project-buffer \"completion/consult\")"))
+        (goto-char (point-min))
+        (should (search-forward snippet nil t))))))
+
+(ert-deftest mcg-project-binds-switch-buffer-to-mcg-project-switch-buffer ()
+  (let ((source
+         (expand-file-name "config-org/modules/tools/init-project.org" mcg-emacs-dir)))
+    (with-temp-buffer
+      (insert-file-contents source)
+      (dolist (snippet '("(mcg-bind-key \"C-c p b\" #'mcg/project-switch-buffer \"tools/project\")"))
+        (goto-char (point-min))
+        (should (search-forward snippet nil t))))))
 
 (ert-deftest mcg-treesit-auto-owns-common-mode-associations ()
   (let ((treesit-source
@@ -577,6 +1202,242 @@
         (should-not (search-forward "(add-to-list 'auto-mode-alist '(\"\\\\.css\\\\'\" . css-ts-mode))" nil t))
         (goto-char (point-min))
         (should-not (search-forward "mcg-setup-lang-mode" nil t))))))
+
+(ert-deftest mcg-treesit-declares-jsdoc-grammar-source ()
+  (let ((source
+         (expand-file-name "config-org/modules/editor/init-treesit.org" mcg-emacs-dir)))
+    (with-temp-buffer
+      (insert-file-contents source)
+      (dolist (snippet '("(jsdoc . (\"https://github.com/tree-sitter/tree-sitter-jsdoc\"))"
+                         "jsdoc"))
+        (goto-char (point-min))
+        (should (search-forward snippet nil t))))))
+
+(ert-deftest mcg-python-module-is-enabled-and-trigger-backed ()
+  (let ((init-source
+         (expand-file-name "config-org/init.org" mcg-emacs-dir))
+        (modules-source
+         (expand-file-name "config-org/core/core-modules.org" mcg-emacs-dir)))
+    (with-temp-buffer
+      (insert-file-contents init-source)
+      (should (search-forward ":lang" nil t))
+      (should (search-forward "python" nil t)))
+    (with-temp-buffer
+      (insert-file-contents modules-source)
+      (should (search-forward "((:lang . python) . (\"\\\\.py\\\\'\" . python-ts-mode))" nil t)))))
+
+(ert-deftest mcg-python-module-provides-core-dev-commands ()
+  (let ((source
+         (expand-file-name "config-org/modules/lang/init-python.org" mcg-emacs-dir)))
+    (with-temp-buffer
+      (insert-file-contents source)
+      (dolist (snippet '("defcustom mcg-python-test-command"
+                         "defcustom mcg-python-ruff-command"
+                         "defun mcg-python-mode-setup"
+                         "defun mcg/python-pytest-project"
+                         "defun mcg/python-pytest-file"
+                         "defun mcg/python-ruff-check"
+                         "defun mcg/python-ruff-format"
+                         "defun mcg/python-repl"
+                         "python-ts-mode-hook"
+                         "python-mode-hook"))
+        (goto-char (point-min))
+        (should (search-forward snippet nil t))))))
+
+(ert-deftest mcg-format-supports-python-formatters ()
+  (let ((source
+         (expand-file-name "config-org/modules/editor/init-format.org" mcg-emacs-dir)))
+    (with-temp-buffer
+      (insert-file-contents source)
+      (dolist (snippet '("python-mode"
+                         "python-ts-mode"
+                         "(python-mode . mcg-format-with-external-command)"
+                         "(python-ts-mode . mcg-format-with-external-command)"
+                         "(\"ruff\" \"format\""
+                         "(\"black\""))
+        (goto-char (point-min))
+        (should (search-forward snippet nil t))))))
+
+(ert-deftest mcg-web-deferred-trigger-covers-common-web-files ()
+  (let ((modules-source
+         (expand-file-name "config-org/core/core-modules.org" mcg-emacs-dir))
+        (web-source
+         (expand-file-name "config-org/modules/lang/init-web.org" mcg-emacs-dir)))
+    (with-temp-buffer
+      (insert-file-contents modules-source)
+      (dolist (snippet '("(:lang . web)"
+                         "html?"
+                         "css"
+                         "jsx?"
+                         "tsx?"
+                         "vue"
+                         "mcg-web-deferred-mode"))
+        (goto-char (point-min))
+        (should (search-forward snippet nil t))))
+    (with-temp-buffer
+      (insert-file-contents web-source)
+      (dolist (snippet '("defun mcg-web-deferred-mode"
+                         "web-mode"
+                         "css-ts-mode"
+                         "js-ts-mode"
+                         "typescript-ts-mode"
+                         "tsx-ts-mode"))
+        (goto-char (point-min))
+        (should (search-forward snippet nil t))))))
+
+(ert-deftest mcg-zig-deferred-trigger-uses-safe-mode-dispatch ()
+  (let ((modules-source
+         (expand-file-name "config-org/core/core-modules.org" mcg-emacs-dir))
+        (zig-source
+         (expand-file-name "config-org/modules/lang/init-zig.org" mcg-emacs-dir)))
+    (with-temp-buffer
+      (insert-file-contents modules-source)
+      (should (search-forward "((:lang . zig) . (\"\\\\.zig\\\\'\" . mcg-zig-deferred-mode))" nil t)))
+    (with-temp-buffer
+      (insert-file-contents zig-source)
+      (dolist (snippet '("defun mcg-zig-deferred-mode"
+                         "zig-ts-mode"
+                         "treesit-language-available-p"
+                         "zig-mode"))
+        (goto-char (point-min))
+        (should (search-forward snippet nil t))))))
+
+(ert-deftest mcg-zig-format-keybinding-matches-help ()
+  (let ((source
+         (expand-file-name "config-org/modules/lang/init-zig.org" mcg-emacs-dir)))
+    (with-temp-buffer
+      (insert-file-contents source)
+      (dolist (snippet '("(define-key map (kbd \"C-c C-f\") #'mcg-format-buffer)"
+                         "C-c C-f      - Format buffer"
+                         "C-c r f      - Format buffer"))
+        (goto-char (point-min))
+        (should (search-forward snippet nil t))))))
+
+(ert-deftest mcg-zig-formatting-has-local-fallback-command ()
+  (let ((source
+         (expand-file-name "config-org/modules/editor/init-format.org" mcg-emacs-dir)))
+    (with-temp-buffer
+      (insert-file-contents source)
+      (dolist (snippet '("(zig-mode . mcg-format-zig-buffer)"
+                         "(zig-ts-mode . mcg-format-zig-buffer)"
+                         "(zig-mode . ((\"zig\" \"fmt\")))"
+                         "(zig-ts-mode . ((\"zig\" \"fmt\")))"
+                         "(defun mcg-format-zig-buffer"
+                         "mcg-format-with-external-command"))
+        (goto-char (point-min))
+        (should (search-forward snippet nil t))))))
+
+(ert-deftest mcg-zig-build-commands-use-unified-compile-runner ()
+  (let ((source
+         (expand-file-name "config-org/modules/lang/init-zig.org" mcg-emacs-dir)))
+    (with-temp-buffer
+      (insert-file-contents source)
+      (dolist (snippet '("(defun mcg-zig--compile"
+                         "(mcg-compile--run command root)"
+                         "(mcg-zig--compile \"zig build\""
+                         "(mcg-zig--compile \"zig build run\""
+                         "(mcg-zig--compile \"zig build test\""))
+        (goto-char (point-min))
+        (should (search-forward snippet nil t))))))
+
+(ert-deftest mcg-zig-lsp-detects-zls-before-enabling-lsp ()
+  (let ((source
+         (expand-file-name "config-org/modules/lang/init-zig.org" mcg-emacs-dir)))
+    (with-temp-buffer
+      (insert-file-contents source)
+      (dolist (snippet '("(defcustom mcg-zig-enable-lsp t"
+                         "(defcustom mcg-zig-warn-missing-zls nil"
+                         "(defun mcg-zig--zls-available-p"
+                         "(executable-find \"zls\")"
+                         "(defun mcg-zig-maybe-enable-lsp"
+                         "(lsp-bridge-mode 1)"
+                         "mcg-zig--missing-zls-warned"))
+        (goto-char (point-min))
+        (should (search-forward snippet nil t))))))
+
+(ert-deftest mcg-web-biome-is-opt-in-not-default-formatting ()
+  (let ((format-source
+         (expand-file-name "config-org/modules/editor/init-format.org" mcg-emacs-dir))
+        (lsp-source
+         (expand-file-name "config-org/modules/tools/init-lsp-bridge.org" mcg-emacs-dir))
+        (example-source
+         (expand-file-name "config-org/private/config-example.org" mcg-emacs-dir)))
+    (with-temp-buffer
+      (insert-file-contents lsp-source)
+      (should (search-forward "(defcustom mcg-lsp-enable-biome nil" nil t)))
+    (with-temp-buffer
+      (insert-file-contents format-source)
+      (should-not (search-forward "(\"biome\" \"format\"" nil t))
+      (should (search-forward "mcg-format--web-external-candidates" nil t))
+      (should (search-forward "mcg-format--web-project-has-antfu-eslint-p" nil t))
+      (should (search-forward "mcg-format--web-project-has-prettier-p" nil t)))
+    (with-temp-buffer
+      (insert-file-contents example-source)
+      (should (search-forward "Use biome for Web development" nil t))
+      (should (search-forward "Default: nil" nil t))
+      (should (search-forward "Default formatting prefers project ESLint" nil t))
+      (should (search-forward "(setq mcg-lsp-enable-biome t)" nil t)))))
+
+(ert-deftest mcg-format-web-detects-antfu-eslint-before-prettier ()
+  (require 'init-format)
+  (let ((root (make-temp-file "mcg-web-antfu-format" t)))
+    (write-region
+     "{\"devDependencies\":{\"@antfu/eslint-config\":\"latest\",\"eslint\":\"latest\",\"prettier\":\"latest\"}}\n"
+     nil
+     (expand-file-name "package.json" root))
+    (let ((default-directory root)
+          (major-mode 'typescript-ts-mode))
+      (should (mcg-format--web-project-has-antfu-eslint-p root))
+      (should (mcg-format--web-project-has-eslint-p root))
+      (should (mcg-format--web-project-has-prettier-p root))
+      (should (equal "eslint" (caar (mcg-format--web-external-candidates))))
+      (should-not (equal "prettier" (caar (mcg-format--web-external-candidates)))))))
+
+(ert-deftest mcg-format-web-uses-prettier-only-when-project-declares-it ()
+  (require 'init-format)
+  (let ((plain-root (make-temp-file "mcg-web-plain-format" t))
+        (prettier-root (make-temp-file "mcg-web-prettier-format" t)))
+    (write-region "{\"devDependencies\":{\"typescript\":\"latest\"}}\n"
+                  nil
+                  (expand-file-name "package.json" plain-root))
+    (write-region "{\"devDependencies\":{\"prettier\":\"latest\"}}\n"
+                  nil
+                  (expand-file-name "package.json" prettier-root))
+    (let ((default-directory plain-root)
+          (major-mode 'typescript-ts-mode))
+      (should-not (mcg-format--web-project-has-eslint-p plain-root))
+      (should-not (mcg-format--web-project-has-prettier-p plain-root))
+      (should-not (mcg-format--web-external-candidates)))
+    (let ((default-directory prettier-root)
+          (major-mode 'typescript-ts-mode))
+      (should (mcg-format--web-project-has-prettier-p prettier-root))
+      (should (equal "prettier" (caar (mcg-format--web-external-candidates)))))))
+
+(ert-deftest mcg-config-example-documents-python-dev-options ()
+  (let ((source-example
+         (expand-file-name "config-org/private/config-example.org" mcg-emacs-dir)))
+    (with-temp-buffer
+      (insert-file-contents source-example)
+      (dolist (setting '("mcg-lsp-python-server"
+                         "mcg-python-test-command"
+                         "mcg-python-ruff-command"
+                         "python -m pytest"
+                         "ruff"))
+        (goto-char (point-min))
+        (should (search-forward setting nil t))))))
+
+(ert-deftest mcg-config-example-documents-zig-dev-options ()
+  (let ((source-example
+         (expand-file-name "config-org/private/config-example.org" mcg-emacs-dir)))
+    (with-temp-buffer
+      (insert-file-contents source-example)
+      (dolist (setting '("Enable Zig LSP when zls is available"
+                         "Default: mcg-zig-enable-lsp = t"
+                         "Default: mcg-zig-warn-missing-zls = nil"
+                         "(setq mcg-zig-enable-lsp nil)"
+                         "(setq mcg-zig-warn-missing-zls t)"))
+        (goto-char (point-min))
+        (should (search-forward setting nil t))))))
 
 (ert-deftest mcg-config-example-documents-org-safety-and-appearance-options ()
   (let ((source-example
@@ -627,5 +1488,546 @@
           (mapcar (lambda (file) (file-relative-name file source-dir))
                   (directory-files-recursively source-dir "\\.el\\'"))))
     (should (equal nil generated-files))))
+
+(ert-deftest mcg-makefile-tangles-org-through-temp-directory ()
+  (let ((path (expand-file-name "Makefile" mcg-emacs-dir)))
+    (with-temp-buffer
+      (insert-file-contents path)
+      (dolist (snippet '("(make-temp-file (string ?m ?c ?g ?- ?t ?a ?n ?g ?l ?e ?-) t)"
+                         "(org-babel-tangle-file temp-source)"
+                         "(copy-file generated target t)"
+                         "(delete-directory temp-dir t)"))
+        (goto-char (point-min))
+        (should (search-forward snippet nil t))))))
+
+(ert-deftest mcg-makefile-uses-windows-safe-eval-quoting ()
+  (let ((path (expand-file-name "Makefile" mcg-emacs-dir)))
+    (with-temp-buffer
+      (insert-file-contents path)
+      (should-not (search-forward "--eval '" nil t)))))
+
+(ert-deftest mcg-startup-profile-script-loads-generated-config ()
+  (let ((path (expand-file-name "scripts/profile-startup.el" mcg-emacs-dir)))
+    (should (file-exists-p path))
+    (with-temp-buffer
+      (insert-file-contents path)
+      (dolist (snippet '("mcg-profile-mode"
+                         "site-lisp/config/early-init.el"
+                         "site-lisp/config/init.el"
+                         "mcg-profile-startup-print-report"
+                         "mcg-load-times"))
+        (goto-char (point-min))
+        (should (search-forward snippet nil t))))))
+
+(ert-deftest mcg-startup-profile-script-suppresses-third-party-noise ()
+  (let ((path (expand-file-name "scripts/profile-startup.el" mcg-emacs-dir)))
+    (with-temp-buffer
+      (insert-file-contents path)
+      (dolist (snippet '("inhibit-message"
+                         "warning-minimum-level"
+                         ":error"
+                         "byte-compile-warnings"
+                         "native-comp-async-report-warnings-errors"
+                         "mcg-profile-startup-quiet-output"
+                         "advice-add"
+                         "display-warning"
+                         "byte-compile-warn"))
+        (goto-char (point-min))
+        (should (search-forward snippet nil t))))))
+
+(ert-deftest mcg-makefile-exposes-startup-profile-target ()
+  (let ((path (expand-file-name "Makefile" mcg-emacs-dir)))
+    (with-temp-buffer
+      (insert-file-contents path)
+      (dolist (snippet '("profile-startup:"
+                         "scripts/profile-startup.el"
+                         "profile-startup-stderr.log"
+                         "make profile-startup"))
+        (goto-char (point-min))
+        (should (search-forward snippet nil t))))))
+
+(ert-deftest mcg-readmes-document-startup-profile-command ()
+  (dolist (readme '("README.org" "README_CN.org"))
+    (let ((path (expand-file-name readme mcg-emacs-dir)))
+      (with-temp-buffer
+        (insert-file-contents path)
+        (goto-char (point-min))
+        (should (search-forward "make profile-startup" nil t))))))
+
+(ert-deftest mcg-readmes-document-current-startup-loading-strategy ()
+  (dolist (readme '("README.org" "README_CN.org"))
+    (let ((path (expand-file-name readme mcg-emacs-dir)))
+      (with-temp-buffer
+        (insert-file-contents path)
+        (dolist (snippet '("Immediate"
+                           "Idle"
+                           "Deferred"
+                           "awesome-tray"
+                           "org"
+                           "dashboard"
+                           "make profile-startup"))
+          (goto-char (point-min))
+          (should (search-forward snippet nil t)))))))
+
+(ert-deftest mcg-init-paths-infers-emacs-root-from-core-bootstrap-location ()
+  (let ((expected (file-name-as-directory (expand-file-name "." default-directory)))
+        (mcg-emacs-dir nil)
+        (mcg-config-dir nil)
+        (mcg-core-dir nil)
+        (mcg-cache-dir nil)
+        (mcg-data-dir nil))
+    (dolist (var '(savehist-file save-place-file recentf-save-file))
+      (makunbound var))
+    (mcg-init-paths)
+    (should (equal expected mcg-emacs-dir))
+    (should (equal (expand-file-name "site-lisp/config/" expected)
+                   mcg-config-dir))
+    (should (equal (expand-file-name ".cache/" expected)
+                   mcg-cache-dir))
+    (should (equal (expand-file-name ".cache/savehist.el" expected)
+                   (symbol-value 'savehist-file)))
+    (should (equal (expand-file-name ".cache/places.el" expected)
+                   (symbol-value 'save-place-file)))
+    (should (equal (expand-file-name ".cache/recentf.el" expected)
+                   (symbol-value 'recentf-save-file)))))
+
+(ert-deftest mcg-init-paths-redirects-eln-cache-into-config-cache ()
+  (skip-unless (boundp 'native-comp-eln-load-path))
+  (let* ((expected (file-name-as-directory (expand-file-name "." default-directory)))
+         (expected-eln-cache (expand-file-name ".cache/eln-cache/" expected))
+         (system-native-lisp (expand-file-name "system-native-lisp/" temporary-file-directory))
+         (original-eln-load-path (symbol-value 'native-comp-eln-load-path))
+         (mcg-emacs-dir nil)
+         (mcg-config-dir nil)
+         (mcg-core-dir nil)
+         (mcg-cache-dir nil)
+         (mcg-data-dir nil))
+    (unwind-protect
+        (progn
+          (set 'native-comp-eln-load-path
+               (list (expand-file-name ".emacs.d/eln-cache/" temporary-file-directory)
+                     system-native-lisp))
+          (mcg-init-paths)
+          (should (equal expected-eln-cache
+                         (car (symbol-value 'native-comp-eln-load-path))))
+          (should (member system-native-lisp
+                          (cdr (symbol-value 'native-comp-eln-load-path))))
+          (should (file-directory-p expected-eln-cache)))
+      (set 'native-comp-eln-load-path original-eln-load-path))))
+
+(ert-deftest mcg-private-config-does-not-keep-inline-passwords ()
+  (dolist (relative-path '("config-org/private/config.org"
+                           "site-lisp/config/private/config.el"))
+    (let ((path (expand-file-name relative-path mcg-emacs-dir)))
+      (when (file-exists-p path)
+        (with-temp-buffer
+          (insert-file-contents path)
+          (should-not (search-forward ":password" nil t)))))))
+
+(ert-deftest mcg-private-loader-loads-single-config-file ()
+  (let ((path (expand-file-name "config-org/init.org" mcg-emacs-dir)))
+    (with-temp-buffer
+      (insert-file-contents path)
+      (should (search-forward "config.el" nil t))
+      (dolist (snippet '("local-settings.el"
+                         "local-secrets.el"))
+        (goto-char (point-min))
+        (should-not (search-forward snippet nil t))))))
+
+(ert-deftest mcg-private-config-file-is-gitignored ()
+  (let ((gitignore (expand-file-name "../.gitignore" mcg-emacs-dir)))
+    (with-temp-buffer
+      (insert-file-contents gitignore)
+      (should (search-forward "emacs/site-lisp/config/private/config.el"
+                              nil t)))))
+
+(ert-deftest mcg-make-all-creates-minimal-private-config-file ()
+  (let ((path (expand-file-name "Makefile" mcg-emacs-dir)))
+    (with-temp-buffer
+      (insert-file-contents path)
+      (should (search-forward "ensure-private-config-file:" nil t))
+      (should (search-forward "all: ensure-private-config-file" nil t))
+      (dolist (snippet '("DST_DIR = site-lisp/config"
+                         "$(DST_DIR)/private/config.el"
+                         "lexical-binding: t"
+                         "Put machine-local settings and secrets here"))
+        (goto-char (point-min))
+        (should (search-forward snippet nil t))))))
+
+(ert-deftest mcg-private-config-default-file-is-only-a-brief-placeholder ()
+  (let ((path (expand-file-name "site-lisp/config/private/config.el"
+                                mcg-emacs-dir)))
+    (when (file-exists-p path)
+      (with-temp-buffer
+        (insert-file-contents path)
+        (goto-char (point-min))
+        (should (search-forward "lexical-binding: t" (line-end-position) t))
+        (dolist (snippet '("mcg-lsp-enable-inlay-hint"
+                           "mcg-org-set-storage-root"
+                           "D:/workspaces"
+                           "mcg-blog-base-directory"))
+          (goto-char (point-min))
+          (should-not (search-forward snippet nil t)))))))
+
+(ert-deftest mcg-config-example-documents-single-private-config-file ()
+  (let ((path (expand-file-name "config-org/private/config-example.org"
+                                mcg-emacs-dir)))
+    (with-temp-buffer
+      (insert-file-contents path)
+      (dolist (snippet '("Local Configuration"
+                         "site-lisp/config/private/config.el"
+                         "settings and secrets"))
+        (goto-char (point-min))
+        (should (search-forward snippet nil t)))
+      (dolist (snippet '("local-settings.el"
+                         "local-secrets.el"
+                         "Copy this file to ~config.org~"))
+        (goto-char (point-min))
+        (should-not (search-forward snippet nil t))))))
+
+(ert-deftest mcg-readme-does-not-require-private-config-org-copy ()
+  (dolist (readme '("README.org" "README_CN.org"))
+    (let ((path (expand-file-name readme mcg-emacs-dir)))
+      (with-temp-buffer
+        (insert-file-contents path)
+        (should-not
+         (search-forward
+          "cp config-org/private/config-example.org config-org/private/config.org"
+          nil t))
+        (should (search-forward "site-lisp/config/private/config.el" nil t))
+        (goto-char (point-min))
+        (should-not (search-forward "local-settings.el" nil t))
+        (goto-char (point-min))
+        (should-not (search-forward "local-secrets.el" nil t))))))
+
+(ert-deftest mcg-readmes-document-hl-todo-pulsar-and-ibuffer ()
+  (dolist (readme '("README.org" "README_CN.org"))
+    (let ((path (expand-file-name readme mcg-emacs-dir)))
+      (with-temp-buffer
+        (insert-file-contents path)
+        (dolist (snippet '("hl-todo"
+                           "pulsar"
+                           "ibuffer"
+                           "C-c s T"
+                           "C-c b i"
+                           "C-c b p"))
+          (goto-char (point-min))
+          (should (search-forward snippet nil t)))))))
+
+(ert-deftest mcg-state-cache-directory-is-gitignored ()
+  (let ((gitignore (expand-file-name "../.gitignore" mcg-emacs-dir)))
+    (with-temp-buffer
+      (insert-file-contents gitignore)
+      (should (search-forward "emacs/.cache/" nil t)))))
+
+(ert-deftest mcg-batch-load-does-not-regress-owned-warning-budget ()
+  (let* ((emacs-bin (expand-file-name invocation-name invocation-directory))
+         (output-buffer (generate-new-buffer " *mcg-batch-load-output*"))
+         (status nil))
+    (unwind-protect
+        (progn
+          (setq status
+                (call-process emacs-bin nil (list output-buffer t) nil
+                              "-Q" "--batch"
+                              "-L" "site-lisp/config"
+                              "-L" "site-lisp/config/core"
+                              "-l" "site-lisp/config/init.el"))
+          (should (= 0 status))
+          (with-current-buffer output-buffer
+            (let ((output (buffer-string)))
+              (dolist (forbidden '("~/.emacs.d/history"
+                                   "recentf.eld"
+                                   "site-lisp/config/private/config.el\"."
+                                   "nerd-icons font missing"))
+                (should-not (string-match-p (regexp-quote forbidden) output))))))
+      (kill-buffer output-buffer))))
+
+(ert-deftest mcg-readme-states-personal-distribution-positioning ()
+  (dolist (case '(("README.org" . "personal Emacs distribution")
+                  ("README_CN.org" . "个人 Emacs 发行版")))
+    (let ((path (expand-file-name (car case) mcg-emacs-dir)))
+      (with-temp-buffer
+        (insert-file-contents path)
+        (should (search-forward (cdr case) nil t))))))
+
+(ert-deftest mcg-readme-does-not-claim-built-in-first-positioning ()
+  (dolist (case '(("README.org" . "Built-in First")
+                  ("README_CN.org" . "内置优先")))
+    (let ((path (expand-file-name (car case) mcg-emacs-dir)))
+      (with-temp-buffer
+        (insert-file-contents path)
+        (should-not (search-forward (cdr case) nil t))))))
+
+(ert-deftest mcg-readme-links-only-existing-config-docs ()
+  (dolist (readme '("README.org" "README_CN.org"))
+    (let ((path (expand-file-name readme mcg-emacs-dir)))
+      (with-temp-buffer
+        (insert-file-contents path)
+        (should-not (search-forward "config-org/README" nil t))))))
+
+(ert-deftest mcg-top-level-entrypoint-file-exists-and-loads-generated-init ()
+  (let ((path (expand-file-name "init.el" mcg-emacs-dir)))
+    (should (file-exists-p path))
+    (with-temp-buffer
+      (insert-file-contents path)
+      (goto-char (point-min))
+      (should (search-forward "lexical-binding: t" (line-end-position) t))
+      (should (search-forward "site-lisp/config/init.el" nil t)))))
+
+(ert-deftest mcg-top-level-entrypoint-is-built-by-make-all ()
+  (let ((path (expand-file-name "Makefile" mcg-emacs-dir)))
+    (with-temp-buffer
+      (insert-file-contents path)
+      (should (search-forward "init.el: config-org/root-init.org" nil t))
+      (should (search-forward "early-init.el: config-org/early-init.org" nil t))
+      (should (search-forward
+               "all: ensure-private-config-file init.el early-init.el"
+               nil t)))))
+
+(ert-deftest mcg-top-level-early-init-file-exists-for-symlink-install ()
+  (let ((path (expand-file-name "early-init.el" mcg-emacs-dir)))
+    (should (file-exists-p path))
+    (with-temp-buffer
+      (insert-file-contents path)
+      (goto-char (point-min))
+      (should (search-forward "lexical-binding: t" (line-end-position) t))
+      (should (search-forward "startup-redirect-eln-cache" nil t)))))
+
+(ert-deftest mcg-top-level-entrypoint-is-documented-for-manual-load ()
+  (dolist (readme '("README.org" "README_CN.org"))
+    (let ((path (expand-file-name readme mcg-emacs-dir)))
+      (with-temp-buffer
+        (insert-file-contents path)
+        (should (search-forward "(load-file \"~/dotfiles/emacs/init.el\")" nil t))
+        (should-not (search-forward "(load-file \"~/dotfiles/emacs/site-lisp/config/init.el\")" nil t))))))
+
+(ert-deftest mcg-module-declaration-registers-enabled-disabled-and-load-order ()
+  (let ((mcg-modules-alist nil)
+        (mcg-disabled-modules nil)
+        (mcg-module-load-order nil))
+    (mcg! :ui font -holo-layer
+          :tools magit color-rg
+          :lang zig)
+    (should (equal mcg-modules-alist
+                   '((:ui . (font))
+                     (:tools . (magit color-rg))
+                     (:lang . (zig)))))
+    (should (equal mcg-disabled-modules
+                   '((:ui . (holo-layer)))))
+    (should (equal mcg-module-load-order
+                   '((:ui . font)
+                     (:tools . magit)
+                     (:tools . color-rg)
+                     (:lang . zig))))))
+
+(ert-deftest mcg-load-module-loads-module-file-and-records-status ()
+  (let* ((root (make-temp-file "mcg-module-test" t))
+         (mcg-modules-dir (expand-file-name "modules" root))
+         (mcg-loaded-modules nil)
+         (mcg-module-load-errors nil)
+         (mcg-module-error-traces nil)
+         (mcg-profile-mode nil)
+         (module-dir (expand-file-name "test" mcg-modules-dir))
+         (module-file (expand-file-name "init-alpha.el" module-dir)))
+    (make-directory module-dir t)
+    (write-region
+     ";;; init-alpha.el --- test module -*- lexical-binding: t; -*-\n(setq mcg-test-loaded-module 'loaded)\n(provide 'init-alpha)\n"
+     nil module-file)
+    (should (mcg-load-module :test 'alpha))
+    (should (eq (symbol-value 'mcg-test-loaded-module) 'loaded))
+    (should (member '(:test . alpha) mcg-loaded-modules))
+    (should-not mcg-module-load-errors)))
+
+(ert-deftest mcg-idle-load-does-not-mark-failed-module-as-loaded ()
+  (let* ((root (make-temp-file "mcg-idle-module-test" t))
+         (mcg-modules-dir (expand-file-name "modules" root))
+         (mcg-loaded-modules nil)
+         (mcg-idle-load-modules '((:test . missing)))
+         (mcg-idle-loaded-modules nil)
+         (mcg-idle-load-timer nil)
+         (mcg-module-load-errors nil)
+         (mcg-module-error-traces nil))
+    (mcg--idle-load-next)
+    (should-not (member '(:test . missing) mcg-loaded-modules))
+    (should-not (member '(:test . missing) mcg-idle-loaded-modules))
+    (should (assoc '(:test . missing) mcg-module-load-errors))))
+
+(ert-deftest mcg-editor-state-files-live-under-mcg-cache-directory ()
+  (require 'init-defaults)
+  (let* ((root (make-temp-file "mcg-editor-state" t))
+         (mcg-cache-dir (file-name-as-directory root)))
+    (cl-letf (((symbol-function 'savehist-mode) #'ignore)
+              ((symbol-function 'save-place-mode) #'ignore))
+      (mcg-editor-setup-savehist)
+      (mcg-editor-setup-saveplace))
+    (should (equal (expand-file-name "savehist.el" root)
+                   savehist-file))
+    (should (equal (expand-file-name "places.el" root)
+                   save-place-file))))
+
+(ert-deftest mcg-editor-backup-state-files-live-under-mcg-cache-directory ()
+  (require 'init-defaults)
+  (let* ((root (make-temp-file "mcg-editor-backups" t))
+         (mcg-cache-dir (file-name-as-directory root)))
+    (mcg-editor-setup-backups)
+    (should (equal `((".*" . ,(expand-file-name "backups/" root)))
+                   backup-directory-alist))
+    (should (equal `((".*" ,(expand-file-name "auto-save/" root) t))
+                   auto-save-file-name-transforms))))
+
+(ert-deftest mcg-editor-savehist-strips-kill-ring-text-properties-before-save ()
+  (require 'init-defaults)
+  (let ((kill-ring (list (propertize "alpha" 'face 'bold)
+                         'not-a-string
+                         (propertize "beta" 'font-lock-face 'warning))))
+    (mcg-editor-clean-savehist-kill-ring)
+    (should (equal kill-ring '("alpha" "beta")))
+    (dolist (entry kill-ring)
+      (should-not (text-properties-at 0 entry))))
+  (should (memq #'mcg-editor-clean-savehist-kill-ring savehist-save-hook)))
+
+(ert-deftest mcg-editor-switch-to-buffer-follows-display-actions ()
+  (require 'init-defaults)
+  (should (eq switch-to-buffer-in-dedicated-window 'pop))
+  (should switch-to-buffer-obey-display-actions))
+
+(ert-deftest mcg-hl-todo-module-is-registered-as-editor ()
+  (let ((source (expand-file-name "config-org/init.org" mcg-emacs-dir)))
+    (with-temp-buffer
+      (insert-file-contents source)
+      (should (search-forward "hl-todo" nil t)))))
+
+(ert-deftest mcg-hl-todo-enables-global-keyword-highlighting ()
+  (require 'init-hl-todo)
+  (should (bound-and-true-p global-hl-todo-mode))
+  (should (memq 'prog-mode hl-todo-include-modes))
+  (should (memq 'conf-mode hl-todo-include-modes))
+  (should (memq 'org-mode hl-todo-exclude-modes))
+  (dolist (keyword '("TODO" "FIXME" "BUG" "HACK" "NOTE" "REVIEW" "DEPRECATED"))
+    (should (assoc keyword hl-todo-keyword-faces))))
+
+(ert-deftest mcg-hl-todo-exposes-project-search-on-shared-search-prefix ()
+  (let ((source (expand-file-name "config-org/modules/editor/init-hl-todo.org"
+                                  mcg-emacs-dir)))
+    (with-temp-buffer
+      (insert-file-contents source)
+      (should (search-forward "(defun mcg/hl-todo-search-project" nil t))
+      (goto-char (point-min))
+      (should (search-forward "(mcg-bind-key \"C-c s T\" #'mcg/hl-todo-search-project \"editor/hl-todo\")"
+                              nil t)))))
+
+(ert-deftest mcg-hl-todo-project-search-uses-current-project-root ()
+  (require 'init-hl-todo)
+  (let ((called nil))
+    (cl-letf (((symbol-function 'mcg-project-root-or-default)
+               (lambda () "/tmp/mcg-project/"))
+              ((symbol-function 'hl-todo-rgrep)
+               (lambda (regexp files dir &optional confirm)
+                 (setq called (list regexp files dir confirm)))))
+      (mcg/hl-todo-search-project)
+      (should (equal (nth 1 called) "*"))
+      (should (equal (nth 2 called) "/tmp/mcg-project/"))
+      (should-not (nth 3 called))
+      (should (string-match-p "TODO" (car called)))
+      (should (string-match-p "FIXME" (car called))))))
+
+(ert-deftest mcg-ibuffer-module-is-registered-as-editor ()
+  (let ((source (expand-file-name "config-org/init.org" mcg-emacs-dir)))
+    (with-temp-buffer
+      (insert-file-contents source)
+      (should (search-forward "ibuffer" nil t)))))
+
+(ert-deftest mcg-ibuffer-binds-global-and-project-buffer-lists ()
+  (let ((source (expand-file-name "config-org/modules/editor/init-ibuffer.org"
+                                  mcg-emacs-dir)))
+    (with-temp-buffer
+      (insert-file-contents source)
+      (dolist (snippet '("(mcg-bind-key \"C-x C-b\" #'ibuffer \"editor/ibuffer\")"
+                         "(mcg-bind-key \"C-c b i\" #'ibuffer \"editor/ibuffer\")"
+                         "(mcg-bind-key \"C-c b p\" #'mcg/ibuffer-project \"editor/ibuffer\")"))
+        (goto-char (point-min))
+        (should (search-forward snippet nil t))))))
+
+(ert-deftest mcg-ibuffer-project-filters-current-project-files ()
+  (require 'init-ibuffer)
+  (let ((called nil))
+    (cl-letf (((symbol-function 'mcg-project-root-or-default)
+               (lambda () "/tmp/mcg-project/"))
+              ((symbol-function 'ibuffer)
+               (lambda (&rest args)
+                 (setq called (list :ibuffer args))))
+              ((symbol-function 'ibuffer-filter-by-filename)
+               (lambda (qualifier)
+                 (setq called (append called (list :filter qualifier))))))
+      (mcg/ibuffer-project)
+      (should (equal (plist-get called :ibuffer)
+                     '(nil "*Ibuffer: mcg-project*")))
+      (should (equal (plist-get called :filter)
+                     (regexp-quote "/tmp/mcg-project/"))))))
+
+(ert-deftest mcg-editor-setup-backups-is-called-by-defaults-initialization ()
+  (let ((path (expand-file-name "site-lisp/config/modules/editor/init-defaults.el"
+                                mcg-emacs-dir)))
+    (with-temp-buffer
+      (insert-file-contents path)
+      (should (search-forward "mcg-editor-setup-backups" nil t)))))
+
+(ert-deftest mcg-recentf-state-file-lives-under-mcg-cache-directory ()
+  (require 'init-recentf)
+  (let* ((root (make-temp-file "mcg-recentf-state" t))
+         (mcg-cache-dir (file-name-as-directory root)))
+    (cl-letf (((symbol-function 'recentf-mode) #'ignore))
+      (mcg--setup-recentf))
+    (should (equal (expand-file-name "recentf.el" root)
+                   recentf-save-file))))
+
+(ert-deftest mcg-recentf-save-file-is-set-before-requiring-recentf ()
+  (let ((path (expand-file-name "site-lisp/config/modules/enhance/init-recentf.el"
+                                mcg-emacs-dir)))
+    (with-temp-buffer
+      (insert-file-contents path)
+      (let ((save-file-position (progn
+                                  (goto-char (point-min))
+                                  (search-forward "(setq recentf-save-file" nil t)))
+            (require-position (progn
+                                (goto-char (point-min))
+                                (search-forward "(require 'recentf)" nil t))))
+        (should save-file-position)
+        (should require-position)
+        (should (< save-file-position require-position))))))
+
+(ert-deftest mcg-require-extension-finds-nested-extension-directory ()
+  (let* ((root (make-temp-file "mcg-extension-test" t))
+         (mcg-extensions-dir (expand-file-name "extensions" root))
+         (mcg-cache-dir (expand-file-name "cache" root))
+         (mcg-extension-cache nil)
+         (mcg-extension-cache-file nil)
+         (mcg-extension-cache-validate-signature t)
+         (extension-dir (expand-file-name "tools/fake-ext" mcg-extensions-dir))
+         (extension-file (expand-file-name "fake-ext.el" extension-dir)))
+    (make-directory extension-dir t)
+    (make-directory mcg-cache-dir t)
+    (write-region
+     ";;; fake-ext.el --- test extension -*- lexical-binding: t; -*-\n(defvar fake-ext-loaded t)\n(provide 'fake-ext)\n"
+     nil extension-file)
+    (unwind-protect
+        (progn
+          (should (mcg-require-extension 'fake-ext))
+          (should (featurep 'fake-ext))
+          (should (member extension-dir load-path)))
+      (when (featurep 'fake-ext)
+        (unload-feature 'fake-ext t)))))
+
+(ert-deftest mcg-bind-key-rejects-conflicting-bindings-by-default ()
+  (let ((mcg-keybinding-registry (make-hash-table :test 'equal))
+        (mcg-keybinding-conflicts nil)
+        (mcg-keybinding-conflict-policy 'reject)
+        (keymap (make-sparse-keymap)))
+    (should (mcg-bind-key "C-c t" #'ignore "first" keymap))
+    (should-not (mcg-bind-key "C-c t" #'identity "second" keymap))
+    (should (equal (mcg-lookup-keybinding "C-c t")
+                   (cons #'ignore "first")))
+    (should (eq (lookup-key keymap (kbd "C-c t")) #'ignore))
+    (should (= 1 (length mcg-keybinding-conflicts)))))
 
 ;;; run-tests.el ends here

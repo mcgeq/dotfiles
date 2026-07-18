@@ -108,12 +108,15 @@
    ef-themes
    nerd-icons
    dashboard
+   pulsar
    awesome-tray
    holo-layer
 
    ;; Editor modules
    :editor
    defaults
+   hl-todo
+   ibuffer
    vundo
    mwim
    treesit
@@ -157,6 +160,7 @@
 
    ;; Lang
    :lang
+   python
    zig
    web
    )
@@ -177,8 +181,17 @@
   :group 'mcg)
 
 (defcustom mcg-idle-modules
-  '((:ui . holo-layer)
+  '(;; First-frame visual stability: these change frame chrome or spawn UI
+    ;; helpers, so load them after the dashboard is already visible.
+    (:ui . holo-layer)
+    (:ui . awesome-tray)
+
+    ;; Heavy modules: useful, but not required for the first dashboard frame.
     (:editor . dirvish)
+    (:org . org)
+
+    ;; On-demand tools: command entry points are available through keybindings
+    ;; and can finish loading during idle time.
     (:tools . magit)
     (:tools . clutch)
     (:tools . lsp-bridge)
@@ -235,19 +248,23 @@ When nil, all trigger-backed modules are eligible."
 ** Load Private Configuration
 
 #+begin_src emacs-lisp
-(defun mcg-load-private-config ()
-  "Load private configuration if it exists.
-Private config is loaded after all other modules to allow overrides."
-  (let ((private-config (expand-file-name "config.el" mcg-private-dir)))
-    (when (file-exists-p private-config)
+(defun mcg-load-private-file (filename profile-name)
+  "Load private FILENAME under `mcg-private-dir' using PROFILE-NAME."
+  (let ((private-file (expand-file-name filename mcg-private-dir)))
+    (when (file-exists-p private-file)
       (condition-case err
           (progn
-            (mcg-profile "private/config"
-              (load private-config nil t))
-            (mcg-log "Loaded private configuration"))
+            (mcg-profile profile-name
+              (load private-file nil t))
+            (mcg-log "Loaded %s" profile-name))
         (error
-         (mcg-log-error "Failed to load private config: %s"
+         (mcg-log-error "Failed to load %s: %s"
+                        profile-name
                         (error-message-string err)))))))
+
+(defun mcg-load-private-config ()
+  "Load private config."
+  (mcg-load-private-file "config.el" "private/config"))
 #+end_src
 
 ** Startup Statistics

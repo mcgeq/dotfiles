@@ -79,6 +79,16 @@
 ;;; Color-rg Helper Functions
 ;;; ============================================================
 
+(defun mcg/color-rg-search-project ()
+  "Search input in current project with Color-rg."
+  (interactive)
+  (color-rg-search-input (color-rg-read-input) (mcg-project-root-or-default)))
+
+(defun mcg/color-rg-search-symbol-in-project ()
+  "Search symbol at point in current project with Color-rg."
+  (interactive)
+  (color-rg-search-input (color-rg-pointer-string) (mcg-project-root-or-default)))
+
 (defun mcg/color-rg-search-project-with-type ()
   "Search in project by file type."
   (interactive)
@@ -86,8 +96,9 @@
                                     '("*.el" "*.org" "*.js" "*.ts" "*.py" "*.go"
                                       "*.rs" "*.java" "*.c" "*.cpp" "*.h"
                                       "*.md" "*.txt" "*.json" "*.yaml" "*.toml"))))
-    (let ((color-rg-search-file-regexp file-type))
-      (call-interactively 'color-rg-search-input-in-project))))
+    (color-rg-search-input (color-rg-read-input)
+                           (mcg-project-root-or-default)
+                           file-type)))
 #+end_src
 
 *** Search in Org Directory
@@ -116,20 +127,20 @@
 
 #+begin_src emacs-lisp
 ;;; ============================================================
-;;; Keybindings (C-c s prefix - search, g subprefix for grep/rg)
+;;; Keybindings (extend C-c s search prefix)
 ;;; ============================================================
 
 (defun mcg--setup-color-rg-keybindings ()
-  "Setup search related keybindings."
-  ;; Color-rg - unified search prefix C-c s, with 'g' subprefix for grep/rg
+  "Setup Color-rg keybindings."
+  ;; Extend the shared C-c s search prefix from init-consult.
   (when (mcg-require-extension "color-rg" t)
     ;; Project content search
     (mcg-bind-key "C-c s g" 'color-rg-search-input "tools/color-rg")
-    (mcg-bind-key "C-c s G" 'color-rg-search-input-in-project "tools/color-rg")
+    (mcg-bind-key "C-c s G" 'mcg/color-rg-search-project "tools/color-rg")
 
     ;; Symbol search (using 's' for symbol)
     (mcg-bind-key "C-c s s" 'color-rg-search-symbol "tools/color-rg")
-    (mcg-bind-key "C-c s S" 'color-rg-search-symbol-in-project "tools/color-rg")
+    (mcg-bind-key "C-c s S" 'mcg/color-rg-search-symbol-in-project "tools/color-rg")
 
     ;; Current file
     (mcg-bind-key "C-c s ." 'color-rg-search-symbol-in-current-file "tools/color-rg")
@@ -140,7 +151,7 @@
     (mcg-bind-key "C-c s O" 'mcg/color-rg-search-in-org-directory "tools/color-rg")
     (mcg-bind-key "C-c s c" 'mcg/color-rg-search-in-config "tools/color-rg"))
 
-  (mcg-log "Search keybindings configured"))
+  (mcg-log "Color-rg keybindings configured"))
 #+end_src
 
 ** Initialize

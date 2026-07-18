@@ -46,6 +46,7 @@
         ;; Xref integration
         (setq xref-show-xrefs-function #'consult-xref
               xref-show-definitions-function #'consult-xref)
+        (setq completion-in-region-function #'consult-completion-in-region)
 
         ;; Buffer filter - hide internal buffers
         (setq consult-buffer-filter
@@ -70,12 +71,42 @@
     (defun mcg--setup-consult-keybinding ()
       "Setup consult."
       (when (mcg-require-extension "consult" t)
+        (require 'consult-register nil t)
+
+        (mcg-bind-key "C-x b" #'consult-buffer "completion/consult")
+        (mcg-bind-key "C-x 4 b" #'consult-buffer-other-window "completion/consult")
+        (mcg-bind-key "C-x 5 b" #'consult-buffer-other-frame "completion/consult")
+        (mcg-bind-key "C-x r b" #'consult-bookmark "completion/consult")
+        (mcg-bind-key "C-x p b" #'consult-project-buffer "completion/consult")
+        (define-key minibuffer-local-map (kbd "C-r") #'consult-history)
+
         ;; 搜索与导航 (C-c s prefix - search)
+        (define-prefix-command 'mcg-search-map)
+        (mcg-bind-key "C-c s" 'mcg-search-map "completion/consult")
         (mcg-bind-key "C-s" #'consult-line "completion/consult")
         (mcg-bind-key "C-c s l" #'consult-line "completion/consult")
         (mcg-bind-key "C-c s r" #'consult-ripgrep "completion/consult")
         (mcg-bind-key "C-c s i" #'consult-imenu "completion/consult")
         (mcg-bind-key "C-c s o" #'consult-outline "completion/consult")
+
+        ;; Standard M-g navigation bindings
+        (mcg-bind-key "M-g g" #'consult-goto-line "completion/consult")
+        (mcg-bind-key "M-g M-g" #'consult-goto-line "completion/consult")
+        (mcg-bind-key "M-g o" #'consult-outline "completion/consult")
+        (mcg-bind-key "M-g i" #'consult-imenu "completion/consult")
+        (mcg-bind-key "M-g I" #'consult-imenu-multi "completion/consult")
+        (mcg-bind-key "M-g m" #'consult-mark "completion/consult")
+        (mcg-bind-key "M-g k" #'consult-global-mark "completion/consult")
+
+        ;; Standard M-s search bindings
+        (mcg-bind-key "M-s f" #'consult-find "completion/consult")
+        (mcg-bind-key "M-s g" #'consult-grep "completion/consult")
+        (mcg-bind-key "M-s G" #'consult-git-grep "completion/consult")
+        (mcg-bind-key "M-s r" #'consult-ripgrep "completion/consult")
+        (mcg-bind-key "M-s l" #'consult-line "completion/consult")
+        (mcg-bind-key "M-s L" #'consult-line-multi "completion/consult")
+        (mcg-bind-key "M-s k" #'consult-keep-lines "completion/consult")
+        (mcg-bind-key "M-s u" #'consult-focus-lines "completion/consult")
 
         ;; 缓冲区与文件 (C-c b / C-c f prefix)
         ;; C-c b is a prefix key for buffer operations
@@ -87,6 +118,7 @@
         
         ;; C-c f for file operations
         (mcg-bind-key "C-c f f" #'consult-find "completion/consult")
+        (mcg-bind-key "C-c f r" #'consult-recent-file "completion/consult")
 
         ;; 粘贴与历史
         (mcg-bind-key "M-y" #'consult-yank-pop "completion/consult")
@@ -95,8 +127,12 @@
         ;; C-c x is a prefix; binding it directly to a command makes C-c x c unreachable.
         (define-prefix-command 'mcg-consult-command-map)
         (mcg-bind-key "C-c x" 'mcg-consult-command-map "completion/consult")
+        (mcg-bind-key "C-x M-:" #'consult-complex-command "completion/consult")
         (mcg-bind-key "C-c x c" #'consult-complex-command "completion/consult")
         (mcg-bind-key "C-c x x" #'consult-mode-command "completion/consult")
+        (mcg-bind-key "M-#" #'consult-register-load "completion/consult")
+        (mcg-bind-key "M-'" #'consult-register-store "completion/consult")
+        (mcg-bind-key "C-M-#" #'consult-register "completion/consult")
         (mcg-bind-key "C-c ; r" #'consult-register "completion/consult")
 
         (mcg-log "consult configured")))

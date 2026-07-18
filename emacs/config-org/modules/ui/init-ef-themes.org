@@ -32,6 +32,21 @@
 ** Setup
 
 #+begin_src emacs-lisp
+(defun mcg-ui-switch-theme ()
+  "Switch the current theme."
+  (interactive)
+  (if (fboundp 'consult-theme)
+      (call-interactively #'consult-theme)
+    (let* ((themes (cons "default"
+                         (mapcar #'symbol-name (custom-available-themes))))
+           (choice (completing-read "Theme: " themes nil t nil nil
+                                    (symbol-name mcg-ui-theme)))
+           (theme (unless (string= choice "default")
+                    (intern choice))))
+      (mapc #'disable-theme custom-enabled-themes)
+      (when theme
+        (load-theme theme t)))))
+
 (defun mcg--setup-ef-themes ()
   "Setup ef-themes."
   (let ((has-modus (mcg-require-extension "modus-themes" t))
@@ -44,6 +59,9 @@
      (t
       (mapc #'disable-theme custom-enabled-themes)
       (load-theme mcg-ui-theme t)
+      (with-eval-after-load 'consult
+        (when (fboundp 'consult-theme)
+          (consult-customize consult-theme :preview-key '(:debounce 0.5 any))))
       (mcg-log "ef-themes configured: %s" mcg-ui-theme)))))
 #+end_src
 
@@ -51,6 +69,7 @@
 
 #+begin_src emacs-lisp
 (mcg--setup-ef-themes)
+(mcg-bind-key "C-c T" #'mcg-ui-switch-theme "ui/theme")
 #+end_src
 
 ** Provide

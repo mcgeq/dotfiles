@@ -104,10 +104,10 @@ Functions receive (CATEGORY MODULE) as arguments.")
     ((:lang . rust) . ("\\.rs\\'" . rust-ts-mode))
     ((:lang . python) . ("\\.py\\'" . python-ts-mode))
     ((:lang . typescript) . ("\\.tsx?\\'" . typescript-ts-mode))
-    ((:lang . web) . ("\\.vue\\'" . web-mode))
+    ((:lang . web) . ("\\.\\(html?\\|css\\|scss\\|less\\|jsx?\\|tsx?\\|vue\\)\\'" . mcg-web-deferred-mode))
     ((:lang . cpp) . ("\\.\\(cpp\\|cc\\|cxx\\|h\\|hpp\\)\\'" . c++-ts-mode))
     ((:lang . lua) . ("\\.lua\\'" . lua-mode))
-    ((:lang . zig) . ("\\.zig\\'" . zig-mode))
+    ((:lang . zig) . ("\\.zig\\'" . mcg-zig-deferred-mode))
     ;; Writing modules
     ((:writing . markdown) . ("\\.md\\'" . markdown-mode))
     ((:writing . vale) . ("\\.\\(md\\|org\\|txt\\)\\'" . text-mode)))
@@ -491,8 +491,8 @@ Skips if module is already loaded or already in the queue."
     (let* ((mod-key (pop mcg-idle-load-modules))
            (category (car mod-key))
            (module (cdr mod-key)))
-      (mcg-load-module category module)
-      (push mod-key mcg-idle-loaded-modules)
+      (when (mcg-load-module category module)
+        (push mod-key mcg-idle-loaded-modules))
       ;; Schedule next idle load if more modules remain
       (when mcg-idle-load-modules
         (setq mcg-idle-load-timer

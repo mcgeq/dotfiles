@@ -8,24 +8,29 @@
 
 * Welcome to My Emacs Configuration
 
-This is a modern, modular Emacs configuration written using literate programming
-with Org Mode. It's designed for Emacs 29+ with extensive language support,
-LSP integration, and productivity features.
+This is a reproducible personal Emacs distribution written as a literate Org
+configuration. It is designed for Emacs 29+ and keeps third-party packages as
+Git submodules under =site-lisp/extensions/= so the editor, package sources,
+and generated configuration can be rebuilt from this repo.
 
 * Philosophy
 
-** Built-in First
-   Reconfigure Emacs to use as many built-in features as possible and use fewer
-   unnecessary plugins.
+** Reproducible Personal Distribution
+   Treat the configuration as a small personal Emacs distribution: package
+   sources are vendored as Git submodules, generated Elisp lives under
+   =site-lisp/config/=, and local secrets stay outside git.
 
 ** Modular Design
-   Configuration split into logical modules organized by functionality
+   Configuration is split into logical modules organized by functionality.
+   Modules are declared centrally in =config-org/init.org= and loaded through
+   the MCG module system.
 
 ** Literate Programming
    Written in Org Mode for easy documentation and maintenance
 
 ** Performance Optimized
-   Lazy loading, fast startup, and minimal overhead
+   Startup work is split between immediate, idle, and trigger-based module
+   loading to keep the first frame responsive.
 
 * 🎯 Features
 
@@ -50,6 +55,9 @@ LSP integration, and productivity features.
    - [[https://magit.vc/][Magit]]: Git interface
    - [[https://github.com/manateelazycat/blink-search][Blink-search]]: Universal search
    - [[https://github.com/manateelazycat/color-rg][Color-rg]]: Fast grep
+   - [[https://github.com/tarsius/hl-todo][hl-todo]]: TODO/FIXME keyword highlighting and project search
+   - [[https://github.com/protesilaos/pulsar][pulsar]]: Current-line pulse after navigation
+   - [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Several-Buffers.html][ibuffer]]: Built-in buffer overview and project filtering
    - [[https://github.com/manateelazycat/awesome-tray][Awesome-tray]]: Lightweight status display
    - [[https://github.com/manateelazycat/emacs-rime][Rime]]: Chinese input
    - [[https://github.com/justbur/emacs-which-key][Which-key]]: Keybinding hints
@@ -77,14 +85,17 @@ LSP integration, and productivity features.
     make init
     #+end_src
 
-*** Step 3: Create User Configuration
+*** Step 3: Generate Configuration
     #+begin_src bash
-    cp custom-example.el custom.el
+    make all
     #+end_src
 
-*** Step 4: Generate Configuration
+    This creates the ignored local file
+    ~site-lisp/config/private/config.el~ for machine-local settings and secrets.
+
+*** Step 4: Customize Local Configuration
     #+begin_src bash
-    make generate
+    $EDITOR site-lisp/config/private/config.el
     #+end_src
 
 *** Step 5: Link to Emacs
@@ -100,7 +111,7 @@ LSP integration, and productivity features.
 
 **** Option B: Manual Load
      #+begin_src emacs-lisp
-     (load-file "~/dotfiles/emacs/site-lisp/config/init.el")
+     (load-file "~/dotfiles/emacs/init.el")
      #+end_src
 
 *** Step 6: First Launch
@@ -112,13 +123,13 @@ LSP integration, and productivity features.
    #+begin_src bash
    make st        # Check package status
    make clean     # Clean generated files
-   make generate  # Regenerate config
+   make all       # Regenerate config
    make h         # View all commands
    #+end_src
 
 * 🗂️ Configuration Structure
 
-For detailed directory structure and module system documentation, see [[file:config-org/README.org][config-org/README.org]].
+For the executable structure, start with [[file:config-org/init.org][config-org/init.org]] and the core modules under [[file:config-org/core/][config-org/core/]].
 
 ** Overview
 
@@ -128,10 +139,9 @@ emacs/
 ├── README.org                   # This file (English)
 ├── README_CN.org                # Chinese documentation
 ├── config-org/                  # Source: Org Mode literate config
-│   ├── README.org               # Detailed module documentation
 │   ├── init.org                 # Main entry point
 │   ├── core/                    # Core configuration (4 files)
-│   ├── modules/                 # Feature modules (8 categories, 35 modules)
+│   ├── modules/                 # Feature modules
 │   └── private/                 # Private configuration
 ├── site-lisp/                   # Generated: Compiled EL files
 │   ├── config/                  # Same structure as config-org/
@@ -142,16 +152,15 @@ emacs/
 
 ** Module Categories
 
-| Category   | Modules | Description                       |
-|------------+---------+-----------------------------------|
-| ui         |       4 | Theme, modeline, font, icons      |
-| editor     |       8 | Editing features                  |
-| completion |       2 | Vertico, yasnippet                |
-| tools      |       5 | Magit, search, rime, tabs, eshell |
-| enhance    |       5 | Autosave, which-key, helpful, etc.|
-| org        |       5 | Org Mode ecosystem                |
-| writing    |       2 | Markdown, vale                    |
-| lang       |       9 | LSP and language support          |
+| Category   | Modules | Description                         |
+|------------+---------+-------------------------------------|
+| ui         |       7 | Theme, tray, font, icons, dashboard, pulse feedback |
+| editor     |       8 | Editing defaults, TODO highlights, buffer overview |
+| completion |       8 | Vertico, Consult, snippets, actions |
+| tools      |      12 | Git, search, LSP bridge, project    |
+| enhance    |       2 | Help and recent file enhancements   |
+| org        |      13 | Org, agenda, capture, export, Hugo  |
+| lang       |       2 | Language-specific integrations      |
 
 * ⚙️ Configuration Management
 
@@ -162,11 +171,19 @@ emacs/
 | make              | Generate config from Org files |
 | make clean        | Clean generated files          |
 | make test         | Run all tests                  |
+| make profile-startup | Show startup module load times |
 | make init         | Initialize Git Submodules      |
 | make st           | Check package status           |
 | make up           | Update packages safely         |
 | make lock-packages| Lock current package versions  |
 | make h            | Show help                      |
+
+** Startup Profiling
+
+Use =make profile-startup= to run a batch startup profile. The report lists
+module load times in descending order and highlights key startup entries such
+as dashboard, theme, recentf, and private config. This is a stable module-level
+signal for regressions; visual GUI timing still needs manual confirmation.
 
 * 📦 Git Submodule Package Management
 
@@ -339,49 +356,59 @@ The system automatically detects old names and shows warnings.
 
 ** Module Loading Strategy
 
-The configuration uses a three-tier loading strategy for optimal startup performance:
+The configuration uses a three-tier loading strategy so the dashboard can appear
+early while heavier or on-demand tools finish loading later:
 
 | Loading Type | When Loaded | Modules |
 |--------------+-------------+---------|
-| Immediate    | At startup  | core, ui (theme, modeline, font), editor (defaults, keybindings) |
-| Idle         | After 2s idle | completion (vertico, yasnippet), enhance (which-key, helpful) |
-| Deferred     | On demand   | lang (rust, python, etc.), tools (magit), writing (markdown) |
+| Immediate    | At startup  | first-frame essentials: font, theme, icons, dashboard, pulsar, editor defaults, completion/search basics |
+| Idle         | After 2s idle | visual chrome and heavy/on-demand tools: awesome-tray, holo-layer, dirvish, org, magit, clutch, lsp-bridge, color-rg, majutsu |
+| Deferred     | On demand   | trigger-backed language modules such as python, zig, and web |
+
+Two idle choices are intentional:
+
+- =awesome-tray= replaces the mode-line, so loading it after the dashboard keeps
+  the first frame from visibly redrawing.
+- =org= is one of the heaviest Windows startup modules, so agenda/capture
+  support is loaded after the first frame unless you override =mcg-idle-modules=.
+
+Use =make profile-startup= when changing this list. It prints module timings and
+the current idle queue without mixing third-party warnings into the report.
 
 ** Idle Loading Configuration
 
-Non-essential modules are loaded during idle time to speed up startup:
+Non-essential modules are loaded during idle time to speed up startup. The
+default list lives in =config-org/init.org= as =mcg-idle-modules= and can be
+overridden from =site-lisp/config/private/config.el=:
 
 #+begin_src emacs-lisp
 ;; Configure idle loading delay (default: 2 seconds)
 (setq mcg-idle-load-delay 2)
 
-;; Modules loaded during idle time are defined in init.org
-;; You can add modules to idle loading:
+;; Add modules to idle loading:
 (mcg-add-idle-load-module :completion 'vertico)
 (mcg-add-idle-load-category :enhance)  ; Add entire category
 #+end_src
 
 ** Deferred Loading
 
-Language modules are loaded on-demand when you open a file:
+Language modules are loaded on-demand when you open a matching file:
 
 | File Extension | Module Loaded |
 |----------------+---------------|
-| =.rs=          | rust          |
 | =.py=          | python        |
-| =.ts=, =.tsx=  | typescript    |
-| =.vue=         | web           |
-| =.lua=         | lua           |
 | =.zig=         | zig           |
-| =.cpp=, =.h=   | cpp           |
+| =.html=, =.css=, =.js=, =.ts=, =.tsx=, =.vue= | web |
 
 ** Startup Time Diagnostics
 
-#+begin_src emacs-lisp
-;; View detailed module loading times
-M-x mcg/show-load-times
+#+begin_src bash
+make profile-startup
+#+end_src
 
-;; Check which modules are loaded
+Inside Emacs, you can also inspect module state:
+
+#+begin_src emacs-lisp
 M-x mcg-list-modules
 #+end_src
 
@@ -507,6 +534,7 @@ All custom bindings use =C-c= prefix (user reserved area) with which-key descrip
 | C-c s g | Search content (color-rg)      |
 | C-c s G | Search project (color-rg)      |
 | C-c s s | Search symbol (color-rg)       |
+| C-c s T | Search TODOs in project        |
 | C-c s b | Blink search                   |
 | C-c s d | Search current directory       |
 | C-c s p | Search project root            |
@@ -516,6 +544,8 @@ All custom bindings use =C-c= prefix (user reserved area) with which-key descrip
 | Key     | Description                    |
 |---------+--------------------------------|
 | C-c b b | Switch buffer (consult)        |
+| C-c b i | Open ibuffer                   |
+| C-c b p | Open project ibuffer           |
 | C-c b m | Switch bookmark                |
 | C-c b r | Open recent file               |
 | C-c f f | Find file                      |

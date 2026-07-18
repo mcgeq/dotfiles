@@ -99,11 +99,42 @@ The default prefers `nerd-icons'. Set nil to disable dashboard icons."
   (and mcg-dashboard-icon-type
        (require mcg-dashboard-icon-type nil t)))
 
+(defun mcg-dashboard-setup-recentf ()
+  "Configure recentf state used by dashboard before startup rendering."
+  (unless mcg-cache-dir
+    (mcg-init-paths))
+  (make-directory mcg-cache-dir t)
+  (setq recentf-max-saved-items 300)
+  (setq recentf-save-file (expand-file-name "recentf.el" mcg-cache-dir))
+  (setq recentf-auto-cleanup 'never)
+  (setq recentf-filename-handlers '(abbreviate-file-name)))
+
+(defun mcg-dashboard-enable-resize-refresh ()
+  "Enable dashboard refreshes after startup window setup has settled."
+  (when (fboundp 'dashboard-resize-on-hook)
+    (add-hook 'window-size-change-functions #'dashboard-resize-on-hook 100)))
+
+(defun mcg-dashboard-open-startup-buffer ()
+  "Open dashboard early enough to avoid a blank startup frame."
+  (add-hook 'window-setup-hook #'mcg-dashboard-enable-resize-refresh 100)
+  (when (fboundp 'dashboard-insert-startupify-lists)
+    (dashboard-insert-startupify-lists t)
+    (switch-to-buffer
+     (if (boundp 'dashboard-buffer-name)
+         dashboard-buffer-name
+       "*dashboard*")))
+  (if (fboundp 'mcg-release-startup-redisplay)
+      (mcg-release-startup-redisplay)
+    (setq inhibit-redisplay nil
+          inhibit-message nil)
+    (redisplay)))
+
 (defun mcg--setup-dashboard ()
   "Setup dashboard."
   (if (and mcg-dashboard-enabled
            (mcg-require-extension "dashboard" t))
       (progn
+        (mcg-dashboard-setup-recentf)
         (setq dashboard-banner-logo-title mcg-dashboard-banner-title)
         (setq dashboard-startup-banner mcg-dashboard-startup-banner)
         (setq dashboard-banner-ascii mcg-dashboard-banner-ascii)
@@ -119,8 +150,7 @@ The default prefers `nerd-icons'. Set nil to disable dashboard icons."
         (when (eq dashboard-icon-type 'nerd-icons)
           (setq dashboard-heading-icons mcg-dashboard-nerd-icons-heading-icons))
         (when mcg-dashboard-startup
-          (setq initial-buffer-choice #'dashboard-open)
-          (dashboard-setup-startup-hook))
+          (mcg-dashboard-open-startup-buffer))
         (mcg-log "dashboard configured"))
     (mcg-log-warning "dashboard not available or disabled")))
 

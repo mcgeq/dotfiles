@@ -1,8 +1,8 @@
-#+TITLE: Auto Save Module
+#+TITLE: Blink Search Module
 #+AUTHOR: mcge
 #+PROPERTY: header-args:emacs-lisp :tangle init-blink-search.el :lexical t
 
-* Auto Save Module
+* Blink Search Module
 
 ** File Header
 
@@ -16,7 +16,6 @@
 ;;; Code:
 
 (require 'core-lib)
-(require 'subr-x)
 #+end_src
 
 ** Custom Options
@@ -99,30 +98,24 @@ Blink-search 辅助函数。
 (defun mcg/blink-search-project-root ()
   "Search files in project root using blink-search."
   (interactive)
-  (let* ((project-root (or (and (fboundp 'projectile-project-root)
-                                (projectile-project-root))
-                           (and (fboundp 'project-root)
-                                (when-let* ((project (project-current)))
-                                  (project-root project)))
-                           default-directory))
-         (default-directory project-root))
+  (let ((default-directory (mcg-project-root-or-default)))
     (blink-search)))
 #+end_src
 
 #+begin_src emacs-lisp
 ;;; ============================================================
-;;; Keybindings (C-c s prefix - search)
+;;; Keybindings (extend C-c s search prefix)
 ;;; ============================================================
 
 (defun mcg--setup-blink-search-keybindings ()
-  "Setup search related keybindings."
-  ;; Blink-search - unified search prefix C-c s
+  "Setup Blink-search keybindings."
+  ;; Extend the shared C-c s search prefix from init-consult.
   (when (featurep 'blink-search)
     (mcg-bind-key "C-c s b" 'blink-search "tools/blink-search")
     (mcg-bind-key "C-c s d" 'mcg/blink-search-grep-current-dir "tools/blink-search")
     (mcg-bind-key "C-c s p" 'mcg/blink-search-project-root "tools/blink-search"))
 
-    (mcg-log "Search keybindings configured"))
+    (mcg-log "Blink-search keybindings configured"))
 #+end_src
 
 ** Initialize

@@ -14,8 +14,8 @@
 # 用户信息配置
 # 这些信息会用于所有提交的 author 和 committer 字段
 [user]
-name = "mcgeq"      # 提交者姓名，会显示在提交记录中
-email = "mcgeq@outlook.com"  # 提交者邮箱，会显示在提交记录中
+name = "mcgeq"
+email = "mcgeq@outlook.com"
 
 # 用户界面配置
 [ui]
@@ -506,7 +506,7 @@ eject = ["squash", "--from", "@", "--into"]
 #   - Git HEAD 标记（如果是 Git HEAD）
 #   - 冲突标记（如果存在冲突）
 'format_short_commit_header(commit)' = '''separate(" ",
-  format_short_change_id_with_hidden_and_divergent_info(commit),
+  format_short_change_id_with_change_offset(commit),
   format_short_signature(commit.author()),
   format_timestamp(commit_timestamp(commit)),
   render_bookmarks(commit),
@@ -519,7 +519,6 @@ eject = ["squash", "--from", "@", "--into"]
   if(config("gerrit.enabled").as_boolean() && has_change_id(commit.description()),
     "[" ++ hyperlink(config("gerrit.url").as_string() ++ "/q/I" ++ gerrit_id(commit.change_id()), "CR: I" ++ commit.change_id().normal_hex().substr(0, 10)) ++ "]"
   ),
-  if(commit.git_head(), label("git_head", "git_head()")),
   if(commit.conflict(), label("conflict", "conflict")),
 )'''
 
@@ -541,7 +540,7 @@ if(root,
   label(if(current_working_copy, "working_copy"),
     concat(
       separate(" ",
-        format_short_change_id_with_hidden_and_divergent_info(self),
+        format_short_change_id_with_change_offset(self),
         format_short_commit_id(commit_id),
         timestr,
         bookmarks,

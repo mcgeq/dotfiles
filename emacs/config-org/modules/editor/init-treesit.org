@@ -78,6 +78,9 @@ treesit-auto 没有的语言需要手动添加。
 (add-to-list 'treesit-language-source-alist
              '(markdown-inline . ("https://github.com/tree-sitter-grammars/tree-sitter-markdown"
                                   "split_parser" "tree-sitter-markdown-inline/src")))
+
+(add-to-list 'treesit-language-source-alist
+             '(jsdoc . ("https://github.com/tree-sitter/tree-sitter-jsdoc")))
 #+end_src
 
 ** Initialize

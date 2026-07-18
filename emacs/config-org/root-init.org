@@ -1,0 +1,27 @@
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init.el :lexical t
+
+* Root Init Entrypoint
+
+This file is the tiny top-level entrypoint for using the =emacs/=
+directory as =~/.emacs.d=.  The generated =init.el= stays at the
+repository root and delegates to the generated framework initializer.
+
+#+begin_src emacs-lisp
+;;; init.el --- MCG Emacs top-level entrypoint -*- lexical-binding: t; -*-
+
+;;; Commentary:
+;; This file makes the emacs/ directory usable directly as ~/.emacs.d.
+;; The actual framework initializer lives in site-lisp/config/init.el.
+
+;;; Code:
+
+(defvar mcg-root-dir
+  (file-name-directory (or load-file-name buffer-file-name))
+  "Root directory of the MCG Emacs distribution.")
+
+(load (expand-file-name "site-lisp/config/init.el" mcg-root-dir)
+      nil 'nomessage)
+
+;;; init.el ends here
+#+end_src

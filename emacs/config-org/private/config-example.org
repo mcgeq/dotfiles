@@ -5,16 +5,19 @@
 * Private Configuration Example
 
 This file is an example template for private configuration.
-Copy this file to ~config.org~ and customize it to your needs.
+Copy the relevant examples into ~site-lisp/config/private/config.el~.
 
 #+begin_quote
 Note: This file is tracked by git as an example.
-Your actual configuration should be in ~config.org~, which is ignored by git.
+Your actual machine-local settings and secrets live in
+~site-lisp/config/private/config.el~, which is ignored by git.
 #+end_quote
 
 ** Startup Configuration
 
 #+begin_src emacs-lisp
+;;; config-example.el --- Example private configuration -*- lexical-binding: t; -*-
+
 ;;; ============================================================
 ;;; Startup Configuration
 ;;; ============================================================
@@ -29,19 +32,37 @@ Your actual configuration should be in ~config.org~, which is ignored by git.
 
 ;; Startup loading strategy
 ;; Heavy modules are loaded during idle time by default to make the first
-;; scratch frame appear sooner. Org stays immediate so capture/agenda helpers
-;; are available early.
+;; dashboard frame appear sooner. Awesome Tray is idle because it replaces the
+;; mode-line and can otherwise make the first dashboard frame visibly redraw.
+;; Org is idle by default because it is one of the heaviest startup modules on
+;; Windows.
+;; The default list is grouped by intent: first-frame visual stability,
+;; generally heavy modules, then on-demand tools.
 ;; Default:
-;;   '((:ui . holo-layer)
+;;   '(;; First-frame visual stability.
+;;     (:ui . holo-layer)
+;;     (:ui . awesome-tray)
+;;
+;;     ;; Heavy modules.
 ;;     (:editor . dirvish)
+;;     (:org . org)
+;;
+;;     ;; On-demand tools.
 ;;     (:tools . magit)
 ;;     (:tools . clutch)
 ;;     (:tools . lsp-bridge)
 ;;     (:tools . color-rg)
 ;;     (:tools . majutsu))
 ;; (setq mcg-idle-modules
-;;       '((:ui . holo-layer)
+;;       '(;; First-frame visual stability.
+;;         (:ui . holo-layer)
+;;         (:ui . awesome-tray)
+;;
+;;         ;; Heavy modules.
 ;;         (:editor . dirvish)
+;;         (:org . org)
+;;
+;;         ;; On-demand tools.
 ;;         (:tools . magit)
 ;;         (:tools . clutch)
 ;;         (:tools . lsp-bridge)
@@ -63,8 +84,18 @@ Your actual configuration should be in ~config.org~, which is ignored by git.
 ;; (setq mcg-lsp-python-server "ty")
 ;; (setq mcg-lsp-python-server "basedpyright")
 
+;; Python development commands
+;; Defaults:
+;;   mcg-python-test-command = "python -m pytest"
+;;   mcg-python-ruff-command = "ruff"
+;; (setq mcg-python-test-command "python -m pytest")
+;; (setq mcg-python-ruff-command "ruff")
+
 ;; Use biome for Web development (instead of ESLint)
 ;; Default: nil
+;; Default formatting prefers project ESLint, especially @antfu/eslint-config.
+;; Prettier is only used when the project explicitly declares Prettier.
+;; Enable or customize Biome explicitly if a project standardizes on it.
 ;; (setq mcg-lsp-enable-biome t)
 
 ;; Enable lsp-bridge in TRAMP buffers
@@ -74,6 +105,12 @@ Your actual configuration should be in ~config.org~, which is ignored by git.
 ;; Enable inlay hints
 ;; Default: nil
 ;; (setq mcg-lsp-enable-inlay-hint t)
+
+;; Enable Zig LSP when zls is available
+;; Default: mcg-zig-enable-lsp = t
+;; Default: mcg-zig-warn-missing-zls = nil
+;; (setq mcg-zig-enable-lsp nil)
+;; (setq mcg-zig-warn-missing-zls t)
 
 #+end_src
 
@@ -278,66 +315,41 @@ Your actual configuration should be in ~config.org~, which is ignored by git.
 
 #+end_src
 
-** Clutch Database Configuration
+** Local Configuration
 
 #+begin_src emacs-lisp
 ;;; ============================================================
-;;; Clutch Database Configuration
+;;; Local Configuration
 ;;; ============================================================
 
-;; Configure database connections here (sensitive data)
-;; Uncomment and modify as needed:
-
-;; (setq mcg-tools-clutch-connections
-;;       '(("dev-mysql" . (:backend mysql
-;;                           :host "127.0.0.1" :port 3306
-;;                           :user "root" :password "test"
-;;                           :database "mydb"
-;;                           :connect-timeout 5
-;;                           :read-idle-timeout 60))
-;;         ("dev-pg" . (:backend pg
-;;                          :host "127.0.0.1" :port 5432
-;;                          :user "postgres" :password "test"
-;;                          :database "mydb"))
-;;         ("dev-sqlite" . (:backend sqlite
-;;                             :database "/path/to/my.db"))))
-
-;; PostgreSQL 连接示例
-;; (setq mcg-tools-clutch-connections
-;;       '(("dev-pg" . (:backend pg
+;; Machine-local settings and secrets should live in one file:
+;;
+;;   site-lisp/config/private/config.el
+;;
+;; That file is ignored by git and loaded automatically by the main init loader.
+;;
+;; Example private/config.el:
+;;
+;;   ;; -*- lexical-binding: t; -*-
+;;   (setq mcg-lsp-enable-inlay-hint t)
+;;   (mcg-org-set-storage-root "D:/workspaces/org")
+;;   (setq mcg-blog-base-directory "D:/workspaces/blog/mcge-blog")
+;;   (setq mcg-org-hugo-postdir "config-org")
+;;   (setq mcg-org-blog-capture-directory nil)
+;;
+;;   (setq mcg-tools-clutch-connections
+;;         `(;; PostgreSQL 连接示例
+;;           ("dev-pg" . (:backend pg
 ;;                       :host "localhost"
 ;;                       :port 5432
 ;;                       :user "postgres"
-;;                       :password "your-password"
-;;                       :database "mydb"))
-;;         ("prod-pg" . (:backend pg
-;;                        :host "prod-db.example.com"
-;;                        :port 5432
-;;                        :user "app"
-;;                        :password "prod-password"
-;;                        :database "production"))))
-
-;; MySQL 连接示例
-;; (setq mcg-tools-clutch-connections
-;;       '(("dev-mysql" . (:backend mysql
-;;                          :host "localhost"
-;;                          :port 3306
-;;                          :user "root"
-;;                          :password "your-password"
-;;                          :database "mydb"))
-;;         ("prod-mysql" . (:backend mysql
-;;                           :host "prod-db.example.com"
-;;                           :port 3306
-;;                           :user "app"
-;;                           :password "prod-password"
-;;                           :database "production"))))
-
-;; SQLite 连接示例
-;; (setq mcg-tools-clutch-connections
-;;       '(("local-sqlite" . (:backend sqlite
-;;                             :database "~/.config/myapp/data.db"))
-;;         ("project-sqlite" . (:backend sqlite
-;;                               :database "~/projects/myapp/data.db"))))
+;;                       :database "mydb"
+;;                       :password ,(or (getenv "MCG_DEV_PG_PASSWORD")
+;;                                      (auth-source-pick-first-password
+;;                                       :host "localhost"
+;;                                       :user "postgres"))))
+;;           ("local-sqlite" . (:backend sqlite
+;;                              :database "~/.config/myapp/data.db"))))
 
 #+end_src
 

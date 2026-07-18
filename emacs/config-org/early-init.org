@@ -51,15 +51,21 @@
       gc-cons-percentage 0.6
       file-name-handler-alist nil)
 
-;; Prevent the glimpse of un-styled Emacs
-(setq inhibit-redisplay t
-      inhibit-message t)
+;; Keep redisplay enabled so Windows can paint the configured dark initial
+;; frame immediately instead of showing an unpainted white window.
 
-(add-hook 'window-setup-hook
-          (lambda ()
-            (setq inhibit-redisplay nil
-                  inhibit-message nil)
-            (redisplay)))
+(defvar mcg--startup-redisplay-released nil
+  "Non-nil once startup redisplay inhibition has been released.")
+
+(defun mcg-release-startup-redisplay ()
+  "Release startup redisplay inhibition once."
+  (unless mcg--startup-redisplay-released
+    (setq inhibit-redisplay nil
+          inhibit-message nil
+          mcg--startup-redisplay-released t)
+    (redisplay)))
+
+(add-hook 'window-setup-hook #'mcg-release-startup-redisplay)
 #+end_src
 
 ** Native Compilation
@@ -68,6 +74,51 @@
 
 #+begin_src emacs-lisp
 ;;; Native Compilation
+
+(defvar mcg-early-init-eln-cache-dir nil
+  "Native-comp ELN cache directory selected during early-init.")
+
+(defun mcg--early-init-emacs-dir ()
+  "Return the MCG Emacs root directory available during early-init."
+  (let* ((init-file (or user-init-file
+                        (expand-file-name "init.el" user-emacs-directory)))
+         (init-dir (and init-file (file-name-directory init-file)))
+         (init-dir-name (and init-dir
+                             (file-name-nondirectory
+                              (directory-file-name init-dir))))
+         (parent-dir (and init-dir
+                          (file-name-directory
+                           (directory-file-name init-dir))))
+         (parent-dir-name (and parent-dir
+                               (file-name-nondirectory
+                                (directory-file-name parent-dir)))))
+    (file-name-as-directory
+     (expand-file-name
+      (cond
+       ((and init-dir
+             (file-exists-p (expand-file-name "site-lisp/config/init.el"
+                                              init-dir)))
+        init-dir)
+       ((and (string= init-dir-name "config")
+             (string= parent-dir-name "site-lisp"))
+        (file-name-directory (directory-file-name parent-dir)))
+       ((and user-emacs-directory
+             (file-exists-p (expand-file-name "site-lisp/config/init.el"
+                                              user-emacs-directory)))
+        user-emacs-directory)
+       (t user-emacs-directory))))))
+
+(when (boundp 'native-comp-eln-load-path)
+  (setq mcg-early-init-eln-cache-dir
+        (expand-file-name ".cache/eln-cache/" (mcg--early-init-emacs-dir)))
+  (unless (file-directory-p mcg-early-init-eln-cache-dir)
+    (make-directory mcg-early-init-eln-cache-dir t))
+  (if (fboundp 'startup-redirect-eln-cache)
+      (startup-redirect-eln-cache mcg-early-init-eln-cache-dir)
+    (setq native-comp-eln-load-path
+          (cons mcg-early-init-eln-cache-dir
+                (remove mcg-early-init-eln-cache-dir
+                        native-comp-eln-load-path)))))
 
 (when (featurep 'native-compile)
   ;; Silence compiler warnings

@@ -8,22 +8,25 @@
 
 * 欢迎使用我的 Emacs 配置
 
-这是一个现代化、模块化的 Emacs 配置，使用 Org Mode 文学编程编写。
-专为 Emacs 29+ 设计，提供丰富的语言支持、LSP 集成和生产力功能。
+这是一个可复现的个人 Emacs 发行版，使用 Org Mode 文学编程编写。
+它面向 Emacs 29+，把第三方包以 Git 子模块形式放在 =site-lisp/extensions/=
+下，使编辑器配置、包源码和生成后的 Elisp 都能从本仓库重建。
 
 * 设计理念
 
-** 内置优先
-   尽可能使用 Emacs 内置功能，减少不必要的插件
+** 可复现的个人发行版
+   将本配置视为一个小型个人 Emacs 发行版：包源码由 Git 子模块托管，
+   生成后的 Elisp 位于 =site-lisp/config/=，本机密钥和密码留在 git 之外。
 
 ** 模块化设计
-   配置按功能拆分为逻辑模块
+   配置按功能拆分为逻辑模块。模块在 =config-org/init.org= 中集中声明，
+   并由 MCG 模块系统负责加载。
 
 ** 文学编程
    使用 Org Mode 编写，便于文档化和维护
 
 ** 性能优化
-   延迟加载、快速启动、最小开销
+   启动工作被拆分为立即加载、空闲加载和按触发器加载，以保持首帧响应速度。
 
 * 🎯 功能特性
 
@@ -48,6 +51,9 @@
    - [[https://magit.vc/][Magit]]: Git 界面
    - [[https://github.com/manateelazycat/blink-search][Blink-search]]: 通用搜索
    - [[https://github.com/manateelazycat/color-rg][Color-rg]]: 快速 grep
+   - [[https://github.com/tarsius/hl-todo][hl-todo]]: TODO/FIXME 高亮与项目搜索
+   - [[https://github.com/protesilaos/pulsar][pulsar]]: 跳转后的当前行闪烁定位
+   - [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Several-Buffers.html][ibuffer]]: 内置缓冲区总览与项目过滤
    - [[https://github.com/manateelazycat/awesome-tray][Awesome-tray]]: 轻量状态栏
    - [[https://github.com/manateelazycat/emacs-rime][Rime]]: 中文输入
    - [[https://github.com/justbur/emacs-which-key][Which-key]]: 快捷键提示 ⭐
@@ -75,14 +81,17 @@
     make init
     #+end_src
 
-*** 步骤 3: 创建用户配置
+*** 步骤 3: 生成配置
     #+begin_src bash
-    cp custom-example.el custom.el
+    make all
     #+end_src
 
-*** 步骤 4: 生成配置
+    这会创建被 git 忽略的本地配置文件
+    ~site-lisp/config/private/config.el~，用于机器本地配置、密钥、token 和密码。
+
+*** 步骤 4: 定制本地配置
     #+begin_src bash
-    make generate
+    $EDITOR site-lisp/config/private/config.el
     #+end_src
 
 *** 步骤 5: 链接到 Emacs
@@ -98,7 +107,7 @@
 
 **** 方式 B: 手动加载
      #+begin_src emacs-lisp
-     (load-file "~/dotfiles/emacs/site-lisp/config/init.el")
+     (load-file "~/dotfiles/emacs/init.el")
      #+end_src
 
 *** 步骤 6: 首次启动
@@ -110,13 +119,13 @@
    #+begin_src bash
    make st        # 检查包状态
    make clean     # 清理生成文件
-   make generate  # 重新生成配置
+   make all       # 重新生成配置
    make h         # 查看所有命令
    #+end_src
 
 * 🗂️ 配置结构
 
-详细的目录结构和模块系统说明请参阅 [[file:config-org/README_CN.org][config-org/README_CN.org]]。
+可执行结构从 [[file:config-org/init.org][config-org/init.org]] 和 [[file:config-org/core/][config-org/core/]] 下的核心模块开始阅读。
 
 ** 概览
 
@@ -126,10 +135,9 @@ emacs/
 ├── README.org                   # 英文文档
 ├── README_CN.org                # 本文件（中文）
 ├── config-org/                  # 源码：Org Mode 文学配置
-│   ├── README.org               # 详细模块文档
 │   ├── init.org                 # 主入口
 │   ├── core/                    # 核心配置（4 个文件）
-│   ├── modules/                 # 功能模块（8 类别，35 模块）
+│   ├── modules/                 # 功能模块
 │   └── private/                 # 私有配置
 ├── site-lisp/                   # 生成：编译后的 EL 文件
 │   ├── config/                  # 与 config-org/ 结构相同
@@ -140,16 +148,15 @@ emacs/
 
 ** 模块类别
 
-| 类别       | 模块数 | 描述                       |
-|------------+--------+----------------------------|
-| ui         |      4 | 主题、状态栏、字体、图标   |
-| editor     |      8 | 编辑功能                   |
-| completion |      2 | Vertico、yasnippet         |
-| tools      |      5 | Magit、搜索、Rime、标签页  |
-| enhance    |      5 | 自动保存、which-key 等     |
-| org        |      5 | Org Mode 生态系统          |
-| writing    |      2 | Markdown、vale             |
-| lang       |      9 | LSP 和语言支持             |
+| 类别       | 模块数 | 描述                         |
+|------------+--------+------------------------------|
+| ui         |      7 | 主题、状态栏、字体、图标、Dashboard、定位闪烁 |
+| editor     |      8 | 编辑默认值、TODO 高亮、缓冲区总览 |
+| completion |      8 | Vertico、Consult、片段、动作 |
+| tools      |     12 | Git、搜索、LSP bridge、项目  |
+| enhance    |      2 | Help 和最近文件增强          |
+| org        |     13 | Org、agenda、capture、导出、Hugo |
+| lang       |      2 | 语言专用集成                 |
 
 * ⚙️ 配置管理
 
@@ -160,11 +167,18 @@ emacs/
 | make              | 从 Org 文件生成配置  |
 | make clean        | 清理生成文件         |
 | make test         | 运行所有测试         |
+| make profile-startup | 查看启动模块耗时     |
 | make init         | 初始化 Git 子模块    |
 | make st           | 检查包状态           |
 | make up           | 安全更新包           |
 | make lock-packages| 锁定当前包版本       |
 | make h            | 显示帮助             |
+
+** 启动 Profiling
+
+使用 =make profile-startup= 运行 batch 启动 profiling。报告会按耗时从高到低
+列出模块耗时，并突出 dashboard、theme、recentf、private config 等关键启动项。
+它适合稳定追踪模块级启动回归；GUI 首帧视觉时间仍需要人工确认。
 
 * 📦 Git 子模块包管理
 
@@ -278,6 +292,63 @@ make st
 3. *更改后提交*：始终一起提交 =.gitmodules= 和子模块目录
 4. *定期更新*：定期运行 =make gsu= 保持包更新
 5. *更新后测试*：更新后运行 =make test= 捕获任何破坏性更改
+
+* ⚡ 性能优化
+
+** 模块加载策略
+
+本配置使用三层加载策略，让 dashboard 尽早出现，同时把较重或按需工具放到
+首屏之后：
+
+| 加载类型 | 加载时机 | 模块 |
+|----------+----------+------|
+| Immediate | 启动时 | 首屏必需项：font、theme、icons、dashboard、pulsar、编辑默认值、补全/搜索基础 |
+| Idle | 空闲 2 秒后 | 视觉外壳和重/按需工具：awesome-tray、holo-layer、dirvish、org、magit、clutch、lsp-bridge、color-rg、majutsu |
+| Deferred | 按需触发 | 有文件类型触发器的语言模块，例如 python、zig 和 web |
+
+其中两个 idle 决策是刻意保留的：
+
+- =awesome-tray= 会替换 mode-line，放到 dashboard 之后加载可以避免首屏明显重绘。
+- =org= 是 Windows 启动期最重的模块之一，所以 agenda/capture 支持默认放到首帧之后加载；需要时可以在 =mcg-idle-modules= 中覆盖。
+
+调整加载策略后，建议运行 =make profile-startup=。它会输出模块耗时和当前 idle
+队列，并且不会把第三方 warning 混入报告。
+
+** Idle 加载配置
+
+非首屏必需模块通过 idle 加载加快启动。默认列表位于 =config-org/init.org= 的
+=mcg-idle-modules=，也可以在 =site-lisp/config/private/config.el= 中覆盖：
+
+#+begin_src emacs-lisp
+;; 配置 idle 加载延迟（默认：2 秒）
+(setq mcg-idle-load-delay 2)
+
+;; 添加单个模块或整个类别到 idle 加载
+(mcg-add-idle-load-module :completion 'vertico)
+(mcg-add-idle-load-category :enhance)
+#+end_src
+
+** Deferred 加载
+
+语言模块在打开匹配文件时按需加载：
+
+| 文件扩展名 | 加载模块 |
+|------------+----------|
+| =.py=      | python   |
+| =.zig=     | zig      |
+| =.html=, =.css=, =.js=, =.ts=, =.tsx=, =.vue= | web |
+
+** 启动耗时诊断
+
+#+begin_src bash
+make profile-startup
+#+end_src
+
+在 Emacs 内也可以查看模块状态：
+
+#+begin_src emacs-lisp
+M-x mcg-list-modules
+#+end_src
 
 ** 模块声明
 
@@ -401,6 +472,7 @@ Warning: Module fingertip is renamed to paredit
 | C-c s g | 搜索内容 (color-rg)        |
 | C-c s G | 搜索项目 (color-rg)        |
 | C-c s s | 搜索符号 (color-rg)        |
+| C-c s T | 搜索项目 TODO/FIXME        |
 | C-c s b | Blink 搜索                 |
 | C-c s d | 搜索当前目录               |
 | C-c s p | 搜索项目根目录             |
@@ -410,6 +482,8 @@ Warning: Module fingertip is renamed to paredit
 | 快捷键  | 描述                       |
 |---------+----------------------------|
 | C-c b b | 切换缓冲区 (consult)       |
+| C-c b i | 打开 ibuffer               |
+| C-c b p | 打开项目 ibuffer           |
 | C-c b m | 切换书签                   |
 | C-c b r | 打开最近文件               |
 | C-c f f | 查找文件                   |

@@ -1,0 +1,247 @@
+#+TITLE: Python Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-python.el :lexical t
+
+* Python Module
+
+** File Header
+
+#+begin_src emacs-lisp
+;;; init-python.el --- Python language support for MCG Emacs -*- lexical-binding: t; -*-
+
+;; Copyright (C) 2024-2026 MCG
+;; Author: mcge <mcgeq@outlook.com>
+;; Keywords: languages, python
+;; Compatibility: GNU Emacs 29.0+
+
+;;; Commentary:
+;; Python language support module for MCG Emacs:
+;; - python-mode / python-ts-mode configuration
+;; - pytest project and file commands
+;; - Ruff check/fix/format helpers
+;; - Python REPL entry point
+;;
+#+end_src
+
+** Require
+
+#+begin_src emacs-lisp
+;;; Code:
+
+(require 'core-lib)
+(require 'python)
+#+end_src
+
+** Variables
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Variables
+;;; ============================================================
+
+(defcustom mcg-python-test-command "python -m pytest"
+  "Command used to run Python tests."
+  :type 'string
+  :group 'mcg)
+
+(defcustom mcg-python-ruff-command "ruff"
+  "Command used to run Ruff."
+  :type 'string
+  :group 'mcg)
+#+end_src
+
+** Mode Setup
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; python-mode / python-ts-mode Configuration
+;;; ============================================================
+
+(defun mcg-python-mode-setup ()
+  "Setup function for python-mode and python-ts-mode."
+  (setq-local indent-tabs-mode nil)
+  (setq-local tab-width 4)
+  (setq-local python-indent-offset 4)
+  (setq-local python-indent-guess-indent-offset nil)
+  (subword-mode 1)
+  (mcg-log "Python mode setup complete"))
+
+(add-hook 'python-mode-hook #'mcg-python-mode-setup)
+(add-hook 'python-ts-mode-hook #'mcg-python-mode-setup)
+#+end_src
+
+** Helpers
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Helpers
+;;; ============================================================
+
+(defun mcg-python--project-root ()
+  "Return the current Python project root or `default-directory'."
+  (mcg-project-root-or-default))
+
+(defun mcg-python--save-and-compile (command &optional root)
+  "Save buffers and run COMMAND with `compile' in ROOT."
+  (save-some-buffers t)
+  (let ((default-directory (or root default-directory)))
+    (compile command)))
+
+(defun mcg-python--current-file ()
+  "Return the current buffer file or raise a user error."
+  (or buffer-file-name
+      (user-error "Current buffer is not visiting a file")))
+
+(defun mcg-python--quoted-current-file ()
+  "Return the shell-quoted current buffer file."
+  (shell-quote-argument (mcg-python--current-file)))
+#+end_src
+
+** Pytest Commands
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Pytest Commands
+;;; ============================================================
+
+(defun mcg/python-pytest-project ()
+  "Run pytest for the current project."
+  (interactive)
+  (mcg-python--save-and-compile mcg-python-test-command
+                                (mcg-python--project-root)))
+
+(defun mcg/python-pytest-file ()
+  "Run pytest for the current Python file."
+  (interactive)
+  (mcg-python--save-and-compile
+   (format "%s %s" mcg-python-test-command
+           (mcg-python--quoted-current-file))
+   (mcg-python--project-root)))
+
+(defun mcg/python-pytest-test-at-point ()
+  "Run pytest for the current test symbol when available."
+  (interactive)
+  (let ((test-name (which-function)))
+    (if (and test-name (not (string-empty-p test-name)))
+        (mcg-python--save-and-compile
+         (format "%s %s::%s"
+                 mcg-python-test-command
+                 (mcg-python--quoted-current-file)
+                 (shell-quote-argument test-name))
+         (mcg-python--project-root))
+      (mcg/python-pytest-file))))
+#+end_src
+
+** Ruff Commands
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Ruff Commands
+;;; ============================================================
+
+(defun mcg/python-ruff-check ()
+  "Run Ruff check for the current project."
+  (interactive)
+  (mcg-python--save-and-compile
+   (format "%s check ." mcg-python-ruff-command)
+   (mcg-python--project-root)))
+
+(defun mcg/python-ruff-fix ()
+  "Run Ruff check --fix for the current project."
+  (interactive)
+  (mcg-python--save-and-compile
+   (format "%s check --fix ." mcg-python-ruff-command)
+   (mcg-python--project-root)))
+
+(defun mcg/python-ruff-format ()
+  "Run Ruff format for the current Python file."
+  (interactive)
+  (mcg-python--save-and-compile
+   (format "%s format %s"
+           mcg-python-ruff-command
+           (mcg-python--quoted-current-file))
+   (mcg-python--project-root)))
+#+end_src
+
+** REPL
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; REPL
+;;; ============================================================
+
+(defun mcg/python-repl ()
+  "Open a Python REPL using built-in python.el."
+  (interactive)
+  (run-python (python-shell-calculate-command) nil nil))
+#+end_src
+
+** Keybindings
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Python Keybindings
+;;; ============================================================
+
+(defvar mcg-python-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "C-c C-c t") #'mcg/python-pytest-project)
+    (define-key map (kbd "C-c C-c f") #'mcg/python-pytest-file)
+    (define-key map (kbd "C-c C-c .") #'mcg/python-pytest-test-at-point)
+    (define-key map (kbd "C-c C-c c") #'mcg/python-ruff-check)
+    (define-key map (kbd "C-c C-c x") #'mcg/python-ruff-fix)
+    (define-key map (kbd "C-c C-c F") #'mcg/python-ruff-format)
+    (define-key map (kbd "C-c C-z") #'mcg/python-repl)
+    map)
+  "Keymap for Python-specific commands.")
+
+(defun mcg-python-setup-keybindings ()
+  "Setup Python-specific keybindings."
+  (use-local-map (make-composed-keymap mcg-python-mode-map (current-local-map))))
+
+(add-hook 'python-mode-hook #'mcg-python-setup-keybindings)
+(add-hook 'python-ts-mode-hook #'mcg-python-setup-keybindings)
+#+end_src
+
+** Help Command
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Help Command
+;;; ============================================================
+
+(defun mcg/python-help ()
+  "Show Python keybindings and command help."
+  (interactive)
+  (with-help-window "*MCG Python Help*"
+    (princ "
+MCG Python Keybindings
+
+TEST:
+  C-c C-c t    - pytest project
+  C-c C-c f    - pytest current file
+  C-c C-c .    - pytest test at point
+
+RUFF:
+  C-c C-c c    - ruff check .
+  C-c C-c x    - ruff check --fix .
+  C-c C-c F    - ruff format current file
+
+REPL:
+  C-c C-z      - Python REPL
+
+LSP COMMANDS (via lsp-bridge with ty/basedpyright + ruff):
+  M-.          - Go to definition
+  M-,          - Return from definition
+  M-?          - Find references
+  C-c r r      - Rename symbol
+  C-c r f      - Format buffer
+")))
+#+end_src
+
+** Provide Feature
+
+#+begin_src emacs-lisp
+(provide 'init-python)
+;;; init-python.el ends here
+#+end_src

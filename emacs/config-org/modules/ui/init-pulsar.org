@@ -1,0 +1,64 @@
+#+TITLE: Pulsar Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-pulsar.el :lexical t
+
+* Pulsar Module
+
+Pulse the current line after navigation commands for better visual orientation.
+
+** File Header
+
+#+begin_src emacs-lisp
+;;; init-pulsar.el --- Visual location feedback for MCG Emacs -*- lexical-binding: t; -*-
+
+;;; Commentary:
+;; Configure pulsar from:
+;; emacs/site-lisp/extensions/ui/pulsar
+
+;;; Code:
+
+(require 'core-lib)
+#+end_src
+
+** Setup
+
+#+begin_src emacs-lisp
+(defconst mcg-pulsar-extra-pulse-functions
+  '(recenter-top-bottom
+    other-window
+    next-error
+    previous-error
+    consult-line
+    consult-ripgrep
+    xref-find-definitions
+    xref-go-back)
+  "Extra commands that should pulse the current line.")
+
+(defun mcg--setup-pulsar ()
+  "Setup Pulsar visual location feedback."
+  (when (mcg-require-extension "pulsar" t)
+    (setq pulsar-face 'pulsar-cyan)
+    (setq pulsar-highlight-face 'pulsar-yellow)
+    (setq pulsar-delay 0.04)
+    (setq pulsar-iterations 8)
+    (setq pulsar-pulse-on-window-change nil)
+    (setq pulsar-pulse-functions
+          (cl-remove-duplicates
+           (append mcg-pulsar-extra-pulse-functions
+                   pulsar-pulse-functions)))
+    (pulsar-global-mode 1)
+    (mcg-log "pulsar configured")))
+#+end_src
+
+** Initialize
+
+#+begin_src emacs-lisp
+(mcg--setup-pulsar)
+#+end_src
+
+** Provide
+
+#+begin_src emacs-lisp
+(provide 'init-pulsar)
+;;; init-pulsar.el ends here
+#+end_src

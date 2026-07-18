@@ -1,0 +1,61 @@
+#+TITLE: Ibuffer Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-ibuffer.el :lexical t
+
+* Ibuffer Module
+
+Lightweight built-in buffer list and project buffer filtering.
+
+** File Header
+
+#+begin_src emacs-lisp
+;;; init-ibuffer.el --- Ibuffer workflow for MCG Emacs -*- lexical-binding: t; -*-
+
+;;; Commentary:
+;; Configure built-in ibuffer for buffer overview and project filtering.
+
+;;; Code:
+
+(require 'core-lib)
+(require 'ibuffer)
+(require 'ibuf-ext)
+#+end_src
+
+** Commands
+
+#+begin_src emacs-lisp
+(defun mcg/ibuffer-project ()
+  "Open ibuffer filtered to buffers under the current project root."
+  (interactive)
+  (let* ((root (mcg-project-root-or-default))
+         (project-name (file-name-nondirectory (directory-file-name root))))
+    (ibuffer nil (format "*Ibuffer: %s*" project-name))
+    (ibuffer-filter-by-filename (regexp-quote root))))
+#+end_src
+
+** Setup
+
+#+begin_src emacs-lisp
+(defun mcg--setup-ibuffer ()
+  "Setup built-in ibuffer defaults."
+  (setq ibuffer-expert t)
+  (setq ibuffer-show-empty-filter-groups nil)
+  (setq ibuffer-default-sorting-mode 'filename/process)
+  (mcg-bind-key "C-x C-b" #'ibuffer "editor/ibuffer")
+  (mcg-bind-key "C-c b i" #'ibuffer "editor/ibuffer")
+  (mcg-bind-key "C-c b p" #'mcg/ibuffer-project "editor/ibuffer")
+  (mcg-log "ibuffer configured"))
+#+end_src
+
+** Initialize
+
+#+begin_src emacs-lisp
+(mcg--setup-ibuffer)
+#+end_src
+
+** Provide
+
+#+begin_src emacs-lisp
+(provide 'init-ibuffer)
+;;; init-ibuffer.el ends here
+#+end_src

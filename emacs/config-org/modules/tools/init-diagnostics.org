@@ -123,6 +123,7 @@ Flymake diagnostics helpers.
 (mcg-bind-key "C-c ! N" #'mcg-diagnostics-previous "tools/diagnostics")
 (mcg-bind-key "C-c ! s" #'flymake-start "tools/diagnostics")
 (mcg-bind-key "C-c ! m" #'mcg-diagnostics-toggle-flymake "tools/diagnostics")
+(mcg-bind-key "M-g f" #'mcg-diagnostics-list "tools/diagnostics")
 
 (mcg-log "diagnostics module configured")
 #+end_src
