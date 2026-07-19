@@ -292,6 +292,11 @@ Hugo 集成配置，包括 capture 模板。
     (mcg-org-hugo-setup-capture-templates)))
 
 (mcg-org-hugo-init)
+
+;; Private configuration is loaded after immediate modules. Re-run the
+;; opt-in initialization once those local settings are available.
+(with-eval-after-load 'private-config
+  (mcg-org-hugo-init))
 #+end_src
 
 ** Provide Feature
