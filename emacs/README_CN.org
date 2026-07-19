@@ -79,6 +79,19 @@
     make init
     #+end_src
 
+    如果首次启动提示缺少 =vundo=、=org-modern=、=org-appear=、=cond-let= 或
+    =magit-section= 这类扩展，通常是子模块没有完整初始化。重新执行：
+
+    #+begin_src bash
+    git submodule sync --recursive
+    git submodule update --init --recursive
+    cd emacs
+    make all
+    #+end_src
+
+    =cond-let= 是 Magit 的独立依赖子模块；=magit-section.el= 由 Magit
+    子模块提供，位置在 =site-lisp/extensions/git/magit/lisp/=。
+
 *** 步骤 3: 生成配置
     #+begin_src bash
     make all

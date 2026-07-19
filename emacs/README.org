@@ -83,6 +83,21 @@ and generated configuration can be rebuilt from this repo.
     make init
     #+end_src
 
+    If first launch reports missing extensions such as =vundo=, =org-modern=,
+    =org-appear=, =cond-let=, or =magit-section=, the submodules are incomplete.
+    Re-run:
+
+    #+begin_src bash
+    git submodule sync --recursive
+    git submodule update --init --recursive
+    cd emacs
+    make all
+    #+end_src
+
+    =cond-let= is a standalone Magit dependency submodule, and
+    =magit-section.el= is provided by the Magit submodule under
+    =site-lisp/extensions/git/magit/lisp/=.
+
 *** Step 3: Generate Configuration
     #+begin_src bash
     make all

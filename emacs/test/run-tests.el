@@ -2144,6 +2144,33 @@
         (goto-char (point-min))
         (should (search-forward "make profile-startup" nil t))))))
 
+(ert-deftest mcg-readmes-document-submodule-recovery-for-missing-extensions ()
+  (let ((cases '(("README.org"
+                  "vundo"
+                  "org-modern"
+                  "org-appear"
+                  "cond-let"
+                  "magit-section"
+                  "git submodule sync --recursive"
+                  "git submodule update --init --recursive"
+                  "make all")
+                 ("README_CN.org"
+                  "vundo"
+                  "org-modern"
+                  "org-appear"
+                  "cond-let"
+                  "magit-section"
+                  "git submodule sync --recursive"
+                  "git submodule update --init --recursive"
+                  "make all"))))
+    (dolist (case cases)
+      (let ((path (expand-file-name (car case) mcg-emacs-dir)))
+        (with-temp-buffer
+          (insert-file-contents path)
+          (dolist (snippet (cdr case))
+            (goto-char (point-min))
+            (should (search-forward snippet nil t))))))))
+
 (ert-deftest mcg-readmes-document-current-startup-loading-strategy ()
   (dolist (readme '("README.org" "README_CN.org"))
     (let ((path (expand-file-name readme mcg-emacs-dir)))
