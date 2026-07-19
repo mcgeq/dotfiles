@@ -2524,6 +2524,37 @@
         (insert-file-contents path)
         (should-not (search-forward "config-org/README" nil t))))))
 
+(ert-deftest mcg-readmes-link-standalone-keybindings-reference ()
+  (dolist (readme '("README.org" "README_CN.org"))
+    (let ((path (expand-file-name readme mcg-emacs-dir)))
+      (with-temp-buffer
+        (insert-file-contents path)
+        (should (search-forward "KEYBINDINGS.org" nil t))))))
+
+(ert-deftest mcg-keybindings-reference-separates-global-and-mode-local-bindings ()
+  (let ((path (expand-file-name "KEYBINDINGS.org" mcg-emacs-dir)))
+    (with-temp-buffer
+      (insert-file-contents path)
+      (dolist (snippet '("* Global Bindings"
+                         "* Mode-local Bindings"
+                         "** Org"
+                         "** LSP Bridge"
+                         "** Python"
+                         "** Zig"
+                         "** Web"
+                         "** YASnippet"
+                         "** Dirvish"
+                         "** Vundo"
+                         "| C-c s b | blink-search | Lazy entry |"
+                         "| C-c n c | org-capture | Capture |"
+                         "| C-x C-b | ibuffer | Ibuffer |"))
+        (goto-char (point-min))
+        (should (search-forward snippet nil t)))
+      (dolist (stale-snippet '("C-c t | sort-tab prefix"
+                               "** Clutch / Org"))
+        (goto-char (point-min))
+        (should-not (search-forward stale-snippet nil t))))))
+
 (ert-deftest mcg-top-level-entrypoint-file-exists-and-loads-generated-init ()
   (let ((path (expand-file-name "init.el" mcg-emacs-dir)))
     (should (file-exists-p path))
@@ -2558,6 +2589,7 @@
       (with-temp-buffer
         (insert-file-contents path)
         (should (search-forward "(load-file \"~/dotfiles/emacs/init.el\")" nil t))
+        (should (search-forward "~/.emacs.d" nil t))
         (should-not (search-forward "(load-file \"~/dotfiles/emacs/site-lisp/config/init.el\")" nil t))))))
 
 (ert-deftest mcg-module-declaration-registers-enabled-disabled-and-load-order ()

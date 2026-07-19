@@ -108,6 +108,10 @@
      (load-file "~/dotfiles/emacs/init.el")
      #+end_src
 
+     如果你还保留一个纯 =~/.emacs=，请让它只做一层薄加载，指向这个仓库的
+     =init.el=。优先推荐的是把 =emacs/= 直接链接成 =~/.emacs.d=，这样
+     =early-init.el= 也会一起生效。
+
 *** 步骤 6: 首次启动
     #+begin_src bash
     emacs
@@ -451,6 +455,8 @@ M-x mcg-list-modules
 
 所有自定义绑定使用 =C-c= 前缀（用户保留区），并通过集中快捷键注册表登记。
 
+完整的全局与 mode-local 快捷键参考见 =KEYBINDINGS.org=。
+
 高频 idle 模块使用 lazy command entry：compile、magit、vundo、blink-search、color-rg、
 dirvish、org capture、clutch、majutsu 的按键启动后立即可用，对应模块在首次调用时加载。
 
@@ -517,7 +523,7 @@ Org Babel LSP 支持都需要显式开启，分别由 =mcg-lsp-enable-inlay-hint
 | C-c b r | 打开最近文件               |
 | C-c f f | 查找文件                   |
 
-完整快捷键参考，在 Emacs 中按 =C-h K=。
+完整快捷键参考见 =KEYBINDINGS.org=；在 Emacs 中也可以按 =C-h K=。
 
 * 🔧 自定义
 

@@ -112,6 +112,10 @@ and generated configuration can be rebuilt from this repo.
      (load-file "~/dotfiles/emacs/init.el")
      #+end_src
 
+     If you keep a plain =~/.emacs=, make it a thin loader that points at this
+     repo's =init.el=. The symlinked =~/.emacs.d= layout is still preferred
+     because it also loads =early-init.el=.
+
 *** Step 6: First Launch
     #+begin_src bash
     emacs
@@ -537,6 +541,9 @@ and =mcg-python-ruff-command=.
 All custom bindings use the =C-c= prefix (user reserved area) and are registered
 through the central keybinding registry.
 
+See =KEYBINDINGS.org= for the standalone global and mode-local keybinding
+reference.
+
 High-frequency idle modules use lazy command entries: compile, magit, vundo,
 blink-search, color-rg, dirvish, org capture, clutch, and majutsu keys are
 available immediately, and their modules are loaded on first use.
@@ -613,7 +620,8 @@ dispatcher.
 | C-h K | Show keybindings         |
 | C-h M | Help menu (transient)    |
 
-For complete keybinding reference, press =C-h K= in Emacs.
+For complete keybinding reference, read =KEYBINDINGS.org= or press =C-h K= in
+Emacs.
 
 * 📝 Org Mode
 

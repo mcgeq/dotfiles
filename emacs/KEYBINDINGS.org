@@ -1,0 +1,291 @@
+#+title: KEYBINDINGS Reference
+#+language: en
+
+* Scope
+- Global bindings are registered through the central keybinding registry.
+- Mode-local bindings only work when their major/minor mode is active.
+- Some idle modules expose lazy command entries, so the key is usable before
+  the module itself finishes loading.
+- This reference keeps global and mode-local bindings separate on purpose.
+
+* Global Bindings
+
+** Consult / Minibuffer
+| Key | Command | Notes |
+|-----+---------+-------|
+| C-x b | consult-buffer | Buffer switcher |
+| C-x 4 b | consult-buffer-other-window | Buffer in other window |
+| C-x 5 b | consult-buffer-other-frame | Buffer in other frame |
+| C-x r b | consult-bookmark | Bookmark picker |
+| C-x p b | consult-project-buffer | Project buffers |
+| C-s | consult-line | Search in buffer |
+| C-c s | mcg-search-map | Search prefix |
+| C-c s l | consult-line | Search line |
+| C-c s r | consult-ripgrep | Search project |
+| C-c s i | consult-imenu | Imenu |
+| C-c s o | consult-outline | Outline |
+| C-c s b | blink-search | Lazy entry |
+| C-c s d | mcg/blink-search-grep-current-dir | Lazy entry |
+| C-c s p | mcg/blink-search-project-root | Lazy entry |
+| C-c s g | color-rg-search-input | Lazy entry |
+| C-c s G | mcg/color-rg-search-project | Lazy entry |
+| C-c s s | color-rg-search-symbol | Lazy entry |
+| C-c s S | mcg/color-rg-search-symbol-in-project | Lazy entry |
+| C-c s . | color-rg-search-symbol-in-current-file | File scope |
+| C-c s , | color-rg-search-input-in-current-file | File scope |
+| C-c s t | mcg/color-rg-search-project-with-type | Type search |
+| C-c s O | mcg/color-rg-search-in-org-directory | Org search |
+| C-c s c | mcg/color-rg-search-in-config | Config search |
+| C-c s T | mcg/hl-todo-search-project | TODO search |
+| C-c x | mcg-consult-command-map | Command map |
+| C-c x c | consult-complex-command | Complex command |
+| C-c x x | consult-mode-command | Mode command |
+| C-x M-: | consult-complex-command | Complex command |
+| M-g g | consult-goto-line | Go to line |
+| M-g M-g | consult-goto-line | Go to line |
+| M-g o | consult-outline | Outline |
+| M-g i | consult-imenu | Imenu |
+| M-g I | consult-imenu-multi | Multi imenu |
+| M-g m | consult-mark | Mark |
+| M-g k | consult-global-mark | Global mark |
+| M-s f | consult-find | Find files |
+| M-s g | consult-grep | Grep |
+| M-s G | consult-git-grep | Git grep |
+| M-s r | consult-ripgrep | Ripgrep |
+| M-s l | consult-line | Search line |
+| M-s L | consult-line-multi | Search lines |
+| M-s k | consult-keep-lines | Keep lines |
+| M-s u | consult-focus-lines | Focus lines |
+| M-y | consult-yank-pop | Yank popup |
+| M-# | consult-register-load | Register load |
+| M-' | consult-register-store | Register store |
+| C-M-# | consult-register | Register |
+| C-c ; r | consult-register | Register |
+| C-. | embark-act | Embark act |
+| C-; | embark-dwim | Embark dwim |
+| M-A | marginalia-cycle | Marginalia cycle |
+
+** Buffers / Files
+| Key | Command | Notes |
+|-----+---------+-------|
+| C-c b | mcg-consult-buffer-map | Buffer map |
+| C-c b b | consult-buffer | Buffer switcher |
+| C-c b m | consult-bookmark | Bookmark picker |
+| C-c b r | consult-recent-file | Recent files |
+| C-c b i | ibuffer | Ibuffer |
+| C-c b p | mcg/ibuffer-project | Project ibuffer |
+| C-c f f | consult-find | Find files |
+| C-c f r | consult-recent-file | Recent files |
+| C-x C-b | ibuffer | Ibuffer |
+
+** Project / Build / Git
+| Key | Command | Notes |
+|-----+---------+-------|
+| C-c p | mcg-project-map | Project prefix |
+| C-c p p | mcg/project-switch | Switch project |
+| C-c p f | mcg/project-find-file | Find file |
+| C-c p b | mcg/project-switch-buffer | Switch buffer |
+| C-c p d | mcg/project-dired | Dired |
+| C-c p e | mcg/project-eshell | Eshell |
+| C-c p s | mcg/project-search | Search project |
+| C-c p r | mcg/project-replace | Replace in project |
+| C-c p c | mcg/project-build | Build project |
+| C-c p t | mcg/project-test | Test project |
+| C-c p k | mcg/project-kill-buffers | Kill project buffers |
+| C-c p . | mcg/project-root | Project root |
+| C-c c | mcg-compile-map | Compile prefix |
+| C-c c c | mcg-compile | Compile |
+| C-c c r | mcg-recompile | Recompile |
+| C-c c b | mcg-compile-build | Build |
+| C-c c t | mcg-compile-test | Test |
+| C-c c R | mcg-compile-run | Run |
+| M-g e | mcg-compile-errors | Next error |
+| C-x g | magit-status | Magit status |
+| C-x M-g | magit-dispatch | Magit dispatch |
+| C-c g s | magit-status | Status |
+| C-c g l | magit-log | Log |
+| C-c g d | magit-dispatch | Dispatch |
+| C-c g f | magit-file-dispatch | File dispatch |
+| C-c g p | magit-push | Push |
+| C-c g P | magit-pull | Pull |
+| C-c g b b | magit-branch-create | Branch create |
+| C-c g b r | magit-branch-rename | Branch rename |
+| C-c g b d | magit-branch-delete | Branch delete |
+| C-c g m a | magit-submodule-add | Submodule add |
+| C-c g m r | magit-submodule-remove | Submodule remove |
+| C-c g m u | magit-submodule-update | Submodule update |
+| C-c g ? | mcg/magit-menu | Magit menu |
+
+** Diagnostics / Help / Appearance
+| Key | Command | Notes |
+|-----+---------+-------|
+| C-c ! | mcg-diagnostics-map | Diagnostics prefix |
+| C-c ! ! | mcg-diagnostics-list | List diagnostics |
+| C-c ! b | flymake-show-buffer-diagnostics | Buffer diagnostics |
+| C-c ! p | mcg-diagnostics-project | Project diagnostics |
+| C-c ! n | mcg-diagnostics-next | Next diagnostic |
+| C-c ! N | mcg-diagnostics-previous | Prev diagnostic |
+| C-c ! s | flymake-start | Start flymake |
+| C-c ! m | mcg-diagnostics-toggle-flymake | Toggle flymake |
+| M-g f | mcg-diagnostics-list | Diagnostic list |
+| C-c h | mcg-help-map | Help prefix |
+| C-c h f | mcg-help-describe-function | Describe function |
+| C-c h v | mcg-help-describe-variable | Describe variable |
+| C-c h x | mcg-help-describe-command | Describe command |
+| C-c h k | mcg-help-describe-key | Describe key |
+| C-c h K | describe-keymap | Describe keymap |
+| C-c h . | mcg-help-describe-at-point | Describe at point |
+| C-c h o | mcg-help-describe-symbol | Describe symbol |
+| C-c h b | describe-bindings | Describe bindings |
+| C-c h m | describe-mode | Describe mode |
+| C-c h w | where-is | Where is |
+| C-c h c | describe-char | Describe char |
+| C-c h l | view-lossage | View lossage |
+| C-c h F | helpful-function | Helpful |
+| C-h f | mcg-help-describe-function | Describe function |
+| C-h v | mcg-help-describe-variable | Describe variable |
+| C-h k | mcg-help-describe-key | Describe key |
+| C-h K | describe-keymap | Describe keymap |
+| C-h . | mcg-help-describe-at-point | Describe at point |
+| C-h o | mcg-help-describe-symbol | Describe symbol |
+| C-c T | mcg-ui-switch-theme | Theme switch |
+
+** Tabs / Undo
+| Key | Command | Notes |
+|-----+---------+-------|
+| C-c t n | sort-tab-select-next-tab | Next tab |
+| C-c t p | sort-tab-select-prev-tab | Prev tab |
+| C-c t k | sort-tab-close-current-tab | Close current |
+| C-c t o | sort-tab-close-other-tabs | Close others |
+| C-c t f | sort-tab-select-first-tab | First tab |
+| C-c t l | sort-tab-select-last-tab | Last tab |
+| M-8 | sort-tab-select-next-tab | Next tab |
+| M-7 | sort-tab-select-prev-tab | Prev tab |
+| C-c d | dirvish | Dirvish |
+| C-x u | vundo | Visual undo |
+| C-c u | vundo | Visual undo |
+| C-/ | vundo | Undo |
+| C-? | undo-redo | Redo |
+| C-x M-j | majutsu | Majutsu |
+
+** Clutch
+| Key | Command | Notes |
+|-----+---------+-------|
+| C-c ; c | clutch-query-console | SQL console |
+| C-c ; j | clutch-jump | Jump |
+| C-c ; t | clutch-list-tables | Tables |
+| C-c ; s | clutch-show-schema | Schema |
+| C-c ; R | clutch-recent | Recent |
+| C-c ; ? | clutch-dispatch | Clutch menu |
+* Mode-local Bindings
+** Org
+| Key | Command | Notes |
+|-----+---------+-------|
+| C-c n c | org-capture | Capture |
+| C-c n a | org-agenda | Agenda |
+| C-c n l | org-store-link | Store link |
+| C-c n t | org-todo-list | Todo list |
+| C-c n e | org-edit-src-code | Edit src |
+| C-c n h | org-insert-heading | Insert heading |
+| C-c n s | org-insert-subheading | Insert subheading |
+| C-c n v | mcg/org-insert-clipboard-image | Clipboard image |
+| C-c C-v C-b | mcg/org-babel-execute-buffer | Execute buffer |
+| C-c C-v C-r | mcg/org-babel-remove-all-results | Remove results |
+| C-c C-v i | mcg/org-insert-src-block | Insert source block |
+
+** LSP Bridge
+| Key | Command |
+|-----+---------|
+| M-. | lsp-bridge-find-def |
+| M-, | lsp-bridge-find-def-return |
+| M-? | lsp-bridge-find-references |
+| C-h . | lsp-bridge-lookup-documentation |
+| C-h , | lsp-bridge-show-signature |
+| C-c r r | lsp-bridge-rename |
+| C-c r a | lsp-bridge-code-action |
+| C-c r f | mcg-format-buffer |
+| C-c r s | lsp-bridge-workspace-list-symbols |
+| M-g n | lsp-bridge-diagnostic-jump-next |
+| M-g p | lsp-bridge-diagnostic-jump-prev |
+| M-g l | lsp-bridge-diagnostic-list |
+
+** Python
+| Key | Command |
+|-----+---------|
+| C-c C-c t | mcg/python-pytest-project |
+| C-c C-c f | mcg/python-pytest-file |
+| C-c C-c . | mcg/python-pytest-test-at-point |
+| C-c C-c c | mcg/python-ruff-check |
+| C-c C-c x | mcg/python-ruff-fix |
+| C-c C-c F | mcg/python-ruff-format |
+| C-c C-z | mcg/python-repl |
+
+** Zig
+| Key | Command |
+|-----+---------|
+| C-c C-c b | mcg/zig-build |
+| C-c C-c r | mcg/zig-build-run |
+| C-c C-c t | mcg/zig-build-test |
+| C-c C-c s | mcg/zig-build-step |
+| C-c C-c R | mcg/zig-build-release |
+| C-c C-c F | mcg/zig-build-release-fast |
+| C-c C-f | mcg-format-buffer |
+| C-c C-r | mcg/zig-run |
+| C-c C-t | mcg/zig-test |
+| C-c C-d d | mcg/zig-doc |
+| C-c C-d s | mcg/zig-std-doc |
+
+** Web
+| Key | Command |
+|-----+---------|
+| C-c C-r | mcg/web-rename-tag |
+| C-c C-/ | mcg/web-close-tag |
+| C-c C-w | mcg/web-wrap-tag |
+| C-c C-k | mcg/web-kill-tag |
+| C-c C-s | mcg/web-select-tag |
+| C-c C-f | mcg/web-fold-tag |
+| C-j | emmet-expand-line |
+
+** Markdown
+| Key | Command |
+|-----+---------|
+| C-c C-p | mcg/markdown-preview |
+| C-c C-e | mcg/markdown-export |
+
+** YASnippet
+| Key | Command |
+|-----+---------|
+| C-c y n | yas-new-snippet |
+| C-c y v | yas-visit-snippet-file |
+| C-c y i | yas-insert-snippet |
+| C-c y e | yas-expand |
+
+** Dirvish
+| Key | Command |
+|-----+---------|
+| ; | dired-up-directory |
+| ? | dirvish-dispatch |
+| a | dirvish-setup-menu |
+| f | dirvish-file-info-menu |
+| o | dirvish-quick-access |
+| s | dirvish-quicksort |
+| r | dirvish-history-jump |
+| l | dirvish-ls-switches-menu |
+| v | dirvish-vc-menu |
+| * | dirvish-mark-menu |
+| y | dirvish-yank-menu |
+| N | dirvish-narrow |
+| ^ | dirvish-history-last |
+| TAB | dirvish-subtree-toggle |
+| M-f | dirvish-history-go-forward |
+| M-b | dirvish-history-go-backward |
+| M-e | dirvish-emerge-menu |
+| <mouse-1> | dirvish-subtree-toggle-or-open |
+| <mouse-2> | dired-mouse-find-file-other-window |
+| <mouse-3> | dired-mouse-find-file |
+
+** Vundo
+| Key | Command |
+|-----+---------|
+| . | hydra-vundo/body |
+| ? | hydra-vundo/body |
