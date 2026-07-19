@@ -1,6 +1,8 @@
 #+title: KEYBINDINGS Reference
 #+language: en
 
+Chinese version: [[file:KEYBINDINGS.zh-CN.org][KEYBINDINGS.zh-CN.org]]
+
 * Scope
 - Global bindings are registered through the central keybinding registry.
 - Mode-local bindings only work when their major/minor mode is active.

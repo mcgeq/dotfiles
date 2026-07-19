@@ -52,8 +52,19 @@
   :type 'boolean
   :group 'mcg)
 
+(defcustom mcg-zig-lsp-idle-delay 0.8
+  "Idle delay before enabling `lsp-bridge' in Zig buffers."
+  :type 'number
+  :group 'mcg)
+
 (defvar mcg-zig--missing-zls-warned nil
   "Non-nil means the missing zls warning has already been shown.")
+
+(defvar mcg-zig--zls-executable 'unknown
+  "Cached `zls' executable lookup result.")
+
+(defvar-local mcg-zig--lsp-attach-timer nil
+  "Idle timer used to defer `lsp-bridge' startup for the current Zig buffer.")
 #+end_src
 
 ** zig-mode / zig-ts-mode Configuration
@@ -84,26 +95,93 @@
   ;; Enable subword mode for camelCase navigation
   (subword-mode 1)
 
-  (mcg-zig-maybe-enable-lsp)
+  (add-hook 'kill-buffer-hook #'mcg-zig--cancel-lsp-attach-timer nil t)
+  (mcg-zig-schedule-lsp)
 
   (mcg-log "Zig mode setup complete"))
 
 (defun mcg-zig--zls-available-p ()
   "Return non-nil when the Zig language server executable is available."
-  (executable-find "zls"))
+  (when (eq mcg-zig--zls-executable 'unknown)
+    (setq mcg-zig--zls-executable (executable-find "zls")))
+  mcg-zig--zls-executable)
+
+(defun mcg-zig--warn-missing-zls ()
+  "Warn once when `zls' is unavailable."
+  (when (and mcg-zig-warn-missing-zls
+             (not mcg-zig--missing-zls-warned))
+    (setq mcg-zig--missing-zls-warned t)
+    (mcg-log-warning "zls executable not found; Zig LSP disabled")))
+
+(defun mcg-zig--buffer-p (&optional buffer)
+  "Return non-nil when BUFFER is a Zig editing buffer."
+  (with-current-buffer (or buffer (current-buffer))
+    (derived-mode-p 'zig-mode 'zig-ts-mode)))
+
+(defun mcg-zig--cancel-lsp-attach-timer ()
+  "Cancel any pending deferred LSP startup for the current Zig buffer."
+  (when (timerp mcg-zig--lsp-attach-timer)
+    (cancel-timer mcg-zig--lsp-attach-timer))
+  (setq mcg-zig--lsp-attach-timer nil))
+
+(defun mcg-zig--enable-lsp-in-buffer (buffer)
+  "Enable `lsp-bridge' in BUFFER when Zig LSP prerequisites are ready."
+  (when (buffer-live-p buffer)
+    (with-current-buffer buffer
+      (setq mcg-zig--lsp-attach-timer nil)
+      (when (and mcg-zig-enable-lsp
+                 (mcg-zig--buffer-p)
+                 (mcg-zig--zls-available-p)
+                 (fboundp 'lsp-bridge-mode)
+                 (not (bound-and-true-p lsp-bridge-mode)))
+        (lsp-bridge-mode 1)))))
 
 (defun mcg-zig-maybe-enable-lsp ()
-  "Enable lsp-bridge for Zig when zls and lsp-bridge are available."
+  "Enable `lsp-bridge' for the current Zig buffer when prerequisites are ready."
   (cond
    ((not mcg-zig-enable-lsp)
     nil)
-   ((mcg-zig--zls-available-p)
-    (when (fboundp 'lsp-bridge-mode)
-      (lsp-bridge-mode 1)))
-   ((and mcg-zig-warn-missing-zls
-         (not mcg-zig--missing-zls-warned))
-    (setq mcg-zig--missing-zls-warned t)
-    (mcg-log-warning "zls executable not found; Zig LSP disabled"))))
+   ((not (mcg-zig--zls-available-p))
+    (mcg-zig--warn-missing-zls))
+   ((and (fboundp 'lsp-bridge-mode)
+         (not (bound-and-true-p lsp-bridge-mode)))
+    (lsp-bridge-mode 1))))
+
+(defun mcg-zig-schedule-lsp ()
+  "Enable Zig LSP after Emacs has been idle briefly."
+  (mcg-zig--cancel-lsp-attach-timer)
+  (cond
+   ((not mcg-zig-enable-lsp)
+    nil)
+   ((not (mcg-zig--zls-available-p))
+    (mcg-zig--warn-missing-zls))
+   ((not (fboundp 'lsp-bridge-mode))
+    nil)
+   ((bound-and-true-p lsp-bridge-mode)
+    t)
+   (t
+    (setq mcg-zig--lsp-attach-timer
+          (run-with-idle-timer
+           mcg-zig-lsp-idle-delay nil
+           #'mcg-zig--enable-lsp-in-buffer (current-buffer))))))
+
+(defun mcg-zig-schedule-lsp-for-open-buffers ()
+  "Schedule deferred LSP startup for every open Zig buffer."
+  (dolist (buffer (buffer-list))
+    (when (buffer-live-p buffer)
+      (with-current-buffer buffer
+        (when (mcg-zig--buffer-p)
+          (mcg-zig-schedule-lsp))))))
+
+(defun mcg-zig--handle-module-load (category module)
+  "Backfill Zig LSP startup after MODULE in CATEGORY loads."
+  (when (and (eq category :tools)
+             (eq module 'lsp-bridge))
+    (mcg-zig-schedule-lsp-for-open-buffers)))
+
+(add-hook 'mcg-module-load-hook #'mcg-zig--handle-module-load)
+(with-eval-after-load 'lsp-bridge
+  (mcg-zig-schedule-lsp-for-open-buffers))
 
 ;; File associations are managed by treesit-auto in init-treesit.el.
 ;; This module only configures mode behavior.

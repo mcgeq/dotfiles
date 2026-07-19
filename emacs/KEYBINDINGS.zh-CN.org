@@ -1,0 +1,294 @@
+#+title: MCG Emacs 快捷键参考
+#+language: zh-CN
+
+英文版：[[file:KEYBINDINGS.org][KEYBINDINGS.org]]
+
+* 范围
+- 全局快捷键通过统一的快捷键注册表集中注册。
+- 模式局部快捷键只在对应的 major mode 或 minor mode 启用时生效。
+- 部分 idle 模块会暴露延迟加载命令入口，所以快捷键可能在模块完全加载前就可以使用。
+- 本文刻意区分全局快捷键和模式局部快捷键，方便定位生效范围。
+
+* 全局快捷键
+
+** Consult / Minibuffer
+| 快捷键 | 命令 | 说明 |
+|--------+------+------|
+| C-x b | consult-buffer | 切换 buffer |
+| C-x 4 b | consult-buffer-other-window | 在其他窗口打开 buffer |
+| C-x 5 b | consult-buffer-other-frame | 在其他 frame 打开 buffer |
+| C-x r b | consult-bookmark | 选择书签 |
+| C-x p b | consult-project-buffer | 选择项目 buffer |
+| C-s | consult-line | 当前 buffer 内搜索 |
+| C-c s | mcg-search-map | 搜索前缀 |
+| C-c s l | consult-line | 搜索当前行/当前 buffer |
+| C-c s r | consult-ripgrep | 项目内 ripgrep 搜索 |
+| C-c s i | consult-imenu | 跳转 imenu 条目 |
+| C-c s o | consult-outline | 跳转 outline |
+| C-c s b | blink-search | 延迟加载入口 |
+| C-c s d | mcg/blink-search-grep-current-dir | 当前目录搜索 |
+| C-c s p | mcg/blink-search-project-root | 项目根目录搜索 |
+| C-c s g | color-rg-search-input | color-rg 输入搜索 |
+| C-c s G | mcg/color-rg-search-project | color-rg 项目搜索 |
+| C-c s s | color-rg-search-symbol | 搜索当前符号 |
+| C-c s S | mcg/color-rg-search-symbol-in-project | 项目内搜索当前符号 |
+| C-c s . | color-rg-search-symbol-in-current-file | 当前文件内搜索当前符号 |
+| C-c s , | color-rg-search-input-in-current-file | 当前文件内输入搜索 |
+| C-c s t | mcg/color-rg-search-project-with-type | 按文件类型搜索 |
+| C-c s O | mcg/color-rg-search-in-org-directory | Org 目录搜索 |
+| C-c s c | mcg/color-rg-search-in-config | Emacs 配置搜索 |
+| C-c s T | mcg/hl-todo-search-project | 项目 TODO 搜索 |
+| C-c x | mcg-consult-command-map | 命令前缀 |
+| C-c x c | consult-complex-command | 复杂命令历史 |
+| C-c x x | consult-mode-command | 当前模式命令 |
+| C-x M-: | consult-complex-command | 复杂命令历史 |
+| M-g g | consult-goto-line | 跳转到行 |
+| M-g M-g | consult-goto-line | 跳转到行 |
+| M-g o | consult-outline | 跳转 outline |
+| M-g i | consult-imenu | 跳转 imenu |
+| M-g I | consult-imenu-multi | 多 buffer imenu |
+| M-g m | consult-mark | 跳转 mark |
+| M-g k | consult-global-mark | 跳转全局 mark |
+| M-s f | consult-find | 查找文件 |
+| M-s g | consult-grep | grep 搜索 |
+| M-s G | consult-git-grep | Git grep 搜索 |
+| M-s r | consult-ripgrep | ripgrep 搜索 |
+| M-s l | consult-line | 当前 buffer 内搜索 |
+| M-s L | consult-line-multi | 多 buffer 行搜索 |
+| M-s k | consult-keep-lines | 只保留匹配行 |
+| M-s u | consult-focus-lines | 聚焦匹配行 |
+| M-y | consult-yank-pop | 粘贴历史 |
+| M-# | consult-register-load | 读取 register |
+| M-' | consult-register-store | 保存到 register |
+| C-M-# | consult-register | register 操作 |
+| C-c ; r | consult-register | register 操作 |
+| C-. | embark-act | Embark 操作 |
+| C-; | embark-dwim | Embark 智能操作 |
+| M-A | marginalia-cycle | 切换 Marginalia 注解样式 |
+
+** Buffers / Files
+| 快捷键 | 命令 | 说明 |
+|--------+------+------|
+| C-c b | mcg-consult-buffer-map | Buffer 前缀 |
+| C-c b b | consult-buffer | 切换 buffer |
+| C-c b m | consult-bookmark | 选择书签 |
+| C-c b r | consult-recent-file | 最近文件 |
+| C-c b i | ibuffer | Buffer 列表 |
+| C-c b p | mcg/ibuffer-project | 当前项目 buffer 列表 |
+| C-c f f | consult-find | 查找文件 |
+| C-c f r | consult-recent-file | 最近文件 |
+| C-x C-b | ibuffer | Buffer 列表 |
+
+** Project / Build / Git
+| 快捷键 | 命令 | 说明 |
+|--------+------+------|
+| C-c p | mcg-project-map | 项目前缀 |
+| C-c p p | mcg/project-switch | 切换项目 |
+| C-c p f | mcg/project-find-file | 查找项目文件 |
+| C-c p b | mcg/project-switch-buffer | 切换项目 buffer |
+| C-c p d | mcg/project-dired | 打开项目 Dired |
+| C-c p e | mcg/project-eshell | 打开项目 Eshell |
+| C-c p s | mcg/project-search | 项目搜索 |
+| C-c p r | mcg/project-replace | 项目替换 |
+| C-c p c | mcg/project-build | 构建项目 |
+| C-c p t | mcg/project-test | 运行项目测试 |
+| C-c p k | mcg/project-kill-buffers | 关闭项目 buffer |
+| C-c p . | mcg/project-root | 打开/定位项目根目录 |
+| C-c c | mcg-compile-map | 编译前缀 |
+| C-c c c | mcg-compile | 编译 |
+| C-c c r | mcg-recompile | 重新编译 |
+| C-c c b | mcg-compile-build | 构建 |
+| C-c c t | mcg-compile-test | 测试 |
+| C-c c R | mcg-compile-run | 运行 |
+| M-g e | mcg-compile-errors | 跳转下一个编译错误 |
+| C-x g | magit-status | Magit 状态 |
+| C-x M-g | magit-dispatch | Magit 命令菜单 |
+| C-c g s | magit-status | Git 状态 |
+| C-c g l | magit-log | Git 日志 |
+| C-c g d | magit-dispatch | Magit 命令菜单 |
+| C-c g f | magit-file-dispatch | 当前文件 Git 操作 |
+| C-c g p | magit-push | 推送 |
+| C-c g P | magit-pull | 拉取 |
+| C-c g b b | magit-branch-create | 创建分支 |
+| C-c g b r | magit-branch-rename | 重命名分支 |
+| C-c g b d | magit-branch-delete | 删除分支 |
+| C-c g m a | magit-submodule-add | 添加 submodule |
+| C-c g m r | magit-submodule-remove | 移除 submodule |
+| C-c g m u | magit-submodule-update | 更新 submodule |
+| C-c g ? | mcg/magit-menu | Magit 菜单 |
+
+** Diagnostics / Help / Appearance
+| 快捷键 | 命令 | 说明 |
+|--------+------+------|
+| C-c ! | mcg-diagnostics-map | 诊断前缀 |
+| C-c ! ! | mcg-diagnostics-list | 列出诊断 |
+| C-c ! b | flymake-show-buffer-diagnostics | 当前 buffer 诊断 |
+| C-c ! p | mcg-diagnostics-project | 项目诊断 |
+| C-c ! n | mcg-diagnostics-next | 下一个诊断 |
+| C-c ! N | mcg-diagnostics-previous | 上一个诊断 |
+| C-c ! s | flymake-start | 启动 flymake |
+| C-c ! m | mcg-diagnostics-toggle-flymake | 开关 flymake |
+| M-g f | mcg-diagnostics-list | 诊断列表 |
+| C-c h | mcg-help-map | 帮助前缀 |
+| C-c h f | mcg-help-describe-function | 查看函数说明 |
+| C-c h v | mcg-help-describe-variable | 查看变量说明 |
+| C-c h x | mcg-help-describe-command | 查看命令说明 |
+| C-c h k | mcg-help-describe-key | 查看快捷键说明 |
+| C-c h K | describe-keymap | 查看 keymap |
+| C-c h . | mcg-help-describe-at-point | 查看光标处对象 |
+| C-c h o | mcg-help-describe-symbol | 查看 symbol |
+| C-c h b | describe-bindings | 查看所有快捷键 |
+| C-c h m | describe-mode | 查看当前模式 |
+| C-c h w | where-is | 查找命令绑定在哪些键 |
+| C-c h c | describe-char | 查看字符信息 |
+| C-c h l | view-lossage | 查看最近按键记录 |
+| C-c h F | helpful-function | Helpful 函数帮助 |
+| C-h f | mcg-help-describe-function | 查看函数说明 |
+| C-h v | mcg-help-describe-variable | 查看变量说明 |
+| C-h k | mcg-help-describe-key | 查看快捷键说明 |
+| C-h K | describe-keymap | 查看 keymap |
+| C-h . | mcg-help-describe-at-point | 查看光标处对象 |
+| C-h o | mcg-help-describe-symbol | 查看 symbol |
+| C-c T | mcg-ui-switch-theme | 切换主题 |
+
+** Tabs / Undo
+| 快捷键 | 命令 | 说明 |
+|--------+------+------|
+| C-c t n | sort-tab-select-next-tab | 下一个标签 |
+| C-c t p | sort-tab-select-prev-tab | 上一个标签 |
+| C-c t k | sort-tab-close-current-tab | 关闭当前标签 |
+| C-c t o | sort-tab-close-other-tabs | 关闭其他标签 |
+| C-c t f | sort-tab-select-first-tab | 第一个标签 |
+| C-c t l | sort-tab-select-last-tab | 最后一个标签 |
+| M-8 | sort-tab-select-next-tab | 下一个标签 |
+| M-7 | sort-tab-select-prev-tab | 上一个标签 |
+| C-c d | dirvish | 打开 Dirvish |
+| C-x u | vundo | 可视化撤销树 |
+| C-c u | vundo | 可视化撤销树 |
+| C-/ | vundo | 撤销 |
+| C-? | undo-redo | 重做 |
+| C-x M-j | majutsu | Majutsu |
+
+** Clutch
+| 快捷键 | 命令 | 说明 |
+|--------+------+------|
+| C-c ; c | clutch-query-console | SQL 控制台 |
+| C-c ; j | clutch-jump | 跳转 |
+| C-c ; t | clutch-list-tables | 数据表列表 |
+| C-c ; s | clutch-show-schema | 查看 schema |
+| C-c ; R | clutch-recent | 最近记录 |
+| C-c ; ? | clutch-dispatch | Clutch 菜单 |
+
+* 模式局部快捷键
+
+** Org
+| 快捷键 | 命令 | 说明 |
+|--------+------+------|
+| C-c n c | org-capture | 捕获笔记 |
+| C-c n a | org-agenda | 打开 agenda |
+| C-c n l | org-store-link | 保存链接 |
+| C-c n t | org-todo-list | TODO 列表 |
+| C-c n e | org-edit-src-code | 编辑源码块 |
+| C-c n h | org-insert-heading | 插入标题 |
+| C-c n s | org-insert-subheading | 插入子标题 |
+| C-c n v | mcg/org-insert-clipboard-image | 插入剪贴板图片 |
+| C-c C-v C-b | mcg/org-babel-execute-buffer | 执行当前 buffer 的 Babel 代码 |
+| C-c C-v C-r | mcg/org-babel-remove-all-results | 删除所有执行结果 |
+| C-c C-v i | mcg/org-insert-src-block | 插入源码块 |
+
+** LSP Bridge
+| 快捷键 | 命令 | 说明 |
+|--------+------+------|
+| M-. | lsp-bridge-find-def | 跳转到定义 |
+| M-, | lsp-bridge-find-def-return | 从定义处返回 |
+| M-? | lsp-bridge-find-references | 查找引用 |
+| C-h . | lsp-bridge-lookup-documentation | 查看文档 |
+| C-h , | lsp-bridge-show-signature | 查看函数签名 |
+| C-c r r | lsp-bridge-rename | 重命名 symbol |
+| C-c r a | lsp-bridge-code-action | 执行 code action |
+| C-c r f | mcg-format-buffer | 格式化当前 buffer |
+| C-c r s | lsp-bridge-workspace-list-symbols | 列出 workspace symbols |
+| M-g n | lsp-bridge-diagnostic-jump-next | 下一个诊断 |
+| M-g p | lsp-bridge-diagnostic-jump-prev | 上一个诊断 |
+| M-g l | lsp-bridge-diagnostic-list | 诊断列表 |
+
+** Python
+| 快捷键 | 命令 | 说明 |
+|--------+------+------|
+| C-c C-c t | mcg/python-pytest-project | 运行项目 pytest |
+| C-c C-c f | mcg/python-pytest-file | 运行当前文件 pytest |
+| C-c C-c . | mcg/python-pytest-test-at-point | 运行光标处测试 |
+| C-c C-c c | mcg/python-ruff-check | Ruff 检查 |
+| C-c C-c x | mcg/python-ruff-fix | Ruff 自动修复 |
+| C-c C-c F | mcg/python-ruff-format | Ruff 格式化 |
+| C-c C-z | mcg/python-repl | 打开 Python REPL |
+
+** Zig
+| 快捷键 | 命令 | 说明 |
+|--------+------+------|
+| C-c C-c b | mcg/zig-build | 执行 zig build |
+| C-c C-c r | mcg/zig-build-run | 执行 zig build run |
+| C-c C-c t | mcg/zig-build-test | 执行 zig build test |
+| C-c C-c s | mcg/zig-build-step | 执行指定 build step |
+| C-c C-c R | mcg/zig-build-release | ReleaseSafe 构建 |
+| C-c C-c F | mcg/zig-build-release-fast | ReleaseFast 构建 |
+| C-c C-f | mcg-format-buffer | 格式化当前 buffer |
+| C-c C-r | mcg/zig-run | 运行当前 Zig 文件 |
+| C-c C-t | mcg/zig-test | 测试当前 Zig 文件 |
+| C-c C-d d | mcg/zig-doc | 打开 Zig 文档 |
+| C-c C-d s | mcg/zig-std-doc | 打开 Zig 标准库文档 |
+
+** Web
+| 快捷键 | 命令 | 说明 |
+|--------+------+------|
+| C-c C-r | mcg/web-rename-tag | 重命名标签 |
+| C-c C-/ | mcg/web-close-tag | 闭合标签 |
+| C-c C-w | mcg/web-wrap-tag | 包裹标签 |
+| C-c C-k | mcg/web-kill-tag | 删除标签 |
+| C-c C-s | mcg/web-select-tag | 选择标签 |
+| C-c C-f | mcg/web-fold-tag | 折叠标签 |
+| C-j | emmet-expand-line | 展开 Emmet |
+
+** Markdown
+| 快捷键 | 命令 | 说明 |
+|--------+------+------|
+| C-c C-p | mcg/markdown-preview | 预览 Markdown |
+| C-c C-e | mcg/markdown-export | 导出 Markdown |
+
+** YASnippet
+| 快捷键 | 命令 | 说明 |
+|--------+------+------|
+| C-c y n | yas-new-snippet | 新建 snippet |
+| C-c y v | yas-visit-snippet-file | 打开 snippet 文件 |
+| C-c y i | yas-insert-snippet | 插入 snippet |
+| C-c y e | yas-expand | 展开 snippet |
+
+** Dirvish
+| 快捷键 | 命令 | 说明 |
+|--------+------+------|
+| ; | dired-up-directory | 返回上级目录 |
+| ? | dirvish-dispatch | Dirvish 菜单 |
+| a | dirvish-setup-menu | 设置菜单 |
+| f | dirvish-file-info-menu | 文件信息菜单 |
+| o | dirvish-quick-access | 快速访问 |
+| s | dirvish-quicksort | 快速排序 |
+| r | dirvish-history-jump | 跳转历史位置 |
+| l | dirvish-ls-switches-menu | ls 参数菜单 |
+| v | dirvish-vc-menu | 版本控制菜单 |
+| * | dirvish-mark-menu | 标记菜单 |
+| y | dirvish-yank-menu | 复制/粘贴菜单 |
+| N | dirvish-narrow | 缩小候选范围 |
+| ^ | dirvish-history-last | 回到上一个历史位置 |
+| TAB | dirvish-subtree-toggle | 展开/收起子树 |
+| M-f | dirvish-history-go-forward | 历史前进 |
+| M-b | dirvish-history-go-backward | 历史后退 |
+| M-e | dirvish-emerge-menu | Emerge 菜单 |
+| <mouse-1> | dirvish-subtree-toggle-or-open | 鼠标展开子树或打开文件 |
+| <mouse-2> | dired-mouse-find-file-other-window | 在其他窗口打开 |
+| <mouse-3> | dired-mouse-find-file | 鼠标打开文件 |
+
+** Vundo
+| 快捷键 | 命令 | 说明 |
+|--------+------+------|
+| . | hydra-vundo/body | 打开 Vundo Hydra |
+| ? | hydra-vundo/body | 打开 Vundo Hydra |

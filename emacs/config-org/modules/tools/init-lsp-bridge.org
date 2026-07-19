@@ -169,6 +169,12 @@ Can be overridden in private/config.el."
             ;; (init-yasnippet.el handles the initial configuration)
             (when (featurep 'yasnippet)
               (yas-global-mode 1))
+            ;; Zig uses its own deferred startup path so opening .zig files
+            ;; can render first and attach zls shortly after idle.
+            (setq lsp-bridge-default-mode-hooks
+                  (delq 'zig-mode-hook
+                        (delq 'zig-ts-mode-hook
+                              lsp-bridge-default-mode-hooks)))
             (global-lsp-bridge-mode)
             ;; Set custom server directories
             (when mcg-lsp-user-langserver-dir
