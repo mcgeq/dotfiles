@@ -29,6 +29,8 @@
 ;;; Code:
 
 (require 'core-lib)
+(require 'cl-lib)
+(require 'subr-x)
 (require 'python)
 #+end_src
 
@@ -47,6 +49,13 @@
 (defcustom mcg-python-ruff-command "ruff"
   "Command used to run Ruff."
   :type 'string
+  :group 'mcg)
+
+(defcustom mcg-python-detect-project-tools t
+  "Whether Python commands should prefer project-local tool runners.
+When enabled, projects with uv, Poetry, or PDM lock files use the matching
+runner when its executable is available."
+  :type 'boolean
   :group 'mcg)
 #+end_src
 
@@ -95,6 +104,75 @@
 (defun mcg-python--quoted-current-file ()
   "Return the shell-quoted current buffer file."
   (shell-quote-argument (mcg-python--current-file)))
+
+(defun mcg-python--project-file-p (root file)
+  "Return non-nil when ROOT contains FILE."
+  (file-exists-p (expand-file-name file root)))
+
+(defun mcg-python--project-tool (&optional root)
+  "Return the detected Python project tool for ROOT, or nil.
+Only return a tool when `mcg-python-detect-project-tools' is enabled and the
+corresponding executable is available."
+  (let ((root (file-name-as-directory (or root (mcg-python--project-root)))))
+    (when mcg-python-detect-project-tools
+      (cond
+       ((and (mcg-python--project-file-p root "uv.lock")
+             (executable-find "uv"))
+        "uv")
+       ((and (mcg-python--project-file-p root "poetry.lock")
+             (executable-find "poetry"))
+        "poetry")
+       ((and (mcg-python--project-file-p root "pdm.lock")
+             (executable-find "pdm"))
+        "pdm")))))
+
+(defun mcg-python--project-tool-command (tool args &optional root)
+  "Return project-aware command parts for TOOL with ARGS in ROOT."
+  (pcase (mcg-python--project-tool root)
+    ("uv" (append (list "uv" "run" tool) args))
+    ("poetry" (append (list "poetry" "run" tool) args))
+    ("pdm" (append (list "pdm" "run" tool) args))
+    (_ (cons tool args))))
+
+(defun mcg-python--command-string (parts)
+  "Return shell command string from command PARTS."
+  (string-join parts " "))
+
+(defun mcg-python--pytest-command (&optional root)
+  "Return the best pytest command for ROOT."
+  (let ((tool (mcg-python--project-tool root)))
+    (if tool
+        (mcg-python--command-string
+         (mcg-python--project-tool-command "pytest" nil root))
+      mcg-python-test-command)))
+
+(defun mcg-python-format-candidates (&optional root)
+  "Return project-aware Python formatter command candidates for ROOT."
+  (let* ((root (file-name-as-directory (or root (mcg-python--project-root))))
+         (project-tool (mcg-python--project-tool root))
+         (project-candidate
+          (when project-tool
+            (mcg-python--project-tool-command "ruff" '("format") root))))
+    (append (when project-candidate (list project-candidate))
+            (list (list mcg-python-ruff-command "format")
+                  (list "black")))))
+
+(defun mcg-python--ruff-command (&rest args)
+  "Return the best Ruff command for ARGS, or raise a user error."
+  (let ((candidate
+         (cl-find-if (lambda (candidate)
+                       (and (consp candidate)
+                            (executable-find (car candidate))))
+                     (let ((project-candidate
+                            (mcg-python--project-tool-command "ruff" args)))
+                       (append
+                        (unless (equal (car project-candidate)
+                                       mcg-python-ruff-command)
+                          (list project-candidate))
+                        (list (cons mcg-python-ruff-command args)))))))
+    (unless candidate
+      (user-error "No Ruff command found; install ruff or configure `mcg-python-ruff-command'"))
+    (mcg-python--command-string candidate)))
 #+end_src
 
 ** Pytest Commands
@@ -107,14 +185,14 @@
 (defun mcg/python-pytest-project ()
   "Run pytest for the current project."
   (interactive)
-  (mcg-python--save-and-compile mcg-python-test-command
+  (mcg-python--save-and-compile (mcg-python--pytest-command)
                                 (mcg-python--project-root)))
 
 (defun mcg/python-pytest-file ()
   "Run pytest for the current Python file."
   (interactive)
   (mcg-python--save-and-compile
-   (format "%s %s" mcg-python-test-command
+   (format "%s %s" (mcg-python--pytest-command)
            (mcg-python--quoted-current-file))
    (mcg-python--project-root)))
 
@@ -125,7 +203,7 @@
     (if (and test-name (not (string-empty-p test-name)))
         (mcg-python--save-and-compile
          (format "%s %s::%s"
-                 mcg-python-test-command
+                 (mcg-python--pytest-command)
                  (mcg-python--quoted-current-file)
                  (shell-quote-argument test-name))
          (mcg-python--project-root))
@@ -143,22 +221,22 @@
   "Run Ruff check for the current project."
   (interactive)
   (mcg-python--save-and-compile
-   (format "%s check ." mcg-python-ruff-command)
+   (mcg-python--ruff-command "check" ".")
    (mcg-python--project-root)))
 
 (defun mcg/python-ruff-fix ()
   "Run Ruff check --fix for the current project."
   (interactive)
   (mcg-python--save-and-compile
-   (format "%s check --fix ." mcg-python-ruff-command)
+   (mcg-python--ruff-command "check" "--fix" ".")
    (mcg-python--project-root)))
 
 (defun mcg/python-ruff-format ()
   "Run Ruff format for the current Python file."
   (interactive)
   (mcg-python--save-and-compile
-   (format "%s format %s"
-           mcg-python-ruff-command
+   (format "%s %s"
+           (mcg-python--ruff-command "format")
            (mcg-python--quoted-current-file))
    (mcg-python--project-root)))
 #+end_src

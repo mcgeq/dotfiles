@@ -39,9 +39,9 @@ DIRS = core modules/ui modules/editor modules/completion modules/tools modules/e
 ensure-private-config-file:
 ifeq ($(IS_UNIX),1)
 	@mkdir -p $(DST_DIR)/private
-	@test -f $(DST_DIR)/private/config.el || printf '%s\n' ';; -*- lexical-binding: t; -*-' '' ';; Put machine-local settings and secrets here.' > $(DST_DIR)/private/config.el
+	@if test -f $(DST_DIR)/private/config.el; then echo "Preserving existing private config.el"; else printf '%s\n' ';; -*- lexical-binding: t; -*-' '' ';; Put machine-local settings and secrets here.' > $(DST_DIR)/private/config.el; fi
 else
-	@powershell -Command "if (-not (Test-Path '$(DST_DIR)/private')) { New-Item -ItemType Directory -Path '$(DST_DIR)/private' -Force | Out-Null }; if (-not (Test-Path '$(DST_DIR)/private/config.el')) { Set-Content -Path '$(DST_DIR)/private/config.el' -Encoding UTF8 -Value @(';; -*- lexical-binding: t; -*-', '', ';; Put machine-local settings and secrets here.') }"
+	@powershell -Command "if (-not (Test-Path '$(DST_DIR)/private')) { New-Item -ItemType Directory -Path '$(DST_DIR)/private' -Force | Out-Null }; if (Test-Path '$(DST_DIR)/private/config.el') { Write-Host 'Preserving existing private config.el' } else { Set-Content -Path '$(DST_DIR)/private/config.el' -Encoding UTF8 -Value @(';; -*- lexical-binding: t; -*-', '', ';; Put machine-local settings and secrets here.') }"
 endif
 
 # Template function - cross-platform

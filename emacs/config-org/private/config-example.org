@@ -31,43 +31,14 @@ Your actual machine-local settings and secrets live in
 ;; (setq mcg-initial-frame-foreground "#efd5c5")
 
 ;; Startup loading strategy
-;; Heavy modules are loaded during idle time by default to make the first
-;; dashboard frame appear sooner. Awesome Tray is idle because it replaces the
-;; mode-line and can otherwise make the first dashboard frame visibly redraw.
-;; Org is idle by default because it is one of the heaviest startup modules on
-;; Windows.
-;; The default list is grouped by intent: first-frame visual stability,
-;; generally heavy modules, then on-demand tools.
-;; Default:
-;;   '(;; First-frame visual stability.
-;;     (:ui . holo-layer)
-;;     (:ui . awesome-tray)
-;;
-;;     ;; Heavy modules.
-;;     (:editor . dirvish)
-;;     (:org . org)
-;;
-;;     ;; On-demand tools.
-;;     (:tools . magit)
-;;     (:tools . clutch)
-;;     (:tools . lsp-bridge)
-;;     (:tools . color-rg)
-;;     (:tools . majutsu))
-;; (setq mcg-idle-modules
-;;       '(;; First-frame visual stability.
-;;         (:ui . holo-layer)
-;;         (:ui . awesome-tray)
-;;
-;;         ;; Heavy modules.
-;;         (:editor . dirvish)
-;;         (:org . org)
-;;
-;;         ;; On-demand tools.
-;;         (:tools . magit)
-;;         (:tools . clutch)
-;;         (:tools . lsp-bridge)
-;;         (:tools . color-rg)
-;;         (:tools . majutsu)))
+;; Module loading strategy is declared in config-org/init.org with `:load'.
+;; Supported values are:
+;;   immediate - load before private config
+;;   idle      - load after the first frame when Emacs is idle
+;;   deferred  - load on file trigger from `mcg-module-triggers'
+;; Example:
+;;   (magit :load idle)
+;;   (python :load deferred)
 
 #+end_src
 
@@ -88,8 +59,12 @@ Your actual machine-local settings and secrets live in
 ;; Defaults:
 ;;   mcg-python-test-command = "python -m pytest"
 ;;   mcg-python-ruff-command = "ruff"
+;;   mcg-python-detect-project-tools = t
+;; Projects with uv.lock, poetry.lock, or pdm.lock prefer the matching runner
+;; when the executable is available.
 ;; (setq mcg-python-test-command "python -m pytest")
 ;; (setq mcg-python-ruff-command "ruff")
+;; (setq mcg-python-detect-project-tools nil)
 
 ;; Use biome for Web development (instead of ESLint)
 ;; Default: nil
@@ -105,6 +80,18 @@ Your actual machine-local settings and secrets live in
 ;; Enable inlay hints
 ;; Default: nil
 ;; (setq mcg-lsp-enable-inlay-hint t)
+
+;; LSP Bridge side effects are opt-in
+;; Default: nil
+;; Keep these disabled unless a project wants lsp-bridge to own formatting or
+;; Org Babel LSP support.
+;; (setq mcg-lsp-enable-auto-format-code t)
+;; (setq mcg-lsp-enable-org-babel t)
+
+;; Enable Vale prose diagnostics
+;; Default: nil
+;; (setq mcg-vale-enable t)
+;; (setq mcg-vale-command "vale")
 
 ;; Enable Zig LSP when zls is available
 ;; Default: mcg-zig-enable-lsp = t
@@ -140,7 +127,10 @@ Your actual machine-local settings and secrets live in
 ;; (setq mcg-font-default-candidates '("JetBrains Mono" "Fira Code"))
 
 ;; Dashboard startup screen
-;; Defaults: enabled, shown at startup, icons prefer nerd-icons.
+;; Dashboard module is disabled by default in config-org/init.org so startup
+;; opens the standard *scratch* buffer. Change -dashboard to dashboard there
+;; before using these options.
+;; Module defaults: enabled, shown at startup, icons prefer nerd-icons.
 ;; Agenda is not included by default to keep startup light.
 ;; (setq mcg-dashboard-enabled t)
 ;; (setq mcg-dashboard-startup t)
@@ -198,6 +188,10 @@ Your actual machine-local settings and secrets live in
 ;; It refreshes the agenda, notes, capture, diary, billing, password,
 ;; and `org-agenda-files' paths derived from the root directory.
 ;; (mcg-org-set-storage-root "~/org/")
+
+;; Hugo integration is opt-in
+;; Default: nil
+;; (setq mcg-org-hugo-enable t)
 
 ;; Hugo blog directory
 ;; Blog capture files are created under:
@@ -273,25 +267,33 @@ Your actual machine-local settings and secrets live in
 ;; (setq mcg-org-export-babel-evaluate nil)
 
 ;; Org Babel languages
-;; Disable entries here to reduce the languages enabled by default.
+;; Conservative defaults keep the executable surface small.
 ;; Zig is controlled separately because this config defines a custom executor.
 ;; (setq mcg-org-babel-load-languages
 ;;       '((emacs-lisp . t)
 ;;         (shell . t)
 ;;         (python . t)
 ;;         (js . t)
-;;         (C . t)
 ;;         (css . t)
-;;         (dot . t)
-;;         (org . t)
-;;         (plantuml . t)
-;;         (sql . t)))
+;;         (org . t)))
 ;; (setq mcg-org-babel-enable-zig t)
 ;; (setq mcg-org-babel-zig-default-header-args
 ;;       '((:results . "output")
 ;;         (:exports . "both")))
 ;; (setq mcg-org-babel-src-block-languages
-;;       '("emacs-lisp" "python" "shell" "zig" "C" "js" "css" "sql"))
+;;       '("emacs-lisp" "python" "shell" "zig" "js" "css" "org"))
+
+;; Extended Org Babel languages
+;; Add these only for projects that need the corresponding tools and trust model.
+;; (setq mcg-org-babel-load-languages
+;;       (append mcg-org-babel-load-languages
+;;               '((C . t)
+;;                 (dot . t)
+;;                 (plantuml . t)
+;;                 (sql . t))))
+;; (setq mcg-org-babel-src-block-languages
+;;       (append mcg-org-babel-src-block-languages
+;;               '("C" "dot" "plantuml" "sql")))
 
 ;; Agenda calendar location (for sunrise/sunset)
 ;; Defaults are near Beijing/Tianjin.

@@ -141,20 +141,27 @@
       (let ((default-directory root))
         (compile command)))))
 
+(defun mcg-zig-build-command (action)
+  "Return Zig build command for ACTION."
+  (pcase action
+    ('build "zig build")
+    ('run "zig build run")
+    ('test "zig build test")))
+
 (defun mcg/zig-build ()
   "Run zig build."
   (interactive)
-  (mcg-zig--compile "zig build"))
+  (mcg-zig--compile (mcg-zig-build-command 'build)))
 
 (defun mcg/zig-build-run ()
   "Run zig build run."
   (interactive)
-  (mcg-zig--compile "zig build run"))
+  (mcg-zig--compile (mcg-zig-build-command 'run)))
 
 (defun mcg/zig-build-test ()
   "Run zig build test."
   (interactive)
-  (mcg-zig--compile "zig build test"))
+  (mcg-zig--compile (mcg-zig-build-command 'test)))
 
 (defun mcg/zig-test ()
   "Run zig test on current file."

@@ -38,9 +38,9 @@
 
 ** 语言支持
    完整的开发支持：
-   - *系统编程*: C/C++, Rust (rust-analyzer), Lua
-   - *Web 开发*: TypeScript, JavaScript, HTML/CSS, JSX/React
-   - *动态语言*: Python, Bash
+   - *系统编程*: Zig，包含 build/test/run 辅助命令
+   - *Web 开发*: TypeScript, JavaScript, HTML/CSS, JSX/React, Vue
+   - *动态语言*: Python，包含 pytest 和 Ruff 辅助命令
    - *标记语言*: Markdown, Org Mode
 
 ** 主要功能
@@ -55,10 +55,8 @@
    - [[https://github.com/protesilaos/pulsar][pulsar]]: 跳转后的当前行闪烁定位
    - [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Several-Buffers.html][ibuffer]]: 内置缓冲区总览与项目过滤
    - [[https://github.com/manateelazycat/awesome-tray][Awesome-tray]]: 轻量状态栏
-   - [[https://github.com/manateelazycat/emacs-rime][Rime]]: 中文输入
-   - [[https://github.com/justbur/emacs-which-key][Which-key]]: 快捷键提示 ⭐
-   - [[https://github.com/abo-abo/ace-window][Ace-window]]: 快速窗口切换 ⭐
-   - [[https://github.com/abo-abo/avy][Avy]]: 快速跳转导航 ⭐
+   - [[https://github.com/minad/consult][Consult]]: 快速跳转和项目搜索
+   - Markdown 按需加载，Vale 默认关闭，可按项目启用文稿诊断
 
 * 📦 安装
 
@@ -150,13 +148,14 @@ emacs/
 
 | 类别       | 模块数 | 描述                         |
 |------------+--------+------------------------------|
-| ui         |      7 | 主题、状态栏、字体、图标、Dashboard、定位闪烁 |
+| ui         |      6 | 主题、状态栏、字体、图标、定位闪烁；Dashboard 可选 |
 | editor     |      8 | 编辑默认值、TODO 高亮、缓冲区总览 |
 | completion |      8 | Vertico、Consult、片段、动作 |
 | tools      |     12 | Git、搜索、LSP bridge、项目  |
 | enhance    |      2 | Help 和最近文件增强          |
 | org        |     13 | Org、agenda、capture、导出、Hugo |
-| lang       |      2 | 语言专用集成                 |
+| writing    |      2 | Markdown 编辑、可选 Vale 文稿诊断 |
+| lang       |      3 | Python、Zig、Web 集成        |
 
 * ⚙️ 配置管理
 
@@ -177,7 +176,7 @@ emacs/
 ** 启动 Profiling
 
 使用 =make profile-startup= 运行 batch 启动 profiling。报告会按耗时从高到低
-列出模块耗时，并突出 dashboard、theme、recentf、private config 等关键启动项。
+列出模块耗时，并突出 theme、recentf、private config 等关键启动项。
 它适合稳定追踪模块级启动回归；GUI 首帧视觉时间仍需要人工确认。
 
 * 📦 Git 子模块包管理
@@ -192,16 +191,16 @@ emacs/
 site-lisp/extensions/
 ├── core/           # 核心库 (dash, s.el, f.el, compat, lazy-load)
 ├── completion/     # 补全系统 (vertico, consult, marginalia, orderless, embark)
-├── editor/         # 编辑器功能 (avy, ace-window, vundo, markmacro, fingertip)
+├── editor/         # 编辑器功能 (vundo, hl-todo)
 ├── git/            # Git 集成 (magit, with-editor, jujutsu)
-├── input/          # 输入法 (emacs-rime, posframe)
-├── lsp/            # LSP 和语言支持 (lsp-bridge, rust-mode, lua-mode 等)
+├── input/          # 子窗口弹窗 (posframe)
+├── lsp/            # LSP 和语言支持 (lsp-bridge, web-mode, zig-mode, treesit-auto)
 ├── org/            # Org-mode 扩展 (org-modern, ox-hugo, org-download)
 ├── search/         # 搜索工具 (blink-search, color-rg, consult-todo)
 ├── snippets/       # 代码片段库 (yasnippet, yasnippet-snippets)
-├── ui/             # UI 组件 (awesome-tray, themes/, nerd-icons)
-├── utils/          # 工具包 (helpful, json-mode, hydra)
-└── docs/           # 文档工具 (markdown-ts-mode, flymake-vale)
+├── ui/             # UI 组件 (dashboard, awesome-tray, holo-layer, pulsar, themes/, nerd-icons)
+├── utils/          # 工具包 (auto-save, sort-tab, mwim, json-mode, hydra)
+└── docs/           # 文档工具 (markdown-mode, markdown-ts-mode)
 #+end_src
 
 ** 子模块命令
@@ -297,27 +296,42 @@ make st
 
 ** 模块加载策略
 
-本配置使用三层加载策略，让 dashboard 尽早出现，同时把较重或按需工具放到
+本配置使用三层加载策略，让默认 =*scratch*= buffer 尽早出现，同时把较重或按需工具放到
 首屏之后：
 
 | 加载类型 | 加载时机 | 模块 |
 |----------+----------+------|
-| Immediate | 启动时 | 首屏必需项：font、theme、icons、dashboard、pulsar、编辑默认值、补全/搜索基础 |
-| Idle | 空闲 2 秒后 | 视觉外壳和重/按需工具：awesome-tray、holo-layer、dirvish、org、magit、clutch、lsp-bridge、color-rg、majutsu |
-| Deferred | 按需触发 | 有文件类型触发器的语言模块，例如 python、zig 和 web |
+| Immediate | 启动时 | 首屏必需项：font、ef-themes、nerd-icons、pulsar、编辑默认值、minibuffer 基础、project/diagnostics 基础 |
+| Idle | 空闲 2 秒后 | 视觉外壳和重/按需工具：awesome-tray、holo-layer、vundo、yasnippet、compile、blink-search、dirvish、org、magit、clutch、lsp-bridge、color-rg、majutsu、vale |
+| Deferred | 按需触发 | 有文件类型触发器的语言与写作模块，例如 python、zig、web 和 markdown |
+
+部分 idle 模块会在模块加载前暴露轻量 lazy command entry。按键入口启动后立即可用，
+但背后的模块会在首次调用时加载。这样既保留启动速度，也避免 compile、magit、vundo、
+blink-search、color-rg、dirvish、org capture、clutch、majutsu 这些高频入口在启动初期出现按键空窗。
 
 其中两个 idle 决策是刻意保留的：
 
-- =awesome-tray= 会替换 mode-line，放到 dashboard 之后加载可以避免首屏明显重绘。
-- =org= 是 Windows 启动期最重的模块之一，所以 agenda/capture 支持默认放到首帧之后加载；需要时可以在 =mcg-idle-modules= 中覆盖。
+- =awesome-tray= 会替换 mode-line，放到首个 scratch frame 之后加载可以避免启动时明显重绘。
+- =org= 是 Windows 启动期最重的模块之一，所以 agenda/capture 支持默认放到首帧之后加载；需要时可以调整它的 =:load= 元数据。
 
 调整加载策略后，建议运行 =make profile-startup=。它会输出模块耗时和当前 idle
 队列，并且不会把第三方 warning 混入报告。
 
 ** Idle 加载配置
 
-非首屏必需模块通过 idle 加载加快启动。默认列表位于 =config-org/init.org= 的
-=mcg-idle-modules=，也可以在 =site-lisp/config/private/config.el= 中覆盖：
+非首屏必需模块通过 idle 加载加快启动。默认策略直接写在 =config-org/init.org=
+的模块声明旁边：
+
+#+begin_src emacs-lisp
+(mcg!
+ :tools
+ (magit :load idle)
+ :lang
+ (python :load deferred))
+#+end_src
+
+=immediate= 表示启动加载，=idle= 表示首帧之后空闲加载，=deferred= 表示按文件触发。
+idle 延迟仍可在 =site-lisp/config/private/config.el= 中配置：
 
 #+begin_src emacs-lisp
 ;; 配置 idle 加载延迟（默认：2 秒）
@@ -330,13 +344,17 @@ make st
 
 ** Deferred 加载
 
-语言模块在打开匹配文件时按需加载：
+语言和写作模块在打开匹配文件时按需加载。Markdown 按需加载，所以普通启动
+不会提前付出 Markdown mode 的成本。Vale 默认关闭：模块会在 idle 阶段加载，
+但只有在 =site-lisp/config/private/config.el= 中把 =mcg-vale-enable nil=
+改为 =(setq mcg-vale-enable t)= 后才运行文稿诊断。
 
 | 文件扩展名 | 加载模块 |
 |------------+----------|
 | =.py=      | python   |
 | =.zig=     | zig      |
 | =.html=, =.css=, =.js=, =.ts=, =.tsx=, =.vue= | web |
+| =.md=      | markdown |
 
 ** 启动耗时诊断
 
@@ -356,29 +374,41 @@ M-x mcg-list-modules
 
 #+begin_src emacs-lisp
 (mcg! :ui
-      theme modeline font icons
+      font ef-themes nerd-icons -dashboard pulsar
+      (holo-layer :load idle)
+      (awesome-tray :load idle)
       
       :editor
-      defaults treesit navigation keybindings
-      paredit format undo multicursor
+      defaults hl-todo ibuffer (vundo :load idle) mwim treesit format
+      (dirvish :load idle)
       
       :completion
-      vertico yasnippet
+      consult marginalia vertico orderless embark pinyinlib
+      nerd-icons-completion (yasnippet :load idle)
       
       :tools
-      magit search rime tabs eshell
+      project (compile :load idle) diagnostics posframe sort-tab auto-save
+      (blink-search :load idle)
+      (magit :load idle)
+      (clutch :load idle)
+      (lsp-bridge :load idle)
+      (color-rg :load idle)
+      (majutsu :load idle)
       
       :enhance
-      autosave which-key helpful recentf symbol
+      help recentf
       
       :org
-      org org-agenda org-babel org-capture org-extras
+      (org :load idle)
       
       :writing
-      markdown vale
+      (markdown :load deferred)
+      (vale :load idle)
       
       :lang
-      lsp rust python typescript web cpp lua zig)
+      (python :load deferred)
+      (zig :load deferred)
+      (web :load deferred))
 #+end_src
 
 ** 迁移指南 ⭐
@@ -397,51 +427,54 @@ M-x mcg-list-modules
 
 | 旧模块名             | 新模块名          | 说明         |
 |----------------------+-------------------+--------------|
-| :input fingertip     | :editor paredit   | 结构化编辑   |
 | :input wraplish      | :editor format    | 文本格式化   |
 | :docs markdown       | :writing markdown | Markdown     |
-| :tools sort-tab      | :tools tabs       | 标签页管理   |
-| :tools utils         | :enhance (拆分)   | 工具模块拆分 |
+| :tools tabs          | :tools sort-tab   | 标签页管理   |
+| :ui icons            | :ui nerd-icons    | Nerd icons   |
+| :enhance autosave    | :tools auto-save  | 空闲自动保存 |
 
-*** 新增模块
+*** 当前对应模块
 
 | 类别     | 模块名      | 功能             |
 |----------+-------------+------------------|
-| :ui      | icons       | Nerd icons 配置  |
-| :editor  | undo        | 可视化撤销       |
-| :editor  | multicursor | 多光标编辑       |
-| :enhance | autosave    | 空闲自动保存     |
-| :enhance | which-key   | 快捷键提示       |
-| :enhance | helpful     | 增强帮助系统     |
+| :ui      | nerd-icons  | Nerd icons 配置  |
+| :editor  | vundo       | 可视化撤销       |
+| :editor  | hl-todo     | TODO/FIXME 高亮  |
+| :editor  | ibuffer     | 缓冲区总览       |
+| :tools   | auto-save   | 空闲自动保存     |
 | :enhance | recentf     | 最近文件         |
-| :enhance | symbol      | 符号高亮         |
 | :writing | vale        | 语法检查         |
 
-*** 自动迁移支持
-
-系统会自动检测旧的类别/模块名称并显示警告：
-
-#+begin_example
-Warning: Category :input is deprecated, use :editor instead
-Warning: Module fingertip is renamed to paredit
-#+end_example
+旧配置需要手动对照当前 =mcg!= 示例调整；当前模块系统不会自动重写旧模块名。
 
 * ⌨️ 快捷键
 
-所有自定义绑定使用 =C-c= 前缀（用户保留区），并提供 which-key 描述。
+所有自定义绑定使用 =C-c= 前缀（用户保留区），并通过集中快捷键注册表登记。
+
+高频 idle 模块使用 lazy command entry：compile、magit、vundo、blink-search、color-rg、
+dirvish、org capture、clutch、majutsu 的按键启动后立即可用，对应模块在首次调用时加载。
 
 ** 快速参考
 
 | 前缀    | 描述           |
 |---------+----------------|
 | C-c g   | Git (Magit)    |
-| C-c w   | 窗口           |
+| C-c p   | 项目           |
+| C-c c   | 编译/build     |
+| C-c !   | 诊断           |
+| C-c h   | 帮助           |
 | C-c s   | 搜索           |
-| C-c r   | 重构           |
+| C-c r   | LSP 动作/格式化 |
 | C-c t   | 标签页         |
 | C-c n   | 笔记/Org       |
-| C-c m   | 多光标         |
-| M-g     | 跳转 (Avy)     |
+| C-c ;   | Clutch 数据库工具 |
+| M-g     | 跳转与诊断     |
+
+在 Python 项目中，=C-c c t= 和 =C-c c R= 会复用
+=mcg-python-detect-project-tools=：包含 =uv.lock=、=poetry.lock= 或 =pdm.lock=
+的项目会优先使用 =uv run=、=poetry run= 或 =pdm run=。
+在包含 =build.zig= 的 Zig 项目中，=C-c c t= 和 =C-c c R= 会使用与 Zig
+模块一致的 =zig build test= 和 =zig build run=。
 
 ** LSP 导航
 
@@ -452,14 +485,10 @@ Warning: Module fingertip is renamed to paredit
 | M-?    | 查找引用     |
 | C-h .  | 显示文档     |
 
-** 窗口操作
-
-| 快捷键  | 描述           |
-|---------+----------------|
-| M-O     | 快速切换 (ace) |
-| C-c w w | 切换窗口       |
-| C-c w d | 删除窗口       |
-| C-c w s | 交换窗口       |
+LSP Bridge 默认保持保守副作用：inlay hints、LSP 更新后的自动格式化、
+Org Babel LSP 支持都需要显式开启，分别由 =mcg-lsp-enable-inlay-hint=、
+=mcg-lsp-enable-auto-format-code= 和 =mcg-lsp-enable-org-babel= 控制。默认格式化
+仍交给统一的 =mcg-format= 分发器。
 
 ** 搜索
 
@@ -494,11 +523,11 @@ Warning: Module fingertip is renamed to paredit
 
 ** 用户设置
 
-编辑 =custom.el= 进行个人设置：
+编辑 =site-lisp/config/private/config.el= 放置本机设置：
 
 #+begin_src emacs-lisp
-(setq mcg-theme 'doom-one)
-(setq mcg-font-size 14)
+(setq mcg-ui-theme 'ef-dream)
+(setq mcg-font-height 140)
 #+end_src
 
 ** 添加新模块
@@ -510,42 +539,49 @@ Warning: Module fingertip is renamed to paredit
 
 * 📝 Org Mode
 
-** 模块化配置系统 ⭐
+=:org org= 模块会加载 Org 核心，以及 agenda、capture、Babel、视觉增强、
+图片插入和可选 Hugo 发布相关子模块。
 
-本配置采用全新的模块化 Org mode 配置系统：
+** 用户命令
 
-- *统一变量管理* :: 所有变量使用 =mcg-org-*= 命名空间
-- *模块化加载* :: 按需加载，智能依赖管理
-- *功能开关* :: 通过变量轻松启用/禁用功能
-- *错误诊断* :: 内置状态查看和验证工具
+| 命令                             | 描述                        |
+|----------------------------------+-----------------------------|
+| =M-x mcg-org-initialize-directories= | 创建当前配置的 Org 目录     |
+| =M-x mcg/org-open-notes=         | 打开 =mcg-org-notes-directory= |
+| =M-x mcg/org-open-agenda-dir=    | 打开 =mcg-org-agenda-directory= |
 
-** 主要功能
+** Org 快捷键
 
-- *Agenda* :: 任务管理和日程安排
-- *Capture* :: 快速笔记捕获（多种模板）
-- *Export* :: 多格式导出 (HTML, Markdown, PDF)
-- *Babel* :: 文档内代码执行（支持 Zig！）✨
-- *Hugo* :: 博客发布集成（可选）
-- *中文日历* :: 农历、节气、日出日落
+| 快捷键        | 描述                         |
+|---------------+------------------------------|
+| C-c n c       | Capture 笔记/任务/模板       |
+| C-c n a       | 打开 agenda                  |
+| C-c n l       | 保存 Org 链接                |
+| C-c n t       | 显示 TODO 列表               |
+| C-c n v       | 通过 org-download 插入剪贴板图片 |
+| C-c C-v C-b   | 执行当前 buffer 所有 Babel 代码块 |
+| C-c C-v C-r   | 删除所有 Babel 执行结果      |
+| C-c C-v i     | 插入源码块                   |
 
-** Org Babel 支持的语言
+** Org 配置面
 
-- ✅ Emacs Lisp - Emacs 配置和脚本
-- ✅ Python - 数据分析、脚本
-- ✅ Shell/Bash - 系统命令
-- ✅ Zig - 系统编程 🦎
-- ✅ JavaScript - 前端脚本
-- ✅ C/C++ - 系统编程
-- ✅ SQL - 数据库查询
+核心存储目录由 =mcg-org-directory=、=mcg-org-agenda-directory= 和
+=mcg-org-notes-directory= 控制。Agenda 使用 =mcg-org-agenda-files= 和
+=mcg-org-agenda-custom-commands= 配置文件范围与自定义视图。
 
-** 管理命令
+Babel 默认偏保守：=mcg-org-babel-confirm-evaluate= 开启，
+=mcg-org-export-babel-evaluate= 关闭；Zig 支持由
+=mcg-org-babel-enable-zig= 控制，插入源码块的候选语言来自
+=mcg-org-babel-src-block-languages=。默认 Babel 语言是 =emacs-lisp=、
+=shell=、=python=、=js=、=css= 和 =org=；=C=、=dot=、=plantuml=、=sql=
+这类扩展语言只在项目需要时从 private 配置启用。
 
-#+begin_src emacs-lisp
-M-x mcg-org-show-status      ; 显示配置状态
-M-x mcg-org-list-modules     ; 列出所有模块
-M-x mcg-org-load-module      ; 加载指定模块
-M-x mcg-org-reload-module    ; 重新加载模块
-#+end_src
+Hugo capture/export 默认关闭：默认值是 =mcg-org-hugo-enable nil=。需要时在
+=site-lisp/config/private/config.el= 中设置 =(setq mcg-org-hugo-enable t)=，
+才会加载 easy-hugo、ox-hugo 以及 =h=/=hb= capture 模板。相关配置包括
+=mcg-blog-base-directory=、=mcg-org-hugo-postdir= 和
+=mcg-org-blog-capture-directory=。当前 capture 入口提供一类 one-file-per-post
+的 =hb= 模板，而不是按主题拆分多个快捷模板。
 
 * 🔍 调试
 
@@ -564,10 +600,22 @@ M-x mcg-check-circular-dependencies
 
 *** 诊断命令
 #+begin_src emacs-lisp
-M-x mcg-validate-all              ; 验证所有配置
-M-x mcg-display-categories-status ; 查看类别状态
-M-x mcg-display-platform-info     ; 查看平台信息
+M-x mcg-doctor       ; 检查配置、Development Environments、Tree-sitter Grammars
+M-x mcg-list-modules ; 查看模块状态
+M-x mcg/show-logs    ; 查看近期日志
 #+end_src
+
+=M-x mcg-doctor= 会检查路径、核心模块、扩展、外部开发工具、Python/Web/Zig
+的 Development Environments，以及当前语言/写作模块需要的 Tree-sitter
+Grammars。环境部分会显示 =uv.lock=、=poetry.lock=、=pdm.lock=、=build.zig=、
+Antfu ESLint 等项目线索，并报告 Emacs 当前会优先使用的 formatter/test/build
+命令。
+
+Python 命令默认会优先使用项目本地 runner。开启
+=mcg-python-detect-project-tools= 时，包含 =uv.lock=、=poetry.lock= 或
+=pdm.lock= 的项目会分别使用 =uv run=、=poetry run= 或 =pdm run= 执行
+pytest/Ruff；否则回落到 =mcg-python-test-command= 和
+=mcg-python-ruff-command=。
 
 * 📚 资源
 

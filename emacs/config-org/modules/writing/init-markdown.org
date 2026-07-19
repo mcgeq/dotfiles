@@ -1,0 +1,143 @@
+#+TITLE: Markdown Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-markdown.el :lexical t
+
+* Markdown Module
+
+** File Header
+
+#+begin_src emacs-lisp
+;;; init-markdown.el --- Markdown writing support for MCG Emacs -*- lexical-binding: t; -*-
+
+;; Copyright (C) 2024-2026 MCG
+;; Author: mcge <mcgeq@outlook.com>
+;; Keywords: markdown, writing
+;; Compatibility: GNU Emacs 29.0+
+
+;;; Commentary:
+;; Markdown editing setup with safe markdown-ts-mode fallback.
+;;
+;;; Code:
+
+(require 'core-lib)
+(require 'subr-x)
+
+(defun mcg-markdown--add-extension-path (name fallback-relative-path)
+  "Add extension NAME or FALLBACK-RELATIVE-PATH to `load-path' quietly."
+  (let ((path (or (mcg-extension-path name)
+                  (mcg-extension-direct-path name)
+                  (let ((fallback (expand-file-name fallback-relative-path mcg-emacs-dir)))
+                    (and (file-directory-p fallback) fallback)))))
+    (when path
+      (add-to-list 'load-path path))))
+
+(mcg-markdown--add-extension-path "markdown-mode"
+                                  "site-lisp/extensions/lsp/markdown-mode")
+(unless (>= emacs-major-version 31)
+  (mcg-markdown--add-extension-path "markdown-ts-mode"
+                                    "site-lisp/extensions/docs/markdown-ts-mode"))
+(require 'markdown-mode nil t)
+(require 'markdown-ts-mode nil t)
+#+end_src
+
+** Options
+
+#+begin_src emacs-lisp
+(defcustom mcg-markdown-prefer-treesit t
+  "Whether Markdown buffers should prefer `markdown-ts-mode' when available."
+  :type 'boolean
+  :group 'mcg)
+
+(defcustom mcg-markdown-enable-visual-line t
+  "Whether to enable `visual-line-mode' in Markdown buffers."
+  :type 'boolean
+  :group 'mcg)
+#+end_src
+
+** Mode Dispatch
+
+#+begin_src emacs-lisp
+(defun mcg-markdown--treesit-available-p ()
+  "Return non-nil when the Markdown tree-sitter grammar is available."
+  (and (fboundp 'treesit-language-available-p)
+       (treesit-language-available-p 'markdown)))
+
+(defun mcg-markdown-deferred-mode ()
+  "Select the best available Markdown major mode after deferred loading."
+  (cond
+   ((and mcg-markdown-prefer-treesit
+         (fboundp 'markdown-ts-mode)
+         (mcg-markdown--treesit-available-p))
+    (markdown-ts-mode))
+   ((fboundp 'markdown-mode)
+    (markdown-mode))
+   (t
+    (text-mode))))
+#+end_src
+
+** Editing Setup
+
+#+begin_src emacs-lisp
+(defun mcg-markdown-mode-setup ()
+  "Set up Markdown editing defaults."
+  (setq-local fill-column 80)
+  (setq-local word-wrap t)
+  (when mcg-markdown-enable-visual-line
+    (visual-line-mode 1))
+  (mcg-log "Markdown mode setup complete"))
+
+(add-hook 'markdown-mode-hook #'mcg-markdown-mode-setup)
+(add-hook 'markdown-ts-mode-hook #'mcg-markdown-mode-setup)
+(add-hook 'gfm-mode-hook #'mcg-markdown-mode-setup)
+#+end_src
+
+** Commands
+
+#+begin_src emacs-lisp
+;;;###autoload
+(defun mcg/markdown-preview ()
+  "Preview the current Markdown buffer."
+  (interactive)
+  (cond
+   ((fboundp 'markdown-preview)
+    (call-interactively #'markdown-preview))
+   ((and buffer-file-name
+         (fboundp 'browse-url-of-file))
+    (browse-url-of-file buffer-file-name))
+   (t
+    (user-error "No Markdown preview command available"))))
+
+;;;###autoload
+(defun mcg/markdown-export ()
+  "Export the current Markdown buffer when markdown-mode provides export."
+  (interactive)
+  (if (fboundp 'markdown-export)
+      (call-interactively #'markdown-export)
+    (user-error "No Markdown export command available")))
+#+end_src
+
+** Keybindings
+
+#+begin_src emacs-lisp
+(defvar mcg-markdown-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "C-c C-p") #'mcg/markdown-preview)
+    (define-key map (kbd "C-c C-e") #'mcg/markdown-export)
+    map)
+  "Keymap for MCG Markdown commands.")
+
+(defun mcg-markdown-setup-keybindings ()
+  "Set up Markdown-specific keybindings."
+  (use-local-map (make-composed-keymap mcg-markdown-mode-map (current-local-map))))
+
+(add-hook 'markdown-mode-hook #'mcg-markdown-setup-keybindings)
+(add-hook 'markdown-ts-mode-hook #'mcg-markdown-setup-keybindings)
+(add-hook 'gfm-mode-hook #'mcg-markdown-setup-keybindings)
+#+end_src
+
+** Provide Feature
+
+#+begin_src emacs-lisp
+(provide 'init-markdown)
+;;; init-markdown.el ends here
+#+end_src

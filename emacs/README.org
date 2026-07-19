@@ -42,9 +42,9 @@ and generated configuration can be rebuilt from this repo.
 
 ** Language Support
    Full development support for:
-   - *Systems*: C/C++, Rust (rust-analyzer), Lua
-   - *Web*: TypeScript, JavaScript, HTML/CSS, JSX/React
-   - *Dynamic*: Python, Bash
+   - *Systems*: Zig, with build/test/run helpers
+   - *Web*: TypeScript, JavaScript, HTML/CSS, JSX/React, Vue
+   - *Dynamic*: Python, with pytest and Ruff helpers
    - *Markup*: Markdown, Org Mode
 
 ** Key Features
@@ -59,10 +59,8 @@ and generated configuration can be rebuilt from this repo.
    - [[https://github.com/protesilaos/pulsar][pulsar]]: Current-line pulse after navigation
    - [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Several-Buffers.html][ibuffer]]: Built-in buffer overview and project filtering
    - [[https://github.com/manateelazycat/awesome-tray][Awesome-tray]]: Lightweight status display
-   - [[https://github.com/manateelazycat/emacs-rime][Rime]]: Chinese input
-   - [[https://github.com/justbur/emacs-which-key][Which-key]]: Keybinding hints
-   - [[https://github.com/abo-abo/ace-window][Ace-window]]: Quick window switching
-   - [[https://github.com/abo-abo/avy][Avy]]: Fast navigation
+   - [[https://github.com/minad/consult][Consult]]: Fast navigation and project search
+   - Markdown is deferred and Vale is optional for prose diagnostics
 
 * 📦 Installation
 
@@ -154,13 +152,14 @@ emacs/
 
 | Category   | Modules | Description                         |
 |------------+---------+-------------------------------------|
-| ui         |       7 | Theme, tray, font, icons, dashboard, pulse feedback |
+| ui         |       6 | Theme, tray, font, icons, pulse feedback; dashboard is optional |
 | editor     |       8 | Editing defaults, TODO highlights, buffer overview |
 | completion |       8 | Vertico, Consult, snippets, actions |
 | tools      |      12 | Git, search, LSP bridge, project    |
 | enhance    |       2 | Help and recent file enhancements   |
 | org        |      13 | Org, agenda, capture, export, Hugo  |
-| lang       |       2 | Language-specific integrations      |
+| writing    |       2 | Markdown editing and optional Vale prose diagnostics |
+| lang       |       3 | Python, Zig, and Web integrations   |
 
 * ⚙️ Configuration Management
 
@@ -182,7 +181,7 @@ emacs/
 
 Use =make profile-startup= to run a batch startup profile. The report lists
 module load times in descending order and highlights key startup entries such
-as dashboard, theme, recentf, and private config. This is a stable module-level
+as theme, recentf, and private config. This is a stable module-level
 signal for regressions; visual GUI timing still needs manual confirmation.
 
 * 📦 Git Submodule Package Management
@@ -197,16 +196,16 @@ Extensions are organized into category subdirectories:
 site-lisp/extensions/
 ├── core/           # Core libraries (dash, s.el, f.el, compat, lazy-load)
 ├── completion/     # Completion system (vertico, consult, marginalia, orderless, embark)
-├── editor/         # Editor features (avy, ace-window, vundo, markmacro, fingertip)
+├── editor/         # Editor features (vundo, hl-todo)
 ├── git/            # Git integration (magit, with-editor, jujutsu)
-├── input/          # Input methods (emacs-rime, posframe)
-├── lsp/            # LSP and language support (lsp-bridge, rust-mode, lua-mode, etc.)
+├── input/          # Child-frame popups (posframe)
+├── lsp/            # LSP and language support (lsp-bridge, web-mode, zig-mode, treesit-auto)
 ├── org/            # Org-mode extensions (org-modern, ox-hugo, org-download)
 ├── search/         # Search tools (blink-search, color-rg, consult-todo)
 ├── snippets/       # Snippet libraries (yasnippet, yasnippet-snippets)
-├── ui/             # UI components (awesome-tray, themes/, nerd-icons)
-├── utils/          # Utility packages (helpful, json-mode, hydra)
-└── docs/           # Documentation tools (markdown-ts-mode, flymake-vale)
+├── ui/             # UI components (dashboard, awesome-tray, holo-layer, pulsar, themes/, nerd-icons)
+├── utils/          # Utility packages (auto-save, sort-tab, mwim, json-mode, hydra)
+└── docs/           # Documentation tools (markdown-mode, markdown-ts-mode)
 #+end_src
 
 ** Submodule Commands
@@ -304,29 +303,41 @@ Use =mcg!= macro in =init.org= to declare enabled modules:
 
 #+begin_src emacs-lisp
 (mcg! :ui
-      theme modeline font icons
+      font ef-themes nerd-icons -dashboard pulsar
+      (holo-layer :load idle)
+      (awesome-tray :load idle)
       
       :editor
-      defaults treesit navigation keybindings
-      paredit format undo multicursor
+      defaults hl-todo ibuffer (vundo :load idle) mwim treesit format
+      (dirvish :load idle)
       
       :completion
-      vertico yasnippet
+      consult marginalia vertico orderless embark pinyinlib
+      nerd-icons-completion (yasnippet :load idle)
       
       :tools
-      magit search rime tabs eshell
+      project (compile :load idle) diagnostics posframe sort-tab auto-save
+      (blink-search :load idle)
+      (magit :load idle)
+      (clutch :load idle)
+      (lsp-bridge :load idle)
+      (color-rg :load idle)
+      (majutsu :load idle)
       
       :enhance
-      autosave which-key helpful recentf symbol
+      help recentf
       
       :org
-      org org-agenda org-babel org-capture org-extras
+      (org :load idle)
       
       :writing
-      markdown vale
+      (markdown :load deferred)
+      (vale :load idle)
       
       :lang
-      lsp rust python typescript web cpp lua zig)
+      (python :load deferred)
+      (zig :load deferred)
+      (web :load deferred))
 #+end_src
 
 ** Migration Guide
@@ -345,32 +356,40 @@ If migrating from an older configuration version:
 
 | Old Module          | New Module        |
 |---------------------+-------------------|
-| :input fingertip    | :editor paredit   |
 | :input wraplish     | :editor format    |
 | :docs markdown      | :writing markdown |
-| :tools sort-tab     | :tools tabs       |
+| :tools tabs         | :tools sort-tab   |
+| :ui icons           | :ui nerd-icons    |
+| :enhance autosave   | :tools auto-save  |
 
-The system automatically detects old names and shows warnings.
+Old configurations should be adjusted manually against the current =mcg!=
+example above; the module system does not rewrite old module names.
 
 * ⚡ Performance Optimization
 
 ** Module Loading Strategy
 
-The configuration uses a three-tier loading strategy so the dashboard can appear
-early while heavier or on-demand tools finish loading later:
+The configuration uses a three-tier loading strategy so the default =*scratch*=
+buffer can appear early while heavier or on-demand tools finish loading later:
 
 | Loading Type | When Loaded | Modules |
 |--------------+-------------+---------|
-| Immediate    | At startup  | first-frame essentials: font, theme, icons, dashboard, pulsar, editor defaults, completion/search basics |
-| Idle         | After 2s idle | visual chrome and heavy/on-demand tools: awesome-tray, holo-layer, dirvish, org, magit, clutch, lsp-bridge, color-rg, majutsu |
-| Deferred     | On demand   | trigger-backed language modules such as python, zig, and web |
+| Immediate    | At startup  | first-frame essentials: font, ef-themes, nerd-icons, pulsar, editor defaults, minibuffer basics, project/diagnostics basics |
+| Idle         | After 2s idle | visual chrome and heavy/on-demand tools: awesome-tray, holo-layer, vundo, yasnippet, compile, blink-search, dirvish, org, magit, clutch, lsp-bridge, color-rg, majutsu, vale |
+| Deferred     | On demand   | trigger-backed language and writing modules such as python, zig, web, and markdown |
+
+Some idle modules expose lightweight lazy command entries before the module is
+loaded. The command keys are available immediately, but the backing module is
+loaded on first use. This keeps startup fast while avoiding an early keybinding
+gap for compile, magit, vundo, blink-search, color-rg, dirvish, org capture,
+clutch, and majutsu.
 
 Two idle choices are intentional:
 
-- =awesome-tray= replaces the mode-line, so loading it after the dashboard keeps
-  the first frame from visibly redrawing.
+- =awesome-tray= replaces the mode-line, so loading it after the first scratch
+  frame keeps startup from visibly redrawing.
 - =org= is one of the heaviest Windows startup modules, so agenda/capture
-  support is loaded after the first frame unless you override =mcg-idle-modules=.
+  support is loaded after the first frame unless you change its =:load= metadata.
 
 Use =make profile-startup= when changing this list. It prints module timings and
 the current idle queue without mixing third-party warnings into the report.
@@ -378,8 +397,19 @@ the current idle queue without mixing third-party warnings into the report.
 ** Idle Loading Configuration
 
 Non-essential modules are loaded during idle time to speed up startup. The
-default list lives in =config-org/init.org= as =mcg-idle-modules= and can be
-overridden from =site-lisp/config/private/config.el=:
+default strategy lives next to each module declaration in =config-org/init.org=:
+
+#+begin_src emacs-lisp
+(mcg!
+ :tools
+ (magit :load idle)
+ :lang
+ (python :load deferred))
+#+end_src
+
+Use =immediate= for startup modules, =idle= for first-frame-safe background
+loading, and =deferred= for trigger-backed file modes. The idle delay remains
+configurable from =site-lisp/config/private/config.el=:
 
 #+begin_src emacs-lisp
 ;; Configure idle loading delay (default: 2 seconds)
@@ -392,13 +422,18 @@ overridden from =site-lisp/config/private/config.el=:
 
 ** Deferred Loading
 
-Language modules are loaded on-demand when you open a matching file:
+Language and writing modules are loaded on-demand when you open a matching
+file. Markdown is deferred so ordinary startup does not pay for Markdown mode.
+Vale is optional: the module is idle-loaded, and diagnostics only run when you
+change the default =mcg-vale-enable nil= to =(setq mcg-vale-enable t)= in
+=site-lisp/config/private/config.el=.
 
 | File Extension | Module Loaded |
 |----------------+---------------|
 | =.py=          | python        |
 | =.zig=         | zig           |
 | =.html=, =.css=, =.js=, =.ts=, =.tsx=, =.vue= | web |
+| =.md=          | markdown      |
 
 ** Startup Time Diagnostics
 
@@ -471,11 +506,23 @@ Press =C-h M= to access the unified help menu:
 
 | Command                        | Description                          |
 |--------------------------------+--------------------------------------|
-| =M-x mcg-doctor=               | Check for configuration issues       |
+| =M-x mcg-doctor=               | Check configuration, Development Environments, and Tree-sitter Grammars |
 | =M-x mcg/show-load-times=      | View module loading performance      |
 | =M-x mcg/show-logs=            | View recent log messages             |
 | =M-x mcg-show-startup-errors=  | Show startup error summary           |
 | =M-x mcg/list-extensions=      | Show extension status with icons     |
+
+=M-x mcg-doctor= includes core path/module/extension health, External Dev Tools,
+Development Environments for Python/Web/Zig, and Tree-sitter Grammars for the
+enabled language and writing modules. The environment section reports project
+signals such as =uv.lock=, =poetry.lock=, =pdm.lock=, =build.zig=, Antfu ESLint,
+and the formatter/test/build command Emacs will prefer.
+
+Python commands prefer project-local runners when available. With
+=mcg-python-detect-project-tools= enabled, projects with =uv.lock=,
+=poetry.lock=, or =pdm.lock= use =uv run=, =poetry run=, or =pdm run= for
+pytest/Ruff commands; otherwise they fall back to =mcg-python-test-command=
+and =mcg-python-ruff-command=.
 
 ** Module Management
 
@@ -487,20 +534,35 @@ Press =C-h M= to access the unified help menu:
 
 * ⌨️ Key Bindings
 
-All custom bindings use =C-c= prefix (user reserved area) with which-key descriptions.
+All custom bindings use the =C-c= prefix (user reserved area) and are registered
+through the central keybinding registry.
+
+High-frequency idle modules use lazy command entries: compile, magit, vundo,
+blink-search, color-rg, dirvish, org capture, clutch, and majutsu keys are
+available immediately, and their modules are loaded on first use.
 
 ** Quick Reference
 
 | Prefix  | Description      |
 |---------+------------------|
 | C-c g   | Git (Magit)      |
-| C-c w   | Window           |
+| C-c p   | Project          |
+| C-c c   | Compile/build    |
+| C-c !   | Diagnostics      |
+| C-c h   | Help             |
 | C-c s   | Search           |
-| C-c r   | Refactor         |
+| C-c r   | LSP actions/format |
 | C-c t   | Tabs             |
 | C-c n   | Notes/Org        |
-| C-c m   | Multi-cursor     |
-| M-g     | Goto (Avy)       |
+| C-c ;   | Clutch database tools |
+| M-g     | Goto and diagnostics |
+
+For Python projects, =C-c c t= and =C-c c R= reuse
+=mcg-python-detect-project-tools=: projects with =uv.lock=, =poetry.lock=, or
+=pdm.lock= prefer =uv run=, =poetry run=, or =pdm run= when those tools are
+available.
+For Zig projects with =build.zig=, =C-c c t= and =C-c c R= use the same
+=zig build test= and =zig build run= commands as the Zig module.
 
 ** LSP Navigation
 
@@ -511,17 +573,11 @@ All custom bindings use =C-c= prefix (user reserved area) with which-key descrip
 | M-?   | Find references      |
 | C-h . | Show documentation   |
 
-** Window Operations
-
-| Key     | Description        |
-|---------+--------------------|
-| M-O     | Quick switch (ace) |
-| C-c w w | Switch window      |
-| C-c w d | Delete window      |
-| C-c w s | Swap windows       |
-| C-c w u | Undo layout        |
-| C-c w r | Redo layout        |
-| C-c w ? | Window menu        |
+LSP Bridge keeps side effects conservative by default. Inlay hints,
+auto-format-on-LSP-update, and Org Babel LSP support are opt-in through
+=mcg-lsp-enable-inlay-hint=, =mcg-lsp-enable-auto-format-code=, and
+=mcg-lsp-enable-org-babel=. Formatting defaults to the shared =mcg-format=
+dispatcher.
 
 ** Search
 
@@ -559,15 +615,61 @@ All custom bindings use =C-c= prefix (user reserved area) with which-key descrip
 
 For complete keybinding reference, press =C-h K= in Emacs.
 
+* 📝 Org Mode
+
+The =:org org= module loads the Org core plus focused submodules for agenda,
+capture, Babel, visual polish, download helpers, and optional Hugo publishing.
+
+** User Commands
+
+| Command                          | Description                 |
+|----------------------------------+-----------------------------|
+| =M-x mcg-org-initialize-directories= | Create configured Org directories |
+| =M-x mcg/org-open-notes=         | Open =mcg-org-notes-directory= |
+| =M-x mcg/org-open-agenda-dir=    | Open =mcg-org-agenda-directory= |
+
+** Org Key Bindings
+
+| Key           | Description                         |
+|---------------+-------------------------------------|
+| C-c n c       | Capture note/task/template          |
+| C-c n a       | Open agenda                         |
+| C-c n l       | Store Org link                      |
+| C-c n t       | Show TODO list                      |
+| C-c n v       | Insert clipboard image via org-download |
+| C-c C-v C-b   | Execute all Babel blocks in buffer  |
+| C-c C-v C-r   | Remove all Babel results            |
+| C-c C-v i     | Insert a source block               |
+
+** Org Configuration Surface
+
+Core storage is controlled by =mcg-org-directory=,
+=mcg-org-agenda-directory=, and =mcg-org-notes-directory=. Agenda behavior is
+configured through =mcg-org-agenda-files= and =mcg-org-agenda-custom-commands=.
+
+Babel is conservative by default: =mcg-org-babel-confirm-evaluate= is enabled,
+=mcg-org-export-babel-evaluate= is disabled, and Zig support is controlled by
+=mcg-org-babel-enable-zig=. Source block prompts use
+=mcg-org-babel-src-block-languages=. Default Babel languages are
+=emacs-lisp=, =shell=, =python=, =js=, =css=, and =org=; enable =C=, =dot=,
+=plantuml=, or =sql= from private config only when a project needs them.
+
+Hugo capture and export are opt-in. The default is =mcg-org-hugo-enable nil=;
+set =(setq mcg-org-hugo-enable t)= in =site-lisp/config/private/config.el= to
+load easy-hugo, ox-hugo, and the =h=/=hb= capture templates. Related knobs are
+=mcg-blog-base-directory=, =mcg-org-hugo-postdir=, and
+=mcg-org-blog-capture-directory=. The current capture surface creates a
+one-file-per-post =hb= template instead of topic-specific shortcuts.
+
 * 🔧 Customization
 
 ** User Settings
 
-Edit =custom.el= for personal settings:
+Edit =site-lisp/config/private/config.el= for machine-local settings:
 
 #+begin_src emacs-lisp
-(setq mcg-theme 'doom-one)
-(setq mcg-font-size 14)
+(setq mcg-ui-theme 'ef-dream)
+(setq mcg-font-height 140)
 #+end_src
 
 ** Adding New Modules

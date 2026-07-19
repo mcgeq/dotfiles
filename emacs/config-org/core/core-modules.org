@@ -62,6 +62,12 @@ ERROR-INFO is a plist with keys:
 (defvar mcg-module-load-order nil
   "List of module keys in the order they should be loaded.
 Populated by mcg! macro based on declaration order.")
+
+(defvar mcg-module-metadata-alist nil
+  "Alist of per-module metadata.
+Structure: (((CATEGORY . MODULE) . PLIST) ...).
+Supported metadata keys include:
+  :load - one of `immediate', `idle', or `deferred'.")
 #+end_src
 
 ** Deferred Loading Variables
@@ -109,8 +115,7 @@ Functions receive (CATEGORY MODULE) as arguments.")
     ((:lang . lua) . ("\\.lua\\'" . lua-mode))
     ((:lang . zig) . ("\\.zig\\'" . mcg-zig-deferred-mode))
     ;; Writing modules
-    ((:writing . markdown) . ("\\.md\\'" . markdown-mode))
-    ((:writing . vale) . ("\\.\\(md\\|org\\|txt\\)\\'" . text-mode)))
+    ((:writing . markdown) . ("\\.md\\'" . mcg-markdown-deferred-mode)))
   "Alist mapping module keys to their file triggers.
 Structure: (((CATEGORY . MODULE) . (PATTERN . MODE)) ...)")
 #+end_src
@@ -179,6 +184,25 @@ Returns non-nil if the module is in mcg-disabled-modules."
         (dolist (module modules)
           (push (cons category module) result))))
     (nreverse result)))
+
+(defun mcg-module-metadata (category module)
+  "Return metadata plist for MODULE in CATEGORY."
+  (cdr (assoc (mcg--module-key category module) mcg-module-metadata-alist)))
+
+(defun mcg-module-load-strategy (category module)
+  "Return loading strategy for MODULE in CATEGORY.
+The strategy is one of `immediate', `idle', or `deferred'."
+  (or (plist-get (mcg-module-metadata category module) :load)
+      'immediate))
+
+(defun mcg-list-modules-by-load-strategy (strategy)
+  "Return enabled module keys whose `:load' metadata matches STRATEGY."
+  (let ((result nil))
+    (dolist (mod-key mcg-module-load-order)
+      (when (eq (mcg-module-load-strategy (car mod-key) (cdr mod-key))
+                strategy)
+        (push mod-key result)))
+    (nreverse result)))
 #+end_src
 
 ** mcg! Macro - Declarative Module Configuration
@@ -190,8 +214,9 @@ Returns non-nil if the module is in mcg-disabled-modules."
 #+begin_src emacs-lisp
 (defun mcg--parse-modules (args)
   "Parse ARGS from mcg! macro into module alist.
-Returns alist of ((CATEGORY . ((MODULE . ENABLED) ...)) ...).
-Modules prefixed with `-' are marked as disabled."
+Returns alist of ((CATEGORY . ((MODULE ENABLED METADATA) ...)) ...).
+Modules prefixed with `-' are marked as disabled.
+Module entries may be bare symbols or lists like (MODULE :load STRATEGY)."
   (let ((result nil)
         (current-category nil))
     (dolist (arg args)
@@ -202,18 +227,35 @@ Modules prefixed with `-' are marked as disabled."
         (unless (assq current-category result)
           (push (cons current-category nil) result)))
        ;; Module (possibly disabled with - prefix)
-       ((and current-category (symbolp arg))
-        (let* ((name (symbol-name arg))
+       ((and current-category
+             (or (symbolp arg)
+                 (and (consp arg) (symbolp (car arg)))))
+        (let* ((raw-module (if (consp arg) (car arg) arg))
+               (metadata (if (consp arg) (cdr arg) nil))
+               (name (symbol-name raw-module))
                (disabled (string-prefix-p "-" name))
                (module (if disabled
                            (intern (substring name 1))
-                         arg))
+                         raw-module))
                (cat-entry (assq current-category result)))
           (when cat-entry
             (setcdr cat-entry
                     (append (cdr cat-entry)
-                            (list (cons module (not disabled))))))))))
+                            (list (list module (not disabled) metadata)))))))))
     (nreverse result)))
+#+end_src
+
+*** Normalize Module Metadata Function
+
+#+begin_src emacs-lisp
+(defun mcg--normalize-module-metadata (metadata)
+  "Return normalized module METADATA plist."
+  (let ((metadata (copy-sequence metadata)))
+    (unless (plist-member metadata :load)
+      (setq metadata (plist-put metadata :load 'immediate)))
+    (unless (memq (plist-get metadata :load) '(immediate idle deferred))
+      (setq metadata (plist-put metadata :load 'immediate)))
+    metadata))
 #+end_src
 
 *** Apply Parsed Modules Function
@@ -226,6 +268,7 @@ PARSED is the output of `mcg--parse-modules'."
   (setq mcg-modules-alist nil)
   (setq mcg-disabled-modules nil)
   (setq mcg-module-load-order nil)
+  (setq mcg-module-metadata-alist nil)
   
   ;; Process parsed modules
   (dolist (cat-entry parsed)
@@ -235,12 +278,16 @@ PARSED is the output of `mcg--parse-modules'."
           (disabled-list nil))
       ;; Separate enabled and disabled modules
       (dolist (mod-entry modules)
-        (let ((module (car mod-entry))
-              (enabled (cdr mod-entry)))
+        (let ((module (nth 0 mod-entry))
+              (enabled (nth 1 mod-entry))
+              (metadata (nth 2 mod-entry)))
           (if enabled
-              (progn
+              (let ((mod-key (cons category module)))
                 (push module enabled-list)
-                (push (cons category module) mcg-module-load-order))
+                (push mod-key mcg-module-load-order)
+                (push (cons mod-key
+                            (mcg--normalize-module-metadata metadata))
+                      mcg-module-metadata-alist))
             (push module disabled-list))))
       ;; Store in registry
       (when enabled-list
@@ -251,7 +298,8 @@ PARSED is the output of `mcg--parse-modules'."
   ;; Reverse to maintain declaration order
   (setq mcg-modules-alist (nreverse mcg-modules-alist))
   (setq mcg-disabled-modules (nreverse mcg-disabled-modules))
-  (setq mcg-module-load-order (nreverse mcg-module-load-order)))
+  (setq mcg-module-load-order (nreverse mcg-module-load-order))
+  (setq mcg-module-metadata-alist (nreverse mcg-module-metadata-alist)))
 #+end_src
 
 *** mcg! Macro
@@ -263,9 +311,9 @@ MODULES is a list of :category module ... declarations.
 Modules prefixed with `-' are disabled.
 
 Example:
-  (mcg! :ui theme modeline
+  (mcg! :ui theme (modeline :load idle)
         :editor defaults treesit
-        :lang lsp rust -lua)"
+        :lang (rust :load deferred) -lua)"
   `(mcg--apply-parsed-modules (mcg--parse-modules ',modules)))
 #+end_src
 
@@ -349,6 +397,41 @@ Returns t if successful, nil if failed."
 Returns t if successful, nil if failed.
 Errors are recorded in `mcg-module-load-errors'."
   (mcg--load-module-internal category module))
+#+end_src
+
+*** Lazy Command Entry Functions
+
+这些 helper 用于给 idle 模块提供立即可用的命令入口。按键先绑定到真实命令名；命令第一次被调用时，
+先通过模块系统加载对应模块，再交给模块中真正定义的命令执行。这样可以保留 `mcg-loaded-modules' 记录，
+也避免模块加载后再次绑定同一个按键时产生冲突。
+
+#+begin_src emacs-lisp
+(defun mcg--lazy-module-command-stub (category module command)
+  "Return a lazy stub for COMMAND from MODULE in CATEGORY."
+  (let ((stub nil))
+    (setq stub
+          (lambda ()
+            (interactive)
+            (unless (mcg-load-module category module)
+              (user-error "Failed to load module %s/%s" category module))
+            (if (eq (symbol-function command) stub)
+                (user-error "Module %s/%s did not define command %s"
+                            category module command)
+              (call-interactively command))))
+    stub))
+
+(defun mcg-define-lazy-module-command (category module command)
+  "Define COMMAND as a lazy entry point for MODULE in CATEGORY.
+If COMMAND is already defined, leave it untouched."
+  (unless (fboundp command)
+    (fset command (mcg--lazy-module-command-stub category module command)))
+  command)
+
+(defun mcg-bind-lazy-module-key (key command source category module &optional keymap)
+  "Bind KEY to lazy COMMAND from MODULE in CATEGORY.
+SOURCE and KEYMAP are passed to `mcg-bind-key'."
+  (mcg-define-lazy-module-command category module command)
+  (mcg-bind-key key command source keymap))
 #+end_src
 
 *** Load Module With Trace Function

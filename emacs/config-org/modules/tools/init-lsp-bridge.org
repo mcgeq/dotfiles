@@ -48,6 +48,17 @@
     :type 'boolean
     :group 'mcg)
 
+  (defcustom mcg-lsp-enable-auto-format-code nil
+    "Whether lsp-bridge should auto-format code after LSP edits.
+Keep this disabled by default so formatting is owned by `mcg-format'."
+    :type 'boolean
+    :group 'mcg)
+
+  (defcustom mcg-lsp-enable-org-babel nil
+    "Whether lsp-bridge should enable LSP support for Org Babel blocks."
+    :type 'boolean
+    :group 'mcg)
+
   (defcustom mcg-lsp-enable-biome nil
     "Use biome with web."
     :type 'boolean
@@ -151,7 +162,7 @@ Can be overridden in private/config.el."
             ;; Load acm-terminal in terminal (non-graphical environment)
             (unless (display-graphic-p)
               (mcg-require-extension 'acm-terminal t))
-            
+
             (setq lsp-bridge-enable-with-tramp mcg-lsp-enable-with-tramp)
             (setq lsp-bridge-enable-inlay-hint mcg-lsp-enable-inlay-hint)
             ;; Optional snippet backend - only enable if yasnippet is already loaded
@@ -165,20 +176,23 @@ Can be overridden in private/config.el."
             (when mcg-lsp-user-multiserver-dir
               (setq lsp-bridge-user-multiserver-dir mcg-lsp-user-multiserver-dir))
             (setq lsp-bridge-enable-completion-in-minibuffer t)
-            (setq lsp-bridge-enable-org-babel t)
-            ;; Auto format code
-            (setq lsp-bridge-enable-auto-format-code t)
+            (setq lsp-bridge-enable-org-babel mcg-lsp-enable-org-babel)
+            (setq lsp-bridge-enable-auto-format-code mcg-lsp-enable-auto-format-code)
 
             ;; 方案C: 格式化后自动保存 (兼容 auto-save 插件)
             ;; 在格式化完成后自动保存 buffer
-            (unless (advice-member-p #'mcg-lsp-format-and-save-after-format
+            (if mcg-lsp-enable-auto-format-code
+                (unless (advice-member-p #'mcg-lsp-format-and-save-after-format
+                                         'lsp-bridge-format--update)
+                  (advice-add 'lsp-bridge-format--update :after #'mcg-lsp-format-and-save-after-format))
+              (when (advice-member-p #'mcg-lsp-format-and-save-after-format
                                      'lsp-bridge-format--update)
-              (advice-add 'lsp-bridge-format--update :after #'mcg-lsp-format-and-save-after-format))
+                (advice-remove 'lsp-bridge-format--update
+                               #'mcg-lsp-format-and-save-after-format)))
             ;; ===== Diagnostics Settings =====
             (setq lsp-bridge-enable-diagnostics t)
             (setq lsp-bridge-enable-hover-diagnostic t)
             (setq lsp-bridge-code-action-enable-popup-tip t)
-            (setq lsp-bridge-enable-inlay-hint t)
             ;; ===== Completion Settings =====
             (setq lsp-bridge-enable-search-words t)
             (setq lsp-bridge-enable-auto-import t)

@@ -1,0 +1,644 @@
+#+TITLE: Core Doctor Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle core-doctor.el :lexical t
+
+* Core Doctor Module
+
+** File Header
+
+#+begin_src emacs-lisp
+;;; core-doctor.el --- Configuration diagnostics for MCG Emacs -*- lexical-binding: t; -*-
+
+;; Copyright (C) 2024-2026 MCG
+;; Author: MCG
+;; Keywords: configuration, diagnostics
+
+;;; Commentary:
+;; This module provides MCG Emacs diagnostics.  It is kept separate from
+;; core-bootstrap so bootstrap can stay focused on paths, load-path setup,
+;; logging, and startup basics.
+
+;;; Code:
+#+end_src
+
+** Require
+
+#+begin_src emacs-lisp
+(require 'cl-lib)
+(require 'seq)
+(require 'subr-x)
+(require 'core-bootstrap)
+#+end_src
+
+** Doctor Variables
+
+#+begin_src emacs-lisp
+(defvar mcg-doctor-checks nil
+  "List of doctor check functions.
+Each function should return a plist with :status (:ok, :warning, :error)
+and :message describing the result.")
+
+(defcustom mcg-doctor-dev-tool-checks
+  '((:name "Python Development"
+     :tools ("python")
+     :optional-tools ("ruff" "pytest" "uv" "poetry" "pdm" "ty" "basedpyright"))
+    (:name "Web Development"
+     :tools ("node")
+     :optional-tools ("pnpm" "bun" "npm" "eslint" "prettier"))
+    (:name "Zig Development"
+     :tools ("zig")
+     :optional-tools ("zls"))
+    (:name "Writing Tools"
+     :tools nil
+     :optional-tools ("vale" "vale-ls")))
+  "Development tool groups checked by `mcg-doctor'."
+  :type '(repeat plist)
+  :group 'mcg)
+
+(defcustom mcg-doctor-treesit-language-checks
+  '(python javascript typescript tsx css html json yaml markdown
+    markdown-inline zig jsdoc)
+  "Tree-sitter languages checked by `mcg-doctor'."
+  :type '(repeat symbol)
+  :group 'mcg)
+#+end_src
+
+** Core Checks
+
+#+begin_src emacs-lisp
+(defun mcg-doctor--check-paths ()
+  "Check if all required paths are properly configured."
+  (let ((issues nil))
+    (unless (and mcg-emacs-dir (file-directory-p mcg-emacs-dir))
+      (push "mcg-emacs-dir is not set or doesn't exist" issues))
+    (unless (and mcg-config-dir (file-directory-p mcg-config-dir))
+      (push "mcg-config-dir is not set or doesn't exist" issues))
+    (unless (and mcg-core-dir (file-directory-p mcg-core-dir))
+      (push "mcg-core-dir is not set or doesn't exist" issues))
+    (unless (and mcg-modules-dir (file-directory-p mcg-modules-dir))
+      (push "mcg-modules-dir is not set or doesn't exist" issues))
+    (unless (and mcg-extensions-dir (file-directory-p mcg-extensions-dir))
+      (push "mcg-extensions-dir is not set or doesn't exist" issues))
+
+    (if issues
+        (list :status :error
+              :message (format "Path issues:\n  - %s" (string-join issues "\n  - "))
+              :action "Check `mcg-init-paths', rebuild with `make all', and verify the configured directories exist.")
+      (list :status :ok
+            :message "All paths configured correctly"))))
+
+(defun mcg-doctor--check-core-modules ()
+  "Check if core modules are loaded."
+  (let ((required '(core-bootstrap core-lib core-modules core-doctor))
+        (missing nil))
+    (dolist (mod required)
+      (unless (featurep mod)
+        (push (symbol-name mod) missing)))
+    (if missing
+        (list :status :error
+              :message (format "Missing core modules: %s" (string-join missing ", "))
+              :action "Rebuild generated config with `make all', then restart Emacs or reload init.el.")
+      (list :status :ok
+            :message "All core modules loaded"))))
+
+(defun mcg-doctor--check-module-errors ()
+  "Check for module load errors."
+  (if (and (boundp 'mcg-module-load-errors) mcg-module-load-errors)
+      (let ((error-count (length mcg-module-load-errors)))
+        (list :status :warning
+              :message (format "%d module(s) failed to load. Run M-x mcg-list-modules for details."
+                               error-count)
+              :action "Run `M-x mcg-list-modules', inspect the failing module, then install or disable the missing dependency."))
+    (list :status :ok
+          :message "No module load errors")))
+
+(defun mcg-doctor--check-extensions ()
+  "Check extensions directory status."
+  (if (and mcg-extensions-dir (file-directory-p mcg-extensions-dir))
+      (let ((ext-count (length (directory-files mcg-extensions-dir nil "^[^.]"))))
+        (if (> ext-count 0)
+            (list :status :ok
+                  :message (format "Extensions directory contains %d items" ext-count))
+          (list :status :warning
+                :message "Extensions directory is empty. Run 'make gsb' to initialize submodules."
+                :action "Run `make gsb' from the emacs directory to initialize Borg submodules.")))
+    (list :status :error
+          :message "Extensions directory not found"
+          :action "Rebuild with `make all` and verify `mcg-extensions-dir` points to site-lisp/extensions.")))
+#+end_src
+
+** Tool Checks
+
+#+begin_src emacs-lisp
+(defun mcg-doctor--tool-status (tool)
+  "Return a display string for TOOL availability."
+  (if (executable-find tool)
+      (format "%s: found" tool)
+    (format "%s: missing" tool)))
+
+(defun mcg-doctor--missing-tools (tools)
+  "Return tools from TOOLS that are not available."
+  (seq-filter (lambda (tool)
+                (not (executable-find tool)))
+              tools))
+
+(defun mcg-doctor--format-tool-group (group)
+  "Return a display line for development tool GROUP."
+  (let* ((name (plist-get group :name))
+         (tools (plist-get group :tools))
+         (optional-tools (plist-get group :optional-tools))
+         (all-tools (append tools optional-tools)))
+    (format "%s\n    %s"
+            name
+            (if all-tools
+                (string-join (mapcar #'mcg-doctor--tool-status all-tools) ", ")
+              "No tools configured"))))
+
+(defun mcg-doctor--check-dev-tools ()
+  "Check external development tools used by language and writing modules."
+  (let* ((missing-required
+          (cl-loop for group in mcg-doctor-dev-tool-checks
+                   append (mcg-doctor--missing-tools
+                           (plist-get group :tools))))
+         (group-lines
+          (mapcar #'mcg-doctor--format-tool-group
+                  mcg-doctor-dev-tool-checks))
+         (message (string-join group-lines "\n  - ")))
+    (list :status (if missing-required :warning :ok)
+          :message
+          (concat
+           (if missing-required
+               (format "Missing required tools: %s\n  - "
+                       (string-join missing-required ", "))
+             "Development tool availability:\n  - ")
+           message)
+          :action
+          (when missing-required
+            "Install the missing required tools or remove unused language modules from the enabled module list."))))
+#+end_src
+
+** Project Environment Helpers
+
+#+begin_src emacs-lisp
+(defun mcg-doctor--project-root ()
+  "Return the current project root for environment diagnostics."
+  (file-name-as-directory
+   (or (and (fboundp 'mcg-project-root-or-default)
+            (mcg-project-root-or-default))
+       (cl-loop for marker in '("build.zig" "pyproject.toml" "uv.lock"
+                                "poetry.lock" "pdm.lock" "package.json"
+                                "pnpm-lock.yaml" "pnpm-workspace.yaml"
+                                ".git")
+                thereis (locate-dominating-file default-directory marker))
+       default-directory)))
+
+(defun mcg-doctor--root-file (root file)
+  "Return FILE expanded under ROOT."
+  (expand-file-name file (file-name-as-directory root)))
+
+(defun mcg-doctor--root-has-file-p (root file)
+  "Return non-nil when ROOT contains FILE."
+  (file-exists-p (mcg-doctor--root-file root file)))
+
+(defun mcg-doctor--root-has-any-file-p (root files)
+  "Return non-nil when ROOT contains any file in FILES."
+  (seq-some (lambda (file)
+              (mcg-doctor--root-has-file-p root file))
+            files))
+
+(defun mcg-doctor--file-contains-p (file regexp)
+  "Return non-nil when FILE contains REGEXP."
+  (when (file-exists-p file)
+    (with-temp-buffer
+      (insert-file-contents file)
+      (goto-char (point-min))
+      (re-search-forward regexp nil t))))
+
+(defun mcg-doctor--root-file-contains-any-p (root files regexp)
+  "Return non-nil when any file in FILES under ROOT contains REGEXP."
+  (seq-some (lambda (file)
+              (mcg-doctor--file-contains-p
+               (mcg-doctor--root-file root file)
+               regexp))
+            files))
+
+(defun mcg-doctor--yes-no (value)
+  "Return yes/no display string for VALUE."
+  (if value "yes" "no"))
+
+(defun mcg-doctor--present-missing (value)
+  "Return present/missing display string for VALUE."
+  (if value "present" "missing"))
+
+(defun mcg-doctor--command-string (command)
+  "Return display string for COMMAND."
+  (cond
+   ((stringp command) command)
+   ((and (consp command) (seq-every-p #'stringp command))
+    (string-join command " "))
+   (t "none")))
+
+(defun mcg-doctor--first-command-string (commands)
+  "Return display string for the first command in COMMANDS."
+  (if (consp commands)
+      (mcg-doctor--command-string (car commands))
+    "none"))
+#+end_src
+
+** Python Environment
+
+#+begin_src emacs-lisp
+(defun mcg-doctor--python-project-tool (root)
+  "Return detected Python project tool for ROOT."
+  (cond
+   ((fboundp 'mcg-python--project-tool)
+    (mcg-python--project-tool root))
+   ((and (mcg-doctor--root-has-file-p root "uv.lock")
+         (executable-find "uv"))
+    "uv")
+   ((and (mcg-doctor--root-has-file-p root "poetry.lock")
+         (executable-find "poetry"))
+    "poetry")
+   ((and (mcg-doctor--root-has-file-p root "pdm.lock")
+         (executable-find "pdm"))
+    "pdm")))
+
+(defun mcg-doctor--python-pytest-command (root project-tool)
+  "Return Python pytest command for ROOT and PROJECT-TOOL."
+  (cond
+   ((fboundp 'mcg-python--pytest-command)
+    (mcg-python--pytest-command root))
+   ((member project-tool '("uv" "poetry" "pdm"))
+    (format "%s run pytest" project-tool))
+   (t "python -m pytest")))
+
+(defun mcg-doctor--python-formatter-command (root)
+  "Return Python formatter command for ROOT."
+  (cond
+   ((fboundp 'mcg-python-format-candidates)
+    (mcg-doctor--first-command-string
+     (mcg-python-format-candidates root)))
+   ((executable-find "ruff") "ruff format")
+   (t "none")))
+
+(defun mcg-doctor--python-environment-summary (root)
+  "Return Python development environment summary for ROOT."
+  (let* ((project-tool (mcg-doctor--python-project-tool root))
+         (pytest-command
+          (mcg-doctor--python-pytest-command root project-tool))
+         (formatter-command
+          (mcg-doctor--python-formatter-command root)))
+    (format
+     "Python Development\n    python: %s\n    project files: uv.lock %s, poetry.lock %s, pdm.lock %s\n    project tool: %s\n    pytest: %s\n    formatter: %s\n    LSP candidates: ty %s, basedpyright %s"
+     (if (executable-find "python") "found" "missing")
+     (mcg-doctor--present-missing
+      (mcg-doctor--root-has-file-p root "uv.lock"))
+     (mcg-doctor--present-missing
+      (mcg-doctor--root-has-file-p root "poetry.lock"))
+     (mcg-doctor--present-missing
+      (mcg-doctor--root-has-file-p root "pdm.lock"))
+     (or project-tool "none")
+     pytest-command
+     formatter-command
+     (if (executable-find "ty") "found" "missing")
+     (if (executable-find "basedpyright") "found" "missing"))))
+#+end_src
+
+** Web Environment
+
+#+begin_src emacs-lisp
+(defun mcg-doctor--web-eslint-config-files ()
+  "Return known ESLint config files for Web diagnostics."
+  '("eslint.config.js" "eslint.config.mjs" "eslint.config.cjs"
+    "eslint.config.ts" ".eslintrc" ".eslintrc.js" ".eslintrc.cjs"
+    ".eslintrc.json" ".eslintrc.yaml" ".eslintrc.yml"))
+
+(defun mcg-doctor--web-prettier-config-files ()
+  "Return known Prettier config files for Web diagnostics."
+  '(".prettierrc" ".prettierrc.json" ".prettierrc.json5"
+    ".prettierrc.yaml" ".prettierrc.yml" ".prettierrc.js"
+    ".prettierrc.cjs" ".prettierrc.mjs" "prettier.config.js"
+    "prettier.config.cjs" "prettier.config.mjs"))
+
+(defun mcg-doctor--web-has-antfu-eslint-p (root)
+  "Return non-nil when ROOT declares Antfu ESLint config."
+  (if (fboundp 'mcg-format--web-project-has-antfu-eslint-p)
+      (mcg-format--web-project-has-antfu-eslint-p root)
+    (or (mcg-doctor--file-contains-p
+         (mcg-doctor--root-file root "package.json")
+         "@antfu/eslint-config")
+        (mcg-doctor--root-file-contains-any-p
+         root
+         (mcg-doctor--web-eslint-config-files)
+         "@antfu/eslint-config"))))
+
+(defun mcg-doctor--web-has-eslint-p (root)
+  "Return non-nil when ROOT declares ESLint."
+  (if (fboundp 'mcg-format--web-project-has-eslint-p)
+      (mcg-format--web-project-has-eslint-p root)
+    (or (mcg-doctor--web-has-antfu-eslint-p root)
+        (mcg-doctor--root-has-any-file-p
+         root
+         (mcg-doctor--web-eslint-config-files))
+        (mcg-doctor--file-contains-p
+         (mcg-doctor--root-file root "package.json")
+         "\"eslint\""))))
+
+(defun mcg-doctor--web-has-prettier-p (root)
+  "Return non-nil when ROOT declares Prettier."
+  (if (fboundp 'mcg-format--web-project-has-prettier-p)
+      (mcg-format--web-project-has-prettier-p root)
+    (or (mcg-doctor--root-has-any-file-p
+         root
+         (mcg-doctor--web-prettier-config-files))
+        (mcg-doctor--file-contains-p
+         (mcg-doctor--root-file root "package.json")
+         "\"prettier\""))))
+
+(defun mcg-doctor--web-formatter-command (root)
+  "Return Web formatter command for ROOT."
+  (cond
+   ((fboundp 'mcg-format--web-external-candidates)
+    (let ((default-directory (file-name-as-directory root)))
+      (mcg-doctor--first-command-string
+       (mcg-format--web-external-candidates))))
+   ((mcg-doctor--web-has-eslint-p root) "eslint --fix")
+   ((mcg-doctor--web-has-prettier-p root) "prettier --write")
+   (t "none")))
+
+(defun mcg-doctor--web-environment-summary (root)
+  "Return Web development environment summary for ROOT."
+  (let ((antfu (mcg-doctor--web-has-antfu-eslint-p root))
+        (eslint (mcg-doctor--web-has-eslint-p root))
+        (prettier (mcg-doctor--web-has-prettier-p root)))
+    (format
+     "Web Development\n    node: %s\n    package.json: %s\n    Antfu ESLint: %s\n    ESLint: %s\n    Prettier: %s\n    formatter: %s\n    Biome default: opt-in"
+     (if (executable-find "node") "found" "missing")
+     (mcg-doctor--present-missing
+      (mcg-doctor--root-has-file-p root "package.json"))
+     (mcg-doctor--yes-no antfu)
+     (mcg-doctor--yes-no eslint)
+     (mcg-doctor--yes-no prettier)
+     (mcg-doctor--web-formatter-command root))))
+#+end_src
+
+** Zig Environment
+
+#+begin_src emacs-lisp
+(defun mcg-doctor--zig-command (action)
+  "Return Zig build command for ACTION."
+  (if (fboundp 'mcg-zig-build-command)
+      (mcg-zig-build-command action)
+    (pcase action
+      ('build "zig build")
+      ('run "zig build run")
+      ('test "zig build test"))))
+
+(defun mcg-doctor--zig-environment-summary (root)
+  "Return Zig development environment summary for ROOT."
+  (format
+   "Zig Development\n    zig: %s\n    zls: %s\n    build.zig: %s\n    formatter: zig fmt\n    build: %s\n    test: %s\n    run: %s"
+   (if (executable-find "zig") "found" "missing")
+   (if (executable-find "zls") "found" "missing")
+   (mcg-doctor--present-missing
+    (mcg-doctor--root-has-file-p root "build.zig"))
+   (mcg-doctor--zig-command 'build)
+   (mcg-doctor--zig-command 'test)
+   (mcg-doctor--zig-command 'run)))
+
+(defun mcg-doctor--check-dev-environments ()
+  "Report project-aware Python, Web, and Zig development strategies."
+  (let* ((root (mcg-doctor--project-root))
+         (missing-required (mcg-doctor--missing-tools
+                            '("python" "node" "zig")))
+         (message
+          (string-join
+           (list
+            (format "Project root: %s" (abbreviate-file-name root))
+            (mcg-doctor--python-environment-summary root)
+            (mcg-doctor--web-environment-summary root)
+            (mcg-doctor--zig-environment-summary root))
+           "\n  - ")))
+    (list :status (if missing-required :warning :ok)
+          :message
+          (if missing-required
+              (format "Missing required environment tools: %s\n  - %s"
+                      (string-join missing-required ", ")
+                      message)
+            (concat "Development environment strategy:\n  - " message))
+          :action
+          (when missing-required
+            "Install missing environment tools and ensure their executables are on PATH, or disable the related language module."))))
+#+end_src
+
+** Tree-sitter And System Checks
+
+#+begin_src emacs-lisp
+(defun mcg-doctor--check-treesit-grammars ()
+  "Check tree-sitter grammars used by language and writing modules."
+  (if (not (fboundp 'treesit-language-available-p))
+      (list :status :warning
+            :message "tree-sitter API not available in this Emacs build"
+            :action "Use an Emacs build with tree-sitter support, or rely on fallback major modes.")
+    (let* ((missing
+            (seq-filter
+             (lambda (language)
+               (not (treesit-language-available-p language)))
+             mcg-doctor-treesit-language-checks))
+           (available
+            (seq-difference mcg-doctor-treesit-language-checks
+                            missing)))
+      (list :status (if missing :warning :ok)
+            :message
+            (format "Available: %s\nMissing: %s"
+                    (if available
+                        (string-join (mapcar #'symbol-name available) ", ")
+                      "none")
+                    (if missing
+                        (string-join (mapcar #'symbol-name missing) ", ")
+                      "none"))
+            :action
+            (when missing
+              "Run `M-x treesit-auto-install-all` or install the listed grammars manually.")))))
+
+(defun mcg-doctor--check-gc-settings ()
+  "Check GC settings."
+  (let ((threshold gc-cons-threshold)
+        (expected mcg-gc-cons-threshold-default))
+    (cond
+     ((= threshold expected)
+      (list :status :ok
+            :message (format "GC threshold restored to %s bytes" expected)))
+     ((> threshold expected)
+      (list :status :warning
+            :message (format "GC threshold (%s) higher than expected (%s)" threshold expected)
+            :action "Wait until startup finishes; if it persists, inspect `mcg-restore-gc-defaults` and startup hooks."))
+     (t
+      (list :status :ok
+            :message (format "GC threshold: %s bytes" threshold))))))
+
+(defun mcg-doctor--check-native-comp ()
+  "Check native compilation status."
+  (if (and (fboundp 'native-comp-available-p) (native-comp-available-p))
+      (list :status :ok
+            :message "Native compilation is available")
+    (list :status :warning
+          :message "Native compilation not available (performance may be reduced)"
+          :action "Use an Emacs build with native compilation if startup or package load performance matters.")))
+
+(defun mcg-doctor--check-emacs-version ()
+  "Check Emacs version compatibility."
+  (cond
+   ((>= emacs-major-version 30)
+    (list :status :ok
+          :message (format "Emacs %s (fully supported)" emacs-version)))
+   ((>= emacs-major-version 29)
+    (list :status :ok
+          :message (format "Emacs %s (supported)" emacs-version)))
+   (t
+    (list :status :warning
+          :message (format "Emacs %s (version 29+ recommended)" emacs-version)
+          :action "Upgrade to Emacs 29 or newer for the supported configuration baseline."))))
+#+end_src
+
+** Rendering
+
+#+begin_src emacs-lisp
+(defun mcg-doctor--status-label (status)
+  "Return ASCII label for doctor STATUS."
+  (pcase status
+    (:ok "OK")
+    (:warning "WARN")
+    (:error "ERROR")
+    (_ "INFO")))
+
+(defun mcg-doctor--indent-message (message)
+  "Return MESSAGE with each line indented for doctor output."
+  (mapconcat (lambda (line)
+               (concat "  " line))
+             (string-lines (or message "") t)
+             "\n"))
+
+(defun mcg-doctor--result-action (result)
+  "Return action text for warning/error RESULT."
+  (let ((status (plist-get result :status))
+        (action (plist-get result :action)))
+    (when (memq status '(:warning :error))
+      (or action
+          "Review the diagnostic message above and adjust the related configuration."))))
+
+(defun mcg-doctor--insert-check-result (name result)
+  "Insert doctor check NAME and RESULT into the current buffer."
+  (let ((status (plist-get result :status))
+        (message (plist-get result :message))
+        (action (mcg-doctor--result-action result)))
+    (insert (format "[%s] %s\n"
+                    (mcg-doctor--status-label status)
+                    name))
+    (insert (mcg-doctor--indent-message message))
+    (when action
+      (insert "\n")
+      (insert (mcg-doctor--indent-message
+               (concat "Action: " action))))
+    (insert "\n\n")))
+
+(defun mcg-doctor--run-checks (checks)
+  "Run doctor CHECKS and return named result plists."
+  (mapcar (lambda (check)
+            (let* ((name (car check))
+                   (fn (cdr check))
+                   (result (funcall fn)))
+              (append (list :name name) result)))
+          checks))
+
+(defun mcg-doctor--results-with-status (results status)
+  "Return RESULTS whose :status is STATUS."
+  (seq-filter (lambda (result)
+                (eq (plist-get result :status) status))
+              results))
+
+(defun mcg-doctor--count-results (results status)
+  "Return number of RESULTS whose :status is STATUS."
+  (length (mcg-doctor--results-with-status results status)))
+
+(defun mcg-doctor--section-title (status)
+  "Return section title for doctor STATUS."
+  (pcase status
+    (:error "Errors")
+    (:warning "Warnings")
+    (:ok "OK")
+    (_ "Info")))
+
+(defun mcg-doctor--insert-result-section (title results)
+  "Insert doctor section TITLE containing RESULTS."
+  (when results
+    (insert title "\n")
+    (insert (make-string (length title) ?-) "\n")
+    (dolist (result results)
+      (mcg-doctor--insert-check-result
+       (plist-get result :name)
+       result))))
+#+end_src
+
+** Entry Point
+
+#+begin_src emacs-lisp
+(defun mcg-doctor ()
+  "Run diagnostic checks on MCG Emacs configuration.
+Displays a report of configuration health and potential issues."
+  (interactive)
+  (let ((buf (get-buffer-create "*MCG Doctor*"))
+        (checks (list
+                 (cons "Emacs Version" #'mcg-doctor--check-emacs-version)
+                 (cons "Path Configuration" #'mcg-doctor--check-paths)
+                 (cons "Core Modules" #'mcg-doctor--check-core-modules)
+                 (cons "Module Errors" #'mcg-doctor--check-module-errors)
+                 (cons "Extensions" #'mcg-doctor--check-extensions)
+                 (cons "External Dev Tools" #'mcg-doctor--check-dev-tools)
+                 (cons "Development Environments" #'mcg-doctor--check-dev-environments)
+                 (cons "Tree-sitter Grammars" #'mcg-doctor--check-treesit-grammars)
+                 (cons "GC Settings" #'mcg-doctor--check-gc-settings)
+                 (cons "Native Compilation" #'mcg-doctor--check-native-comp))))
+    (with-current-buffer buf
+      (erase-buffer)
+      (insert "MCG Emacs Doctor\n")
+      (insert (make-string 64 ?=) "\n\n")
+      (insert (format "Checked at: %s\n\n" (format-time-string "%Y-%m-%d %H:%M:%S")))
+
+      (let* ((results (mcg-doctor--run-checks checks))
+             (ok-count (mcg-doctor--count-results results :ok))
+             (warning-count (mcg-doctor--count-results results :warning))
+             (error-count (mcg-doctor--count-results results :error)))
+        (dolist (status '(:error :warning :ok))
+          (mcg-doctor--insert-result-section
+           (mcg-doctor--section-title status)
+           (mcg-doctor--results-with-status results status)))
+
+        (insert (make-string 64 ?-) "\n")
+        (insert (format "Summary: %d OK, %d Warnings, %d Errors\n"
+                        ok-count warning-count error-count))
+
+        (cond
+         ((> error-count 0)
+          (insert "\nConfiguration has errors that need attention.\n"))
+         ((> warning-count 0)
+          (insert "\nConfiguration is working but has some warnings.\n"))
+         (t
+          (insert "\nConfiguration is healthy.\n"))))
+
+      (insert "\n" (make-string 64 ?-) "\n")
+      (insert "Useful commands:\n")
+      (insert "  M-x mcg-list-modules     - Show all modules and their status\n")
+      (insert "  M-x mcg-show-load-times  - Show module load times\n")
+      (insert "  M-x mcg-show-logs        - Show recent log messages\n")
+      (insert "  M-x mcg-show-extensions  - Show discovered extensions\n")
+      (insert "  M-x mcg-show-keybindings - Show registered keybindings\n"))
+    (display-buffer buf)))
+#+end_src
+
+** Provide Feature
+
+#+begin_src emacs-lisp
+(provide 'core-doctor)
+;;; core-doctor.el ends here
+#+end_src

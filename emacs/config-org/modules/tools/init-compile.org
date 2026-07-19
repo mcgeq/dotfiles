@@ -76,14 +76,31 @@ Unified compile, build, test, and run commands.
       (`(,runner test) (format "%s test" runner))
       (`(,runner run) (format "%s start" runner)))))
 
+(defun mcg-compile--python-command (root action)
+  "Return Python command for ROOT and ACTION.
+When the Python module is loaded, reuse its project-aware pytest detection."
+  (pcase action
+    ('build "python -m build")
+    ((or 'test 'run)
+     (if (fboundp 'mcg-python--pytest-command)
+         (mcg-python--pytest-command (file-name-as-directory root))
+       "python -m pytest"))))
+
+(defun mcg-compile--zig-command (action)
+  "Return Zig command for ACTION.
+When the Zig module is loaded, reuse its build command helper."
+  (if (fboundp 'mcg-zig-build-command)
+      (mcg-zig-build-command action)
+    (pcase action
+      ('build "zig build")
+      ('test "zig build test")
+      ('run "zig build run"))))
+
 (defun mcg-compile--guess-command (root action)
   "Guess a shell command for ROOT and ACTION."
   (cond
    ((mcg-compile--root-has-p root "build.zig")
-    (pcase action
-      ('build "zig build")
-      ('test "zig build test")
-      ('run "zig build run")))
+    (mcg-compile--zig-command action))
    ((mcg-compile--root-has-p root "Cargo.toml")
     (pcase action
       ('build "cargo build")
@@ -103,10 +120,7 @@ Unified compile, build, test, and run commands.
       ('test "make test")
       ('run "make run")))
    ((mcg-compile--root-has-p root "pyproject.toml")
-    (pcase action
-      ('build "python -m build")
-      ('test "python -m pytest")
-      ('run "python -m pytest")))))
+    (mcg-compile--python-command root action))))
 
 (defun mcg-compile--read-command (prompt default)
   "Read a shell command with PROMPT and DEFAULT."

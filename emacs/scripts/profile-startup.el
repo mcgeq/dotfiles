@@ -22,12 +22,13 @@
   "Root directory of the Emacs configuration being profiled.")
 
 (defvar mcg-profile-startup-key-modules
-  '(":ui/dashboard"
-    ":ui/ef-themes"
+  '(":ui/ef-themes"
     ":ui/font"
     ":ui/nerd-icons"
+    ":ui/pulsar"
     ":editor/defaults"
     ":completion/consult"
+    ":completion/embark"
     ":enhance/recentf"
     "private/config")
   "Startup entries to highlight after the full sorted report.")

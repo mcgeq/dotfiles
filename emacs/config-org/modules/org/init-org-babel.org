@@ -45,16 +45,15 @@ Org Babel - code block execution support.
   :group 'mcg-org)
 
 (defcustom mcg-org-babel-load-languages
+  ;; Conservative default languages: keep the common literate config and
+  ;; day-to-day scripting surface small. Extended Babel languages such as C,
+  ;; dot, plantuml, and sql can be enabled from private config when needed.
   '((emacs-lisp . t)
     (shell . t)
     (python . t)
     (js . t)
-    (C . t)
     (css . t)
-    (dot . t)
-    (org . t)
-    (plantuml . t)
-    (sql . t))
+    (org . t))
   "Languages enabled for Org Babel.
 Zig is controlled separately by `mcg-org-babel-enable-zig'."
   :type '(repeat (cons symbol boolean))
@@ -73,7 +72,7 @@ Zig is controlled separately by `mcg-org-babel-enable-zig'."
   :group 'mcg-org)
 
 (defcustom mcg-org-babel-src-block-languages
-  '("emacs-lisp" "python" "shell" "zig" "C" "js" "css" "sql")
+  '("emacs-lisp" "python" "shell" "zig" "js" "css" "org")
   "Language candidates offered by `mcg/org-insert-src-block'."
   :type '(repeat string)
   :group 'mcg-org)

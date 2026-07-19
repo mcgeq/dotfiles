@@ -76,10 +76,17 @@
 (mcg-modules-init)
 #+end_src
 
+*** Load core-doctor
+
+#+begin_src emacs-lisp
+;; 4. core-doctor: configuration diagnostics
+(require 'core-doctor)
+#+end_src
+
 *** Load core-autoload (Optional)
 
 #+begin_src emacs-lisp
-;; 4. core-autoload: autoload generation (optional)
+;; 5. core-autoload: autoload generation (optional)
 (when (locate-library "core-autoload")
   (require 'core-autoload nil t))
 #+end_src
@@ -89,6 +96,10 @@
 #+begin_src emacs-lisp
   ;; Declare which modules to enable using mcg! macro
   ;; Modules prefixed with `-' are disabled
+  ;; Modules can declare loading strategy with `:load':
+  ;;   immediate - load during startup before private config
+  ;;   idle      - load after the first frame when Emacs is idle
+  ;;   deferred  - load on file trigger from `mcg-module-triggers'
   ;;
   ;; Categories:
   ;;   :ui         - Theme, modeline, fonts, icons
@@ -107,21 +118,25 @@
    font
    ef-themes
    nerd-icons
-   dashboard
+   -dashboard
    pulsar
-   awesome-tray
-   holo-layer
+   (holo-layer :load idle)
+   (awesome-tray :load idle)
 
    ;; Editor modules
    :editor
    defaults
    hl-todo
    ibuffer
-   vundo
+   (vundo :load idle)
    mwim
    treesit
    format
-   dirvish
+   (dirvish :load idle)
+
+   ;; Org
+   :org
+   (org :load idle)
 
    ;; Completion modules
    :completion
@@ -132,106 +147,147 @@
    embark
    pinyinlib
    nerd-icons-completion
-   yasnippet
+   (yasnippet :load idle)
 
    ;; Tools modules
    :tools
    project
-   compile
+   (compile :load idle)
    diagnostics
    posframe
    sort-tab
    auto-save
-   lsp-bridge
-   blink-search
-   color-rg
-   magit
-   majutsu
-   clutch
+   (blink-search :load idle)
+   (magit :load idle)
+   (clutch :load idle)
+   (lsp-bridge :load idle)
+   (color-rg :load idle)
+   (majutsu :load idle)
 
    ;; Enhance
    :enhance
    help
    recentf
 
-   ;; Org
-   :org
-   org
+   ;; Writing
+   :writing
+   (markdown :load deferred)
+   (vale :load idle)
 
    ;; Lang
    :lang
-   python
-   zig
-   web
+   (python :load deferred)
+   (zig :load deferred)
+   (web :load deferred)
    )
 #+end_src
 
 ** Module Loading Strategy
 
 #+begin_src emacs-lisp
-;; Define which categories use which loading strategy
-(defcustom mcg-immediate-categories '(:ui :editor :completion :tools :enhance :org)
-  "Categories to load immediately at startup."
-  :type '(repeat symbol)
-  :group 'mcg)
+;; Loading strategy is declared per module in `mcg!' with `:load'.
+;; Bare module declarations default to `immediate'.
+#+end_src
 
-(defcustom mcg-idle-categories nil
-  "Categories to load during idle time."
-  :type '(repeat symbol)
-  :group 'mcg)
+** Setup Lazy Command Entries
 
-(defcustom mcg-idle-modules
-  '(;; First-frame visual stability: these change frame chrome or spawn UI
-    ;; helpers, so load them after the dashboard is already visible.
-    (:ui . holo-layer)
-    (:ui . awesome-tray)
+#+begin_src emacs-lisp
+(defun mcg--idle-module-command-entries-enabled-p (category module)
+  "Return non-nil when MODULE in CATEGORY should expose lazy command entries."
+  (and (mcg-module-enabled-p category module)
+       (eq (mcg-module-load-strategy category module) 'idle)))
 
-    ;; Heavy modules: useful, but not required for the first dashboard frame.
-    (:editor . dirvish)
-    (:org . org)
+(defun mcg--bind-idle-module-command-entries (category module source bindings)
+  "Bind lazy command entry BINDINGS for idle MODULE in CATEGORY.
+BINDINGS is an alist of (KEY . COMMAND)."
+  (when (mcg--idle-module-command-entries-enabled-p category module)
+    (dolist (binding bindings)
+      (mcg-bind-lazy-module-key
+       (car binding) (cdr binding) source category module))))
 
-    ;; On-demand tools: command entry points are available through keybindings
-    ;; and can finish loading during idle time.
-    (:tools . magit)
-    (:tools . clutch)
-    (:tools . lsp-bridge)
-    (:tools . color-rg)
-    (:tools . majutsu))
-  "Individual modules to load during idle time."
-  :type '(repeat (cons symbol symbol))
-  :group 'mcg)
+(defun mcg-setup-idle-module-command-entries ()
+  "Expose high-value commands from idle modules immediately."
+  (when (mcg--idle-module-command-entries-enabled-p :tools 'compile)
+    (define-prefix-command 'mcg-compile-map)
+    (mcg-bind-key "C-c c" 'mcg-compile-map "tools/compile")
+    (mcg--bind-idle-module-command-entries
+     :tools 'compile "tools/compile"
+     '(("C-c c c" . mcg-compile)
+       ("C-c c r" . mcg-recompile)
+       ("C-c c b" . mcg-compile-build)
+       ("C-c c t" . mcg-compile-test)
+       ("C-c c R" . mcg-compile-run)
+       ("M-g e" . mcg-compile-errors))))
 
-(defcustom mcg-immediate-skip-modules mcg-idle-modules
-  "Individual modules to skip while loading immediate categories."
-  :type '(repeat (cons symbol symbol))
-  :group 'mcg)
+  (mcg--bind-idle-module-command-entries
+   :tools 'blink-search "tools/blink-search"
+   '(("C-c s b" . blink-search)
+     ("C-c s d" . mcg/blink-search-grep-current-dir)
+     ("C-c s p" . mcg/blink-search-project-root)))
 
-(defcustom mcg-deferred-categories '(:lang)
-  "Categories eligible for trigger-based deferred loading.
-When nil, all trigger-backed modules are eligible."
-  :type '(repeat symbol)
-  :group 'mcg)
+  (mcg--bind-idle-module-command-entries
+   :tools 'color-rg "tools/color-rg"
+   '(("C-c s g" . color-rg-search-input)
+     ("C-c s G" . mcg/color-rg-search-project)
+     ("C-c s s" . color-rg-search-symbol)
+     ("C-c s S" . mcg/color-rg-search-symbol-in-project)))
+
+  (mcg--bind-idle-module-command-entries
+   :tools 'magit "tools/magit"
+   '(("C-x g" . magit-status)
+     ("C-x M-g" . magit-dispatch)
+     ("C-c g s" . magit-status)
+     ("C-c g l" . magit-log)
+     ("C-c g d" . magit-dispatch)
+     ("C-c g f" . magit-file-dispatch)
+     ("C-c g ?" . mcg/magit-menu)))
+
+  (mcg--bind-idle-module-command-entries
+   :editor 'dirvish "editor/dirvish"
+   '(("C-c d" . dirvish)))
+
+  (mcg--bind-idle-module-command-entries
+   :tools 'clutch "tools/clutch"
+   '(("C-c ; c" . clutch-query-console)
+     ("C-c ; j" . clutch-jump)
+     ("C-c ; t" . clutch-list-tables)
+     ("C-c ; s" . clutch-show-schema)
+     ("C-c ; R" . clutch-recent)
+     ("C-c ; ?" . clutch-dispatch)))
+
+  (mcg--bind-idle-module-command-entries
+   :tools 'majutsu "tools/majutsu"
+   '(("C-x M-j" . majutsu)))
+
+  (mcg--bind-idle-module-command-entries
+   :org 'org "org/capture"
+   '(("C-c n c" . org-capture)
+     ("C-c n a" . org-agenda)
+     ("C-c n l" . org-store-link)
+     ("C-c n t" . org-todo-list)))
+
+  (mcg--bind-idle-module-command-entries
+   :editor 'vundo "editor/vundo"
+   '(("C-x u" . vundo)
+     ("C-c u" . vundo)
+     ("C-/" . vundo))))
 #+end_src
 
 ** Load Immediate Modules
 
 #+begin_src emacs-lisp
 (defun mcg-load-immediate-modules ()
-  "Load all modules in immediate categories."
-  (dolist (category mcg-immediate-categories)
-    (dolist (module (cdr (assq category mcg-modules-alist)))
-      (unless (member (cons category module) mcg-immediate-skip-modules)
-        (mcg-load-module category module)))))
+  "Load all modules declared with `:load immediate'."
+  (dolist (mod-key (mcg-list-modules-by-load-strategy 'immediate))
+    (mcg-load-module (car mod-key) (cdr mod-key))))
 #+end_src
 
 ** Setup Idle Loading
 
 #+begin_src emacs-lisp
 (defun mcg-setup-idle-modules ()
-  "Set up idle loading for categories in `mcg-idle-categories'."
-  (dolist (category mcg-idle-categories)
-    (mcg-add-idle-load-category category))
-  (dolist (mod-key (reverse mcg-idle-modules))
+  "Set up idle loading for modules declared with `:load idle'."
+  (dolist (mod-key (reverse (mcg-list-modules-by-load-strategy 'idle)))
     (mcg-add-idle-load-module (car mod-key) (cdr mod-key)))
   (mcg-setup-idle-loading))
 #+end_src
@@ -240,9 +296,9 @@ When nil, all trigger-backed modules are eligible."
 
 #+begin_src emacs-lisp
 (defun mcg-setup-deferred-modules ()
-  "Set up trigger-based deferred loading."
-  ;; Setup deferred loading based on triggers defined in core-modules
-  (mcg-setup-deferred-loading mcg-deferred-categories))
+  "Set up trigger-based loading for modules declared with `:load deferred'."
+  (dolist (mod-key (mcg-list-modules-by-load-strategy 'deferred))
+    (mcg-defer-module (car mod-key) (cdr mod-key))))
 #+end_src
 
 ** Load Private Configuration
@@ -289,6 +345,9 @@ When nil, all trigger-backed modules are eligible."
 (defun mcg-init ()
   "Main initialization function.
 Called to set up the complete MCG Emacs configuration."
+  ;; Expose selected idle-module commands without paying their startup cost.
+  (mcg-setup-idle-module-command-entries)
+
   ;; Load immediate modules (UI, editor, tools, org)
   (mcg-load-immediate-modules)
 

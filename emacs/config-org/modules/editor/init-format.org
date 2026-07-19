@@ -85,10 +85,8 @@
   "Major modes that use project-aware Web formatter detection.")
 
 (defcustom mcg-format-external-command-alist
-  '((python-mode . (("ruff" "format")
-                    ("black")))
-    (python-ts-mode . (("ruff" "format")
-                       ("black")))
+  '((python-mode . mcg-python-format-candidates)
+    (python-ts-mode . mcg-python-format-candidates)
     (zig-mode . (("zig" "fmt")))
     (zig-ts-mode . (("zig" "fmt")))
     (web-mode . mcg-format--web-external-candidates)

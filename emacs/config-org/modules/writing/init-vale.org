@@ -1,0 +1,167 @@
+#+TITLE: Vale Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-vale.el :lexical t
+
+* Vale Module
+
+** File Header
+
+#+begin_src emacs-lisp
+;;; init-vale.el --- Optional Vale prose diagnostics for MCG Emacs -*- lexical-binding: t; -*-
+
+;; Copyright (C) 2024-2026 MCG
+;; Author: mcge <mcgeq@outlook.com>
+;; Keywords: writing, diagnostics, vale
+;; Compatibility: GNU Emacs 29.0+
+
+;;; Commentary:
+;; Optional Flymake backend for Vale. It is disabled by default so prose
+;; diagnostics never add startup noise unless explicitly enabled.
+;;
+;;; Code:
+
+(require 'core-lib)
+(require 'flymake)
+(require 'subr-x)
+#+end_src
+
+** Options
+
+#+begin_src emacs-lisp
+(defcustom mcg-vale-enable nil
+  "Whether to enable Vale diagnostics in supported prose buffers."
+  :type 'boolean
+  :group 'mcg)
+
+(defcustom mcg-vale-command "vale"
+  "Executable used to run Vale."
+  :type 'string
+  :group 'mcg)
+
+(defcustom mcg-vale-supported-modes
+  '(markdown-mode markdown-ts-mode gfm-mode org-mode text-mode)
+  "Major modes where Vale diagnostics may be enabled."
+  :type '(repeat symbol)
+  :group 'mcg)
+
+(defcustom mcg-vale-warn-missing-executable nil
+  "Whether to warn once when Vale is enabled but the executable is missing."
+  :type 'boolean
+  :group 'mcg)
+
+(defvar mcg-vale--missing-executable-warned nil
+  "Non-nil means the missing Vale executable warning has already been shown.")
+
+(defvar-local mcg-vale--flymake-process nil
+  "Current Vale Flymake process for this buffer.")
+#+end_src
+
+** Helpers
+
+#+begin_src emacs-lisp
+(defun mcg-vale--supported-mode-p ()
+  "Return non-nil when current `major-mode' supports Vale diagnostics."
+  (memq major-mode mcg-vale-supported-modes))
+
+(defun mcg-vale--executable-available-p ()
+  "Return non-nil when `mcg-vale-command' is available."
+  (executable-find mcg-vale-command))
+
+(defun mcg-vale--project-root ()
+  "Return the project root used when running Vale."
+  (if (fboundp 'mcg-project-root-or-default)
+      (mcg-project-root-or-default)
+    default-directory))
+
+(defun mcg-vale--diagnostic-from-line (line source)
+  "Parse one Vale output LINE into a Flymake diagnostic for SOURCE."
+  (when (string-match "^\\(.+\\):\\([0-9]+\\):\\([0-9]+\\):\\([^:]+\\):\\(.*\\)$" line)
+    (let ((line-number (string-to-number (match-string 2 line)))
+          (column (string-to-number (match-string 3 line)))
+          (rule (string-trim (match-string 4 line)))
+          (message (string-trim (match-string 5 line))))
+      (with-current-buffer source
+        (ignore-errors
+          (pcase-let ((`(,beg . ,end)
+                       (flymake-diag-region source line-number column)))
+            (flymake-make-diagnostic
+             source beg end :warning
+             (string-trim (format "%s: %s" rule message)))))))))
+
+(defun mcg-vale--parse-diagnostics (buffer source)
+  "Parse Vale diagnostics from BUFFER for SOURCE."
+  (with-current-buffer buffer
+    (delq nil
+          (mapcar (lambda (line)
+                    (mcg-vale--diagnostic-from-line line source))
+                  (split-string (buffer-string) "\n" t)))))
+#+end_src
+
+** Flymake Backend
+
+#+begin_src emacs-lisp
+(defun mcg-vale-flymake (report-fn &rest _args)
+  "Run Vale and report diagnostics through REPORT-FN."
+  (if (or (not mcg-vale-enable)
+          (not buffer-file-name)
+          (not (mcg-vale--executable-available-p)))
+      (funcall report-fn nil)
+    (when (process-live-p mcg-vale--flymake-process)
+      (kill-process mcg-vale--flymake-process))
+    (let* ((source (current-buffer))
+           (file buffer-file-name)
+           (output-buffer (generate-new-buffer " *MCG Vale*"))
+           (default-directory (mcg-vale--project-root)))
+      (setq mcg-vale--flymake-process
+            (make-process
+             :name "mcg-vale"
+             :buffer output-buffer
+             :command (list mcg-vale-command "--output=line" file)
+             :noquery t
+             :sentinel
+             (lambda (process _event)
+               (when (memq (process-status process) '(exit signal))
+                 (let ((diagnostics
+                        (when (buffer-live-p output-buffer)
+                          (mcg-vale--parse-diagnostics output-buffer source))))
+                   (when (buffer-live-p source)
+                     (with-current-buffer source
+                       (when (eq process mcg-vale--flymake-process)
+                         (funcall report-fn diagnostics)))))
+                 (when (buffer-live-p output-buffer)
+                   (kill-buffer output-buffer)))))))))
+#+end_src
+
+** Initialize
+
+#+begin_src emacs-lisp
+(defun mcg-vale--maybe-enable ()
+  "Enable Vale Flymake diagnostics in supported buffers when configured."
+  (when (and mcg-vale-enable
+             (mcg-vale--supported-mode-p)
+             (not (minibufferp)))
+    (if (mcg-vale--executable-available-p)
+        (progn
+          (add-hook 'flymake-diagnostic-functions #'mcg-vale-flymake nil t)
+          (flymake-mode 1))
+      (when (and mcg-vale-warn-missing-executable
+                 (not mcg-vale--missing-executable-warned))
+        (setq mcg-vale--missing-executable-warned t)
+        (mcg-log-warning "Vale executable not found: %s" mcg-vale-command)))))
+
+(dolist (hook '(markdown-mode-hook
+                markdown-ts-mode-hook
+                gfm-mode-hook
+                org-mode-hook
+                text-mode-hook))
+  (add-hook hook #'mcg-vale--maybe-enable))
+
+(mcg-log "vale module configured")
+#+end_src
+
+** Provide Feature
+
+#+begin_src emacs-lisp
+(provide 'init-vale)
+;;; init-vale.el ends here
+#+end_src

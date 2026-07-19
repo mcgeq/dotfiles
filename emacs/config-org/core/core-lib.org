@@ -54,6 +54,45 @@ Fall back to built-in `project.el', then to `default-directory'."
        default-directory)))
 #+end_src
 
+** Org Storage Helpers
+
+这些 helper 放在 core-lib 中，确保 private config 在 Org 模块 idle 加载前也可以设置
+Org 存储根目录。后续 Org 模块加载时会沿用这些已绑定变量。
+
+#+begin_src emacs-lisp
+(defun mcg-org-set-storage-root (root)
+  "Set Org storage ROOT and refresh all derived Org capture paths."
+  (let* ((root-dir (file-name-as-directory (expand-file-name root)))
+         (agenda-dir (expand-file-name "agenda" root-dir))
+         (notes-dir (expand-file-name "notes" root-dir)))
+    (setq mcg-org-directory root-dir
+          mcg-org-agenda-directory agenda-dir
+          mcg-org-notes-directory notes-dir
+          mcg-org-default-notes-file (expand-file-name "notes.org" notes-dir)
+          mcg-org-task-file (expand-file-name "tasks.org" agenda-dir)
+          mcg-org-diary-file (expand-file-name "diary.org" agenda-dir)
+          mcg-org-journal-file (expand-file-name "journal.org" notes-dir)
+          mcg-org-billing-file (expand-file-name "billing.org" notes-dir)
+          mcg-org-password-file (expand-file-name "passwords.org" notes-dir)
+          mcg-org-capture-notes-directory (expand-file-name "capture" notes-dir)
+          mcg-org-capture-journal-directory (expand-file-name "journal" notes-dir)
+          mcg-org-agenda-files (list agenda-dir)
+          org-agenda-files mcg-org-agenda-files)
+    (when (boundp 'mcg-org-agenda-diary-file)
+      (setq mcg-org-agenda-diary-file mcg-org-diary-file))
+    (when (boundp 'org-agenda-diary-file)
+      (setq org-agenda-diary-file mcg-org-diary-file))
+    (when (boundp 'diary-file)
+      (setq diary-file mcg-org-diary-file))
+    (mapc (lambda (dir)
+            (unless (file-directory-p dir)
+              (make-directory dir t)))
+          (list root-dir agenda-dir notes-dir
+                mcg-org-capture-notes-directory
+                mcg-org-capture-journal-directory))
+    root-dir))
+#+end_src
+
 ** Extension Cache System
 
 扩展缓存系统，用于缓存扩展路径以提高查找性能。

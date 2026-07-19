@@ -54,8 +54,8 @@ Hugo 博客相关的配置变量。
   :type 'directory
   :group 'mcg-org-hugo)
 
-(defcustom mcg-org-hugo-enable t
-  "Whether to enable Hugo blog integration."
+(defcustom mcg-org-hugo-enable nil
+  "Whether to enable optional Hugo blog integration."
   :type 'boolean
   :group 'mcg-org-hugo)
 
