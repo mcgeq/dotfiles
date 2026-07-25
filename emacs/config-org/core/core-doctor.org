@@ -278,6 +278,9 @@ and :message describing the result.")
    ((fboundp 'mcg-python-format-candidates)
     (mcg-doctor--first-command-string
      (mcg-python-format-candidates root)))
+   ((fboundp 'mcg-python--ruff-format-command)
+    (mcg-doctor--first-command-string
+     (list (mcg-python--ruff-format-command root))))
    ((executable-find "ruff") "ruff format")
    (t "none")))
 

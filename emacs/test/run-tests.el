@@ -288,6 +288,9 @@
         (example-source
          (expand-file-name "config-org/private/config-example.org" mcg-emacs-dir)))
     (require 'init-org-babel)
+    (should (boundp 'mcg-org-babel-enable-jupyter))
+    (should (boundp 'mcg-org-babel-jupyter-default-header-args))
+    (should-not mcg-org-babel-enable-jupyter)
     (should (equal mcg-org-babel-load-languages
                    '((emacs-lisp . t)
                      (shell . t)
@@ -308,6 +311,9 @@
     (with-temp-buffer
       (insert-file-contents example-source)
       (dolist (snippet '("Extended Org Babel languages"
+                         "Jupyter Babel integration"
+                         "mcg-org-babel-enable-jupyter"
+                         "mcg-org-babel-jupyter-default-header-args"
                          "(C . t)"
                          "(dot . t)"
                          "(plantuml . t)"
@@ -315,6 +321,47 @@
                          "(setq mcg-org-babel-src-block-languages"))
         (goto-char (point-min))
         (should (search-forward snippet nil t))))))
+
+(ert-deftest mcg-org-babel-jupyter-support-is-optional ()
+  (require 'init-org-babel)
+  (should (boundp 'mcg-org-babel-enable-jupyter))
+  (should (boundp 'mcg-org-babel-jupyter-default-header-args))
+  (let ((mcg-org-babel-enable-jupyter nil)
+        (mcg-org-babel-src-block-languages '("emacs-lisp" "python"))
+        (org-babel-default-header-args:jupyter-python '((:old . "value")))
+        captured-languages)
+    (cl-letf (((symbol-function 'org-babel-do-load-languages)
+               (lambda (_symbol languages)
+                 (setq captured-languages languages)))
+              ((symbol-function 'executable-find)
+               (lambda (_command) "jupyter")))
+      (mcg-org-babel-setup-defaults)
+      (mcg-org-babel-setup-languages))
+    (should-not (assoc 'jupyter captured-languages))
+    (should-not (member "jupyter-python" mcg-org-babel-src-block-languages))
+    (should (equal '((:old . "value"))
+                   org-babel-default-header-args:jupyter-python)))
+  (let ((mcg-org-babel-enable-jupyter t)
+        (mcg-org-babel-jupyter-default-header-args
+         '((:async . "yes")
+           (:session . "py")
+           (:kernel . "python3")))
+        (mcg-org-babel-src-block-languages '("emacs-lisp" "python"))
+        captured-languages)
+    (cl-letf (((symbol-function 'org-babel-do-load-languages)
+               (lambda (_symbol languages)
+                 (setq captured-languages languages)))
+              ((symbol-function 'executable-find)
+               (lambda (_command) "jupyter")))
+      (mcg-org-babel-setup-defaults)
+      (mcg-org-babel-setup-languages))
+    (should (equal '((jupyter . t)) (last captured-languages)))
+    (should (assoc 'jupyter captured-languages))
+    (should (member "jupyter-python" mcg-org-babel-src-block-languages))
+    (should (equal '((:async . "yes")
+                     (:session . "py")
+                     (:kernel . "python3"))
+                   org-babel-default-header-args:jupyter-python))))
 
 (ert-deftest mcg-org-babel-load-languages-are-configurable ()
   (require 'init-org-babel)
@@ -624,11 +671,13 @@
                                           "pytest" "eslint" "zls"))
                         (concat "/bin/" program))))
                 ((symbol-function 'mcg-python--project-tool)
-                 (lambda (&optional _root) "uv"))
+                  (lambda (&optional _root) "uv"))
                 ((symbol-function 'mcg-python--pytest-command)
-                 (lambda (&optional _root) "uv run pytest"))
+                  (lambda (&optional _root) "uv run pytest"))
                 ((symbol-function 'mcg-python-format-candidates)
-                 (lambda (&optional _root) '(("uv" "run" "ruff" "format"))))
+                  (lambda (&optional _root)
+                    '(("uv" "run" "ruff" "format" "--config"
+                       "/tmp/ruff-format-single.toml"))))
                 ((symbol-function 'mcg-format--web-project-has-antfu-eslint-p)
                  (lambda (&optional _root) t))
                 ((symbol-function 'mcg-format--web-project-has-eslint-p)
@@ -649,7 +698,7 @@
           (dolist (snippet '("Python Development"
                              "project tool: uv"
                              "pytest: uv run pytest"
-                             "formatter: uv run ruff format"
+                             "formatter: uv run ruff format --config /tmp/ruff-format-single.toml"
                              "Web Development"
                              "Antfu ESLint: yes"
                              "formatter: pnpm exec eslint --fix"
@@ -1653,16 +1702,23 @@
          (expand-file-name "config-org/modules/lang/init-python.org" mcg-emacs-dir)))
     (with-temp-buffer
       (insert-file-contents source)
-      (dolist (snippet '("defcustom mcg-python-test-command"
-                         "defcustom mcg-python-ruff-command"
-                         "defun mcg-python-mode-setup"
-                         "defun mcg/python-pytest-project"
-                         "defun mcg/python-pytest-file"
-                         "defun mcg/python-ruff-check"
-                         "defun mcg/python-ruff-format"
-                         "defun mcg/python-repl"
-                         "python-ts-mode-hook"
-                         "python-mode-hook"))
+       (dolist (snippet '("defcustom mcg-python-test-command"
+                          "defcustom mcg-python-ruff-command"
+                          "defcustom mcg-python-use-ipython"
+                          "defcustom mcg-python-ipython-args"
+                          "defconst mcg-python-ruff-format-quote-style"
+                          "defconst mcg-python-ruff-format-config-file-name"
+                          "defun mcg-python-mode-setup"
+                          "defun mcg/python-pytest-project"
+                          "defun mcg/python-pytest-file"
+                          "defun mcg/python-ruff-check"
+                          "defun mcg/python-ruff-format"
+                          "defun mcg-python--ruff-format-config-file"
+                          "defun mcg-python--ruff-format-command"
+                          "defun mcg-python--repl-command"
+                          "defun mcg/python-repl"
+                          "python-ts-mode-hook"
+                          "python-mode-hook"))
         (goto-char (point-min))
         (should (search-forward snippet nil t))))))
 
@@ -1671,14 +1727,16 @@
          (expand-file-name "config-org/modules/lang/init-python.org" mcg-emacs-dir)))
     (with-temp-buffer
       (insert-file-contents source)
-      (dolist (snippet '("defcustom mcg-python-detect-project-tools t"
-                         "defun mcg-python--project-tool"
-                         "\"uv.lock\""
-                         "\"poetry.lock\""
-                         "\"pdm.lock\""
-                         "defun mcg-python--pytest-command"
-                         "defun mcg-python--ruff-command"
-                         "defun mcg-python-format-candidates"
+       (dolist (snippet '("defcustom mcg-python-detect-project-tools t"
+                          "defun mcg-python--project-tool"
+                          "\"uv.lock\""
+                          "\"poetry.lock\""
+                          "\"pdm.lock\""
+                          "mcg-python-ruff-format-quote-style"
+                          "mcg-python-ruff-format-config-file-name"
+                          "defun mcg-python--pytest-command"
+                          "defun mcg-python--ruff-command"
+                          "defun mcg-python-format-candidates"
                          "executable-find"
                          "(mcg-python--pytest-command)"
                          "(mcg-python--ruff-command \"check\" \".\")"))
@@ -1704,10 +1762,14 @@
       (should (equal (mcg-python--pytest-command poetry-root) "poetry run pytest"))
       (should (equal (mcg-python--pytest-command pdm-root) "pdm run pytest"))
       (should (equal (mcg-python--pytest-command plain-root) "python -m pytest"))
-      (should (equal (mcg-python-format-candidates uv-root)
-                     '(("uv" "run" "ruff" "format")
-                       ("ruff" "format")
-                       ("black"))))
+      (cl-letf (((symbol-function 'mcg-python--ruff-format-config-file)
+                 (lambda () "/tmp/ruff-format-single.toml")))
+        (should (equal (mcg-python-format-candidates uv-root)
+                       '(("uv" "run" "ruff" "format" "--config"
+                          "/tmp/ruff-format-single.toml")
+                         ("ruff" "format" "--config"
+                          "/tmp/ruff-format-single.toml")
+                         ("black" "--skip-string-normalization")))))
       (let ((default-directory uv-root))
         (should (equal (mcg-python--ruff-command "check" ".")
                        "uv run ruff check ."))))
@@ -1719,6 +1781,77 @@
       (let ((default-directory uv-root))
         (should (equal (mcg-python--ruff-command "check" ".")
                        "ruff check ."))))))
+
+(ert-deftest mcg-python-repl-prefers-ipython-and-shows-buffer ()
+  (load (expand-file-name "site-lisp/config/modules/lang/init-python.el"
+                          mcg-emacs-dir)
+        nil t)
+  (let (command dedicated show)
+    (cl-letf (((symbol-function 'executable-find)
+               (lambda (tool)
+                 (pcase tool
+                   ("ipython" "C:/Python/Scripts/ipython.exe")
+                   ("python" "C:/Python/python.exe"))))
+              ((symbol-function 'run-python)
+               (lambda (cmd dedicated-arg show-arg)
+                 (setq command cmd
+                       dedicated dedicated-arg
+                       show show-arg)
+                 'python-process)))
+      (should (eq (mcg/python-repl) 'python-process))
+      (should (string-match-p "ipython" command))
+      (should (string-match-p "--simple-prompt" command))
+      (should-not dedicated)
+      (should show))))
+
+(ert-deftest mcg-python-repl-falls-back-to-python-when-ipython-is-missing ()
+  (load (expand-file-name "site-lisp/config/modules/lang/init-python.el"
+                          mcg-emacs-dir)
+        nil t)
+  (cl-letf (((symbol-function 'executable-find)
+             (lambda (tool)
+               (and (equal tool "python")
+                    "C:/Python/python.exe"))))
+    (let ((command (mcg-python--repl-command)))
+      (should (string-match-p "python" command))
+      (should-not (string-match-p "--simple-prompt" command)))))
+
+(ert-deftest mcg-python-ruff-format-config-file-contains-single-quote-toml ()
+  (load (expand-file-name "site-lisp/config/modules/lang/init-python.el"
+                          mcg-emacs-dir)
+        nil t)
+  (let ((mcg-cache-dir (make-temp-file "mcg-ruff-format" t)))
+    (let ((file (mcg-python--ruff-format-config-file)))
+      (should (string-suffix-p "/ruff-format-single.toml"
+                               (replace-regexp-in-string "\\\\" "/" file)))
+      (with-temp-buffer
+        (insert-file-contents file)
+        (should (equal (buffer-string)
+                       "[format]\nquote-style = \"single\"\n"))))))
+
+(ert-deftest mcg-python-ruff-format-prefers-project-config-when-present ()
+  (load (expand-file-name "site-lisp/config/modules/lang/init-python.el"
+                          mcg-emacs-dir)
+        nil t)
+  (let ((root (make-temp-file "mcg-ruff-project" t)))
+    (write-region "[tool.ruff]\nline-length = 88\n" nil
+                  (expand-file-name "pyproject.toml" root))
+    (cl-letf (((symbol-function 'mcg-python--ruff-format-config-file)
+               (lambda ()
+                 (error "project config should win"))))
+      (should (mcg-python--ruff-project-config-p root))
+      (should (equal (mcg-python--ruff-format-args root) '("format")))
+      (should (equal (mcg-python-format-candidates root)
+                     '(("ruff" "format")
+                       ("black" "--skip-string-normalization")))))))
+
+(ert-deftest mcg-lsp-bridge-ty-completions-insert-function-parentheses ()
+  (let ((source (expand-file-name
+                 "site-lisp/extensions/lsp/lsp-bridge/langserver/ty.json"
+                 mcg-emacs-dir)))
+    (with-temp-buffer
+      (insert-file-contents source)
+      (should (search-forward "\"completeFunctionParentheses\": true" nil t)))))
 
 (ert-deftest mcg-format-supports-python-formatters ()
   (let ((source
@@ -1733,6 +1866,20 @@
                          "(python-ts-mode . mcg-python-format-candidates)"))
         (goto-char (point-min))
         (should (search-forward snippet nil t))))))
+
+(ert-deftest mcg-format-on-save-skips-unmodified-buffers ()
+  (require 'init-format)
+  (let ((mcg-format-on-save t)
+        (calls 0))
+    (with-temp-buffer
+      (setq major-mode 'json-ts-mode)
+      (insert "{\"name\":\"demo\"}\n")
+      (set-buffer-modified-p nil)
+      (cl-letf (((symbol-function 'mcg-format-buffer)
+                 (lambda ()
+                   (setq calls (1+ calls)))))
+        (mcg-format-buffer-maybe))
+      (should (= calls 0)))))
 
 (ert-deftest mcg-web-deferred-trigger-covers-common-web-files ()
   (let ((modules-source

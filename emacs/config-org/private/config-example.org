@@ -60,11 +60,15 @@ Your actual machine-local settings and secrets live in
 ;;   mcg-python-test-command = "python -m pytest"
 ;;   mcg-python-ruff-command = "ruff"
 ;;   mcg-python-detect-project-tools = t
+;;   mcg-python-use-ipython = t
+;;   mcg-python-ipython-args = "--simple-prompt"
 ;; Projects with uv.lock, poetry.lock, or pdm.lock prefer the matching runner
 ;; when the executable is available.
 ;; (setq mcg-python-test-command "python -m pytest")
 ;; (setq mcg-python-ruff-command "ruff")
 ;; (setq mcg-python-detect-project-tools nil)
+;; (setq mcg-python-use-ipython t)
+;; (setq mcg-python-ipython-args "--simple-prompt")
 
 ;; Use biome for Web development (instead of ESLint)
 ;; Default: nil
@@ -282,6 +286,16 @@ Your actual machine-local settings and secrets live in
 ;;         (:exports . "both")))
 ;; (setq mcg-org-babel-src-block-languages
 ;;       '("emacs-lisp" "python" "shell" "zig" "js" "css" "org"))
+
+;; Jupyter Babel integration
+;; Default: nil. Requires the `jupyter` executable on PATH.
+;; When enabled, use jupyter-python blocks; plain python blocks keep using
+;; the built-in ob-python executor.
+;; (setq mcg-org-babel-enable-jupyter t)
+;; (setq mcg-org-babel-jupyter-default-header-args
+;;       '((:async . "yes")
+;;         (:session . "py")
+;;         (:kernel . "python3")))
 
 ;; Extended Org Babel languages
 ;; Add these only for projects that need the corresponding tools and trust model.

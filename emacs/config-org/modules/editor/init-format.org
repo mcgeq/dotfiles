@@ -367,6 +367,7 @@ Prettier is only used when the project explicitly declares Prettier."
 (defun mcg-format-buffer-maybe ()
   "Format current buffer before saving when enabled and supported."
   (when (and mcg-format-on-save
+             (buffer-modified-p)
              (not mcg-format--inhibit-on-save)
              (mcg-format--supported-mode-p)
              (not buffer-read-only))

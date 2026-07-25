@@ -51,11 +51,28 @@
   :type 'string
   :group 'mcg)
 
+(defconst mcg-python-ruff-format-quote-style "format.quote-style = 'single'"
+  "Ruff format config that preserves Python strings as single quotes.")
+
+(defconst mcg-python-ruff-format-config-file-name "ruff-format-single.toml"
+  "Filename for the generated Ruff formatter config.")
+
 (defcustom mcg-python-detect-project-tools t
   "Whether Python commands should prefer project-local tool runners.
 When enabled, projects with uv, Poetry, or PDM lock files use the matching
 runner when its executable is available."
   :type 'boolean
+  :group 'mcg)
+
+(defcustom mcg-python-use-ipython t
+  "Whether `mcg/python-repl' should prefer IPython when available."
+  :type 'boolean
+  :group 'mcg)
+
+(defcustom mcg-python-ipython-args "--simple-prompt"
+  "Arguments passed to IPython for `mcg/python-repl'.
+`--simple-prompt' keeps IPython compatible with Emacs comint buffers."
+  :type 'string
   :group 'mcg)
 #+end_src
 
@@ -138,6 +155,10 @@ corresponding executable is available."
   "Return shell command string from command PARTS."
   (string-join parts " "))
 
+(defun mcg-python--shell-command-string (parts)
+  "Return a shell-quoted command string from command PARTS."
+  (string-join (mapcar #'shell-quote-argument parts) " "))
+
 (defun mcg-python--pytest-command (&optional root)
   "Return the best pytest command for ROOT."
   (let ((tool (mcg-python--project-tool root)))
@@ -146,16 +167,63 @@ corresponding executable is available."
          (mcg-python--project-tool-command "pytest" nil root))
       mcg-python-test-command)))
 
+(defun mcg-python--pyproject-has-ruff-config-p (file)
+  "Return non-nil when FILE contains a Ruff pyproject section."
+  (and (file-exists-p file)
+       (with-temp-buffer
+         (insert-file-contents file)
+         (goto-char (point-min))
+         (re-search-forward "^\\[tool\\.ruff\\(?:\\.[^]]+\\)?\\]$" nil t))))
+
+(defun mcg-python--ruff-project-config-p (&optional root)
+  "Return non-nil when ROOT declares Ruff configuration."
+  (let* ((root (file-name-as-directory (or root (mcg-python--project-root))))
+         (pyproject (expand-file-name "pyproject.toml" root)))
+    (or (mcg-python--project-file-p root ".ruff.toml")
+        (mcg-python--project-file-p root "ruff.toml")
+        (mcg-python--pyproject-has-ruff-config-p pyproject))))
+
+(defun mcg-python--ruff-format-args (&optional root)
+  "Return Ruff format args for ROOT without overriding project config."
+  (if (mcg-python--ruff-project-config-p root)
+      '("format")
+    (list "format" "--config" (mcg-python--ruff-format-config-file))))
+
 (defun mcg-python-format-candidates (&optional root)
   "Return project-aware Python formatter command candidates for ROOT."
   (let* ((root (file-name-as-directory (or root (mcg-python--project-root))))
          (project-tool (mcg-python--project-tool root))
+         (ruff-format-args (mcg-python--ruff-format-args root))
          (project-candidate
           (when project-tool
-            (mcg-python--project-tool-command "ruff" '("format") root))))
+            (mcg-python--project-tool-command
+             "ruff" ruff-format-args root))))
     (append (when project-candidate (list project-candidate))
-            (list (list mcg-python-ruff-command "format")
-                  (list "black")))))
+            (list (cons mcg-python-ruff-command ruff-format-args)
+                  (list "black" "--skip-string-normalization")))))
+
+(defun mcg-python--ruff-format-config-file ()
+  "Return a Ruff config file path that forces single-quote formatting."
+  (let* ((dir (or (and (boundp 'mcg-cache-dir) mcg-cache-dir)
+                  temporary-file-directory))
+         (file (expand-file-name mcg-python-ruff-format-config-file-name dir))
+         (contents "[format]\nquote-style = \"single\"\n"))
+    (unless (file-directory-p dir)
+      (make-directory dir t))
+    (unless (and (file-exists-p file)
+                 (with-temp-buffer
+                   (insert-file-contents file)
+                   (equal (buffer-string) contents)))
+      (with-temp-file file
+        (insert contents)))
+    file))
+
+(defun mcg-python--ruff-format-command (&optional root)
+  "Return Ruff format command parts for ROOT."
+  (mcg-python--project-tool-command
+   "ruff"
+   (mcg-python--ruff-format-args root)
+   root))
 
 (defun mcg-python--ruff-command (&rest args)
   "Return the best Ruff command for ARGS, or raise a user error."
@@ -235,9 +303,9 @@ corresponding executable is available."
   "Run Ruff format for the current Python file."
   (interactive)
   (mcg-python--save-and-compile
-   (format "%s %s"
-           (mcg-python--ruff-command "format")
-           (mcg-python--quoted-current-file))
+   (mcg-python--shell-command-string
+    (append (mcg-python--ruff-format-command)
+            (list (mcg-python--current-file))))
    (mcg-python--project-root)))
 #+end_src
 
@@ -248,10 +316,22 @@ corresponding executable is available."
 ;;; REPL
 ;;; ============================================================
 
+(defun mcg-python--repl-command ()
+  "Return the command used by `mcg/python-repl'."
+  (let* ((ipython (and mcg-python-use-ipython
+                       (executable-find "ipython")))
+         (interpreter (or ipython
+                          (executable-find "python")
+                          python-shell-interpreter))
+         (args (if ipython mcg-python-ipython-args "")))
+    (let ((python-shell-interpreter interpreter)
+          (python-shell-interpreter-args args))
+      (python-shell-calculate-command))))
+
 (defun mcg/python-repl ()
-  "Open a Python REPL using built-in python.el."
+  "Open a Python REPL, preferring IPython when available."
   (interactive)
-  (run-python (python-shell-calculate-command) nil nil))
+  (run-python (mcg-python--repl-command) nil t))
 #+end_src
 
 ** Keybindings
@@ -306,7 +386,7 @@ RUFF:
   C-c C-c F    - ruff format current file
 
 REPL:
-  C-c C-z      - Python REPL
+  C-c C-z      - Python/IPython REPL
 
 LSP COMMANDS (via lsp-bridge with ty/basedpyright + ruff):
   M-.          - Go to definition

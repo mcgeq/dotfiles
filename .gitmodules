@@ -253,3 +253,18 @@
 [submodule "emacs-pulsar"]
 	path = emacs/site-lisp/extensions/ui/pulsar
 	url = https://github.com/protesilaos/pulsar.git
+[submodule "emacs-jupyter"]
+	path = emacs/site-lisp/extensions/lsp/emacs-jupyter
+	url = https://github.com/emacs-jupyter/jupyter.git
+[submodule "emacs-jupyter1"]
+	path = emacs/site-lisp/extensions/jupyter/emacs-jupyter
+	url = https://github.com/emacs-jupyter/jupyter.git
+[submodule "emacs-websocket"]
+	path = emacs/site-lisp/extensions/jupyter/emacs-websocket
+	url = https://github.com/ahyatt/emacs-websocket.git
+[submodule "emacs-web-server"]
+	path = emacs/site-lisp/extensions/jupyter/emacs-web-server
+	url = https://github.com/skeeto/emacs-web-server.git
+[submodule "emacs-zmq"]
+	path = emacs/site-lisp/extensions/jupyter/emacs-zmq
+	url = https://github.com/nnicandro/emacs-zmq.git

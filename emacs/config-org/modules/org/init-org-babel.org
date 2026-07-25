@@ -47,7 +47,8 @@ Org Babel - code block execution support.
 (defcustom mcg-org-babel-load-languages
   ;; Conservative default languages: keep the common literate config and
   ;; day-to-day scripting surface small. Extended Babel languages such as C,
-  ;; dot, plantuml, and sql can be enabled from private config when needed.
+  ;; dot, plantuml, sql, and Jupyter can be enabled from private config when
+  ;; needed.
   '((emacs-lisp . t)
     (shell . t)
     (python . t)
@@ -55,8 +56,22 @@ Org Babel - code block execution support.
     (css . t)
     (org . t))
   "Languages enabled for Org Babel.
-Zig is controlled separately by `mcg-org-babel-enable-zig'."
+Zig is controlled separately by `mcg-org-babel-enable-zig'.
+Jupyter is controlled separately by `mcg-org-babel-enable-jupyter'."
   :type '(repeat (cons symbol boolean))
+  :group 'mcg-org)
+
+(defcustom mcg-org-babel-enable-jupyter nil
+  "Whether to enable Org Babel support for Jupyter kernels."
+  :type 'boolean
+  :group 'mcg-org)
+
+(defcustom mcg-org-babel-jupyter-default-header-args
+  '((:async . "yes")
+    (:session . "py")
+    (:kernel . "python3"))
+  "Default header arguments for Jupyter Org Babel blocks."
+  :type 'sexp
   :group 'mcg-org)
 
 (defcustom mcg-org-babel-enable-zig t
@@ -73,9 +88,37 @@ Zig is controlled separately by `mcg-org-babel-enable-zig'."
 
 (defcustom mcg-org-babel-src-block-languages
   '("emacs-lisp" "python" "shell" "zig" "js" "css" "org")
-  "Language candidates offered by `mcg/org-insert-src-block'."
+  "Language candidates offered by `mcg/org-insert-src-block'.
+Jupyter adds `jupyter-python' when enabled and available."
   :type '(repeat string)
   :group 'mcg-org)
+
+(defvar mcg-org-babel--jupyter-missing-warned nil
+  "Non-nil means the missing Jupyter CLI warning has already been shown.")
+
+(defun mcg-org-babel--jupyter-available-p ()
+  "Return non-nil when the Jupyter CLI is available."
+  (executable-find "jupyter"))
+
+(defun mcg-org-babel--maybe-enable-jupyter-defaults ()
+  "Apply Jupyter Babel defaults when configured and available."
+  (when (and mcg-org-babel-enable-jupyter
+             (mcg-org-babel--jupyter-available-p))
+    (setq org-babel-default-header-args:jupyter-python
+          mcg-org-babel-jupyter-default-header-args)
+    (add-to-list 'mcg-org-babel-src-block-languages "jupyter-python")))
+
+(defun mcg-org-babel--effective-load-languages ()
+  "Return the Org Babel languages to load for this session."
+  (let ((languages (copy-sequence mcg-org-babel-load-languages)))
+    (when mcg-org-babel-enable-jupyter
+      (if (mcg-org-babel--jupyter-available-p)
+          ;; emacs-jupyter expects the jupyter language to be loaded last.
+          (setq languages (append languages '((jupyter . t))))
+        (unless mcg-org-babel--jupyter-missing-warned
+          (setq mcg-org-babel--jupyter-missing-warned t)
+          (mcg-log-warning "jupyter executable not found; Jupyter Babel disabled"))))
+    languages))
 
 (defun mcg-org-babel-setup-basic ()
   "Setup Org Babel basic configuration."
@@ -100,7 +143,7 @@ Zig is controlled separately by `mcg-org-babel-enable-zig'."
   (with-eval-after-load 'org
     (org-babel-do-load-languages
      'org-babel-load-languages
-     mcg-org-babel-load-languages)
+     (mcg-org-babel--effective-load-languages))
     (mcg-log "Configured org-babel languages")))
 #+end_src
 
@@ -123,6 +166,7 @@ Zig is controlled separately by `mcg-org-babel-enable-zig'."
         '((:results . "output")))
   (setq org-babel-default-header-args:shell
         '((:results . "output")))
+  (mcg-org-babel--maybe-enable-jupyter-defaults)
   (mcg-log "Configured org-babel default arguments"))
 #+end_src
 
