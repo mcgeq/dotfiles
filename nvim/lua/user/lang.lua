@@ -16,6 +16,13 @@ return {
     eslint_filetypes = {},
   },
 
+  -- Hugo blogging support. Disabled by default — activate it per machine in
+  -- `lua/user/private.lua` (git-ignored), e.g.
+  --   hugo = { enabled = true, blog_path = "D:\\workspaces\\blog\\mcge-blog" }
+  hugo = {
+    enabled = false,
+  },
+
   -- Markdown extras borrowed from the old cap153-nvim workflow.
   markdown = {
     table = {

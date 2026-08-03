@@ -29,6 +29,8 @@ wezterm/user.lua
 # nvim lazy
 nvim/lazy-lock.json
 nvim/nvim-data/*
+# nvim private user config (machine-specific overrides)
+nvim/lua/user/private.lua
 # Logs
 logs
 *.log

@@ -1,0 +1,60 @@
+{
+  "Hugo Figure": {
+    "prefix": "hfig",
+    "body": [
+      "{{< figure src=\"${1:image}\" title=\"${2:\"}\" caption=\"${3:\"} >}}$0"
+    ],
+    "description": "Hugo figure shortcode"
+  },
+  "Hugo Img": {
+    "prefix": "himg",
+    "body": [
+      "![${1:alt}](${2:image})$0"
+    ],
+    "description": "Markdown image"
+  },
+  "Hugo TOC": {
+    "prefix": "htoc",
+    "body": [
+      "{{< toc >}}"
+    ],
+    "description": "Hugo table of contents"
+  },
+  "Hugo Highlight": {
+    "prefix": "hhil",
+    "body": [
+      "{{< highlight ${1:lang} >}}",
+      "${2:code}",
+      "{{< /highlight >}}"
+    ],
+    "description": "Hugo highlight block"
+  },
+  "Hugo Youtube": {
+    "prefix": "hyt",
+    "body": [
+      "{{< youtube ${1:id} >}}"
+    ],
+    "description": "Hugo youtube embed"
+  },
+  "Hugo Vimeo": {
+    "prefix": "hvi",
+    "body": [
+      "{{< vimeo ${1:id} >}}"
+    ],
+    "description": "Hugo vimeo embed"
+  },
+  "Hugo Gist": {
+    "prefix": "hgi",
+    "body": [
+      "{{< gist ${1:user} ${2:id} >}}"
+    ],
+    "description": "Hugo gist embed"
+  },
+  "Hugo Ref": {
+    "prefix": "href",
+    "body": [
+      "[${1:text}](${2:path})$0"
+    ],
+    "description": "Hugo relative link"
+  }
+}
