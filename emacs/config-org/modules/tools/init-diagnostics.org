@@ -51,6 +51,22 @@ Flymake diagnostics helpers.
     (flymake-mode 1)))
 #+end_src
 
+** Rust: rely on lsp-bridge diagnostics
+
+#+begin_src emacs-lisp
+(defun mcg-diagnostics--rust-ts-disable-builtin-flymake ()
+  "Disable `rust-ts-flymake' and turn off Flymake in `rust-ts-mode' buffers.
+`rust-ts-mode' registers `rust-ts-flymake' automatically, which checks the
+buffer as a standalone file via `clippy-driver' and reports errors unrelated
+to the real Cargo workspace (standalone edition, unresolved dependencies).
+lsp-bridge delivers rust-analyzer diagnostics with full workspace context,
+so Flymake is redundant here."
+  (remove-hook 'flymake-diagnostic-functions #'rust-ts-flymake t)
+  (flymake-mode -1))
+
+(add-hook 'rust-ts-mode-hook #'mcg-diagnostics--rust-ts-disable-builtin-flymake)
+#+end_src
+
 ** Commands
 
 #+begin_src emacs-lisp
