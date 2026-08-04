@@ -113,7 +113,9 @@ end
 
 function M.setup()
   local map = require("core.keymaps").map
-  local user_lang = require("core.util").require_if_exists("user.lang") or {}
+  local user = require("user")
+  local user_lang = user.lang
+  local features = user.private.features
   local frontend_state = require("lang.frontend_state")
 
   local function current_frontend()
@@ -158,17 +160,19 @@ function M.setup()
     formatters = vim.tbl_deep_extend("force", formatters, user_lang.formatters or {})
 
     conform.setup({
-      format_on_save = function(bufnr)
-        if frontend_owns_format(bufnr) then return end
-        return {
-          timeout_ms = 1000,
-          lsp_format = "fallback",
-        }
-      end,
+      format_on_save = features.format_on_save ~= false
+          and function(bufnr)
+            if frontend_owns_format(bufnr) then return end
+            return {
+              timeout_ms = 1000,
+              lsp_format = "fallback",
+            }
+          end
+        or nil,
       formatters_by_ft = formatters_by_ft,
       formatters = formatters,
     })
-  elseif python_ruff_fallback then
+  elseif python_ruff_fallback and features.format_on_save ~= false then
     vim.api.nvim_create_autocmd("BufWritePre", {
       group = vim.api.nvim_create_augroup("plugins_format_python_ruff_fallback", { clear = true }),
       pattern = "*.py",

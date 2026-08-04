@@ -41,7 +41,7 @@ opt.fillchars = {
   foldsep = " ",
 }
 
-vim.g.have_nerd_font = true
+vim.g.have_nerd_font = require("user").private.features.nerd_font ~= false
 vim.g.health = {
   style = "float",
 }

@@ -12,7 +12,7 @@ local DEFAULTS = {
 }
 
 local function config()
-  local user_lang = require("core.util").require_if_exists("user.lang") or {}
+  local user_lang = require("user").lang
   return vim.tbl_deep_extend("force", {}, DEFAULTS, user_lang.markdown or {})
 end
 

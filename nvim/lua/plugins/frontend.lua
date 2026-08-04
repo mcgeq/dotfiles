@@ -109,9 +109,11 @@ function M.setup()
     end,
   })
 
-  map("n", "<leader>ls", function()
-    terminal.open_float("live-server", { title = " live-server " })
-  end, "Live Server start")
+  if require("user").private.features.live_server ~= false then
+    map("n", "<leader>ls", function()
+      terminal.open_float("live-server", { title = " live-server " })
+    end, "Live Server start")
+  end
 end
 
 return M

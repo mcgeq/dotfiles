@@ -39,6 +39,8 @@ function M.setup()
 
   markdown.setup()
 
+  if require("user").private.features.markdown_extras == false then return end
+
   vim.api.nvim_create_autocmd("FileType", {
     group = vim.api.nvim_create_augroup("plugins_markdown_keymaps", { clear = true }),
     pattern = "markdown",

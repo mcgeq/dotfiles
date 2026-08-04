@@ -12,7 +12,7 @@ local DEFAULTS = {
 local util = require("core.util")
 
 local function config()
-  local user = util.require_if_exists("user.lang") or {}
+  local user = require("user").lang or {}
   local private = util.require_if_exists("user.private") or {}
   local cfg = vim.tbl_deep_extend("force", {}, DEFAULTS, user.hugo or {}, private.hugo or {})
   return cfg

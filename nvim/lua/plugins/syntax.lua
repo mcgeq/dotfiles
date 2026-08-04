@@ -2,7 +2,7 @@ local M = {}
 
 function M.setup()
   local map = require("core.keymaps").map
-  local user_lang = require("core.util").require_if_exists("user.lang") or {}
+  local user_lang = require("user").lang
 
   local ok_treesitter, treesitter = pcall(require, "nvim-treesitter.configs")
   if ok_treesitter then

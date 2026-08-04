@@ -239,7 +239,7 @@ function M.setup()
   end
 
   local ok_bufferline, bufferline = pcall(require, "bufferline")
-  if ok_bufferline then
+  if ok_bufferline and require("user").private.features.bufferline ~= false then
     bufferline.setup({
       options = {
         always_show_bufferline = true,

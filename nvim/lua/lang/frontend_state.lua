@@ -53,7 +53,7 @@ local state = {
 }
 
 local function load_user_frontend()
-  local user_lang = require("core.util").require_if_exists("user.lang") or {}
+  local user_lang = require("user").lang
   return vim.tbl_deep_extend("force", {}, DEFAULTS, user_lang.frontend or {})
 end
 

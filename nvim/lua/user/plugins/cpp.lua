@@ -1,4 +1,5 @@
 local M = {
+  feature = "cpp",
   spec = {
     { src = "https://github.com/p00f/clangd_extensions.nvim", name = "clangd_extensions.nvim" },
     { src = "https://github.com/Civitasv/cmake-tools.nvim", name = "cmake-tools.nvim" },

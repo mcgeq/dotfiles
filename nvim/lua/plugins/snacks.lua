@@ -32,9 +32,12 @@ function M.setup()
     if not ok_explorer then snacks.explorer() end
   end
 
+  local user = require("user")
+
   snacks.setup({
     bigfile = {},
     dashboard = {
+      enabled = user.private.features.dashboard ~= false,
       preset = {
         header = table.concat({
           [[ /\/\    ___   __ _   /\ \ \__   __(_) _ __ ___ ]],
