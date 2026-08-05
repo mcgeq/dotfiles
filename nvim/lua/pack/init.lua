@@ -1,6 +1,6 @@
 local M = {}
 
-local util = require("core.util")
+local util = require "core.util"
 
 local START_PLUGINS = {
   "nvim-web-devicons",
@@ -13,12 +13,14 @@ local START_PLUGINS = {
   "nvim-spider",
   "mini.nvim",
   "noice.nvim",
+  "lualine.nvim",
   "bufferline.nvim",
   "gitsigns.nvim",
   "blink.lib",
   "blink.cmp",
   "friendly-snippets",
   "nvim-treesitter",
+  "nvim-treesitter-textobjects",
   "nvim-treesitter-context",
   "conform.nvim",
   "mason.nvim",
@@ -35,10 +37,10 @@ local START_PLUGINS = {
 ---@return table[]
 local function collect_specs()
   local specs = require("pack.spec").get_base_specs()
-  local user = require("user")
+  local user = require "user"
   local disabled = util.to_lookup(user.pack.disable)
 
-  for _, entry in ipairs(util.load_table_modules("user.plugins")) do
+  for _, entry in ipairs(util.load_table_modules "user.plugins") do
     local module_specs = entry.spec or entry
     if vim.islist(module_specs) then
       vim.list_extend(specs, module_specs)
@@ -62,7 +64,7 @@ end
 
 local STARTUP_PACK_NOTIFY_DELAY_MS = 1200
 local STARTUP_PACK_HEALTH_BATCH_SIZE = 8
-local PACK_PLUGIN_ROOT = vim.fs.joinpath(vim.fn.stdpath("data"), "site", "pack", "core", "opt")
+local PACK_PLUGIN_ROOT = vim.fs.joinpath(vim.fn.stdpath "data", "site", "pack", "core", "opt")
 
 local function dedupe_load_errors(errors)
   local seen = {}
@@ -106,9 +108,7 @@ local function notify_load_errors(errors)
   })
 end
 
-local function plugin_dir(name)
-  return vim.fs.joinpath(PACK_PLUGIN_ROOT, name)
-end
+local function plugin_dir(name) return vim.fs.joinpath(PACK_PLUGIN_ROOT, name) end
 
 local function count_non_git_entries(path)
   local count = 0
@@ -146,21 +146,21 @@ local function cleanup_broken_plugin_dirs(specs)
       local path = plugin_dir(name)
       if is_broken_plugin_dir(path) then
         local delete_code = vim.fn.delete(path, "rf")
-        if delete_code == 0 then
-          cleaned[#cleaned + 1] = name
-        end
+        if delete_code == 0 then cleaned[#cleaned + 1] = name end
       end
     end
   end
 
   if #cleaned > 0 then
-    vim.schedule(function()
-      vim.notify(
-        "Removed broken plugin directories before bootstrap: " .. table.concat(cleaned, ", "),
-        vim.log.levels.WARN,
-        { title = "Pack Repair" }
-      )
-    end)
+    vim.schedule(
+      function()
+        vim.notify(
+          "Removed broken plugin directories before bootstrap: " .. table.concat(cleaned, ", "),
+          vim.log.levels.WARN,
+          { title = "Pack Repair" }
+        )
+      end
+    )
   end
 end
 
@@ -169,9 +169,7 @@ local function collect_startup_pack_issues(specs, on_done)
   local index = 1
 
   local function finish()
-    table.sort(issues, function(a, b)
-      return a.name < b.name
-    end)
+    table.sort(issues, function(a, b) return a.name < b.name end)
     on_done(issues)
   end
 
@@ -242,11 +240,13 @@ local function schedule_startup_pack_health(load_errors, specs)
           notify_startup_pack_issues(specs)
         end)
         if not ok then
-          vim.schedule(function()
-            vim.notify("Pack health check failed: " .. tostring(err), vim.log.levels.WARN, {
-              title = "Pack Health",
-            })
-          end)
+          vim.schedule(
+            function()
+              vim.notify("Pack health check failed: " .. tostring(err), vim.log.levels.WARN, {
+                title = "Pack Health",
+              })
+            end
+          )
         end
       end, STARTUP_PACK_NOTIFY_DELAY_MS)
     end,
@@ -258,7 +258,7 @@ function M.setup()
   require("pack.ui").setup()
 
   if vim.env.NVIM_NO_PLUGINS == "1" then return end
-  if vim.fn.executable("git") == 0 then
+  if vim.fn.executable "git" == 0 then
     vim.notify("`git` is not available on PATH, skipping vim.pack bootstrap.", vim.log.levels.WARN)
     return
   end
@@ -281,9 +281,7 @@ function M.setup()
       end
     end,
   })
-  if not ok then
-    vim.notify("vim.pack bootstrap failed: " .. err, vim.log.levels.ERROR)
-  end
+  if not ok then vim.notify("vim.pack bootstrap failed: " .. err, vim.log.levels.ERROR) end
 
   schedule_startup_pack_health(load_errors, specs)
 end

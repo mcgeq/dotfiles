@@ -46,5 +46,5 @@ vim.g.health = {
   style = "float",
 }
 
-local user_options = require("core.util").require_if_exists("user.options")
+local user_options = require("core.util").require_if_exists "user.options"
 if type(user_options) == "function" then user_options() end

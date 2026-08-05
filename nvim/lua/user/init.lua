@@ -1,4 +1,4 @@
-local util = require("core.util")
+local util = require "core.util"
 
 local DEFAULTS = {
   colorscheme = nil,
@@ -31,7 +31,7 @@ local DEFAULTS = {
       nerd_font = true, -- 使用 Nerd Font 图标
       debug = true, -- DAP 调试 (codelldb / debugpy)
       database = true, -- dadbod 数据库 UI
-      go = true, -- go.nvim 工具链
+      go = false, -- go.nvim 工具链（默认关闭，需要时在 private.lua 打开）
       cpp = true, -- clangd_extensions + cmake-tools
       frontend = true, -- 前端 eslint / colorizer / autotag
       live_server = true, -- live-server 终端
@@ -61,12 +61,10 @@ merge_section("lang", "user.lang")
 -- section above and supplies the `features` toggles.
 local private_override_sections = { "theme", "pack", "session", "lsp", "lang" }
 
-local private = util.require_if_exists("user.private")
+local private = util.require_if_exists "user.private"
 if private ~= nil then
   for _, key in ipairs(private_override_sections) do
-    if private[key] ~= nil then
-      M[key] = vim.tbl_deep_extend("force", vim.deepcopy(M[key] or {}), private[key])
-    end
+    if private[key] ~= nil then M[key] = vim.tbl_deep_extend("force", vim.deepcopy(M[key] or {}), private[key]) end
   end
 end
 M.private = vim.tbl_deep_extend("force", vim.deepcopy(DEFAULTS.private or {}), private or {})

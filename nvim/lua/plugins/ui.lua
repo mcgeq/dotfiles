@@ -21,6 +21,7 @@ local function setup_catppuccin(overrides)
     integrations = {
       cmp = true,
       gitsigns = true,
+      lualine = true,
       mini = true,
       mason = true,
       noice = true,
@@ -52,9 +53,7 @@ local function setup_tokyonight(overrides)
       floats = "dark",
     },
     sidebars = { "qf", "help", "terminal" },
-    on_highlights = function(hl, colors)
-      hl.CursorLineNr = { fg = colors.orange, bold = true }
-    end,
+    on_highlights = function(hl, colors) hl.CursorLineNr = { fg = colors.orange, bold = true } end,
   }
 
   tokyonight.setup(vim.tbl_deep_extend("force", defaults, overrides or {}))
@@ -141,7 +140,7 @@ local function complete_theme_names(arg_lead)
 end
 
 function M.apply_theme(requested)
-  local user = require("user")
+  local user = require "user"
   local theme = vim.deepcopy(user.theme or {})
   local name = resolve_theme_name(user, requested)
   local overrides = theme.overrides or {}
@@ -156,7 +155,9 @@ function M.apply_theme(requested)
       if active_name ~= name then
         message = ("Theme `%s` is not available yet, falling back to `%s`."):format(name, active_name)
       else
-        message = ("Theme `%s` is not installed or not loaded yet. Run `:PackUpdate`, `:PackRepair`, or restart Neovim."):format(name)
+        message = ("Theme `%s` is not installed or not loaded yet. Run `:PackUpdate`, `:PackRepair`, or restart Neovim."):format(
+          name
+        )
       end
       vim.notify(message, vim.log.levels.WARN)
       if err then vim.notify(tostring(err), vim.log.levels.DEBUG, { title = "Theme Fallback" }) end
@@ -183,13 +184,9 @@ function M.apply_theme(requested)
   return ok_colorscheme, active_name
 end
 
-function M.available_themes(arg_lead)
-  return complete_theme_names(arg_lead)
-end
+function M.available_themes(arg_lead) return complete_theme_names(arg_lead) end
 
-function M.current_theme()
-  return vim.g.colors_name or session_theme or resolve_theme_name(require("user"))
-end
+function M.current_theme() return vim.g.colors_name or session_theme or resolve_theme_name(require "user") end
 
 function M.cycle_theme()
   local current = M.current_theme()
@@ -210,7 +207,7 @@ function M.setup()
 
   local ok_which_key, which_key = pcall(require, "which-key")
   if ok_which_key then
-    which_key.setup({
+    which_key.setup {
       delay = 200,
       preset = "helix",
       spec = {
@@ -235,17 +232,17 @@ function M.setup()
         { "<leader>w", group = "window" },
         { "<leader>x", group = "diagnostics" },
       },
-    })
+    }
   end
 
   local ok_bufferline, bufferline = pcall(require, "bufferline")
   if ok_bufferline and require("user").private.features.bufferline ~= false then
-    bufferline.setup({
+    bufferline.setup {
       options = {
         always_show_bufferline = true,
         diagnostics = "nvim_lsp",
       },
-    })
+    }
   end
 end
 

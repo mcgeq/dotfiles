@@ -2,14 +2,14 @@ local M = {}
 
 function M.setup()
   local map = require("core.keymaps").map
-  local terminal = require("core.terminal")
+  local terminal = require "core.terminal"
 
   map("n", "<leader>lt", function() terminal.open_cwd() end, "Shell in cwd")
   map("n", "<leader>lp", function() terminal.open_project() end, "Shell in project root")
   map("n", "<leader>lb", function() terminal.open_buffer_dir() end, "Shell in buffer directory")
   map("n", "<leader>lT", function() terminal.open_last() end, "Reopen last terminal")
   map("n", "<leader>gj", function()
-    if vim.fn.executable("lazyjj") == 1 then
+    if vim.fn.executable "lazyjj" == 1 then
       terminal.open_float("lazyjj", { title = " lazyjj " })
     else
       terminal.open_float("jj log", { title = " jj log " })

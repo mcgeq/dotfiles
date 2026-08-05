@@ -1,6 +1,6 @@
 local M = {}
 
-local util = require("core.util")
+local util = require "core.util"
 
 local MASON_PACKAGE_NAMES = {
   bashls = "bash-language-server",
@@ -32,33 +32,25 @@ local DEFAULT_FILETYPES = {
 
 local function diagnostic_nav(next_fn, severity)
   return function()
-    next_fn({
+    next_fn {
       severity = severity,
-    })
+    }
   end
 end
 
-local function diagnostics_to_quickfix()
-  vim.diagnostic.setqflist({ open = false })
-end
+local function diagnostics_to_quickfix() vim.diagnostic.setqflist { open = false } end
 
-local function diagnostics_to_loclist()
-  vim.diagnostic.setloclist({ open = false })
-end
+local function diagnostics_to_loclist() vim.diagnostic.setloclist { open = false } end
 
-local function ensure_lookup(names)
-  return util.to_lookup(names)
-end
+local function ensure_lookup(names) return util.to_lookup(names) end
 
 local function build_server_registry()
   local registry = require("lsp.servers").get()
   local install_lookup = ensure_lookup(require("user").lsp.ensure_installed)
 
-  for _, entry in ipairs(util.load_table_modules("user.lsp")) do
+  for _, entry in ipairs(util.load_table_modules "user.lsp") do
     if entry.name and entry.config then
-      if entry.ensure_installed == nil then
-        entry.ensure_installed = install_lookup[entry.name]
-      end
+      if entry.ensure_installed == nil then entry.ensure_installed = install_lookup[entry.name] end
       registry[entry.name] = entry
     end
   end
@@ -90,9 +82,7 @@ local function build_filetype_server_index(registry)
   return index
 end
 
-local function mason_package_name(name)
-  return MASON_PACKAGE_NAMES[name] or name
-end
+local function mason_package_name(name) return MASON_PACKAGE_NAMES[name] or name end
 
 local function retry_lsp_attach(name, bufnr)
   if not vim.api.nvim_buf_is_valid(bufnr) then return end
@@ -115,13 +105,11 @@ local function setup_mason_auto_install(registry)
 
   local function with_mason_registry(callback)
     local ok_mason, mason = pcall(require, "mason")
-    if ok_mason and not mason.has_setup then
-      mason.setup({
-        ui = {
-          border = "rounded",
-        },
-      })
-    end
+    if ok_mason and not mason.has_setup then mason.setup {
+      ui = {
+        border = "rounded",
+      },
+    } end
 
     local ok_registry, mason_registry = pcall(require, "mason-registry")
     if not ok_registry then return end
@@ -143,11 +131,13 @@ local function setup_mason_auto_install(registry)
       registry_callbacks = {}
 
       if not success then
-        vim.schedule(function()
-          vim.notify("Mason registry refresh failed; LSP auto-install skipped.", vim.log.levels.WARN, {
-            title = "Mason",
-          })
-        end)
+        vim.schedule(
+          function()
+            vim.notify("Mason registry refresh failed; LSP auto-install skipped.", vim.log.levels.WARN, {
+              title = "Mason",
+            })
+          end
+        )
         return
       end
 
@@ -164,11 +154,13 @@ local function setup_mason_auto_install(registry)
     with_mason_registry(function(mason_registry)
       local ok_package, package = pcall(mason_registry.get_package, package_name)
       if not ok_package then
-        vim.schedule(function()
-          vim.notify(("Mason package not found for `%s`: %s"):format(name, package_name), vim.log.levels.WARN, {
-            title = "Mason",
-          })
-        end)
+        vim.schedule(
+          function()
+            vim.notify(("Mason package not found for `%s`: %s"):format(name, package_name), vim.log.levels.WARN, {
+              title = "Mason",
+            })
+          end
+        )
         return
       end
 
@@ -179,11 +171,13 @@ local function setup_mason_auto_install(registry)
       if package:is_installing() then return end
 
       installing[package_name] = true
-      vim.schedule(function()
-        vim.notify(("Installing `%s` for `%s`..."):format(package_name, name), vim.log.levels.INFO, {
-          title = "Mason",
-        })
-      end)
+      vim.schedule(
+        function()
+          vim.notify(("Installing `%s` for `%s`..."):format(package_name, name), vim.log.levels.INFO, {
+            title = "Mason",
+          })
+        end
+      )
 
       local ok_install, err = pcall(function()
         package:install({}, function(success, result)
@@ -206,11 +200,13 @@ local function setup_mason_auto_install(registry)
 
       if not ok_install then
         installing[package_name] = nil
-        vim.schedule(function()
-          vim.notify(("Failed to start Mason install for `%s`: %s"):format(package_name, err), vim.log.levels.ERROR, {
-            title = "Mason",
-          })
-        end)
+        vim.schedule(
+          function()
+            vim.notify(("Failed to start Mason install for `%s`: %s"):format(package_name, err), vim.log.levels.ERROR, {
+              title = "Mason",
+            })
+          end
+        )
       end
     end)
   end
@@ -241,7 +237,7 @@ end
 function M.setup()
   if vim.env.NVIM_NO_PLUGINS == "1" then return end
 
-  local python = require("lang.python")
+  local python = require "lang.python"
   python.setup()
   python.prime()
 
@@ -254,22 +250,18 @@ function M.setup()
   table.sort(ensure_installed)
 
   local ok_mason_lsp, mason_lsp = pcall(require, "mason-lspconfig")
-  if ok_mason_lsp then
-    mason_lsp.setup({
-      ensure_installed = ensure_installed,
-      automatic_enable = false,
-    })
-  end
+  if ok_mason_lsp then mason_lsp.setup {
+    ensure_installed = ensure_installed,
+    automatic_enable = false,
+  } end
 
   for name, entry in pairs(registry) do
     vim.lsp.config(name, entry.config)
     if entry.enable ~= false then vim.lsp.enable(name) end
   end
 
-  local user = require("user")
-  if user.lsp.auto_install ~= false then
-    setup_mason_auto_install(registry)
-  end
+  local user = require "user"
+  if user.lsp.auto_install ~= false then setup_mason_auto_install(registry) end
 
   local map = require("core.keymaps").map
   map("n", "K", vim.lsp.buf.hover, "Hover documentation")
@@ -286,7 +278,7 @@ function M.setup()
   map("n", "<leader>xq", diagnostics_to_quickfix, "Diagnostics to quickfix")
   map("n", "<leader>xl", diagnostics_to_loclist, "Diagnostics to location list")
 
-  for _, lhs in ipairs({ "grr", "grn", "gra", "gri", "grt", "grx" }) do
+  for _, lhs in ipairs { "grr", "grn", "gra", "gri", "grt", "grx" } do
     pcall(vim.keymap.del, "n", lhs)
     pcall(vim.keymap.del, "x", lhs)
   end

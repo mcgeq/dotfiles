@@ -16,7 +16,7 @@ return {
     -- nerd_font = false,      -- 使用 Nerd Font 图标
     -- debug = false,          -- DAP 调试 (codelldb / debugpy)
     -- database = false,       -- dadbod 数据库 UI
-    -- go = false,             -- go.nvim 工具链
+    -- go = true,              -- go.nvim 工具链（默认关闭，需要时打开）
     -- cpp = false,            -- clangd_extensions + cmake-tools
     -- frontend = false,       -- 前端 eslint / colorizer / autotag
     -- live_server = false,    -- live-server 终端

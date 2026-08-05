@@ -6,21 +6,22 @@ local M = {
   },
 }
 
-local util = require("core.util")
+local util = require "core.util"
 local is_windows = util.is_windows
 local executable_suffix = util.executable_suffix
 local shell_quote = util.shell_quote
+local powershell_quote = util.powershell_quote
 
 local function is_usable_executable_path(path)
   if type(path) ~= "string" or path == "" then return false end
   if not is_windows() then return true end
 
   local lower = path:lower()
-  return path:match("^[A-Za-z]:[\\/]")
-    or path:match("^\\\\")
-    or lower:match("%.exe$")
-    or lower:match("%.cmd$")
-    or lower:match("%.bat$")
+  return path:match "^[A-Za-z]:[\\/]"
+    or path:match "^\\\\"
+    or lower:match "%.exe$"
+    or lower:match "%.cmd$"
+    or lower:match "%.bat$"
 end
 
 local function first_executable(names)
@@ -88,9 +89,7 @@ local function cmake_preset_binary_dir(root, preset)
     local decoded_ok, data = pcall(vim.json.decode, table.concat(lines, "\n"))
     if decoded_ok and type(data) == "table" then
       for _, item in ipairs(data.configurePresets or {}) do
-        if item.name == preset and item.binaryDir then
-          return expand_cmake_path(item.binaryDir, root)
-        end
+        if item.name == preset and item.binaryDir then return expand_cmake_path(item.binaryDir, root) end
       end
     end
   end
@@ -105,13 +104,13 @@ local function cmake_project_name(root)
 
   local in_project = false
   for _, line in ipairs(lines) do
-    local inline_name = line:match("project%s*%(%s*([%w_%.%-]+)")
+    local inline_name = line:match "project%s*%(%s*([%w_%.%-]+)"
     if inline_name then return inline_name end
 
     if in_project then
-      local name = line:match("^%s*([%w_%.%-]+)")
+      local name = line:match "^%s*([%w_%.%-]+)"
       if name then return name end
-    elseif line:match("project%s*%(") then
+    elseif line:match "project%s*%(" then
       in_project = true
     end
   end
@@ -120,7 +119,7 @@ local function cmake_project_name(root)
 end
 
 local function cmake_build_or_run_command(root, preset, run_after_build)
-  local cmake = first_executable({ "cmake" })
+  local cmake = first_executable { "cmake" }
   if not cmake then return nil, "No `cmake` executable found on PATH." end
 
   local pieces = {
@@ -132,7 +131,8 @@ local function cmake_build_or_run_command(root, preset, run_after_build)
 
   local script = table.concat(pieces, " ")
   if run_after_build then
-    local output = vim.fs.joinpath(cmake_preset_binary_dir(root, preset), cmake_project_name(root) .. executable_suffix())
+    local output =
+      vim.fs.joinpath(cmake_preset_binary_dir(root, preset), cmake_project_name(root) .. executable_suffix())
     if is_windows() then
       script = script .. "; if ($LASTEXITCODE -eq 0) { & " .. powershell_quote(output) .. " }"
     else
@@ -153,7 +153,7 @@ end
 
 local function makefile_path(root)
   if not root then return end
-  for _, name in ipairs({ "GNUmakefile", "makefile", "Makefile" }) do
+  for _, name in ipairs { "GNUmakefile", "makefile", "Makefile" } do
     local path = vim.fs.joinpath(root, name)
     if vim.uv.fs_stat(path) then return path end
   end
@@ -168,11 +168,9 @@ local function make_targets(root)
   if not ok then return targets end
 
   for _, line in ipairs(lines) do
-    if not line:match("^%s*#") and not line:match("^%s*[A-Za-z0-9_%.%-]+%s*[%+%?%!:]?=") then
-      local target = line:match("^([A-Za-z0-9_%.%-]+)%s*:")
-      if target and not target:match("^%.") then
-        targets[target] = true
-      end
+    if not line:match "^%s*#" and not line:match "^%s*[A-Za-z0-9_%.%-]+%s*[%+%?%!:]?=" then
+      local target = line:match "^([A-Za-z0-9_%.%-]+)%s*:"
+      if target and not target:match "^%." then targets[target] = true end
     end
   end
 
@@ -190,33 +188,23 @@ local function make_action_command(bufnr, action)
   local root = make_root(bufnr)
   if not root then return nil, nil, nil end
 
-  local make = first_executable({ "make", "mingw32-make", "gmake" })
-  if not make then
-    return nil, "No `make` executable found on PATH.", root
-  end
+  local make = first_executable { "make", "mingw32-make", "gmake" }
+  if not make then return nil, "No `make` executable found on PATH.", root end
 
   local target
   if action == "run" then
     target = preferred_make_target(root, { "run" })
-    if not target then
-      return nil, "No `run` target found in Makefile. Add `run:` or use `,cb` to build only.", root
-    end
+    if not target then return nil, "No `run` target found in Makefile. Add `run:` or use `,cb` to build only.", root end
   elseif action == "clean" then
     target = preferred_make_target(root, { "clean", "distclean", "mrproper" })
-    if not target then
-      return nil, "No clean target found in Makefile. Expected `clean:`.", root
-    end
+    if not target then return nil, "No clean target found in Makefile. Expected `clean:`.", root end
   elseif action == "test" then
     target = preferred_make_target(root, { "test", "check" })
-    if not target then
-      return nil, "No `test` or `check` target found in Makefile.", root
-    end
+    if not target then return nil, "No `test` or `check` target found in Makefile.", root end
   end
 
   local pieces = { shell_quote(make) }
-  if target then
-    pieces[#pieces + 1] = shell_quote(target)
-  end
+  if target then pieces[#pieces + 1] = shell_quote(target) end
 
   return shell_command(table.concat(pieces, " "), root, " Make "), root
 end
@@ -255,7 +243,7 @@ local function single_file_command(bufnr, run_after_build)
   local args
 
   if filetype == "c" then
-    compiler = first_executable({ "clang", "gcc" })
+    compiler = first_executable { "clang", "gcc" }
     args = {
       "-std=c17",
       "-Wall",
@@ -266,7 +254,7 @@ local function single_file_command(bufnr, run_after_build)
       output,
     }
   elseif vim.tbl_contains({ "cpp", "objc", "objcpp" }, filetype) then
-    compiler = first_executable({ "clang++", "g++" })
+    compiler = first_executable { "clang++", "g++" }
     args = {
       "-std=c++23",
       "-Wall",
@@ -280,9 +268,7 @@ local function single_file_command(bufnr, run_after_build)
     return nil, "Single-file build is only configured for C/C++ source files."
   end
 
-  if not compiler then
-    return nil, "No compiler found on PATH. Expected clang/clang++ or gcc/g++."
-  end
+  if not compiler then return nil, "No compiler found on PATH. Expected clang/clang++ or gcc/g++." end
 
   local pieces = { shell_executable(compiler) }
   for _, arg in ipairs(args) do
@@ -301,7 +287,8 @@ local function single_file_command(bufnr, run_after_build)
   return shell_command(
     script,
     dir,
-    run_after_build and (" run: " .. vim.fn.fnamemodify(file, ":t") .. " ") or (" build: " .. vim.fn.fnamemodify(file, ":t") .. " ")
+    run_after_build and (" run: " .. vim.fn.fnamemodify(file, ":t") .. " ")
+      or (" build: " .. vim.fn.fnamemodify(file, ":t") .. " ")
   )
 end
 
@@ -314,7 +301,7 @@ local function build_or_run_file(bufnr, run_after_build)
     return
   end
 
-  local terminal = require("core.terminal")
+  local terminal = require "core.terminal"
   local cmake_project_root = cmake_root(bufnr)
   if cmake_project_root then
     local command, opts_or_error = cmake_build_or_run_command(cmake_project_root, "default-debug", run_after_build)
@@ -327,7 +314,8 @@ local function build_or_run_file(bufnr, run_after_build)
     return
   end
 
-  local make_command, make_opts_or_error, make_project_root = make_action_command(bufnr, run_after_build and "run" or "build")
+  local make_command, make_opts_or_error, make_project_root =
+    make_action_command(bufnr, run_after_build and "run" or "build")
   if make_project_root then
     if not make_command then
       vim.notify(make_opts_or_error, vim.log.levels.WARN, { title = "C/C++" })
@@ -348,12 +336,12 @@ local function build_or_run_file(bufnr, run_after_build)
 end
 
 local function clean_file_or_target(bufnr)
-  if cmake_root(bufnr) and vim.fn.exists(":CMakeClean") == 2 then
-    vim.cmd("CMakeClean")
+  if cmake_root(bufnr) and vim.fn.exists ":CMakeClean" == 2 then
+    vim.cmd "CMakeClean"
     return
   end
 
-  local terminal = require("core.terminal")
+  local terminal = require "core.terminal"
   local make_command, make_opts_or_error, make_project_root = make_action_command(bufnr, "clean")
   if make_project_root then
     if not make_command then
@@ -388,12 +376,12 @@ local function clean_file_or_target(bufnr)
 end
 
 local function run_tests(bufnr)
-  if cmake_root(bufnr) and vim.fn.exists(":CMakeRunTest") == 2 then
-    vim.cmd("CMakeRunTest")
+  if cmake_root(bufnr) and vim.fn.exists ":CMakeRunTest" == 2 then
+    vim.cmd "CMakeRunTest"
     return
   end
 
-  local terminal = require("core.terminal")
+  local terminal = require "core.terminal"
   local make_command, make_opts_or_error, make_project_root = make_action_command(bufnr, "test")
   if make_project_root then
     if not make_command then
@@ -405,9 +393,13 @@ local function run_tests(bufnr)
     return
   end
 
-  vim.notify("No test command is configured for single-file C/C++. Open a CMake project to use CTest.", vim.log.levels.INFO, {
-    title = "C/C++",
-  })
+  vim.notify(
+    "No test command is configured for single-file C/C++. Open a CMake project to use CTest.",
+    vim.log.levels.INFO,
+    {
+      title = "C/C++",
+    }
+  )
 end
 
 local function cpp_key_lines(bufnr)
@@ -434,9 +426,18 @@ local function cpp_key_lines(bufnr)
     lines[#lines + 1] = ""
     lines[#lines + 1] = "Makefile mode"
     lines[#lines + 1] = ",cb  Uses default `make` target"
-    lines[#lines + 1] = ",cr  " .. (preferred_make_target(make_project_root, { "run" }) and "Uses `make run`" or "Needs a `run:` target")
-    lines[#lines + 1] = ",cc  " .. (preferred_make_target(make_project_root, { "clean", "distclean", "mrproper" }) and "Uses clean target" or "Needs a `clean:` target")
-    lines[#lines + 1] = ",ct  " .. (preferred_make_target(make_project_root, { "test", "check" }) and "Uses `make test/check`" or "Needs a `test:` or `check:` target")
+    lines[#lines + 1] = ",cr  "
+      .. (preferred_make_target(make_project_root, { "run" }) and "Uses `make run`" or "Needs a `run:` target")
+    lines[#lines + 1] = ",cc  "
+      .. (
+        preferred_make_target(make_project_root, { "clean", "distclean", "mrproper" }) and "Uses clean target"
+        or "Needs a `clean:` target"
+      )
+    lines[#lines + 1] = ",ct  "
+      .. (
+        preferred_make_target(make_project_root, { "test", "check" }) and "Uses `make test/check`"
+        or "Needs a `test:` or `check:` target"
+      )
   end
 
   if cmake_root(bufnr) then
@@ -497,21 +498,21 @@ local function setup_clangd_extensions()
   local ok, clangd_extensions = pcall(require, "clangd_extensions")
   if not ok then return end
 
-  clangd_extensions.setup({
+  clangd_extensions.setup {
     memory_usage = {
       border = "rounded",
     },
     symbol_info = {
       border = "rounded",
     },
-  })
+  }
 end
 
 local function setup_cmake_tools()
   local ok, cmake_tools = pcall(require, "cmake-tools")
   if not ok then return end
 
-  cmake_tools.setup({
+  cmake_tools.setup {
     cmake_use_preset = true,
     cmake_regenerate_on_save = true,
     cmake_generate_options = { "-DCMAKE_EXPORT_COMPILE_COMMANDS=1" },
@@ -551,7 +552,7 @@ local function setup_cmake_tools()
     },
     cmake_virtual_text_support = true,
     cmake_use_scratch_buffer = false,
-  })
+  }
 end
 
 function M.setup()
@@ -560,9 +561,11 @@ function M.setup()
   setup_clangd_extensions()
   setup_cmake_tools()
 
-  vim.api.nvim_create_user_command("CppKeys", function()
-    show_cpp_keys(vim.api.nvim_get_current_buf())
-  end, { desc = "Show C/C++ keymaps" })
+  vim.api.nvim_create_user_command(
+    "CppKeys",
+    function() show_cpp_keys(vim.api.nvim_get_current_buf()) end,
+    { desc = "Show C/C++ keymaps" }
+  )
 
   vim.api.nvim_create_autocmd("FileType", {
     group = vim.api.nvim_create_augroup("user_cpp_keymaps", { clear = true }),
@@ -570,24 +573,42 @@ function M.setup()
     callback = function(event)
       register_cpp_which_key(event.buf)
       map("n", "<localleader>ck", function() show_cpp_keys(event.buf) end, "Show C/C++ keymaps", { buffer = event.buf })
-      map("n", "<localleader>cb", function() build_or_run_file(event.buf, false) end, "Build file or CMake target", { buffer = event.buf })
-      map("n", "<localleader>cr", function() build_or_run_file(event.buf, true) end, "Run file or CMake target", { buffer = event.buf })
-      map("n", "<localleader>cc", function() clean_file_or_target(event.buf) end, "Clean file or CMake target", { buffer = event.buf })
+      map(
+        "n",
+        "<localleader>cb",
+        function() build_or_run_file(event.buf, false) end,
+        "Build file or CMake target",
+        { buffer = event.buf }
+      )
+      map(
+        "n",
+        "<localleader>cr",
+        function() build_or_run_file(event.buf, true) end,
+        "Run file or CMake target",
+        { buffer = event.buf }
+      )
+      map(
+        "n",
+        "<localleader>cc",
+        function() clean_file_or_target(event.buf) end,
+        "Clean file or CMake target",
+        { buffer = event.buf }
+      )
       map("n", "<localleader>ct", function() run_tests(event.buf) end, "Run tests", { buffer = event.buf })
 
-      if vim.fn.exists(":ClangdSwitchSourceHeader") == 2 then
+      if vim.fn.exists ":ClangdSwitchSourceHeader" == 2 then
         map("n", "<localleader>ch", "<cmd>ClangdSwitchSourceHeader<cr>", "Switch source/header", { buffer = event.buf })
       end
-      if vim.fn.exists(":ClangdAST") == 2 then
+      if vim.fn.exists ":ClangdAST" == 2 then
         map("n", "<localleader>ca", "<cmd>ClangdAST<cr>", "Show AST", { buffer = event.buf })
       end
-      if vim.fn.exists(":ClangdSymbolInfo") == 2 then
+      if vim.fn.exists ":ClangdSymbolInfo" == 2 then
         map("n", "<localleader>ci", "<cmd>ClangdSymbolInfo<cr>", "Show symbol info", { buffer = event.buf })
       end
-      if vim.fn.exists(":ClangdTypeHierarchy") == 2 then
+      if vim.fn.exists ":ClangdTypeHierarchy" == 2 then
         map("n", "<localleader>cT", "<cmd>ClangdTypeHierarchy<cr>", "Show type hierarchy", { buffer = event.buf })
       end
-      if vim.fn.exists(":ClangdMemoryUsage") == 2 then
+      if vim.fn.exists ":ClangdMemoryUsage" == 2 then
         map("n", "<localleader>cm", "<cmd>ClangdMemoryUsage<cr>", "Show memory usage", { buffer = event.buf })
       end
     end,
@@ -598,29 +619,35 @@ function M.setup()
     pattern = { "cmake" },
     callback = function(event)
       register_cmake_which_key(event.buf)
-      if vim.fn.exists(":CMakeGenerate") == 2 then
+      if vim.fn.exists ":CMakeGenerate" == 2 then
         map("n", "<localleader>cg", "<cmd>CMakeGenerate<cr>", "Generate CMake project", { buffer = event.buf })
       end
-      if vim.fn.exists(":CMakeBuild") == 2 then
+      if vim.fn.exists ":CMakeBuild" == 2 then
         map("n", "<localleader>cb", "<cmd>CMakeBuild<cr>", "Build current target", { buffer = event.buf })
       end
-      if vim.fn.exists(":CMakeRun") == 2 then
+      if vim.fn.exists ":CMakeRun" == 2 then
         map("n", "<localleader>cr", "<cmd>CMakeRun<cr>", "Run current target", { buffer = event.buf })
       end
-      if vim.fn.exists(":CMakeRunTest") == 2 then
+      if vim.fn.exists ":CMakeRunTest" == 2 then
         map("n", "<localleader>ct", "<cmd>CMakeRunTest<cr>", "Run tests", { buffer = event.buf })
       end
-      if vim.fn.exists(":CMakeSelectBuildTarget") == 2 then
+      if vim.fn.exists ":CMakeSelectBuildTarget" == 2 then
         map("n", "<localleader>cs", "<cmd>CMakeSelectBuildTarget<cr>", "Select build target", { buffer = event.buf })
       end
-      if vim.fn.exists(":CMakeSelectLaunchTarget") == 2 then
+      if vim.fn.exists ":CMakeSelectLaunchTarget" == 2 then
         map("n", "<localleader>cl", "<cmd>CMakeSelectLaunchTarget<cr>", "Select launch target", { buffer = event.buf })
       end
-      if vim.fn.exists(":CMakeSelectBuildType") == 2 then
+      if vim.fn.exists ":CMakeSelectBuildType" == 2 then
         map("n", "<localleader>cv", "<cmd>CMakeSelectBuildType<cr>", "Select build type", { buffer = event.buf })
       end
-      if vim.fn.exists(":CMakeSelectConfigurePreset") == 2 then
-        map("n", "<localleader>cp", "<cmd>CMakeSelectConfigurePreset<cr>", "Select configure preset", { buffer = event.buf })
+      if vim.fn.exists ":CMakeSelectConfigurePreset" == 2 then
+        map(
+          "n",
+          "<localleader>cp",
+          "<cmd>CMakeSelectConfigurePreset<cr>",
+          "Select configure preset",
+          { buffer = event.buf }
+        )
       end
     end,
   })

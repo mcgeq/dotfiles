@@ -1,3 +1,4 @@
+-- selene: allow(unused_variable)
 return function(map)
   -- Add personal keymaps here without touching the base config.
   -- Example:

@@ -4,7 +4,7 @@ function M.setup()
   local ok_blink, blink = pcall(require, "blink.cmp")
   if not ok_blink then return end
 
-  blink.setup({
+  blink.setup {
     appearance = {
       nerd_font_variant = "mono",
     },
@@ -33,7 +33,7 @@ function M.setup()
     sources = {
       default = { "lsp", "path", "snippets", "buffer" },
     },
-  })
+  }
 end
 
 return M

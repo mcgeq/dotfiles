@@ -1,5 +1,5 @@
 local M = {}
-local filetypes = require("lang.frontend_filetypes")
+local filetypes = require "lang.frontend_filetypes"
 
 local DEFAULTS = {
   formatter = "eslint",
@@ -63,9 +63,7 @@ local function derive_mode(frontend)
   return "eslint"
 end
 
-function M.available_modes()
-  return vim.deepcopy(ORDER)
-end
+function M.available_modes() return vim.deepcopy(ORDER) end
 
 function M.get()
   local frontend = load_user_frontend()
@@ -76,13 +74,9 @@ function M.get()
   return frontend
 end
 
-function M.get_mode()
-  return M.get().mode
-end
+function M.get_mode() return M.get().mode end
 
-function M.eslint_lookup()
-  return filetypes.build_eslint_lookup(M.get().eslint_filetypes)
-end
+function M.eslint_lookup() return filetypes.build_eslint_lookup(M.get().eslint_filetypes) end
 
 function M.describe(mode)
   local current = mode or M.get_mode()

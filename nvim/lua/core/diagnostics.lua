@@ -1,4 +1,4 @@
-vim.diagnostic.config({
+vim.diagnostic.config {
   severity_sort = true,
   underline = true,
   update_in_insert = false,
@@ -19,4 +19,4 @@ vim.diagnostic.config({
       [vim.diagnostic.severity.HINT] = "H",
     },
   },
-})
+}

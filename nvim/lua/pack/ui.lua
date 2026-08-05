@@ -4,9 +4,7 @@ local M = {
   win = nil,
 }
 
-local function timestamp()
-  return os.date("%H:%M:%S")
-end
+local function timestamp() return os.date "%H:%M:%S" end
 
 local function append(message, level)
   local line = string.format("[%s] %s", timestamp(), message)

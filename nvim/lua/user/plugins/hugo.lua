@@ -9,11 +9,11 @@ local DEFAULTS = {
   posts_dir = "posts",
 }
 
-local util = require("core.util")
+local util = require "core.util"
 
 local function config()
   local user = require("user").lang or {}
-  local private = util.require_if_exists("user.private") or {}
+  local private = util.require_if_exists "user.private" or {}
   local cfg = vim.tbl_deep_extend("force", {}, DEFAULTS, user.hugo or {}, private.hugo or {})
   return cfg
 end
@@ -24,7 +24,11 @@ local function blog_root()
 
   local raw = cfg.blog_path
   if not raw or raw == "" then
-    vim.notify("Hugo is enabled but `blog_path` is not set in `user.lang.hugo`.", vim.log.levels.WARN, { title = "Hugo" })
+    vim.notify(
+      "Hugo is enabled but `blog_path` is not set in `user.lang.hugo`.",
+      vim.log.levels.WARN,
+      { title = "Hugo" }
+    )
     return nil
   end
 
@@ -48,22 +52,22 @@ local function slugify(title)
   local chars = {}
   local pending = ""
 
-  for byte in tostring(title):lower():gmatch(".") do
+  for byte in tostring(title):lower():gmatch "." do
     local value = byte:byte()
     if value < 128 then
       if pending ~= "" then
-        if pending:match("^[\228-\233][\128-\191][\128-\191]$") then table.insert(chars, pending) end
+        if pending:match "^[\228-\233][\128-\191][\128-\191]$" then table.insert(chars, pending) end
         pending = ""
       end
-      if byte:match("%w") then
+      if byte:match "%w" then
         table.insert(chars, byte)
-      elseif (byte:match("%s") or byte == "_") and chars[#chars] ~= "-" then
+      elseif (byte:match "%s" or byte == "_") and chars[#chars] ~= "-" then
         table.insert(chars, "-")
       end
     else
       pending = pending .. byte
       if #pending == 3 then
-        if pending:match("^[\228-\233][\128-\191][\128-\191]$") then table.insert(chars, pending) end
+        if pending:match "^[\228-\233][\128-\191][\128-\191]$" then table.insert(chars, pending) end
         pending = ""
       end
     end
@@ -104,9 +108,7 @@ local function front_matter(title, series, stamp)
   }, "\n")
 end
 
-local function open_file(path)
-  vim.cmd("edit " .. vim.fn.fnameescape(path))
-end
+local function open_file(path) vim.cmd("edit " .. vim.fn.fnameescape(path)) end
 
 local function write_manual_post(path, title, series, stamp)
   pcall(vim.fn.writefile, vim.split(front_matter(title, series, stamp), "\n", { plain = true }), path)
@@ -158,14 +160,12 @@ local function new_post()
         return
       end
 
-      if vim.fn.executable("hugo") == 1 then
+      if vim.fn.executable "hugo" == 1 then
         local rel = vim.fs.joinpath(cfg.content_dir or "content", cfg.posts_dir or "posts", series, year, month, name)
         vim.fn.system({ "hugo", "new", rel }, nil, { cwd = root })
       end
 
-      if vim.uv.fs_stat(path) == nil then
-        write_manual_post(path, title, series, stamp)
-      end
+      if vim.uv.fs_stat(path) == nil then write_manual_post(path, title, series, stamp) end
 
       if vim.uv.fs_stat(path) then
         vim.notify("Created post: " .. path, vim.log.levels.INFO, { title = "Hugo" })
@@ -181,7 +181,7 @@ local function server_command()
   local root = blog_root()
   if not root then return end
 
-  if vim.fn.executable("hugo") ~= 1 then
+  if vim.fn.executable "hugo" ~= 1 then
     vim.notify("`hugo` is not available on PATH.", vim.log.levels.WARN, { title = "Hugo" })
     return
   end
@@ -200,7 +200,7 @@ local function blog_files()
   if not root then return end
   local ok, snacks = pcall(require, "snacks")
   if not ok then return end
-  snacks.picker.files({ cwd = root })
+  snacks.picker.files { cwd = root }
 end
 
 local function blog_grep()
@@ -208,7 +208,7 @@ local function blog_grep()
   if not root then return end
   local ok, snacks = pcall(require, "snacks")
   if not ok then return end
-  snacks.picker.grep({ cwd = root })
+  snacks.picker.grep { cwd = root }
 end
 
 function M.setup()
@@ -216,7 +216,11 @@ function M.setup()
   if not cfg.enabled then return end
 
   if not cfg.blog_path or cfg.blog_path == "" then
-    vim.notify("Hugo is enabled but `blog_path` is not set in `user.lang.hugo`.", vim.log.levels.WARN, { title = "Hugo" })
+    vim.notify(
+      "Hugo is enabled but `blog_path` is not set in `user.lang.hugo`.",
+      vim.log.levels.WARN,
+      { title = "Hugo" }
+    )
     return
   end
 
@@ -228,7 +232,11 @@ function M.setup()
   map("n", "<leader>hg", blog_grep, "Grep blog content")
 
   vim.api.nvim_create_user_command("HugoNewPost", new_post, { desc = "Create a new Hugo post" })
-  vim.api.nvim_create_user_command("HugoServer", server_command, { desc = "Start `hugo server` in a floating terminal" })
+  vim.api.nvim_create_user_command(
+    "HugoServer",
+    server_command,
+    { desc = "Start `hugo server` in a floating terminal" }
+  )
 end
 
 return M

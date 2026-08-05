@@ -19,14 +19,12 @@ M.PROJECT_ROOT_MARKERS = {
   ".git",
 }
 
-local function current_cwd_raw()
-  return vim.uv.cwd() or vim.fn.getcwd()
-end
+local function current_cwd_raw() return vim.uv.cwd() or vim.fn.getcwd() end
 
 local function listed_buffers()
   local buffers = {}
 
-  for _, buffer in ipairs(vim.fn.getbufinfo({ buflisted = 1 })) do
+  for _, buffer in ipairs(vim.fn.getbufinfo { buflisted = 1 }) do
     if vim.api.nvim_buf_is_valid(buffer.bufnr) and vim.bo[buffer.bufnr].buflisted then
       table.insert(buffers, buffer.bufnr)
     end
@@ -40,9 +38,7 @@ function M.normalize(path)
   return vim.fs.normalize(path)
 end
 
-function M.cwd()
-  return M.normalize(current_cwd_raw()) or vim.fs.normalize(vim.fn.getcwd())
-end
+function M.cwd() return M.normalize(current_cwd_raw()) or vim.fs.normalize(vim.fn.getcwd()) end
 
 function M.dir_label(path)
   local normalized = M.normalize(path) or M.cwd()
@@ -84,9 +80,7 @@ function M.cwd_project_root()
   return nil
 end
 
-function M.current_root(bufnr)
-  return M.project_root(bufnr) or M.buffer_dir(bufnr) or M.cwd()
-end
+function M.current_root(bufnr) return M.project_root(bufnr) or M.buffer_dir(bufnr) or M.cwd() end
 
 function M.buffer_roots()
   local roots = {}
@@ -211,9 +205,7 @@ function M.cd(root, opts)
     return false
   end
 
-  if not M.same_path(target, M.cwd()) then
-    vim.cmd.cd(vim.fn.fnameescape(target))
-  end
+  if not M.same_path(target, M.cwd()) then vim.cmd.cd(vim.fn.fnameescape(target)) end
 
   local loaded_session = false
   local has_session = false

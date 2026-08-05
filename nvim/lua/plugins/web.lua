@@ -7,37 +7,37 @@ end
 
 function M.setup()
   local map = require("core.keymaps").map
-  local loader = require("pack.loader")
+  local loader = require "pack.loader"
   local package_info_ready = false
   local hurl_ready = false
 
   local function ensure_package_info()
     if package_info_ready then return true end
-    if not loader.ensure("package-info.nvim") then return false end
+    if not loader.ensure "package-info.nvim" then return false end
     local ok_package_info, package_info = pcall(require, "package-info")
     if not ok_package_info then return false end
-    package_info.setup({
+    package_info.setup {
       autostart = true,
       hide_up_to_date = false,
       hide_unstable_versions = false,
-    })
+    }
     package_info_ready = true
     return package_info
   end
 
   local function ensure_hurl()
     if hurl_ready then return true end
-    if not loader.ensure("hurl.nvim") then return false end
+    if not loader.ensure "hurl.nvim" then return false end
     local ok_hurl, hurl = pcall(require, "hurl")
     if not ok_hurl then return false end
-    hurl.setup({
+    hurl.setup {
       debug = false,
       show_notification = false,
       mode = "split",
       formatters = {
         json = { "jq" },
       },
-    })
+    }
     hurl_ready = true
     return true
   end

@@ -5,36 +5,26 @@ function M.setup()
   if not ok then return end
   local ok_picker, picker = pcall(require, "snacks.picker")
   local ok_input, input = pcall(require, "snacks.input")
-  local workspace = require("core.workspace")
+  local workspace = require "core.workspace"
 
-  local function project_root()
-    return workspace.current_root(0)
-  end
+  local function project_root() return workspace.current_root(0) end
 
-  local function project_files()
-    snacks.picker.files({ cwd = project_root() })
-  end
+  local function project_files() snacks.picker.files { cwd = project_root() } end
 
-  local function project_git_files()
-    snacks.picker.git_files({ cwd = project_root() })
-  end
+  local function project_git_files() snacks.picker.git_files { cwd = project_root() } end
 
-  local function project_grep()
-    snacks.picker.grep({ cwd = project_root() })
-  end
+  local function project_grep() snacks.picker.grep { cwd = project_root() } end
 
-  local function project_smart()
-    snacks.picker.smart({ cwd = project_root() })
-  end
+  local function project_smart() snacks.picker.smart { cwd = project_root() } end
 
   local function project_explorer()
     local ok_explorer = pcall(snacks.explorer, { cwd = project_root() })
     if not ok_explorer then snacks.explorer() end
   end
 
-  local user = require("user")
+  local user = require "user"
 
-  snacks.setup({
+  snacks.setup {
     bigfile = {},
     dashboard = {
       enabled = user.private.features.dashboard ~= false,
@@ -136,14 +126,10 @@ function M.setup()
     },
     scope = {},
     statuscolumn = {},
-  })
+  }
 
-  if ok_picker and picker and picker.select then
-    vim.ui.select = picker.select
-  end
-  if ok_input and input and input.input then
-    vim.ui.input = input.input
-  end
+  if ok_picker and picker and picker.select then vim.ui.select = picker.select end
+  if ok_input and input and input.input then vim.ui.input = input.input end
 
   local map = require("core.keymaps").map
   map("n", "<leader><space>", project_smart, "Smart find project files")
@@ -154,7 +140,7 @@ function M.setup()
   map("n", "<leader>ff", project_files, "Find project files")
   map("n", "<leader>fg", project_git_files, "Find project git files")
   map("n", "<leader>fr", function() snacks.picker.recent() end, "Recent files")
-  map("n", "<leader>fc", function() snacks.picker.files({ cwd = vim.fn.stdpath("config") }) end, "Find config files")
+  map("n", "<leader>fc", function() snacks.picker.files { cwd = vim.fn.stdpath "config" } end, "Find config files")
 
   map("n", "<leader>sb", function() snacks.picker.lines() end, "Buffer lines")
   map({ "n", "x" }, "<leader>sw", function() snacks.picker.grep_word() end, "Search word")
@@ -168,11 +154,16 @@ function M.setup()
   map("n", "<leader>sS", function() snacks.picker.lsp_workspace_symbols() end, "Workspace symbols")
   map("n", "<leader>sm", function() snacks.picker.marks() end, "Marks")
   map("n", "<leader>sc", function() snacks.picker.commands() end, "Commands")
-  map("n", "<leader>sp", function() snacks.picker.files({ cwd = vim.fn.stdpath("data") .. "/site/pack" }) end, "Plugin files")
+  map(
+    "n",
+    "<leader>sp",
+    function() snacks.picker.files { cwd = vim.fn.stdpath "data" .. "/site/pack" } end,
+    "Plugin files"
+  )
 
   map("n", "<leader>gb", function() snacks.picker.git_branches() end, "Git branches")
   map("n", "<leader>gg", function()
-    if vim.fn.executable("lazygit") == 1 then
+    if vim.fn.executable "lazygit" == 1 then
       snacks.lazygit()
       return
     end

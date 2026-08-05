@@ -2,8 +2,8 @@ local M = {}
 
 function M.setup()
   local map = require("core.keymaps").map
-  local loader = require("pack.loader")
-  local runner = require("lang.runner")
+  local loader = require "pack.loader"
+  local runner = require "lang.runner"
   local features = require("user").private.features
 
   runner.setup()
@@ -19,14 +19,14 @@ function M.setup()
   local go_ready = false
   local function ensure_go()
     if go_ready then return true end
-    if not loader.ensure_many({ "guihua.lua", "go.nvim" }) then return false end
+    if not loader.ensure_many { "guihua.lua", "go.nvim" } then return false end
     local ok_go, go = pcall(require, "go")
     if not ok_go then return false end
-    go.setup({
+    go.setup {
       fillstruct = "gopls",
       lsp_cfg = false,
       dap_debug = false,
-    })
+    }
     go_ready = true
     return true
   end
@@ -57,19 +57,19 @@ function M.setup()
     vim.g.db_ui_winwidth = 40
     vim.g.db_ui_show_database_icon = 1
     vim.g.db_ui_force_echo_notifications = 1
-    vim.g.db_ui_save_location = vim.fn.stdpath("data") .. "/db_ui"
+    vim.g.db_ui_save_location = vim.fn.stdpath "data" .. "/db_ui"
 
     local function with_dbui(command)
       return function()
-        if not loader.ensure_many({ "vim-dadbod", "vim-dadbod-completion", "vim-dadbod-ui" }) then return end
+        if not loader.ensure_many { "vim-dadbod", "vim-dadbod-completion", "vim-dadbod-ui" } then return end
         vim.cmd(command)
       end
     end
 
-    map("n", "<leader>db", with_dbui("DBUIToggle"), "Toggle database UI")
-    map("n", "<leader>df", with_dbui("DBUIFindBuffer"), "Find database buffer")
-    map("n", "<leader>dr", with_dbui("DBUIRenameBuffer"), "Rename database buffer")
-    map("n", "<leader>dq", with_dbui("DBUILastQueryInfo"), "Database last query")
+    map("n", "<leader>db", with_dbui "DBUIToggle", "Toggle database UI")
+    map("n", "<leader>df", with_dbui "DBUIFindBuffer", "Find database buffer")
+    map("n", "<leader>dr", with_dbui "DBUIRenameBuffer", "Rename database buffer")
+    map("n", "<leader>dq", with_dbui "DBUILastQueryInfo", "Database last query")
   end
 end
 

@@ -11,9 +11,7 @@ autocmd("BufReadPost", {
   callback = function(args)
     local mark = vim.api.nvim_buf_get_mark(args.buf, '"')
     local line_count = vim.api.nvim_buf_line_count(args.buf)
-    if mark[1] > 1 and mark[1] <= line_count then
-      pcall(vim.api.nvim_win_set_cursor, 0, mark)
-    end
+    if mark[1] > 1 and mark[1] <= line_count then pcall(vim.api.nvim_win_set_cursor, 0, mark) end
   end,
 })
 
@@ -41,5 +39,5 @@ autocmd("BufWinEnter", {
   end,
 })
 
-local user_autocmds = require("core.util").require_if_exists("user.autocmds")
+local user_autocmds = require("core.util").require_if_exists "user.autocmds"
 if type(user_autocmds) == "function" then user_autocmds() end

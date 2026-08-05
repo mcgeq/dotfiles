@@ -1,26 +1,20 @@
 local M = {}
 local last_terminal = nil
-local workspace = require("core.workspace")
+local workspace = require "core.workspace"
 
-local util = require("core.util")
+local util = require "core.util"
 local is_windows = util.is_windows
 
-local function current_cwd()
-  return vim.uv.cwd() or vim.fn.getcwd()
-end
+local function current_cwd() return vim.uv.cwd() or vim.fn.getcwd() end
 
-local function normalize_dir(path)
-  return workspace.normalize(path) or workspace.normalize(current_cwd())
-end
+local function normalize_dir(path) return workspace.normalize(path) or workspace.normalize(current_cwd()) end
 
-local function dir_label(path)
-  return workspace.dir_label(path)
-end
+local function dir_label(path) return workspace.dir_label(path) end
 
 local function default_shell()
   if is_windows() then
-    if vim.fn.executable("pwsh") == 1 then return "pwsh" end
-    if vim.fn.executable("powershell") == 1 then return "powershell" end
+    if vim.fn.executable "pwsh" == 1 then return "pwsh" end
+    if vim.fn.executable "powershell" == 1 then return "powershell" end
     return "cmd.exe"
   end
 
@@ -42,21 +36,13 @@ local function remember_terminal(cmd, opts)
   }
 end
 
-local function terminal_title(prefix, cwd)
-  return (" %s: %s "):format(prefix, dir_label(cwd))
-end
+local function terminal_title(prefix, cwd) return (" %s: %s "):format(prefix, dir_label(cwd)) end
 
-function M.cwd()
-  return workspace.cwd()
-end
+function M.cwd() return workspace.cwd() end
 
-function M.buffer_dir(bufnr)
-  return workspace.buffer_dir(bufnr)
-end
+function M.buffer_dir(bufnr) return workspace.buffer_dir(bufnr) end
 
-function M.project_root(bufnr)
-  return workspace.project_root(bufnr)
-end
+function M.project_root(bufnr) return workspace.project_root(bufnr) end
 
 ---@param cmd string|string[]
 ---@param opts table|nil
@@ -115,9 +101,13 @@ function M.open_buffer_dir(cmd, opts)
 
   if not dir then
     dir = M.cwd()
-    vim.notify("Current buffer has no file path yet; opening a shell in the current working directory.", vim.log.levels.INFO, {
-      title = "Terminal",
-    })
+    vim.notify(
+      "Current buffer has no file path yet; opening a shell in the current working directory.",
+      vim.log.levels.INFO,
+      {
+        title = "Terminal",
+      }
+    )
   end
 
   opts = vim.tbl_extend("force", {
@@ -135,9 +125,13 @@ function M.open_project(cmd, opts)
 
   if not root then
     root = M.buffer_dir(bufnr) or M.cwd()
-    vim.notify("No project root detected for the current buffer; opening a shell in the nearest available directory.", vim.log.levels.INFO, {
-      title = "Terminal",
-    })
+    vim.notify(
+      "No project root detected for the current buffer; opening a shell in the nearest available directory.",
+      vim.log.levels.INFO,
+      {
+        title = "Terminal",
+      }
+    )
   end
 
   opts = vim.tbl_extend("force", {

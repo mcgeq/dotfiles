@@ -1,13 +1,9 @@
 local M = {}
-local PACK_PLUGIN_ROOT = vim.fs.joinpath(vim.fn.stdpath("data"), "site", "pack", "core", "opt")
+local PACK_PLUGIN_ROOT = vim.fs.joinpath(vim.fn.stdpath "data", "site", "pack", "core", "opt")
 
-local function path_exists(path)
-  return path and vim.uv.fs_stat(path) ~= nil
-end
+local function path_exists(path) return path and vim.uv.fs_stat(path) ~= nil end
 
-local function plugin_dir(name)
-  return vim.fs.joinpath(PACK_PLUGIN_ROOT, name)
-end
+local function plugin_dir(name) return vim.fs.joinpath(PACK_PLUGIN_ROOT, name) end
 
 local function worktree_state(path)
   if not path_exists(path) then return "missing" end
@@ -31,7 +27,7 @@ end
 
 local function shorten_src(src)
   if not src or src == "" then return "" end
-  local repo = src:match("github%.com[:/](.-)$") or src
+  local repo = src:match "github%.com[:/](.-)$" or src
   repo = repo:gsub("%.git$", "")
   return repo
 end
@@ -126,9 +122,7 @@ local function get_plugins(names)
     if ok_get then
       for _, plugin in ipairs(all) do
         local name = plugin.spec.name
-        if name then
-          plugins[#plugins + 1] = make_plugin_record(name, plugin.spec, plugin)
-        end
+        if name then plugins[#plugins + 1] = make_plugin_record(name, plugin.spec, plugin) end
       end
     end
   else
@@ -139,9 +133,7 @@ local function get_plugins(names)
     end
   end
 
-  table.sort(plugins, function(a, b)
-    return a.name < b.name
-  end)
+  table.sort(plugins, function(a, b) return a.name < b.name end)
 
   return plugins
 end
@@ -159,9 +151,7 @@ end
 local function get_plugin_names(arg_lead)
   local names = {}
   for _, name in ipairs(spec_name_list()) do
-    if name and name:lower():find(arg_lead:lower(), 1, true) == 1 then
-      table.insert(names, name)
-    end
+    if name and name:lower():find(arg_lead:lower(), 1, true) == 1 then table.insert(names, name) end
   end
   table.sort(names)
   return names
@@ -200,9 +190,7 @@ local function pick_plugin_and_run(title, plugins, on_choice, opts)
 
   vim.ui.select(items, {
     prompt = string.format("%s (%d)", title, #plugins),
-    format_item = function(item)
-      return item.display or item.text
-    end,
+    format_item = function(item) return item.display or item.text end,
     kind = "pack",
     snacks = {
       layout = { preset = "select" },
@@ -215,16 +203,14 @@ local function pick_plugin_and_run(title, plugins, on_choice, opts)
       on_choice(nil)
       return
     end
-    on_choice({ choice.name })
+    on_choice { choice.name }
   end)
 end
 
 local function filter_plugins(predicate)
   local ret = {}
   for _, plugin in ipairs(get_plugins()) do
-    if predicate(plugin) then
-      ret[#ret + 1] = plugin
-    end
+    if predicate(plugin) then ret[#ret + 1] = plugin end
   end
   return ret
 end
@@ -236,9 +222,7 @@ local function get_repair_candidates()
   end)
 end
 
-local function pending_repair_path()
-  return vim.fs.joinpath(vim.fn.stdpath("data"), "pack-repair-pending.json")
-end
+local function pending_repair_path() return vim.fs.joinpath(vim.fn.stdpath "data", "pack-repair-pending.json") end
 
 local function summarize_names(names, max_items)
   local lines = {}
@@ -306,7 +290,7 @@ local function open_pending_repair_session()
     return false
   end
 
-  local terminal = require("core.terminal")
+  local terminal = require "core.terminal"
   local env = vim.fn.environ()
   env.NVIM_NO_PLUGINS = "1"
 
@@ -367,11 +351,7 @@ local function repair_plugins(names, opts)
 
     cleanup_plugin_dirs(names)
 
-    if names == nil then
-      names = vim.tbl_map(function(plugin)
-        return plugin.name
-      end, get_repair_candidates())
-    end
+    if names == nil then names = vim.tbl_map(function(plugin) return plugin.name end, get_repair_candidates()) end
   else
     cleanup_plugin_dirs(names)
   end
@@ -385,9 +365,7 @@ local function repair_plugins(names, opts)
   local targets = {}
   for _, name in ipairs(names or {}) do
     local plugin = by_name[name]
-    if plugin then
-      targets[#targets + 1] = plugin
-    end
+    if plugin then targets[#targets + 1] = plugin end
   end
 
   if #targets == 0 then
@@ -412,9 +390,7 @@ local function repair_plugins(names, opts)
   end
 
   if #active_targets > 0 then
-    local active_names = vim.tbl_map(function(plugin)
-      return plugin.name
-    end, active_targets)
+    local active_names = vim.tbl_map(function(plugin) return plugin.name end, active_targets)
     local ok_save, save_result = save_pending_repair(active_names)
     local lines = {
       "Active plugins cannot be reinstalled in the current session:",
@@ -448,7 +424,11 @@ local function repair_plugins(names, opts)
 
   local ok_del, err_del = pcall(vim.pack.del, target_names)
   if not ok_del then
-    vim.notify("Failed to delete broken plugins: " .. tostring(err_del), vim.log.levels.ERROR, { title = "Pack Repair" })
+    vim.notify(
+      "Failed to delete broken plugins: " .. tostring(err_del),
+      vim.log.levels.ERROR,
+      { title = "Pack Repair" }
+    )
     return
   end
 
@@ -477,9 +457,7 @@ function M.setup()
       return
     end
 
-    pick_plugin_and_run("Pack Update", get_plugins(), function(names)
-      vim.pack.update(names)
-    end)
+    pick_plugin_and_run("Pack Update", get_plugins(), function(names) vim.pack.update(names) end)
   end, {
     bang = true,
     nargs = "*",
@@ -498,9 +476,7 @@ function M.setup()
       return
     end
 
-    pick_plugin_and_run("Pack Status", get_plugins(), function(names)
-      vim.pack.update(names, { offline = true })
-    end)
+    pick_plugin_and_run("Pack Status", get_plugins(), function(names) vim.pack.update(names, { offline = true }) end)
   end, {
     bang = true,
     nargs = "*",
@@ -517,15 +493,11 @@ function M.setup()
     local candidates = get_repair_candidates()
 
     if opts.bang then
-      repair_plugins(vim.tbl_map(function(plugin)
-        return plugin.name
-      end, candidates))
+      repair_plugins(vim.tbl_map(function(plugin) return plugin.name end, candidates))
       return
     end
 
-    pick_plugin_and_run("Pack Repair", candidates, function(names)
-      repair_plugins(names)
-    end, {
+    pick_plugin_and_run("Pack Repair", candidates, function(names) repair_plugins(names) end, {
       all_display = "[*] all broken or missing plugins",
       all_src = "Repair every broken or missing vim.pack plugin",
       empty_message = "No broken or missing plugins found",
@@ -561,9 +533,7 @@ function M.setup()
     desc = "Repair plugins, then open a clean nested Neovim session for active ones",
   })
 
-  vim.api.nvim_create_user_command("PackSync", function()
-    vim.pack.update(nil, { target = "lockfile" })
-  end, {
+  vim.api.nvim_create_user_command("PackSync", function() vim.pack.update(nil, { target = "lockfile" }) end, {
     desc = "Sync local plugins to nvim-pack-lock.json",
   })
 

@@ -5,12 +5,10 @@ local PROJECT_MARKERS = { "pyproject.toml", "uv.lock", "requirements.txt", "ruff
 local VENV_NAMES = { ".venv", "venv" }
 local activated_roots = {}
 
-local util = require("core.util")
+local util = require "core.util"
 local is_windows = util.is_windows
 
-local function joinpath(...)
-  return vim.fs.joinpath(...)
-end
+local function joinpath(...) return vim.fs.joinpath(...) end
 
 local function project_root(path)
   if not path or path == "" then return nil end
@@ -53,9 +51,7 @@ local function activate_root(root, opts)
 
         vim.env.VIRTUAL_ENV = venv_dir
         vim.g.python3_host_prog = python
-        if opts.bufnr and vim.api.nvim_buf_is_valid(opts.bufnr) then
-          vim.b[opts.bufnr].python3_host_prog = python
-        end
+        if opts.bufnr and vim.api.nvim_buf_is_valid(opts.bufnr) then vim.b[opts.bufnr].python3_host_prog = python end
 
         if opts.notify and activated_roots[root] ~= python then
           vim.notify("Python virtualenv detected: " .. name, vim.log.levels.INFO, { title = "Python" })

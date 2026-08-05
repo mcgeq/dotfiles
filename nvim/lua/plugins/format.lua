@@ -24,9 +24,7 @@ local DEFAULT_FORMATTERS_BY_FT = {
   zig = { "zigfmt" },
 }
 
-local function normalize_newlines(text)
-  return (text or ""):gsub("\r\n", "\n")
-end
+local function normalize_newlines(text) return (text or ""):gsub("\r\n", "\n") end
 
 local function get_buffer_text(bufnr)
   local text = table.concat(vim.api.nvim_buf_get_lines(bufnr, 0, -1, false), "\n")
@@ -69,7 +67,7 @@ end
 local function format_python_with_ruff(bufnr, opts)
   opts = opts or {}
   if not vim.api.nvim_buf_is_valid(bufnr) or vim.bo[bufnr].filetype ~= "python" then return false end
-  if vim.fn.executable("ruff") ~= 1 then return false end
+  if vim.fn.executable "ruff" ~= 1 then return false end
 
   local filename = vim.api.nvim_buf_get_name(bufnr)
   if filename == "" then return false end
@@ -113,20 +111,18 @@ end
 
 function M.setup()
   local map = require("core.keymaps").map
-  local user = require("user")
+  local user = require "user"
   local user_lang = user.lang
   local features = user.private.features
-  local frontend_state = require("lang.frontend_state")
+  local frontend_state = require "lang.frontend_state"
 
-  local function current_frontend()
-    return frontend_state.get()
-  end
+  local function current_frontend() return frontend_state.get() end
 
   local function frontend_owns_format(bufnr)
     local frontend = current_frontend()
     local eslint_filetypes = frontend_state.eslint_lookup()
     if frontend.formatter == "conform" or not eslint_filetypes[vim.bo[bufnr].filetype] then return false end
-    if #vim.lsp.get_clients({ bufnr = bufnr, name = "eslint" }) > 0 then return true end
+    if #vim.lsp.get_clients { bufnr = bufnr, name = "eslint" } > 0 then return true end
     return vim.fs.root(bufnr, {
       "eslint.config.js",
       "eslint.config.mjs",
@@ -141,7 +137,8 @@ function M.setup()
     }) ~= nil
   end
 
-  local formatters_by_ft = vim.tbl_deep_extend("force", vim.deepcopy(DEFAULT_FORMATTERS_BY_FT), user_lang.formatters_by_ft or {})
+  local formatters_by_ft =
+    vim.tbl_deep_extend("force", vim.deepcopy(DEFAULT_FORMATTERS_BY_FT), user_lang.formatters_by_ft or {})
   local python_ruff_fallback = supports_python_ruff_fallback(formatters_by_ft)
   local ok_conform, conform = pcall(require, "conform")
   if ok_conform then
@@ -159,19 +156,17 @@ function M.setup()
     }
     formatters = vim.tbl_deep_extend("force", formatters, user_lang.formatters or {})
 
-    conform.setup({
-      format_on_save = features.format_on_save ~= false
-          and function(bufnr)
-            if frontend_owns_format(bufnr) then return end
-            return {
-              timeout_ms = 1000,
-              lsp_format = "fallback",
-            }
-          end
-        or nil,
+    conform.setup {
+      format_on_save = features.format_on_save ~= false and function(bufnr)
+        if frontend_owns_format(bufnr) then return end
+        return {
+          timeout_ms = 1000,
+          lsp_format = "fallback",
+        }
+      end or nil,
       formatters_by_ft = formatters_by_ft,
       formatters = formatters,
-    })
+    }
   elseif python_ruff_fallback and features.format_on_save ~= false then
     vim.api.nvim_create_autocmd("BufWritePre", {
       group = vim.api.nvim_create_augroup("plugins_format_python_ruff_fallback", { clear = true }),
@@ -185,28 +180,28 @@ function M.setup()
 
   map({ "n", "v" }, "<leader>cf", function()
     local bufnr = vim.api.nvim_get_current_buf()
-    if frontend_owns_format(bufnr) and vim.fn.exists(":EslintFixAll") == 2 then
+    if frontend_owns_format(bufnr) and vim.fn.exists ":EslintFixAll" == 2 then
       pcall(vim.cmd, "silent EslintFixAll")
       return
     end
 
     if ok_conform then
-      conform.format({ async = true })
+      conform.format { async = true }
       return
     end
 
-    if python_ruff_fallback and format_python_with_ruff(bufnr, { notify_errors = true, timeout_ms = 1000 }) then return end
-    vim.lsp.buf.format({ async = true })
+    if python_ruff_fallback and format_python_with_ruff(bufnr, { notify_errors = true, timeout_ms = 1000 }) then
+      return
+    end
+    vim.lsp.buf.format { async = true }
   end, "Format buffer")
 
   local ok_mason, mason = pcall(require, "mason")
-  if ok_mason then
-    mason.setup({
-      ui = {
-        border = "rounded",
-      },
-    })
-  end
+  if ok_mason then mason.setup {
+    ui = {
+      border = "rounded",
+    },
+  } end
 
   local ok_tool_installer, tool_installer = pcall(require, "mason-tool-installer")
   if ok_tool_installer then
@@ -225,11 +220,11 @@ function M.setup()
     vim.list_extend(tools, user_lang.mason or {})
     tools = vim.fn.uniq(vim.fn.sort(tools))
 
-    tool_installer.setup({
+    tool_installer.setup {
       ensure_installed = tools,
       run_on_start = false,
       auto_update = false,
-    })
+    }
   end
 end
 

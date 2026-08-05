@@ -16,28 +16,22 @@ local function config()
   return vim.tbl_deep_extend("force", {}, DEFAULTS, user_lang.markdown or {})
 end
 
-local function trim(text)
-  return (text:gsub("^%s+", ""):gsub("%s+$", ""))
-end
+local function trim(text) return (text:gsub("^%s+", ""):gsub("%s+$", "")) end
 
-local function is_table_line(line)
-  return line ~= nil and line:match("^%s*|.*|%s*$") ~= nil
-end
+local function is_table_line(line) return line ~= nil and line:match "^%s*|.*|%s*$" ~= nil end
 
 local function split_cells(line)
   local cells = {}
   local body = line:gsub("^%s*|", ""):gsub("|%s*$", "")
 
-  for cell in (body .. "|"):gmatch("(.-)|") do
+  for cell in (body .. "|"):gmatch "(.-)|" do
     table.insert(cells, trim(cell))
   end
 
   return cells
 end
 
-local function is_separator_cell(cell)
-  return cell:match("^:?-+:?$") ~= nil
-end
+local function is_separator_cell(cell) return cell:match "^:?-+:?$" ~= nil end
 
 local function format_separator(cell, width)
   local left = cell:sub(1, 1) == ":"
@@ -160,9 +154,7 @@ function M.setup_buffer(bufnr)
     vim.api.nvim_create_autocmd("InsertLeave", {
       group = group,
       buffer = bufnr,
-      callback = function()
-        pcall(M.format_table, bufnr)
-      end,
+      callback = function() pcall(M.format_table, bufnr) end,
     })
   end
 
@@ -187,9 +179,7 @@ function M.setup()
   vim.api.nvim_create_autocmd("FileType", {
     group = vim.api.nvim_create_augroup("lang_markdown_setup", { clear = true }),
     pattern = "markdown",
-    callback = function(event)
-      M.setup_buffer(event.buf)
-    end,
+    callback = function(event) M.setup_buffer(event.buf) end,
   })
 end
 
@@ -200,8 +190,6 @@ function M.manual_format()
   end
 end
 
-function M.config()
-  return config()
-end
+function M.config() return config() end
 
 return M

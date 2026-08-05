@@ -1,18 +1,18 @@
 local M = {}
-local workspace = require("core.workspace")
+local workspace = require "core.workspace"
 local SESSION_ROOT_PREFIX = '" workspace_root: '
 local session_file_path
 
 local function user_session_config()
-  local util = require("core.util")
-  local user = util.require_if_exists("user")
+  local util = require "core.util"
+  local user = util.require_if_exists "user"
   if not user then return {} end
   return user.session or {}
 end
 
 local function config_dir()
   local user = user_session_config()
-  return user.directory or (vim.fn.stdpath("data") .. "/session")
+  return user.directory or (vim.fn.stdpath "data" .. "/session")
 end
 
 local function autoread_enabled()
@@ -26,13 +26,9 @@ local function autowrite_enabled()
   return user.autowrite == true
 end
 
-local function current_cwd()
-  return workspace.cwd()
-end
+local function current_cwd() return workspace.cwd() end
 
-local function project_root()
-  return workspace.current_root(0)
-end
+local function project_root() return workspace.current_root(0) end
 
 local function ensure_session_dir()
   local dir = config_dir()
@@ -42,10 +38,8 @@ end
 
 local function session_slug(path)
   local normalized = workspace.normalize(path or current_cwd())
-  local drive = normalized:match("^([A-Za-z]):")
-  if drive then
-    normalized = drive:lower() .. normalized:sub(3)
-  end
+  local drive = normalized:match "^([A-Za-z]):"
+  if drive then normalized = drive:lower() .. normalized:sub(3) end
 
   local slug = normalized
     :gsub("^[/\\]+", "")
@@ -60,18 +54,16 @@ local function session_slug(path)
   return slug .. ".vim"
 end
 
-local function session_name_for_root(root)
-  return session_slug(root or project_root())
-end
+local function session_name_for_root(root) return session_slug(root or project_root()) end
 
 local function session_root_from_name(name)
   local bare = tostring(name or ""):gsub("%.vim$", "")
   if bare == "" then return nil end
 
   local root = bare:gsub("__", "/")
-  if root:match("^[A-Za-z]/") then
+  if root:match "^[A-Za-z]/" then
     root = root:sub(1, 1):upper() .. ":" .. root:sub(2)
-  elseif not root:match("^/") then
+  elseif not root:match "^/" then
     root = "/" .. root
   end
 
@@ -85,9 +77,7 @@ local function read_session_root_metadata(path)
   if not ok or type(lines) ~= "table" then return nil end
 
   for _, line in ipairs(lines) do
-    if vim.startswith(line, SESSION_ROOT_PREFIX) then
-      return workspace.normalize(line:sub(#SESSION_ROOT_PREFIX + 1))
-    end
+    if vim.startswith(line, SESSION_ROOT_PREFIX) then return workspace.normalize(line:sub(#SESSION_ROOT_PREFIX + 1)) end
   end
 
   return nil
@@ -112,9 +102,7 @@ local function write_session_root_metadata(name, root)
   pcall(vim.fn.writefile, lines, path)
 end
 
-local function session_display_name(name)
-  return tostring(name or ""):gsub("%.vim$", "")
-end
+local function session_display_name(name) return tostring(name or ""):gsub("%.vim$", "") end
 
 local function active_session_name()
   local this_session = vim.v.this_session
@@ -122,13 +110,9 @@ local function active_session_name()
   return vim.fn.fnamemodify(this_session, ":t")
 end
 
-local function current_session_matches(root)
-  return active_session_name() == session_name_for_root(root)
-end
+local function current_session_matches(root) return active_session_name() == session_name_for_root(root) end
 
-function session_file_path(name)
-  return vim.fs.joinpath(ensure_session_dir(), name)
-end
+function session_file_path(name) return vim.fs.joinpath(ensure_session_dir(), name) end
 
 local function session_items()
   local items = {}
@@ -157,9 +141,7 @@ local function session_items()
   return items
 end
 
-local function session_exists(name)
-  return vim.uv.fs_stat(session_file_path(name)) ~= nil
-end
+local function session_exists(name) return vim.uv.fs_stat(session_file_path(name)) ~= nil end
 
 local function session_label(item)
   local root = item.root
@@ -189,9 +171,7 @@ end
 local function should_autoread()
   if vim.fn.argc() > 0 then return false end
 
-  local listed = vim.tbl_filter(function(bufnr)
-    return vim.fn.buflisted(bufnr) == 1
-  end, vim.api.nvim_list_bufs())
+  local listed = vim.tbl_filter(function(bufnr) return vim.fn.buflisted(bufnr) == 1 end, vim.api.nvim_list_bufs())
   if #listed > 1 then return false end
 
   if vim.bo.filetype ~= "" then return false end
@@ -205,8 +185,8 @@ local function should_autoread()
 end
 
 local function ensure_loaded()
-  local loader = require("pack.loader")
-  if not loader.ensure("mini.nvim") then return nil end
+  local loader = require "pack.loader"
+  if not loader.ensure "mini.nvim" then return nil end
 
   local ok, mini_sessions = pcall(require, "mini.sessions")
   if not ok then
@@ -215,7 +195,7 @@ local function ensure_loaded()
   end
 
   if not M._setup_done then
-    mini_sessions.setup({
+    mini_sessions.setup {
       autoread = false,
       autowrite = false,
       directory = ensure_session_dir(),
@@ -235,32 +215,22 @@ local function ensure_loaded()
           read = restore_runtime_state,
         },
       },
-    })
+    }
     M._setup_done = true
   end
 
   return mini_sessions
 end
 
-function M.current_name()
-  return session_name_for_root(project_root())
-end
+function M.current_name() return session_name_for_root(project_root()) end
 
-function M.current_root()
-  return project_root()
-end
+function M.current_root() return project_root() end
 
-function M.name_for_root(root)
-  return session_name_for_root(root)
-end
+function M.name_for_root(root) return session_name_for_root(root) end
 
-function M.exists_for_root(root)
-  return session_exists(session_name_for_root(root))
-end
+function M.exists_for_root(root) return session_exists(session_name_for_root(root)) end
 
-function M.items()
-  return session_items()
-end
+function M.items() return session_items() end
 
 local function save_session(name, root, notify_success)
   local mini_sessions = ensure_loaded()
@@ -338,7 +308,11 @@ function M.delete_current()
   local root = project_root()
   local name = session_name_for_root(root)
   if not M.exists_for_root(root) then
-    vim.notify(("No saved workspace session to delete for: %s"):format(root), vim.log.levels.INFO, { title = "Sessions" })
+    vim.notify(
+      ("No saved workspace session to delete for: %s"):format(root),
+      vim.log.levels.INFO,
+      { title = "Sessions" }
+    )
     return
   end
 
@@ -398,7 +372,8 @@ function M.show_current()
     "Name:    " .. session_display_name(name),
     "Path:    " .. session_file_path(name),
     "Active:  " .. (current_session_matches(root) and "yes" or "no"),
-    "Auto:    " .. ("read=%s, write=%s"):format(autoread_enabled() and "on" or "off", autowrite_enabled() and "on" or "off"),
+    "Auto:    "
+      .. ("read=%s, write=%s"):format(autoread_enabled() and "on" or "off", autowrite_enabled() and "on" or "off"),
   }
 
   vim.notify(table.concat(lines, "\n"), vim.log.levels.INFO, { title = "Sessions" })

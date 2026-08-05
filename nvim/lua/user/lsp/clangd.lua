@@ -20,19 +20,19 @@ local function executable_sibling(path, sibling)
 end
 
 local function system_clangd()
-  local direct = first_executable({ "clangd", "clangd.exe" })
+  local direct = first_executable { "clangd", "clangd.exe" }
   if direct then return direct end
 
-  local sibling = executable_sibling(vim.fn.exepath("clang++"), "clangd.exe")
-    or executable_sibling(vim.fn.exepath("clang-cl"), "clangd.exe")
-    or executable_sibling(vim.fn.exepath("clang"), "clangd.exe")
+  local sibling = executable_sibling(vim.fn.exepath "clang++", "clangd.exe")
+    or executable_sibling(vim.fn.exepath "clang-cl", "clangd.exe")
+    or executable_sibling(vim.fn.exepath "clang", "clangd.exe")
   if sibling then return sibling end
 end
 
 local function mason_clangd()
   local patterns = {
-    vim.fs.joinpath(vim.fn.stdpath("data"), "mason", "packages", "clangd", "*", "bin", "clangd.exe"),
-    vim.fs.joinpath(vim.fn.stdpath("data"), "mason", "packages", "clangd", "*", "bin", "clangd"),
+    vim.fs.joinpath(vim.fn.stdpath "data", "mason", "packages", "clangd", "*", "bin", "clangd.exe"),
+    vim.fs.joinpath(vim.fn.stdpath "data", "mason", "packages", "clangd", "*", "bin", "clangd"),
   }
 
   for _, pattern in ipairs(patterns) do
@@ -56,12 +56,12 @@ end
 
 local function build_cmd()
   local clangd = system_clangd() or mason_clangd() or "clangd"
-  local drivers = unique({
-    normalize(vim.fn.exepath("clang++")),
-    normalize(vim.fn.exepath("clang-cl")),
-    normalize(vim.fn.exepath("clang")),
-    normalize(vim.fn.exepath("cl")),
-  })
+  local drivers = unique {
+    normalize(vim.fn.exepath "clang++"),
+    normalize(vim.fn.exepath "clang-cl"),
+    normalize(vim.fn.exepath "clang"),
+    normalize(vim.fn.exepath "cl"),
+  }
 
   local cmd = {
     clangd,
@@ -72,9 +72,7 @@ local function build_cmd()
     "--pch-storage=memory",
   }
 
-  if #drivers > 0 then
-    table.insert(cmd, "--query-driver=" .. table.concat(drivers, ","))
-  end
+  if #drivers > 0 then table.insert(cmd, "--query-driver=" .. table.concat(drivers, ",")) end
 
   return cmd
 end

@@ -2,7 +2,7 @@ local M = {}
 
 local function print_lines(lines)
   vim.api.nvim_out_write(table.concat(lines, "\n"))
-  vim.api.nvim_out_write("\n")
+  vim.api.nvim_out_write "\n"
 end
 
 local function is_nvim_update_check(cmd)
@@ -23,14 +23,10 @@ end
 
 local function skipped_system_obj()
   return {
-    wait = function()
-      return skipped_system_result()
-    end,
+    wait = function() return skipped_system_result() end,
     kill = function() end,
     write = function() end,
-    is_closing = function()
-      return true
-    end,
+    is_closing = function() return true end,
   }
 end
 
@@ -58,11 +54,7 @@ function M.run()
   vim.system = function(cmd, opts, on_exit)
     if is_nvim_update_check(cmd) then
       local result = skipped_system_result()
-      if on_exit then
-        vim.schedule(function()
-          on_exit(result)
-        end)
-      end
+      if on_exit then vim.schedule(function() on_exit(result) end) end
       return skipped_system_obj()
     end
     return old_system(cmd, opts, on_exit)
@@ -70,9 +62,7 @@ function M.run()
 
   prepare_headless_snacks_health()
 
-  local ok, err = pcall(function()
-    require("vim.health")._check("", vim.env.NVIM_HEALTH_ARGS or "")
-  end)
+  local ok, err = pcall(function() require("vim.health")._check("", vim.env.NVIM_HEALTH_ARGS or "") end)
 
   vim.api.nvim_echo = old_echo
   vim.system = old_system
@@ -83,9 +73,9 @@ function M.run()
     return
   end
 
-  local bufnr = vim.fn.bufnr("health://")
+  local bufnr = vim.fn.bufnr "health://"
   if bufnr < 0 then
-    vim.api.nvim_err_writeln("Health capture failed: health:// buffer was not created")
+    vim.api.nvim_err_writeln "Health capture failed: health:// buffer was not created"
     vim.cmd.cquit(1)
     return
   end

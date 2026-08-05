@@ -11,7 +11,7 @@ end
 ---@return string[]
 function M.scan_modules(root)
   local modules = {}
-  local root_path = vim.fn.stdpath("config") .. "/lua/" .. root:gsub("%.", "/")
+  local root_path = vim.fn.stdpath "config" .. "/lua/" .. root:gsub("%.", "/")
   if vim.fn.isdirectory(root_path) == 0 then return modules end
 
   for name, type_ in vim.fs.dir(root_path) do
@@ -45,13 +45,9 @@ function M.to_lookup(names)
   return lookup
 end
 
-function M.is_windows()
-  return vim.fn.has("win32") == 1 or vim.fn.has("win64") == 1
-end
+function M.is_windows() return vim.fn.has "win32" == 1 or vim.fn.has "win64" == 1 end
 
-function M.executable_suffix()
-  return M.is_windows() and ".exe" or ""
-end
+function M.executable_suffix() return M.is_windows() and ".exe" or "" end
 
 function M.first_executable(names)
   for _, name in ipairs(names) do
@@ -60,9 +56,7 @@ function M.first_executable(names)
   end
 end
 
-function M.powershell_quote(value)
-  return "'" .. tostring(value):gsub("'", "''") .. "'"
-end
+function M.powershell_quote(value) return "'" .. tostring(value):gsub("'", "''") .. "'" end
 
 function M.shell_quote(value)
   if M.is_windows() then return M.powershell_quote(value) end

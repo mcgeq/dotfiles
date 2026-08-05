@@ -4,9 +4,7 @@ function M.setup()
   local map = require("core.keymaps").map
 
   local ok_pairs, mini_pairs = pcall(require, "mini.pairs")
-  if ok_pairs then
-    mini_pairs.setup()
-  end
+  if ok_pairs then mini_pairs.setup() end
 
   local ok_ai, mini_ai = pcall(require, "mini.ai")
   if ok_ai then mini_ai.setup() end
@@ -19,11 +17,11 @@ function M.setup()
 
   local ok_spider, spider = pcall(require, "spider")
   if ok_spider then
-    spider.setup({
+    spider.setup {
       skipInsignificantPunctuation = true,
       subwordMovement = true,
       consistentOperatorPending = false,
-    })
+    }
 
     -- Use ex-commands so dot-repeat keeps working in operator-pending mode.
     map({ "n", "o", "x" }, "w", "<cmd>lua require('spider').motion('w')<cr>", "Spider forward word")
