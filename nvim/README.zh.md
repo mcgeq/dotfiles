@@ -58,7 +58,7 @@ UI 和导航：
 
 ## 语言支持
 
-LSP 直接在 [lua/lsp/servers.lua](/d:/config/dotfiles/nvim/lua/lsp/servers.lua) 中配置。
+LSP 直接在 [lua/lsp/servers/](/d:/config/dotfiles/nvim/lua/lsp/servers) 中配置。
 
 内置基础支持包括：
 
@@ -74,10 +74,10 @@ LSP 直接在 [lua/lsp/servers.lua](/d:/config/dotfiles/nvim/lua/lsp/servers.lua
 - Zig：`zls`
 - Python：`ruff` + `uv + ty`（默认），`ty` 未安装时回退到 `basedpyright`
 - CSS / HTML：`cssls`、`emmet_language_server`
-- JavaScript / TypeScript / React：`vtsls`、`eslint`
+- JavaScript / TypeScript / React：`vtsls`、`eslint`、`biome`
 - Vue：`vue_ls`，`@vue/typescript-plugin` 接入 `vtsls`
 
-前端格式化默认使用 ESLint 驱动的工作流，以便使用 `@antfu/eslint-config` 的项目保持单一事实来源。非前端文件类型继续使用 Conform。
+前端格式化按项目自动判断：检测到 `biome.json` / `biome.jsonc` 时由 Biome 接管格式化和修复操作；否则默认使用 ESLint 驱动的工作流，以便使用 `@antfu/eslint-config` 的项目保持单一事实来源；非前端文件类型继续使用 Conform。
 
 C++ 用户覆盖优先使用系统 LLVM 工具链，不可用时回退到 Mason 的 `clangd`。C++20/23 默认值、`query-driver` 和项目级模块配置请参阅 [docs/cpp-clangd.md](/d:/config/dotfiles/nvim/docs/cpp-clangd.md)。
 
@@ -102,6 +102,8 @@ C++ 用户覆盖优先使用系统 LLVM 工具链，不可用时回退到 Mason 
 - `:FrontendMode eslint_imports`
 - `:FrontendMode conform`
 - `:FrontendModeCycle`
+
+Biome 项目自动检测，不参与前端模式。
 
 插件管理：
 
@@ -329,6 +331,11 @@ Git 块：
 - `<leader>ghS` 暂存当前缓冲区
 - `<leader>ghu` 撤销上一次暂存的块
 - `<leader>ghD` 比较当前缓冲区差异
+
+Git 提交（`gitcommit` 缓冲区）：
+
+- `<leader>cc` 选择并插入 Conventional Commits 类型
+- 主题行超过 50 字符时给出警告
 
 调试：
 

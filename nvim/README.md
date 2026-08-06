@@ -58,7 +58,7 @@ If a preferred theme is missing or broken locally, the config now falls back to 
 
 ## Language Support
 
-LSP is configured directly in [lua/lsp/servers.lua](/d:/config/dotfiles/nvim/lua/lsp/servers.lua).
+LSP is configured directly in [lua/lsp/servers/](/d:/config/dotfiles/nvim/lua/lsp/servers).
 
 Built-in base support includes:
 
@@ -74,10 +74,10 @@ Built-in base support includes:
 - Zig: `zls`
 - Python: `ruff` plus `uv + ty` by default, falling back to `basedpyright` when `ty` is not installed
 - CSS / HTML: `cssls`, `emmet_language_server`
-- JavaScript / TypeScript / React: `vtsls`, `eslint`
+- JavaScript / TypeScript / React: `vtsls`, `eslint`, `biome`
 - Vue: `vue_ls` with `@vue/typescript-plugin` wired into `vtsls`
 
-Frontend formatting defaults to ESLint-driven workflows so projects using `@antfu/eslint-config` can keep one source of truth. Non-frontend filetypes continue to use Conform.
+Frontend formatting resolves per project: Biome is auto-detected (`biome.json` / `biome.jsonc`) and takes over formatting and fix actions; otherwise ESLint-driven workflows keep `@antfu/eslint-config` as the single source of truth, and non-frontend filetypes continue to use Conform.
 
 For C++, the user override prefers a system LLVM toolchain when available and falls back to Mason's `clangd`. See [docs/cpp-clangd.md](/d:/config/dotfiles/nvim/docs/cpp-clangd.md) for C++20/23 defaults, `query-driver`, and project-level module setup.
 
@@ -102,6 +102,8 @@ Frontend mode:
 - `:FrontendMode eslint_imports`
 - `:FrontendMode conform`
 - `:FrontendModeCycle`
+
+Biome projects are auto-detected and skip frontend mode.
 
 Plugin management:
 
@@ -329,6 +331,11 @@ Git hunks:
 - `<leader>ghS` stage current buffer
 - `<leader>ghu` undo last staged hunk
 - `<leader>ghD` diff current buffer
+
+Git commits (`gitcommit` buffers):
+
+- `<leader>cc` pick and insert a Conventional Commits type
+- 50-character subject warning while typing
 
 Debug:
 

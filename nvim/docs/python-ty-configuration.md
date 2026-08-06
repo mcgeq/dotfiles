@@ -4,7 +4,7 @@
 
 当前这套 Neovim 配置里，`ty` 的定义已经不在旧的 AstroNvim 插件文件中，而是在：
 
-- `nvim/lua/lsp/servers.lua`
+- `nvim/lua/lsp/servers/`
 
 对应的是默认 Python 类型检查 / LSP 主线。当前策略是：
 
@@ -122,7 +122,7 @@ uv run ty server
 
 这份文档对应的是“当前新结构”：
 
-- LSP 定义：`nvim/lua/lsp/servers.lua`
+- LSP 定义：`nvim/lua/lsp/servers/`
 - 用户扩展入口：`nvim/lua/user/lsp/`
 - 用户语言扩展入口：`nvim/lua/user/lang.lua`
 

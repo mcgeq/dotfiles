@@ -121,6 +121,8 @@ return {
 
 The base config defaults to ESLint-driven formatting for JS, TS, React, Vue, JSON, YAML, and TOML so projects using `@antfu/eslint-config` can keep one formatting source of truth.
 
+Projects detected as Biome (`biome.json` / `biome.jsonc`) are auto-attached to the Biome LSP and skip frontend mode entirely: save runs Biome fix-all and `<localleader>lf` / `<localleader>li` / `<localleader>ls` operate on the Biome client instead of ESLint.
+
 Save actions are conservative by default so one save does not trigger repeated overlapping edits:
 
 - ESLint fix on save: on
@@ -184,8 +186,8 @@ Default keymaps:
 
 For `javascript`, `typescript`, `react`, and `vue` buffers:
 
-- `<localleader>lf`: ESLint fix all
-- `<localleader>li`: organize imports
+- `<localleader>lf`: ESLint fix all (Biome fix all in Biome projects)
+- `<localleader>li`: organize imports (Biome organize imports in Biome projects)
 - `<localleader>lm`: add missing imports
 - `<localleader>lu`: remove unused code
 - `<localleader>lv`: code actions

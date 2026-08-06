@@ -43,6 +43,6 @@ For the current running config, prefer these files over old docs:
 - [architecture.md](./architecture.md)
 - [lua/pack/spec.lua](/d:/config/dotfiles/nvim/lua/pack/spec.lua)
 - [lua/plugins/](/d:/config/dotfiles/nvim/lua/plugins)
-- [lua/lsp/servers.lua](/d:/config/dotfiles/nvim/lua/lsp/servers.lua)
+- [lua/lsp/servers/](/d:/config/dotfiles/nvim/lua/lsp/servers)
 
 If a note is not linked from `README.md` or this index, do not treat it as active guidance without re-verifying it against the current code.
