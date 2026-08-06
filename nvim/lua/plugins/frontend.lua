@@ -70,6 +70,19 @@ function M.setup()
     group = vim.api.nvim_create_augroup("plugins_frontend_lsp_keymaps", { clear = true }),
     pattern = frontend_filetypes.lsp_filetypes,
     callback = function(event)
+      local biome = require "lang.biome"
+      if biome.project_root(event.buf) then
+        map("n", "<localleader>lf", biome.fix_all, "Biome fix all", { buffer = event.buf })
+        map("n", "<localleader>li", biome.organize_imports, "Biome organize imports", { buffer = event.buf })
+        map(
+          "n",
+          "<localleader>ls",
+          function() actions.show_frontend_clients(event.buf) end,
+          "Show frontend clients",
+          { buffer = event.buf }
+        )
+        return
+      end
       map(
         "n",
         "<localleader>lf",

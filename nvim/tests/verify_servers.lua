@@ -5,6 +5,7 @@ local registry = require("lsp.servers").get()
 local expected = {
   "bashls",
   "basedpyright",
+  "biome",
   "cssls",
   "eslint",
   "emmet_language_server",

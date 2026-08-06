@@ -119,6 +119,9 @@ function M.setup()
   local function current_frontend() return frontend_state.get() end
 
   local function frontend_owns_format(bufnr)
+    local biome_root = require("lang.biome").project_root(bufnr)
+    if biome_root then return true end
+
     local frontend = current_frontend()
     local eslint_filetypes = frontend_state.eslint_lookup()
     if frontend.formatter == "conform" or not eslint_filetypes[vim.bo[bufnr].filetype] then return false end

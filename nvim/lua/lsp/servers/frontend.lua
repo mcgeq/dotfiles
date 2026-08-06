@@ -75,6 +75,32 @@ function M.get()
   }
 
   return {
+    biome = {
+      name = "biome",
+      ensure_installed = false, -- 项目级工具：node_modules / PATH / mason 探测
+      config = {
+        cmd = function(dispatchers)
+          local biome = require "lang.biome"
+          return biome.lsp_cmd_fn(dispatchers)
+        end,
+        root_dir = function(bufnr, cb) require("lang.biome").lsp_root_dir(bufnr, cb) end,
+        single_file_support = false,
+        filetypes = {
+          "javascript",
+          "javascriptreact",
+          "typescript",
+          "typescriptreact",
+          "vue",
+          "json",
+          "jsonc",
+        },
+        settings = {
+          formatter = {
+            enabled = true,
+          },
+        },
+      },
+    },
     cssls = {
       name = "cssls",
       ensure_installed = true,

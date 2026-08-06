@@ -83,6 +83,12 @@ function M.preferred_code_action(only, client_names)
 end
 
 function M.run_save_actions(bufnr, frontend)
+  local biome = require "lang.biome"
+  if biome.project_root(bufnr) and biome.has_client(bufnr) then
+    biome.fix_all()
+    return
+  end
+
   local save_actions = frontend.save_actions or {}
 
   if frontend.eslint_fix_on_save == false then return end
