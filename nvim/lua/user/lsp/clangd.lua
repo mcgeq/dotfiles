@@ -81,7 +81,7 @@ return {
   name = "clangd",
   ensure_installed = true,
   config = {
-    cmd = build_cmd(),
+    cmd = build_cmd,
     capabilities = {
       offsetEncoding = { "utf-8" },
     },
