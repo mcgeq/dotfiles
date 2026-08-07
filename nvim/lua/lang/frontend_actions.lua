@@ -86,6 +86,7 @@ function M.run_save_actions(bufnr, frontend)
   local biome = require "lang.biome"
   if biome.project_root(bufnr) and biome.has_client(bufnr) then
     biome.fix_all()
+    biome.format(bufnr)
     return
   end
 

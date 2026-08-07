@@ -120,4 +120,12 @@ function M.organize_imports() return M.apply_code_action "source.organizeImports
 --- @return boolean
 function M.has_client(bufnr) return #vim.lsp.get_clients { bufnr = bufnr, name = "biome" } > 0 end
 
+--- Format the buffer through the Biome LSP client. `source.fixAll.biome`
+--- only applies lint fixes, so formatting needs its own request.
+--- @param bufnr integer
+function M.format(bufnr)
+  if not M.has_client(bufnr) then return end
+  vim.lsp.buf.format { bufnr = bufnr, name = "biome" }
+end
+
 return M
