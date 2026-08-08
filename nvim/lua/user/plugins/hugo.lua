@@ -162,7 +162,7 @@ local function new_post()
 
       if vim.fn.executable "hugo" == 1 then
         local rel = vim.fs.joinpath(cfg.content_dir or "content", cfg.posts_dir or "posts", series, year, month, name)
-        vim.fn.system({ "hugo", "new", rel }, nil, { cwd = root })
+        pcall(vim.fn.system, { "hugo", "new", rel }, nil, { cwd = root })
       end
 
       if vim.uv.fs_stat(path) == nil then write_manual_post(path, title, series, stamp) end
@@ -175,6 +175,28 @@ local function new_post()
       end
     end)
   end)
+end
+
+local function toggle_draft()
+  local buf = vim.api.nvim_get_current_buf()
+  local lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
+  for i, line in ipairs(lines) do
+    local next, count = line:gsub("^draft = true$", "draft = false")
+    if count > 0 then
+      vim.api.nvim_buf_set_lines(buf, i - 1, i, false, { next })
+      vim.notify("draft = false (published)", vim.log.levels.INFO, { title = "Hugo" })
+      vim.cmd "write"
+      return
+    end
+    next, count = line:gsub("^draft = false$", "draft = true")
+    if count > 0 then
+      vim.api.nvim_buf_set_lines(buf, i - 1, i, false, { next })
+      vim.notify("draft = true (draft)", vim.log.levels.INFO, { title = "Hugo" })
+      vim.cmd "write"
+      return
+    end
+  end
+  vim.notify("No `draft` line found in front matter.", vim.log.levels.WARN, { title = "Hugo" })
 end
 
 local function server_command()
@@ -227,11 +249,17 @@ function M.setup()
   local map = require("core.keymaps").map
 
   map("n", "<leader>hn", new_post, "New Hugo post")
+  map("n", "<leader>hd", toggle_draft, "Toggle Hugo post publish state")
   map("n", "<leader>hs", server_command, "Start Hugo server")
   map("n", "<leader>hf", blog_files, "Find blog files")
   map("n", "<leader>hg", blog_grep, "Grep blog content")
 
   vim.api.nvim_create_user_command("HugoNewPost", new_post, { desc = "Create a new Hugo post" })
+  vim.api.nvim_create_user_command(
+    "HugoToggleDraft",
+    toggle_draft,
+    { desc = "Toggle the `draft` flag of the current post" }
+  )
   vim.api.nvim_create_user_command(
     "HugoServer",
     server_command,
