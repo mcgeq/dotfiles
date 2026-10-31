@@ -91,7 +91,6 @@ function M.setup()
     if ready then return true end
     if
       not loader.ensure_many {
-        "mason-nvim-dap.nvim",
         "nvim-dap",
         "nvim-nio",
         "nvim-dap-ui",
@@ -99,15 +98,6 @@ function M.setup()
       }
     then
       return false
-    end
-
-    local ok_mason_dap, mason_dap = pcall(require, "mason-nvim-dap")
-    if ok_mason_dap then
-      mason_dap.setup {
-        ensure_installed = {},
-        automatic_installation = false,
-        handlers = {},
-      }
     end
 
     setup_dap()

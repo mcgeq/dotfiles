@@ -12,9 +12,6 @@ function M.setup()
   local ok_surround, mini_surround = pcall(require, "mini.surround")
   if ok_surround then mini_surround.setup() end
 
-  local ok_comment, mini_comment = pcall(require, "mini.comment")
-  if ok_comment then mini_comment.setup() end
-
   local ok_spider, spider = pcall(require, "spider")
   if ok_spider then
     spider.setup {

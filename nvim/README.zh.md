@@ -43,7 +43,7 @@ UI 和导航：
 - `blink.cmp`：代码补全
 - `bufferline.nvim`：缓冲区标签页
 - `which-key.nvim`：分组快捷键提示
-- `nvim-spectre`：交互式搜索替换
+- `grug-far.nvim`：交互式搜索替换
 - `trouble.nvim`：诊断、符号、quickfix 和 location 列表
 - `todo-comments.nvim`：TODO / FIXME 导航
 - `nvim-treesitter-context`：轻量级代码上下文
@@ -248,11 +248,11 @@ C++ / CMake 扩展：
 - `<leader>sk` 快捷键
 - `<leader>sn` 通知
 - `<leader>sw` 使用 `snacks.picker` 搜索当前单词或选中文本
-- `<leader>sr` 使用 `nvim-spectre` 替换文件内容
-- `<leader>su` 恢复上一次 `nvim-spectre` 搜索
-- `<leader>sQ` 将 `nvim-spectre` 结果发送到 quickfix
-- `<leader>sW` 使用 `nvim-spectre` 替换当前单词或选中文本
-- `<leader>sF` 使用 `nvim-spectre` 替换当前文件
+- `<leader>sr` 使用 `grug-far.nvim` 替换文件内容
+- `<leader>su` 恢复上一次 `grug-far.nvim` 搜索
+- `<leader>sQ` 将 `grug-far.nvim` 结果发送到 quickfix
+- `<leader>sW` 使用 `grug-far.nvim` 替换当前单词或选中文本
+- `<leader>sF` 使用 `grug-far.nvim` 替换当前文件
 - `<leader>sR` 恢复上一次选择器
 
 主题和前端运行时切换：

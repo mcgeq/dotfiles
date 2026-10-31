@@ -43,7 +43,7 @@ UI and navigation:
 - `blink.cmp` for completion
 - `bufferline.nvim` for buffer tabs
 - `which-key.nvim` for grouped keymap hints
-- `nvim-spectre` for interactive search and replace
+- `grug-far.nvim` for interactive search and replace
 - `trouble.nvim` for diagnostics, symbols, quickfix, and location lists
 - `todo-comments.nvim` for TODO / FIXME navigation
 - `nvim-treesitter-context` for lightweight code context
@@ -249,11 +249,11 @@ Search and picker:
 - `<leader>sk` keymaps
 - `<leader>sn` notifications
 - `<leader>sw` grep current word or visual selection with `snacks.picker`
-- `<leader>sr` replace in files with `nvim-spectre`
-- `<leader>su` resume the last `nvim-spectre` search
-- `<leader>sQ` send `nvim-spectre` results to quickfix
-- `<leader>sW` replace current word or selection with `nvim-spectre`
-- `<leader>sF` replace in current file with `nvim-spectre`
+- `<leader>sr` replace in files with `grug-far.nvim`
+- `<leader>su` resume the last `grug-far.nvim` search
+- `<leader>sQ` send `grug-far.nvim` results to quickfix
+- `<leader>sW` replace current word or selection with `grug-far.nvim`
+- `<leader>sF` replace in current file with `grug-far.nvim`
 - `<leader>sR` resume last picker
 
 Theme and frontend runtime toggles:

@@ -55,6 +55,34 @@ for _, filetype in ipairs { "lua", "cpp", "cmake", "markdown", "typescript", "py
   vim.api.nvim_buf_delete(buf, { force = true })
 end
 
+do
+  local fixture = vim.fn.tempname()
+  vim.fn.mkdir(fixture, "p")
+  local file = fixture .. "/search fixture.txt"
+  vim.fn.writefile({ "before needle after", "needle twice needle" }, file)
+  local sourceBuf = vim.api.nvim_create_buf(true, false)
+  vim.api.nvim_buf_set_name(sourceBuf, file)
+  vim.api.nvim_set_current_buf(sourceBuf)
+  vim.bo[sourceBuf].filetype = "text"
+  vim.api.nvim_buf_set_lines(sourceBuf, 0, -1, false, { "before needle after", "needle twice needle" })
+  vim.api.nvim_win_set_cursor(0, { 1, 8 })
+  assert(require("pack.loader").ensure "grug-far.nvim", "grug-far did not lazy-load")
+  require("plugins.search").setup()
+  local callback = vim.fn.maparg("<leader>sF", "n", false, true).callback
+  assert(type(callback) == "function", "current-file search mapping missing")
+  callback()
+  vim.wait(100)
+  local instances = require "grug-far.instances"
+  local instance = instances.get_instance(0)
+  assert(instance, "grug-far current-file search did not open")
+  local values = require("grug-far.inputs").getValues(instance._context, instance:get_buf())
+  assert(values.search == "needle", "normal-mode word was not captured")
+  assert(values.paths:find "search\\ fixture%.txt", "space-containing file path was not escaped")
+  instance:close()
+  vim.wait(100)
+  vim.fn.delete(fixture, "rf")
+end
+
 assert(vim.fn.exists ":PackRestore" == 2, "PackRestore command missing")
 assert(vim.fn.exists ":RunnerBuild" == 2, "Runner command missing")
 assert(#vim.api.nvim_get_autocmds { group = "lang_formatting", event = "BufWritePre" } == 1, "Save entry is duplicated")

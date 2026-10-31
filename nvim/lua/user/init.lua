@@ -36,7 +36,7 @@ local DEFAULTS = {
       frontend = true, -- 前端 eslint / colorizer / autotag
       live_server = true, -- live-server 终端
       web = true, -- package-info + hurl
-      spectre = true, -- nvim-spectre 批量替换
+      search_replace = true, -- grug-far 批量替换
       markdown_extras = true, -- markdown 表格/图片/TOC/render
       format_on_save = true, -- 保存时自动格式化
       fix_on_save = true, -- 在自动保存流程中应用 lint fixes
@@ -70,5 +70,10 @@ if private ~= nil then
   end
 end
 M.private = vim.tbl_deep_extend("force", vim.deepcopy(DEFAULTS.private or {}), private or {})
+-- Honor the former feature name until the machine config adopts search_replace.
+local features = private and private.features or {}
+if features.search_replace == nil and features.spectre ~= nil then
+  M.private.features.search_replace = features.spectre
+end
 
 return M

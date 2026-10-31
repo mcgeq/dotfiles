@@ -10,7 +10,7 @@ This directory documents the current native `vim.pack`-based config and keeps a 
   Current runtime order and module ownership map
 - [nvim-spider.md](./nvim-spider.md)
   Current smart word-motion behavior
-- [nvim-spectre.md](./nvim-spectre.md)
+- [grug-far.md](./grug-far.md)
   Current project search-and-replace workflow
 
 ## Optional Reference

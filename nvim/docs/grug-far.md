@@ -1,16 +1,16 @@
-# nvim-spectre
+# grug-far.nvim
 
-`nvim-spectre` is active in the current config as the project-wide search and replace UI.
+`grug-far.nvim` is loaded on first use as the interactive project search/replace UI. Searches and history are isolated per workspace root.
 
 ## Active keymaps
 
-Configured in [lua/plugins/search.lua](/d:/config/dotfiles/nvim/lua/plugins/search.lua).
+Configured in `lua/plugins/search.lua`.
 
 Current mappings:
 
 - `<leader>sr`: open project replace
-- `<leader>su`: resume the last Spectre search
-- `<leader>sQ`: send the current Spectre results to quickfix
+- `<leader>su`: resume the last grug-far search
+- `<leader>sQ`: send the current grug-far results to quickfix
 - `<leader>sW` in normal mode: replace current word
 - `<leader>sW` in visual mode: replace current selection
 - `<leader>sF`: replace only in current file
@@ -29,10 +29,10 @@ Typical cases:
 
 ## Current behavior
 
-The base config keeps it intentionally simple:
+The base config uses ripgrep only, keeping search and replacement on the same engine:
 
 ```lua
-require("spectre").setup({})
+require("grug-far").setup({ engine = "ripgrep", enabledEngines = { "ripgrep" } })
 ```
 
 The plugin is mainly there for the workflow and keymaps, not for a heavily customized UI layer.
@@ -45,36 +45,36 @@ The plugin is mainly there for the workflow and keymaps, not for a heavily custo
 2. Fill in search text
 3. Fill in replacement text
 4. Review matches
-5. Apply changes from the Spectre UI
+5. Apply changes from the grug-far UI
 
 If you close the panel and want to come back to the same search state, press `<leader>su`.
 
-### Search current word
+### Replace current word
 
 1. Put the cursor on a symbol
 2. Press `<leader>sW`
 3. Narrow or replace from the panel
 
-### Search current selection
+### Replace current selection
 
 1. Select text in visual mode
 2. Press `<leader>sW`
-3. Spectre opens with the selection prefilled
+3. grug-far opens with the selection prefilled
 
-### Search only in current file
+### Replace only in current file
 
 1. Press `<leader>sF`
-2. Spectre opens in file-local mode
+2. grug-far opens in file-local mode
 
 For a file-local replace from a visual selection:
 
 1. Select text in visual mode
 2. Press `<leader>sF`
-3. Spectre opens scoped to the current file with the selection prefilled
+3. grug-far opens scoped to the current file with the selection prefilled
 
 ### Send results to quickfix
 
-1. Open a Spectre search
+1. Open a grug-far search
 2. Press `<leader>sQ`
 3. Use `[q` and `]q` to walk the matches from quickfix
 
@@ -86,24 +86,24 @@ This plugin still earns its place because:
 - it is much better than ad-hoc global replace for multi-file refactors
 - it fits the current workflow without requiring a framework layer
 
-`snacks` is the fast finder. `spectre` is the safer interactive replace tool.
+`snacks` is the fast finder. `grug-far` is the safer interactive replace tool.
 
 ## Change or disable it
 
-If you want to remove it:
+To disable it on this machine:
 
-Edit [lua/user/pack.lua](/d:/config/dotfiles/nvim/lua/user/pack.lua):
+Edit `lua/user/private.lua`:
 
 ```lua
 return {
-  disable = { "nvim-spectre" },
+  features = { search_replace = false },
 }
 ```
 
-If you only want different keymaps, override them in [lua/user/keymaps.lua](/d:/config/dotfiles/nvim/lua/user/keymaps.lua).
+The previous `private.features.spectre` switch is still honored unless `search_replace` is set explicitly.
 
 ## Related files
 
-- [lua/pack/spec.lua](/d:/config/dotfiles/nvim/lua/pack/spec.lua)
-- [lua/plugins/search.lua](/d:/config/dotfiles/nvim/lua/plugins/search.lua)
-- [lua/user/pack.lua](/d:/config/dotfiles/nvim/lua/user/pack.lua)
+- `lua/pack/spec.lua`
+- `lua/plugins/search.lua`
+- `lua/user/private.example.lua`

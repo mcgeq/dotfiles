@@ -287,5 +287,83 @@ check("unsupported C++ file tests do not fall through to Make build", function()
   vim.api.nvim_buf_delete(buf, { force = true })
 end)
 
+check("search plugin migration keeps inventory and feature ownership consistent", function()
+  local names = {}
+  for _, spec in ipairs(require("pack.spec").get_base_specs()) do
+    names[spec.name] = spec
+  end
+  assert(names["grug-far.nvim"] and names["grug-far.nvim"].feature == "search_replace")
+  assert(not names["nvim-spectre"] and not names["mason-nvim-dap.nvim"] and not names["headlines.nvim"])
+  local configs = require("pack.spec").configurations()
+  assert(
+    vim.tbl_filter(function(config) return config.module == "search" and config.plugin == "grug-far.nvim" end, configs)[1]
+  )
+  stub(package.loaded, "user", user { search_replace = false })
+  assert(require("pack.spec").enabled "grug-far.nvim" == false)
+end)
+
+check("debug setup loads adapters directly without Mason DAP bridge", function()
+  stub(package.loaded, "plugins.debug", nil)
+  local maps = {}
+  stub(package.loaded, "core.keymaps", { map = function(_, lhs, callback) maps[lhs] = callback end })
+  local loaded
+  stub(package.loaded, "pack.loader", {
+    ensure_many = function(names)
+      loaded = names
+      return true
+    end,
+  })
+  stub(package.preload, "dap", function()
+    return {
+      adapters = {},
+      configurations = {},
+      continue = function() end,
+      listeners = { after = { event_initialized = {} }, before = { event_terminated = {}, event_exited = {} } },
+    }
+  end)
+  stub(package.preload, "dap.utils", function()
+    return { pick_process = function() end }
+  end)
+  stub(package.preload, "nvim-dap-virtual-text", function()
+    return { setup = function() end }
+  end)
+  stub(package.preload, "dapui", function()
+    return { setup = function() end }
+  end)
+  stub(vim.fn, "executable", function() return 0 end)
+  require("plugins.debug").setup()
+  maps["<leader>Dc"]()
+  assert(not vim.tbl_contains(loaded, "mason-nvim-dap.nvim"), "removed bridge was loaded")
+  assert(vim.tbl_contains(loaded, "nvim-dap") and vim.tbl_contains(loaded, "nvim-dap-ui"), "DAP features were removed")
+end)
+
+check("editing keeps mini modules without overriding native commenting", function()
+  stub(package.loaded, "plugins.editing", nil)
+  local setups = {}
+  local function module(name)
+    return { setup = function() setups[name] = (setups[name] or 0) + 1 end }
+  end
+  stub(package.preload, "mini.pairs", function() return module "pairs" end)
+  stub(package.preload, "mini.ai", function() return module "ai" end)
+  stub(package.preload, "mini.surround", function() return module "surround" end)
+  stub(package.preload, "mini.comment", function() return module "comment" end)
+  stub(package.preload, "spider", function()
+    return { setup = function() end, motion = function() end }
+  end)
+  stub(package.loaded, "core.keymaps", { map = function() end })
+  require("plugins.editing").setup()
+  assert(setups.pairs and setups.ai and setups.surround, "mini editing modules were removed")
+  assert(not setups.comment, "mini.comment must not override native gc/gcc")
+end)
+
+check("legacy Spectre feature switch remains effective with explicit new switch taking priority", function()
+  stub(package.loaded, "user", nil)
+  stub(package.loaded, "user.private", { features = { spectre = false } })
+  assert(require("user").private.features.search_replace == false)
+  package.loaded.user = nil
+  package.loaded["user.private"] = { features = { spectre = false, search_replace = true } }
+  assert(require("user").private.features.search_replace == true)
+end)
+
 print(("%d/%d behavior checks passed"):format(total - failures, total))
 if failures > 0 then os.exit(1) end

@@ -21,7 +21,7 @@ return {
     -- frontend = false,       -- 前端 eslint / colorizer / autotag
     -- live_server = false,    -- live-server 终端
     -- web = false,            -- package-info + hurl
-    -- spectre = false,        -- nvim-spectre 批量替换
+    -- search_replace = false, -- grug-far 批量替换
     -- markdown_extras = false,-- markdown 表格/图片/TOC/render
     -- format_on_save = false, -- 保存时自动格式化
     -- fix_on_save = false,    -- 禁止保存时应用 lint fixes
