@@ -4,6 +4,9 @@ function M.setup()
   local ok_blink, blink = pcall(require, "blink.cmp")
   if not ok_blink then return end
 
+  local sql_sources = require("user").private.features.database ~= false and { "dadbod", "buffer", "snippets" }
+    or { "lsp", "buffer", "snippets" }
+
   blink.setup {
     appearance = {
       nerd_font_variant = "mono",
@@ -32,6 +35,14 @@ function M.setup()
     },
     sources = {
       default = { "lsp", "path", "snippets", "buffer" },
+      per_filetype = {
+        sql = sql_sources,
+        mysql = sql_sources,
+        plsql = sql_sources,
+      },
+      providers = {
+        dadbod = { name = "Dadbod", module = "plugins.dadbod_source" },
+      },
     },
   }
 end

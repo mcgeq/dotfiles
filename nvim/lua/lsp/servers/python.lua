@@ -2,15 +2,21 @@ local M = {}
 
 local common = require "lsp.servers.common"
 
-function M.get(use_ty)
+function M.get()
   local markers = common.PYTHON_ROOT_MARKERS
 
   return {
     basedpyright = {
       name = "basedpyright",
-      ensure_installed = not use_ty,
-      enable = not use_ty,
+      ensure_installed = true,
+      install_for = function(bufnr)
+        return require("lang.python").checker(vim.api.nvim_buf_get_name(bufnr)) == "basedpyright"
+      end,
       config = {
+        cmd = require("lang.python").lsp_command { "basedpyright-langserver", "--stdio" },
+        before_init = require("lang.python").before_init,
+        root_dir = require("lang.python").checker_root "basedpyright",
+        filetypes = { "python" },
         root_markers = markers,
         settings = {
           basedpyright = {
@@ -27,7 +33,7 @@ function M.get(use_ty)
       name = "ruff",
       ensure_installed = true,
       config = {
-        cmd = { "ruff", "server" },
+        cmd = require("lang.python").lsp_command { "ruff", "server" },
         root_markers = markers,
         on_attach = function(client) client.server_capabilities.hoverProvider = false end,
       },
@@ -35,10 +41,16 @@ function M.get(use_ty)
     ty = {
       name = "ty",
       ensure_installed = false,
-      enable = use_ty,
       config = {
-        cmd = common.python_ty_cmd() or { "ty", "server" },
+        cmd = function(dispatchers, config)
+          local command =
+            assert(require("lang.python").ty_command(config.root_dir), "Ty is not available for this project")
+          return require("lang.python").lsp_command(command)(dispatchers, config)
+        end,
+        before_init = require("lang.python").before_init,
+        root_dir = require("lang.python").checker_root "ty",
         filetypes = { "python" },
+        settings = {},
         root_markers = markers,
       },
     },

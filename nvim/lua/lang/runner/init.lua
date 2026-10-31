@@ -12,6 +12,10 @@ local languages = {
   frontend = require "lang.runner.frontend",
 }
 
+for _, filetype in ipairs { "c", "cpp", "objc", "objcpp", "cuda", "cmake" } do
+  languages[filetype] = require "lang.runner.cpp"
+end
+
 local last_run = nil
 
 local function language_for(filetype)
@@ -68,7 +72,7 @@ function M.run(action, bufnr)
 
   if not ui.supports(filetype) then
     vim.notify(
-      "Runner currently supports rust, zig, go, python, javascript, typescript, and vue buffers.",
+      "Runner currently supports C/C++, CMake, rust, zig, go, python, javascript, typescript, and vue buffers.",
       vim.log.levels.INFO,
       {
         title = "Runner",
@@ -85,7 +89,7 @@ function M.show_keys(bufnr)
   local filetype = vim.bo[bufnr].filetype
   if not ui.supports(filetype) then
     vim.notify(
-      "RunnerKeys currently supports rust, zig, go, python, javascript, typescript, and vue buffers.",
+      "RunnerKeys currently supports C/C++, CMake, rust, zig, go, python, javascript, typescript, and vue buffers.",
       vim.log.levels.INFO,
       {
         title = "RunnerKeys",
@@ -149,7 +153,23 @@ function M.setup()
 
   vim.api.nvim_create_autocmd("FileType", {
     group = vim.api.nvim_create_augroup("lang_runner_keymaps", { clear = true }),
-    pattern = { "rust", "zig", "go", "python", "javascript", "javascriptreact", "typescript", "typescriptreact", "vue" },
+    pattern = {
+      "c",
+      "cpp",
+      "objc",
+      "objcpp",
+      "cuda",
+      "cmake",
+      "rust",
+      "zig",
+      "go",
+      "python",
+      "javascript",
+      "javascriptreact",
+      "typescript",
+      "typescriptreact",
+      "vue",
+    },
     callback = function(event)
       local filetype = vim.bo[event.buf].filetype
       ui.register_which_key(event.buf, filetype)

@@ -53,67 +53,35 @@ function M.lsp_cmd(bufnr)
   return { binary, "lsp-proxy" }
 end
 
---- Cache for the most recently resolved binary, set by lsp_root_dir.
-M._last_binary = nil
+function M.supports(bufnr)
+  return vim.list_contains(
+    { "javascript", "javascriptreact", "typescript", "typescriptreact", "vue", "json", "jsonc" },
+    vim.bo[bufnr].filetype
+  )
+end
 
---- Dynamic LSP root_dir: only activates Biome when the project uses it and a
---- binary is available. `cb` is not called otherwise, so LSP never starts.
---- @param bufnr integer
---- @param cb fun(root_dir: string)
 function M.lsp_root_dir(bufnr, cb)
   local root = project_root(bufnr)
-  if not root then return end
-  local binary = M.binary(bufnr)
-  if not binary then return end
-  M._last_binary = binary
-  cb(root)
+  if root and M.binary(bufnr) then cb(root) end
 end
 
---- Dynamic LSP cmd, called after lsp_root_dir succeeded. Resolves the binary
---- from the cache set during root detection.
---- @param dispatchers vim.lsp.rpc.Dispatchers
---- @return vim.lsp.rpc.Client
-function M.lsp_cmd_fn(dispatchers)
-  local binary = M._last_binary or "biome"
-  return vim.lsp.rpc.start({ binary, "lsp-proxy" }, dispatchers, {})
+function M.lsp_cmd_fn(dispatchers, config)
+  local binary = M.binary(config.root_dir)
+  assert(binary, "Biome binary disappeared for " .. tostring(config.root_dir))
+  return vim.lsp.rpc.start({ binary, "lsp-proxy" }, dispatchers, { cwd = config.root_dir })
 end
---- Run a Biome code action synchronously on the current buffer.
---- @param only string
---- @return boolean applied
-function M.apply_code_action(only)
-  local bufnr = vim.api.nvim_get_current_buf()
-  local params = vim.lsp.util.make_range_params(nil, "utf-8")
-  params.context = {
-    only = { only },
-    diagnostics = vim.diagnostic.get(bufnr),
-    triggerKind = vim.lsp.protocol.CodeActionTriggerKind.Automatic,
-  }
 
-  for _, client in ipairs(vim.lsp.get_clients { bufnr = bufnr, name = "biome" }) do
-    local response = client:request_sync("textDocument/codeAction", params, 1200, bufnr)
-    local actions = response and response.result or nil
-    if actions and not vim.tbl_isempty(actions) then
-      for _, action in ipairs(actions) do
-        if action.edit then vim.lsp.util.apply_workspace_edit(action.edit, client.offset_encoding or "utf-8") end
-        if action.command then
-          local command = type(action.command) == "table" and action.command or action
-          pcall(vim.lsp.buf.execute_command, command)
-        end
-      end
-      return true
-    end
-  end
-
-  return false
+function M.apply_code_action(only, bufnr)
+  return require("lsp.actions").apply(bufnr or vim.api.nvim_get_current_buf(), only, { "biome" })
 end
 
 --- Fix all lint issues with Biome.
 --- @return boolean applied
-function M.fix_all() return M.apply_code_action "source.fixAll.biome" end
+function M.fix_all(bufnr) return M.apply_code_action("source.fixAll.biome", bufnr) end
 
 --- Organize imports with Biome.
 --- @return boolean applied
-function M.organize_imports() return M.apply_code_action "source.organizeImports.biome" end
+function M.organize_imports(bufnr) return M.apply_code_action("source.organizeImports.biome", bufnr) end
 
 --- Whether the current buffer has an attached Biome LSP client.
 --- @param bufnr integer
@@ -123,9 +91,9 @@ function M.has_client(bufnr) return #vim.lsp.get_clients { bufnr = bufnr, name =
 --- Format the buffer through the Biome LSP client. `source.fixAll.biome`
 --- only applies lint fixes, so formatting needs its own request.
 --- @param bufnr integer
-function M.format(bufnr)
+function M.format(bufnr, opts)
   if not M.has_client(bufnr) then return end
-  vim.lsp.buf.format { bufnr = bufnr, name = "biome" }
+  vim.lsp.buf.format(vim.tbl_extend("force", { bufnr = bufnr, name = "biome", timeout_ms = 1000 }, opts or {}))
 end
 
 return M

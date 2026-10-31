@@ -1,24 +1,6 @@
 local M = {}
-local PACK_PLUGIN_ROOT = vim.fs.joinpath(vim.fn.stdpath "data", "site", "pack", "core", "opt")
-
-local function path_exists(path) return path and vim.uv.fs_stat(path) ~= nil end
-
-local function plugin_dir(name) return vim.fs.joinpath(PACK_PLUGIN_ROOT, name) end
-
-local function worktree_state(path)
-  if not path_exists(path) then return "missing" end
-
-  local entries = 0
-  for name in vim.fs.dir(path) do
-    if name ~= ".git" then
-      entries = entries + 1
-      break
-    end
-  end
-
-  if entries == 0 then return "broken" end
-  return "ok"
-end
+local function plugin_dir(name) return require("pack.health").directory(name) end
+local function worktree_state(path) return require("pack.health").status(path) end
 
 local function shorten_rev(rev)
   if not rev or rev == "" then return "unknown" end
@@ -414,12 +396,17 @@ local function repair_plugins(names, opts)
 
   local target_names = {}
   local target_specs = {}
+  local specs_by_name = {}
+  for _, spec in ipairs(collect_specs()) do
+    specs_by_name[spec.name] = spec
+  end
   for _, plugin in ipairs(inactive_targets) do
     target_names[#target_names + 1] = plugin.name
-    target_specs[#target_specs + 1] = {
-      name = plugin.name,
-      src = plugin.src,
-    }
+    target_specs[#target_specs + 1] = specs_by_name[plugin.name]
+      or {
+        name = plugin.name,
+        src = plugin.src,
+      }
   end
 
   local ok_del, err_del = pcall(vim.pack.del, target_names)
@@ -432,7 +419,7 @@ local function repair_plugins(names, opts)
     return
   end
 
-  local ok_add, err_add = pcall(vim.pack.add, target_specs, { load = true, confirm = false })
+  local ok_add, err_add = pcall(vim.pack.add, target_specs, { load = false, confirm = false })
   if not ok_add then
     vim.notify("Failed to reinstall plugins: " .. tostring(err_add), vim.log.levels.ERROR, { title = "Pack Repair" })
     return
@@ -533,8 +520,12 @@ function M.setup()
     desc = "Repair plugins, then open a clean nested Neovim session for active ones",
   })
 
-  vim.api.nvim_create_user_command("PackSync", function() vim.pack.update(nil, { target = "lockfile" }) end, {
-    desc = "Sync local plugins to nvim-pack-lock.json",
+  local function restore_lockfile() vim.pack.update(nil, { offline = true, target = "lockfile" }) end
+  vim.api.nvim_create_user_command("PackRestore", restore_lockfile, {
+    desc = "Restore installed plugins to nvim-pack-lock.json revisions",
+  })
+  vim.api.nvim_create_user_command("PackSync", restore_lockfile, {
+    desc = "Compatibility alias for PackRestore",
   })
 
   map("n", "<leader>pl", "<cmd>PackOpenLog<cr>", "Open pack log")

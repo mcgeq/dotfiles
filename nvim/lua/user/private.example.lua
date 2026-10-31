@@ -24,6 +24,8 @@ return {
     -- spectre = false,        -- nvim-spectre 批量替换
     -- markdown_extras = false,-- markdown 表格/图片/TOC/render
     -- format_on_save = false, -- 保存时自动格式化
+    -- fix_on_save = false,    -- 禁止保存时应用 lint fixes
+    -- imports_on_save = false,-- 禁止保存时执行 imports 动作
   },
 
   -- ---------------------------------------------------------------------------

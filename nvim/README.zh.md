@@ -31,7 +31,7 @@
 - 原生 `vim.lsp.config()` 和 `vim.lsp.enable()`
 - Mason 用于工具和 LSP 安装
 - Treesitter 用于语法和结构解析
-- Conform 用于非前端格式化
+- Conform 用于按文件类型格式化及前端降级
 - 重型可选插件通过 `vim.pack` 安装，部分工作流工具按需通过 `:packadd` 加载
 
 UI 和导航：
@@ -77,7 +77,11 @@ LSP 直接在 [lua/lsp/servers/](/d:/config/dotfiles/nvim/lua/lsp/servers) 中�
 - JavaScript / TypeScript / React：`vtsls`、`eslint`、`biome`
 - Vue：`vue_ls`，`@vue/typescript-plugin` 接入 `vtsls`
 
-前端格式化按项目自动判断：检测到 `biome.json` / `biome.jsonc` 时由 Biome 接管格式化和修复操作；否则默认使用 ESLint 驱动的工作流，以便使用 `@antfu/eslint-config` 的项目保持单一事实来源；非前端文件类型继续使用 Conform。
+手动格式化与保存格式化共用策略：当前文件类型受支持、属于 Biome 项目且客户端已连接时才由 Biome 接管；ESLint 模式下有已连接的 ESLint 客户端时使用 ESLint；其余情况交给 Conform。仅有项目配置文件不会阻止 Conform 工作。
+
+`private.features.format_on_save = false` 关闭全部自动格式化、修复和 imports 编辑；开启时可通过 `fix_on_save`、`imports_on_save` 分别限制修复和 imports 动作。手动 `<leader>cf` 仍可使用。
+
+Python 按项目解析 `.venv` / `venv`，不修改进程的 `PATH`、`VIRTUAL_ENV` 或 Neovim Python provider。各项目独立选择本地或 PATH 中可用的 Ty，否则使用 basedpyright。Ruff LSP 和 Conform 优先使用项目内的 Ruff；Runner 与 DAP 分别解析项目解释器。
 
 C++ 用户覆盖优先使用系统 LLVM 工具链，不可用时回退到 Mason 的 `clangd`。C++20/23 默认值、`query-driver` 和项目级模块配置请参阅 [docs/cpp-clangd.md](/d:/config/dotfiles/nvim/docs/cpp-clangd.md)。
 
@@ -114,7 +118,8 @@ Biome 项目自动检测，不参与前端模式。
 - `:PackRepair` 显示损坏或缺失的插件
 - `:PackRepair <plugin>` 重新安装指定损坏插件
 - `:PackRepair!` 修复所有损坏或缺失的插件
-- `:PackSync` 将当前解析状态写入 [nvim-pack-lock.json](/d:/config/dotfiles/nvim/nvim-pack-lock.json)
+- `:PackRestore` 离线将已安装插件恢复到 `nvim-pack-lock.json` 中的版本，需在原生确认界面确认
+- `:PackSync` 为 `:PackRestore` 的兼容别名，不用于导出本地版本
 - `:PackOpenLog` 打开轻量级 `vim.pack` 活动日志
 - `:MarkdownTableFormat` 格式化光标下的 Markdown 表格
 - `:RenderMarkdown toggle` 切换缓冲区 Markdown 渲染
@@ -573,3 +578,15 @@ Windows 提示：
 - `snacks.nvim` 的 lazygit 集成
 
 以上均视为可选增强，而非核心架构。
+
+## 维护检查
+
+在仓库根目录运行 `pwsh -NoProfile -File nvim/scripts/check.ps1 -SkipStartupTiming`，执行 Lua 静态检查、格式检查、模块加载、LSP 清单及行为回归，不引导插件安装。
+
+使用 `nvim/scripts/offline-startup.ps1 -PluginRoot <data>/site/pack/core/opt` 运行离线集成检查：使用现有插件和临时数据目录，检查真实插件初始化及七类文件配置，不更新插件或启动 LSP。
+
+所有插件均保留。`pack/spec.lua` 集中记录插件来源、功能开关、启动标记和配置顺序；禁用功能或插件会阻止激活，不删除本地文件。`core/tools.lua` 统一初始化 Mason；LSP 只在 `auto_install` 开启且遇到对应文件类型时自动安装。格式化和调试工具通过 `:MasonToolsInstall` 显式安装。
+
+C/C++、CMake 现在共用 Runner，原有 `,cb / ,cr / ,cc / ,ct` 继续可用。CMake 的构建与运行仍优先使用 cmake-tools 的目标选择；缺少插件时只提供构建降级，不猜测可执行文件位置。
+
+入口继续要求 Neovim 0.12+；本次本机验证使用 0.13 开发版，尚未验证稳定版 0.12。Mason 的本地 health 兼容补丁暂时保留，待升级后重新复现原 Windows 问题再决定移除。

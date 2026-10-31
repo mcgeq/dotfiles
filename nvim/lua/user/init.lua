@@ -39,6 +39,8 @@ local DEFAULTS = {
       spectre = true, -- nvim-spectre 批量替换
       markdown_extras = true, -- markdown 表格/图片/TOC/render
       format_on_save = true, -- 保存时自动格式化
+      fix_on_save = true, -- 在自动保存流程中应用 lint fixes
+      imports_on_save = true, -- 允许配置的 imports 保存动作
     },
   },
 }

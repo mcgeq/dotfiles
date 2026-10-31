@@ -69,7 +69,7 @@ function M.get()
   local frontend = load_user_frontend()
   local mode = state.mode or derive_mode(frontend)
   local preset = PRESETS[mode]
-  if preset then frontend = vim.tbl_deep_extend("force", frontend, preset) end
+  if state.mode and preset then frontend = vim.tbl_deep_extend("force", frontend, preset) end
   frontend.mode = mode
   return frontend
 end

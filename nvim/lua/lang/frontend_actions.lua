@@ -1,6 +1,6 @@
 local M = {}
 
-local FRONTEND_CLIENTS = { "eslint", "vtsls", "vue_ls" }
+local FRONTEND_CLIENTS = { "eslint", "vtsls", "vue_ls", "biome" }
 
 function M.has_client(bufnr, names)
   local lookup = {}
@@ -29,36 +29,7 @@ function M.show_frontend_clients(bufnr)
 end
 
 function M.apply_sync_code_action(bufnr, only, client_names)
-  local allowed = {}
-  for _, name in ipairs(client_names or {}) do
-    allowed[name] = true
-  end
-
-  local params = vim.lsp.util.make_range_params(nil, "utf-8")
-  params.context = {
-    only = { only },
-    diagnostics = vim.diagnostic.get(bufnr),
-    triggerKind = vim.lsp.protocol.CodeActionTriggerKind.Automatic,
-  }
-
-  for _, client in ipairs(vim.lsp.get_clients { bufnr = bufnr }) do
-    if not client_names or allowed[client.name] then
-      local response = client:request_sync("textDocument/codeAction", params, 1200, bufnr)
-      local actions = response and response.result or nil
-      if actions and not vim.tbl_isempty(actions) then
-        for _, action in ipairs(actions) do
-          if action.edit then vim.lsp.util.apply_workspace_edit(action.edit, client.offset_encoding or "utf-8") end
-          if action.command then
-            local command = type(action.command) == "table" and action.command or action
-            pcall(vim.lsp.buf.execute_command, command)
-          end
-        end
-        return true
-      end
-    end
-  end
-
-  return false
+  return require("lsp.actions").apply(bufnr, only, client_names)
 end
 
 function M.preferred_code_action(only, client_names)
@@ -82,36 +53,34 @@ function M.preferred_code_action(only, client_names)
   end
 end
 
-function M.run_save_actions(bufnr, frontend)
-  local biome = require "lang.biome"
-  if biome.project_root(bufnr) and biome.has_client(bufnr) then
-    biome.fix_all()
-    biome.format(bufnr)
+function M.run_save_actions(bufnr, frontend, opts)
+  opts = opts or {}
+  local save_actions = frontend.save_actions or {}
+  if opts.provider == "biome" then
+    if opts.fix ~= false and frontend.eslint_fix_on_save ~= false and save_actions.eslint then
+      require("lang.biome").fix_all(bufnr)
+    end
+    if opts.imports ~= false and save_actions.organize_imports then require("lang.biome").organize_imports(bufnr) end
     return
   end
-
-  local save_actions = frontend.save_actions or {}
-
-  if frontend.eslint_fix_on_save == false then return end
-
-  if save_actions.eslint and M.has_client(bufnr, { "eslint" }) then
-    if vim.fn.exists ":EslintFixAll" == 2 then
-      pcall(vim.cmd, "silent EslintFixAll")
-    else
-      M.apply_sync_code_action(bufnr, "source.fixAll.eslint", { "eslint" })
+  if
+    (opts.provider == nil or opts.provider == "eslint")
+    and opts.fix ~= false
+    and frontend.eslint_fix_on_save ~= false
+    and save_actions.eslint
+    and M.has_client(bufnr, { "eslint" })
+  then
+    M.apply_sync_code_action(bufnr, "source.fixAll.eslint", { "eslint" })
+  end
+  if opts.imports == false then return end
+  for _, action in ipairs {
+    { "organize_imports", "source.organizeImports" },
+    { "remove_unused", "source.removeUnused.ts" },
+    { "add_missing_imports", "source.addMissingImports.ts" },
+  } do
+    if save_actions[action[1]] and M.has_client(bufnr, { "vtsls" }) then
+      M.apply_sync_code_action(bufnr, action[2], { "vtsls" })
     end
-  end
-
-  if save_actions.organize_imports and M.has_client(bufnr, { "vtsls" }) then
-    M.apply_sync_code_action(bufnr, "source.organizeImports", { "vtsls" })
-  end
-
-  if save_actions.remove_unused and M.has_client(bufnr, { "vtsls" }) then
-    M.apply_sync_code_action(bufnr, "source.removeUnused.ts", { "vtsls" })
-  end
-
-  if save_actions.add_missing_imports and M.has_client(bufnr, { "vtsls" }) then
-    M.apply_sync_code_action(bufnr, "source.addMissingImports.ts", { "vtsls" })
   end
 end
 

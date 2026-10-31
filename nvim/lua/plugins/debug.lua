@@ -74,6 +74,10 @@ local function setup_dap()
       program = "${file}",
       console = "integratedTerminal",
       justMyCode = false,
+      pythonPath = function()
+        local project = require("lang.python").for_buffer(vim.api.nvim_get_current_buf())
+        return project and project.python or first_executable { "python", "python3" } or "python"
+      end,
     },
   }
 end
@@ -89,9 +93,9 @@ function M.setup()
       not loader.ensure_many {
         "mason-nvim-dap.nvim",
         "nvim-dap",
+        "nvim-nio",
         "nvim-dap-ui",
         "nvim-dap-virtual-text",
-        "nvim-nio",
       }
     then
       return false
@@ -100,7 +104,7 @@ function M.setup()
     local ok_mason_dap, mason_dap = pcall(require, "mason-nvim-dap")
     if ok_mason_dap then
       mason_dap.setup {
-        ensure_installed = { "codelldb", "debugpy" },
+        ensure_installed = {},
         automatic_installation = false,
         handlers = {},
       }

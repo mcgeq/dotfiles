@@ -3,6 +3,7 @@ local M = {}
 local loaded = {}
 
 function M.ensure(name)
+  if vim.env.NVIM_NO_PLUGINS == "1" or not require("pack.spec").enabled(name) then return false end
   if loaded[name] then return true end
 
   local ok, err = pcall(vim.cmd.packadd, name)

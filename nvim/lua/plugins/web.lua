@@ -9,10 +9,11 @@ function M.setup()
   local map = require("core.keymaps").map
   local loader = require "pack.loader"
   local package_info_ready = false
+  local package_info_module
   local hurl_ready = false
 
   local function ensure_package_info()
-    if package_info_ready then return true end
+    if package_info_ready then return package_info_module end
     if not loader.ensure "package-info.nvim" then return false end
     local ok_package_info, package_info = pcall(require, "package-info")
     if not ok_package_info then return false end
@@ -22,6 +23,7 @@ function M.setup()
       hide_unstable_versions = false,
     }
     package_info_ready = true
+    package_info_module = package_info
     return package_info
   end
 

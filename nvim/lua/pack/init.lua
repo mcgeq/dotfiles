@@ -1,70 +1,24 @@
 local M = {}
 
-local util = require "core.util"
-
-local START_PLUGINS = {
-  "nvim-web-devicons",
-  "catppuccin",
-  "which-key.nvim",
-  "tokyonight.nvim",
-  "kanagawa.nvim",
-  "snacks.nvim",
-  "flash.nvim",
-  "nvim-spider",
-  "mini.nvim",
-  "noice.nvim",
-  "lualine.nvim",
-  "bufferline.nvim",
-  "gitsigns.nvim",
-  "blink.lib",
-  "blink.cmp",
-  "friendly-snippets",
-  "nvim-treesitter",
-  "nvim-treesitter-textobjects",
-  "nvim-treesitter-context",
-  "conform.nvim",
-  "mason.nvim",
-  "mason-lspconfig.nvim",
-  "mason-tool-installer.nvim",
-  "nvim-lspconfig",
-  "SchemaStore.nvim",
-  "plenary.nvim",
-  "nui.nvim",
-  "trouble.nvim",
-  "todo-comments.nvim",
-}
-
----@return table[]
 local function collect_specs()
-  local specs = require("pack.spec").get_base_specs()
-  local user = require "user"
-  local disabled = util.to_lookup(user.pack.disable)
-
-  for _, entry in ipairs(util.load_table_modules "user.plugins") do
-    local module_specs = entry.spec or entry
-    if vim.islist(module_specs) then
-      vim.list_extend(specs, module_specs)
-    else
-      table.insert(specs, module_specs)
-    end
+  local catalog = require "pack.spec"
+  local specs = {}
+  for _, entry in ipairs(catalog.entries()) do
+    if catalog.enabled(entry.name, entry) then specs[#specs + 1] = catalog.native_spec(entry) end
   end
-
-  vim.list_extend(specs, user.pack.add)
-
-  return vim.tbl_filter(function(spec)
-    local name = type(spec) == "table" and spec.name or nil
-    return not (name and disabled[name])
-  end, specs)
+  return specs
 end
 
 local function should_load_immediately(spec)
-  local name = type(spec) == "table" and spec.name or nil
-  return name ~= nil and vim.tbl_contains(START_PLUGINS, name)
+  local catalog = require "pack.spec"
+  for _, entry in ipairs(catalog.entries()) do
+    if entry.name == spec.name then return entry.start == true and catalog.enabled(entry.name, entry) end
+  end
+  return false
 end
 
 local STARTUP_PACK_NOTIFY_DELAY_MS = 1200
 local STARTUP_PACK_HEALTH_BATCH_SIZE = 8
-local PACK_PLUGIN_ROOT = vim.fs.joinpath(vim.fn.stdpath "data", "site", "pack", "core", "opt")
 
 local function dedupe_load_errors(errors)
   local seen = {}
@@ -108,34 +62,9 @@ local function notify_load_errors(errors)
   })
 end
 
-local function plugin_dir(name) return vim.fs.joinpath(PACK_PLUGIN_ROOT, name) end
+local function plugin_dir(name) return require("pack.health").directory(name) end
 
-local function count_non_git_entries(path)
-  local count = 0
-  for name in vim.fs.dir(path) do
-    if name ~= ".git" then
-      count = count + 1
-      break
-    end
-  end
-  return count
-end
-
-local function is_invalid_head(path)
-  local head_path = vim.fs.joinpath(path, ".git", "HEAD")
-  if vim.fn.filereadable(head_path) == 0 then return false end
-
-  local ok, lines = pcall(vim.fn.readfile, head_path)
-  if not ok or not lines or not lines[1] then return false end
-
-  return lines[1]:find(".invalid", 1, true) ~= nil
-end
-
-local function is_broken_plugin_dir(path)
-  if vim.fn.isdirectory(path) == 0 then return false end
-  if count_non_git_entries(path) == 0 then return true end
-  return is_invalid_head(path)
-end
+local function is_broken_plugin_dir(path) return require("pack.health").status(path) == "broken" end
 
 local function cleanup_broken_plugin_dirs(specs)
   local cleaned = {}
@@ -264,7 +193,6 @@ function M.setup()
   end
 
   local specs = collect_specs()
-  cleanup_broken_plugin_dirs(specs)
 
   local load_errors = {}
   local ok, err = pcall(vim.pack.add, specs, {

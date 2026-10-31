@@ -9,7 +9,8 @@ This document is a short map of the current active configuration. It is meant fo
 3. `lua/pack`
 4. `lua/plugins`
 5. `lua/lsp`
-6. `lua/user`
+
+`lua/user` is a configuration input loaded on demand (first used by `core.options`), not a final initialization stage.
 
 ## Ownership Rules
 
@@ -34,7 +35,13 @@ This document is a short map of the current active configuration. It is meant fo
 - `lua/plugins/completion.lua` owns `blink.cmp` setup only.
 - `lua/plugins/git.lua` owns `gitsigns` and hunk keymaps.
 - `lua/plugins/syntax.lua` owns Treesitter, Treesitter context, TODO comments, and Trouble wiring.
-- `lua/plugins/format.lua` owns Conform, formatter fallbacks, Mason tool installation, and the global format keymap.
+- `lua/plugins/format.lua` configures Conform and the manual format keymap.
+- `lua/lang/formatting.lua` selects the provider and owns the single BufWritePre formatting pipeline.
+- `lua/core/tools.lua` owns Mason setup, explicit non-LSP tool inventory, and filetype-triggered LSP installation.
+- `lua/pack/spec.lua` owns plugin inventory/start flags/feature gates and base setup order. `pack.health` shares disk inspection between startup and repair; startup reports corruption rather than deleting directories.
+- `lua/lang/cpp/build.lua` owns compiler/Make/CMake command construction. `lang.runner` dispatches and executes it; `plugins.cpp` owns integrations and compatibility keymaps.
+- `lua/lang/python.lua` resolves per-project interpreters/tools and checker activation; it never activates a virtualenv process-wide.
+- `lua/lsp/actions.lua` executes synchronous source actions on their responding client, with its offset encoding.
 - `lua/lang/frontend_state.lua`, `lua/lang/frontend_actions.lua`, and `lua/lang/frontend_filetypes.lua` hold frontend runtime state and helpers so `lua/plugins/frontend.lua` can stay focused on autocmds and keymaps.
 
 ## Maintenance Notes

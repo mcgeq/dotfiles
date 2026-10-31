@@ -205,7 +205,7 @@ For `javascript`, `typescript`, `react`, and `vue` buffers:
 
 ## Runner Localleader
 
-For Python, frontend, Rust, Zig, and Go buffers:
+For C/C++, CMake, Python, frontend, Rust, Zig, and Go buffers:
 
 - `<localleader>rb`: build
 - `<localleader>rr`: run
@@ -344,7 +344,7 @@ Markdown tables now auto-align on `InsertLeave`, and can also auto-align right a
 - `[I]`: installed on disk but not active in the current session
 - `[!]`: broken worktree on disk, usually a plugin directory that only has `.git`
 - `[?]`: missing plugin path
-- `:PackSync` only writes the current resolved state back to `nvim-pack-lock.json`.
+- `:PackRestore` restores installed plugins to lockfile revisions offline. `:PackSync` is its compatibility alias; neither exports local revisions.
 - `:PackRepair` is the quickest fix when a plugin directory is corrupted on disk.
 - `<leader>pu`: open plugin update picker
 - `<leader>pP`: update all plugins
@@ -370,7 +370,7 @@ Diagnostics can be viewed inline, in floats, through Snacks pickers, or in Troub
 
 Debugging uses `nvim-dap`:
 
-- Python uses `debugpy`, preferring `uv run python -m debugpy.adapter`
+- Python uses Mason debugpy when installed, then the existing uv/Python adapter fallback. The launched program uses its project interpreter.
 - C, C++, Rust, and Zig use `codelldb` when available
 - Debug keymaps use `<leader>D*` so they do not conflict with the database UI under `<leader>d*`
 
@@ -444,3 +444,14 @@ Runtime commands:
 - `:ThemeCycle`: cycle bundled themes
 - `<leader>ut`: cycle bundled themes
 - `<leader>uT`: show current theme
+
+## Runtime maintenance contracts
+
+- `private.features.format_on_save = false` disables all automatic buffer edits in the formatting pipeline. `fix_on_save` and `imports_on_save` independently restrict lint/import actions. Manual formatting is unaffected.
+- Set `lang.frontend.eslint_fix_on_save = false` to disable ESLint/Biome fix actions without disabling TypeScript import actions. Explicit `:FrontendMode` presets replace the corresponding session settings; initial startup preserves user-provided action switches.
+- `lsp.auto_install = false` prevents automatic LSP installation. `ensure_installed` marks servers eligible for installation on their matching filetypes, not unconditional preinstallation.
+- Mason's formatter/debug tool list is installed explicitly with `:MasonToolsInstall`. DAP and mason-lspconfig integrations do not own a second automatic installation list.
+- `user.plugins` specs accept native string or table forms. Names can be inferred from repository URLs. `feature` gates inventory, loading and setup. Groups with `setup` load their specs at startup by default; set `lazy = true` and use `pack.loader.ensure()` in your event/command callback for optional plugins. A disabled member prevents group setup. `pack.add` entries load at startup unless `start = false`.
+- Native `src`, `name`, `version`, and `data` fields pass through to vim.pack. `start` and `feature` are local lifecycle metadata. Keep updates explicit; this refactor does not change plugin revisions.
+- Use `lang.python.resolve(path)` for interpreter/environment data and `lang.python.executable(name, path)` for project tool lookup. The returned environment belongs to that child process, not `vim.env`.
+- C/C++ compiler/Make commands use the common Runner executor. CMake delegates to cmake-tools when loaded. A preset build fallback can be configured with `lang.cpp.cmake_preset`; running/cleaning/testing requires the plugin so target paths are not guessed.

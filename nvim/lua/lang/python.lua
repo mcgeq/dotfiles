@@ -1,114 +1,74 @@
 local M = {}
-
-local ROOT_MARKERS = { "pyproject.toml", "uv.lock", "requirements.txt", ".git" }
-local PROJECT_MARKERS = { "pyproject.toml", "uv.lock", "requirements.txt", "ruff.toml", ".ruff.toml" }
-local VENV_NAMES = { ".venv", "venv" }
-local activated_roots = {}
-
 local util = require "core.util"
-local is_windows = util.is_windows
 
-local function joinpath(...) return vim.fs.joinpath(...) end
-
-local function project_root(path)
+function M.resolve(path)
   if not path or path == "" then return nil end
-  return vim.fs.root(path, ROOT_MARKERS)
-end
-
-local function looks_like_python_root(root)
-  if not root or root == "" then return false end
-
-  for _, marker in ipairs(PROJECT_MARKERS) do
-    if vim.fn.filereadable(joinpath(root, marker)) == 1 then return true end
-  end
-
-  for _, name in ipairs(VENV_NAMES) do
-    if vim.fn.isdirectory(joinpath(root, name)) == 1 then return true end
-  end
-
-  return false
-end
-
-local function activate_root(root, opts)
-  if not root or root == "" then return nil end
-
-  opts = opts or {}
-  local win = is_windows()
-  local path_sep = win and ";" or ":"
-
-  for _, name in ipairs(VENV_NAMES) do
-    local venv_dir = joinpath(root, name)
-    if vim.fn.isdirectory(venv_dir) == 1 then
-      local bin_dir = joinpath(venv_dir, win and "Scripts" or "bin")
-      local python = joinpath(bin_dir, win and "python.exe" or "python")
-      if vim.fn.filereadable(python) == 1 then
-        local current_path = vim.env.PATH or ""
-        local normalized_bin = win and bin_dir:lower() or bin_dir
-        local normalized_path = win and current_path:lower() or current_path
-        if vim.fn.isdirectory(bin_dir) == 1 and not normalized_path:find(normalized_bin, 1, true) then
-          vim.env.PATH = bin_dir .. path_sep .. current_path
-        end
-
-        vim.env.VIRTUAL_ENV = venv_dir
-        vim.g.python3_host_prog = python
-        if opts.bufnr and vim.api.nvim_buf_is_valid(opts.bufnr) then vim.b[opts.bufnr].python3_host_prog = python end
-
-        if opts.notify and activated_roots[root] ~= python then
-          vim.notify("Python virtualenv detected: " .. name, vim.log.levels.INFO, { title = "Python" })
-        end
-
-        activated_roots[root] = python
-        return {
-          root = root,
-          venv_dir = venv_dir,
-          bin_dir = bin_dir,
-          python = python,
-        }
-      end
+  local root = vim.fs.root(path, { "pyproject.toml", "uv.lock", "requirements.txt", "ruff.toml", ".ruff.toml", ".git" })
+  if not root then return nil end
+  for _, name in ipairs { ".venv", "venv" } do
+    local venv = vim.fs.joinpath(root, name)
+    local bin = vim.fs.joinpath(venv, util.is_windows() and "Scripts" or "bin")
+    local python = vim.fs.joinpath(bin, "python" .. util.executable_suffix())
+    if vim.fn.filereadable(python) == 1 then
+      return {
+        root = root,
+        venv_dir = venv,
+        bin_dir = bin,
+        python = vim.fs.normalize(python),
+        env = {
+          VIRTUAL_ENV = venv,
+          PATH = bin .. (util.is_windows() and ";" or ":") .. (vim.env.PATH or ""),
+        },
+      }
     end
   end
 end
 
-function M.activate_for_path(path, opts)
-  local root = project_root(path)
-  if not root then return nil end
-  if opts and opts.require_python_root and not looks_like_python_root(root) then return nil end
-  return activate_root(root, opts)
+function M.for_buffer(bufnr) return M.resolve(vim.api.nvim_buf_get_name(bufnr)) end
+
+function M.executable(name, path)
+  local project = M.resolve(path)
+  if project then
+    local candidate = vim.fs.joinpath(project.bin_dir, name .. util.executable_suffix())
+    if vim.fn.executable(candidate) == 1 then return candidate end
+  end
+  return name
 end
 
-function M.activate_for_buffer(bufnr, opts)
-  if not bufnr or not vim.api.nvim_buf_is_valid(bufnr) then return nil end
-
-  local file = vim.api.nvim_buf_get_name(bufnr)
-  if file == "" then return nil end
-
-  opts = vim.tbl_extend("force", opts or {}, { bufnr = bufnr })
-  return M.activate_for_path(file, opts)
+function M.ty_command(path)
+  local executable = M.executable("ty", path)
+  if vim.fn.executable(executable) == 1 then return { executable, "server" } end
 end
 
-function M.prime()
-  local current = M.activate_for_buffer(vim.api.nvim_get_current_buf(), { notify = false, require_python_root = true })
-  if current then return current end
+function M.checker(path) return M.ty_command(path) and "ty" or "basedpyright" end
 
-  local cwd = vim.uv.cwd()
-  local from_cwd = M.activate_for_path(cwd, { notify = false, require_python_root = true })
-  if from_cwd then return from_cwd end
-
-  for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
-    local result = M.activate_for_buffer(bufnr, { notify = false, require_python_root = true })
-    if result then return result end
+function M.checker_root(name)
+  return function(bufnr, on_dir)
+    local file = vim.api.nvim_buf_get_name(bufnr)
+    local root = vim.fs.root(bufnr, require("lsp.servers.common").PYTHON_ROOT_MARKERS) or vim.fs.dirname(file)
+    if root and M.checker(root) == name then on_dir(root) end
   end
 end
 
-function M.setup()
-  vim.api.nvim_create_autocmd("FileType", {
-    pattern = "python",
-    group = vim.api.nvim_create_augroup("lang_python_venv", { clear = true }),
-    callback = function(event)
-      if vim.b[event.buf].venv_checked then return end
-      vim.b[event.buf].venv_checked = true
-      M.activate_for_buffer(event.buf, { notify = true })
-    end,
+function M.lsp_command(command)
+  return function(dispatchers, config)
+    local project = M.resolve(config.root_dir)
+    local cmd = vim.deepcopy(command)
+    cmd[1] = M.executable(cmd[1], config.root_dir)
+    return vim.lsp.rpc.start(cmd, dispatchers, {
+      cwd = config.root_dir,
+      env = project and project.env or nil,
+    })
+  end
+end
+
+function M.before_init(_, config)
+  local project = M.resolve(config.root_dir)
+  if not project then return end
+  -- LSP clients keep a reference to this table before before_init runs.
+  config.settings.python = vim.tbl_deep_extend("force", config.settings.python or {}, { pythonPath = project.python })
+  config.settings.ty = vim.tbl_deep_extend("force", config.settings.ty or {}, {
+    configuration = { environment = { python = project.python } },
   })
 end
 

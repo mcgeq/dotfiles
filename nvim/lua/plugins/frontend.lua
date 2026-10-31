@@ -6,7 +6,6 @@ function M.setup()
   local map = require("core.keymaps").map
   local loader = require "pack.loader"
   local terminal = require "core.terminal"
-  local frontend_state = require "lang.frontend_state"
   local colorizer_ready = false
   local autotag_ready = false
 
@@ -200,30 +199,6 @@ function M.setup()
           { buffer = event.buf }
         )
       end
-    end,
-  })
-
-  vim.api.nvim_create_autocmd("BufWritePre", {
-    group = vim.api.nvim_create_augroup("plugins_frontend_eslint_fix", { clear = true }),
-    pattern = {
-      "*.js",
-      "*.jsx",
-      "*.ts",
-      "*.tsx",
-      "*.vue",
-      "*.css",
-      "*.scss",
-      "*.less",
-      "*.html",
-      "*.json",
-      "*.jsonc",
-      "*.yaml",
-      "*.yml",
-      "*.toml",
-    },
-    callback = function(event)
-      local bufnr = event.buf
-      actions.run_save_actions(bufnr, frontend_state.get())
     end,
   })
 

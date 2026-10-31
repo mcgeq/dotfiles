@@ -26,6 +26,8 @@ function M.ensure_file_is_saved(bufnr, title)
   return true
 end
 
+function M.shell_executable(value) return (is_windows() and "& " or "") .. util.shell_quote(value) end
+
 function M.open_command(cmd, opts) require("core.terminal").open_float(cmd, opts) end
 
 function M.quickfix_command(command, cwd, title, errorformat)
@@ -149,8 +151,20 @@ function M.open_quickfix_result(result)
 end
 
 function M.execute_result(result)
+  if result.buffer and not vim.api.nvim_buf_is_valid(result.buffer) then
+    vim.notify(
+      "The original build buffer was closed; run the action again from its project.",
+      vim.log.levels.WARN,
+      { title = "Runner" }
+    )
+    return false
+  end
+  if result.execute then
+    result.execute()
+    return
+  end
   if result.quickfix then
-    vim.system(result.cmd, { text = true, cwd = result.opts.cwd }, function(run_result)
+    vim.system(result.cmd, { text = true, cwd = result.opts.cwd, env = result.opts.env }, function(run_result)
       vim.schedule(
         function()
           M.open_quickfix_result {

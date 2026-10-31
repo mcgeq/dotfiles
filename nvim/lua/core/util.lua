@@ -5,6 +5,9 @@ local M = {}
 function M.require_if_exists(module)
   local ok, value = pcall(require, module)
   if ok then return value end
+  if not tostring(value):find("module '" .. module .. "' not found:", 1, true) then
+    vim.notify("Failed to load " .. module .. ": " .. tostring(value), vim.log.levels.ERROR)
+  end
 end
 
 ---@param root string
@@ -29,8 +32,8 @@ end
 function M.load_table_modules(root)
   local loaded = {}
   for _, module in ipairs(M.scan_modules(root)) do
-    local ok, value = pcall(require, module)
-    if ok and value ~= nil then table.insert(loaded, value) end
+    local value = M.require_if_exists(module)
+    if value ~= nil then table.insert(loaded, value) end
   end
   return loaded
 end

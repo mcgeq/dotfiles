@@ -31,7 +31,7 @@ Core:
 - Native `vim.lsp.config()` and `vim.lsp.enable()`
 - Mason for tool and LSP installation
 - Treesitter for syntax and structure
-- Conform for non-frontend formatting
+- Conform for filetype formatting and frontend fallback
 - Heavy optional plugins are installed by `vim.pack`, but several workflow-specific tools now load on demand through `:packadd`
 
 UI and navigation:
@@ -77,7 +77,11 @@ Built-in base support includes:
 - JavaScript / TypeScript / React: `vtsls`, `eslint`, `biome`
 - Vue: `vue_ls` with `@vue/typescript-plugin` wired into `vtsls`
 
-Frontend formatting resolves per project: Biome is auto-detected (`biome.json` / `biome.jsonc`) and takes over formatting and fix actions; otherwise ESLint-driven workflows keep `@antfu/eslint-config` as the single source of truth, and non-frontend filetypes continue to use Conform.
+Formatting uses one policy for manual actions and saving. Biome takes priority only for supported filetypes in a Biome project with an attached client. ESLint takes priority in ESLint mode when its client is attached; otherwise Conform handles formatting, including frontend fallback. A project config file alone never disables Conform.
+
+`private.features.format_on_save = false` disables all automatic formatting, fixes, and import edits. `fix_on_save` and `imports_on_save` independently restrict those actions when automatic saving is enabled. Manual `<leader>cf` still works.
+
+Python resolves `.venv` / `venv` independently for each project without modifying process `PATH`, `VIRTUAL_ENV`, or the Neovim Python provider. Ty is selected per project when its executable is available locally or on PATH; other projects use basedpyright. Ruff LSP and Conform prefer the project-local executable. Runner and DAP resolve the project's interpreter separately.
 
 For C++, the user override prefers a system LLVM toolchain when available and falls back to Mason's `clangd`. See [docs/cpp-clangd.md](/d:/config/dotfiles/nvim/docs/cpp-clangd.md) for C++20/23 defaults, `query-driver`, and project-level module setup.
 
@@ -114,7 +118,8 @@ Plugin management:
 - `:PackRepair` show only broken or missing plugins
 - `:PackRepair <plugin>` reinstall one broken plugin
 - `:PackRepair!` repair all broken or missing plugins
-- `:PackSync` write the current resolved state to [nvim-pack-lock.json](/d:/config/dotfiles/nvim/nvim-pack-lock.json)
+- `:PackRestore` restore installed plugins to the revisions in `nvim-pack-lock.json` (offline, with confirmation)
+- `:PackSync` compatibility alias for `:PackRestore`; it does not export local revisions
 - `:PackOpenLog` open the lightweight `vim.pack` activity log
 - `:MarkdownTableFormat` format the markdown table under cursor
 - `:RenderMarkdown toggle` toggle in-buffer Markdown rendering
@@ -158,6 +163,7 @@ C++ / CMake extras:
 
 - `clangd_extensions.nvim` adds source/header switching plus AST, symbol, hierarchy, and memory views
 - `cmake-tools.nvim` adds in-editor generate / build / run workflows for CMake projects
+- C/C++ and CMake use the shared Runner; existing `<localleader>cb/cr/cc/ct` aliases remain available
 - `nvim-dap`, `dap-ui`, and `dap-virtual-text` provide a debugging baseline for Python plus C/C++/Rust/Zig through `debugpy` and `codelldb`
 
 `PackRepair` is especially useful when a plugin directory is corrupted and only contains `.git`.
@@ -370,7 +376,7 @@ Plugin maintenance:
 - `<leader>pl` pack log
 - `<leader>pR` pack repair pending
 - `<leader>pC` pack repair clean
-- `<leader>pU` pack sync lockfile
+- `<leader>pU` restore plugins from lockfile
 
 LSP and code navigation:
 
@@ -573,3 +579,13 @@ Already borrowed into the new base:
 - `snacks.nvim` lazygit integration
 
 Those are treated as optional enhancements, not core architecture.
+
+## Maintenance checks
+
+Run `pwsh -NoProfile -File nvim/scripts/check.ps1 -SkipStartupTiming` from the repository root. It checks Lua lint/formatting, module loading, the LSP registry, and behavior regressions without bootstrapping plugins.
+
+For an offline integration check with installed plugins, run `nvim/scripts/offline-startup.ps1 -PluginRoot <data>/site/pack/core/opt`. It uses temporary data/state/cache directories and exercises real plugin setup and seven filetypes while blocking install/update and LSP startup paths.
+
+All plugin choices are retained. `pack/spec.lua` records inventory, feature gates, startup flags and setup order; disabled features/plugins are excluded from activation without deleting their installed files. `core/tools.lua` owns Mason setup. LSP installs occur on matching filetypes only when `lsp.auto_install` is enabled. Formatter/debug tools are explicitly installed with `:MasonToolsInstall`; they are not automatically installed at startup.
+
+The entrypoint supports Neovim 0.12+. The current local verification uses 0.13 development builds; a stable 0.12 runtime has not been verified in this change. The local `mason/health.lua` workaround remains in place pending reproduction of the original Windows issue against an upgraded Mason version.

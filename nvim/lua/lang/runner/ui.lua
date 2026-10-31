@@ -4,7 +4,9 @@ local detect = require "lang.runner.detect"
 local frontend_filetypes = require "lang.frontend_filetypes"
 
 function M.backend_mode(bufnr, filetype)
-  if filetype == "rust" then
+  if vim.list_contains({ "c", "cpp", "objc", "objcpp", "cuda", "cmake" }, filetype) then
+    return require("lang.cpp.build").mode_label(bufnr)
+  elseif filetype == "rust" then
     local root = detect.is_rust_project(bufnr)
     if root and detect.file_exists(vim.fs.joinpath(root, "Cargo.toml")) then return "Cargo project" end
     return "Single file"
@@ -33,7 +35,7 @@ function M.backend_mode(bufnr, filetype)
 end
 
 local function runner_entries(filetype)
-  if vim.tbl_contains({ "rust", "zig", "go" }, filetype) then
+  if vim.tbl_contains({ "c", "cpp", "objc", "objcpp", "cuda", "cmake", "rust", "zig", "go" }, filetype) then
     return {
       { key = "rk", desc = "Show runner keymaps" },
       { key = "rb", desc = "Build", action = "build" },

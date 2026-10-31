@@ -23,12 +23,6 @@ local function get_vue_plugin()
   end
 end
 
-local function ts_on_attach(client, bufnr)
-  local filetype = vim.bo[bufnr].filetype
-  local semantic = client.server_capabilities.semanticTokensProvider
-  if semantic then semantic.full = filetype ~= "vue" end
-end
-
 local function vue_on_init(client)
   local unpack_fn = table.unpack
 
@@ -79,9 +73,9 @@ function M.get()
       name = "biome",
       ensure_installed = false, -- 项目级工具：node_modules / PATH / mason 探测
       config = {
-        cmd = function(dispatchers)
+        cmd = function(dispatchers, config)
           local biome = require "lang.biome"
-          return biome.lsp_cmd_fn(dispatchers)
+          return biome.lsp_cmd_fn(dispatchers, config)
         end,
         root_dir = function(bufnr, cb) require("lang.biome").lsp_root_dir(bufnr, cb) end,
         single_file_support = false,
@@ -135,9 +129,6 @@ function M.get()
           validate = "on",
           packageManager = "npm",
           useESLintClass = false,
-          experimental = {
-            useFlatConfig = false,
-          },
           codeActionOnSave = {
             enable = false,
             mode = "all",
@@ -201,7 +192,6 @@ function M.get()
         root_markers = markers,
         single_file_support = false,
         filetypes = ts_filetypes,
-        on_attach = ts_on_attach,
         settings = {
           vtsls = vue_plugin and {
             tsserver = {
