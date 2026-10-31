@@ -59,7 +59,7 @@
 (defun mcg-holo-layer-setup ()
   "Setup holo-layer."
   (when (and mcg-holo-layer-enabled
-             (mcg-require-extension "holo-layer" t))
+             (mcg-require-extension "holo-layer"))
     (setq holo-layer-enable-window-border mcg-holo-layer-enable-window-border)
     (setq holo-layer-active-window-color "#cc2444")
     (setq holo-layer-inactive-window-color "#000000")

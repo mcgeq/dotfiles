@@ -1,0 +1,115 @@
+;;; round-four-tests.el --- Org configuration regressions -*- lexical-binding: t; -*-
+
+(require 'ert)
+(require 'cl-lib)
+
+(defun mcg-test-round-four-definitions (relative)
+  "Read definitions from generated RELATIVE without running initialization."
+  (with-temp-buffer
+    (insert-file-contents (expand-file-name relative mcg-emacs-dir))
+    (goto-char (point-min))
+    (condition-case nil
+        (while t
+          (let ((form (read (current-buffer))))
+            (when (memq (car-safe form) '(defun defvar defcustom defconst defgroup))
+              (eval form t))))
+      (end-of-file nil))))
+
+(ert-deftest mcg-round-four-capture-keeps-user-and-hugo-templates ()
+  (let* ((custom '("n" "User note" entry (file "custom.org") "* %?"))
+         (hugo '("hb" "User blog" plain (file "blog.org") "%?"))
+         (org-capture-templates (list custom hugo '("z" "Other"))))
+    (mcg--setup-capture-templates)
+    (mcg--setup-capture-templates)
+    (should (equal (assoc "n" org-capture-templates) custom))
+    (should (equal (assoc "hb" org-capture-templates) hugo))
+    (should (assoc "z" org-capture-templates))
+    (should (assoc "tw" org-capture-templates))
+    (should (= (length org-capture-templates)
+               (length (delete-dups (mapcar #'car org-capture-templates)))))))
+
+(ert-deftest mcg-round-four-hugo-keeps-user-template-on-same-key ()
+  (require 'init-org-hugo)
+  (let* ((custom '("hb" "User blog" plain (file "blog.org") "%?"))
+         (org-capture-templates (list custom))
+         (org-capture-after-finalize-hook nil)
+         (mcg-org-hugo-enable t))
+    (mcg-org-hugo-setup-capture-templates)
+    (mcg-org-hugo-setup-capture-templates)
+    (should (equal (assoc "hb" org-capture-templates) custom))
+    (should (= 1 (cl-count "hb" org-capture-templates :key #'car :test #'equal)))))
+
+(ert-deftest mcg-round-four-capture-hook-registration-is-idempotent ()
+  (let ((org-capture-mode-hook nil) (org-capture-after-finalize-hook nil))
+    (mcg--setup-org-capture)
+    (mcg--setup-org-capture)
+    (should (memq 'mcg-org-capture-mode-setup org-capture-mode-hook))
+    (should (= 2 (length org-capture-mode-hook)))
+    (should (= 1 (length org-capture-after-finalize-hook)))))
+
+(ert-deftest mcg-round-four-org-display-does-not-change-other-buffers ()
+  (mcg-test-round-four-definitions "site-lisp/config/modules/org/init-org.el")
+  (let ((prettify-symbols-alist '(("outside" . ?x)))
+        (system-time-locale "C")
+        (line-spacing 0.1))
+    (with-temp-buffer
+      (mcg--setup-org-core)
+      (should (equal prettify-symbols-alist '(("outside" . ?x))))
+      (should (equal system-time-locale "C"))
+      (should (= line-spacing 0.1))
+      (mcg-org-mode-setup)
+      (should (local-variable-p 'prettify-symbols-alist))
+      (should (local-variable-p 'system-time-locale))
+      (should (= line-spacing 2)))))
+
+(ert-deftest mcg-round-four-storage-root-syncs-org-runtime-variables ()
+  (require 'org-agenda)
+  (let ((root (make-temp-file "mcg-org-root" t))
+        (org-directory "old") (org-default-notes-file "old")
+        (org-agenda-diary-file "old") (diary-file "old"))
+    (unwind-protect
+        (progn
+          (mcg-org-set-storage-root root)
+          (should (equal org-directory (file-name-as-directory root)))
+          (should (equal org-default-notes-file mcg-org-default-notes-file))
+          (should (equal org-agenda-diary-file mcg-org-diary-file))
+          (should (equal diary-file mcg-org-diary-file)))
+      (delete-directory root t))))
+
+(ert-deftest mcg-round-four-babel-setup-reuses-successful-language-load ()
+  (require 'init-org-babel)
+  (let ((mcg-org-babel--configured-options nil)
+        (mcg-org-babel-load-languages '((emacs-lisp . t)))
+        (mcg-org-babel-enable-jupyter nil)
+        (mcg-org-babel-enable-zig nil)
+        (calls 0))
+    (cl-letf (((symbol-function 'org-babel-do-load-languages)
+               (lambda (&rest _) (cl-incf calls))))
+      (mcg-org-babel-mode-setup)
+      (mcg-org-babel-mode-setup)
+      (should (= calls 1))
+      (setq mcg-org-babel-load-languages '((emacs-lisp . t) (python . t)))
+      (mcg-org-babel-mode-setup)
+      (should (= calls 2)))))
+
+(ert-deftest mcg-round-four-babel-failed-setup-can-retry ()
+  (require 'init-org-babel)
+  (let ((mcg-org-babel--configured-options nil)
+        (mcg-org-babel-enable-jupyter nil)
+        (calls 0))
+    (cl-letf (((symbol-function 'org-babel-do-load-languages)
+               (lambda (&rest _)
+                 (when (= (cl-incf calls) 1) (error "fixture failure")))))
+      (should-error (mcg-org-babel-mode-setup))
+      (mcg-org-babel-mode-setup)
+      (should (= calls 2)))))
+
+(ert-deftest mcg-round-four-org-smoke-in-fresh-process ()
+  (with-temp-buffer
+    (let ((status (call-process
+                   (expand-file-name invocation-name invocation-directory)
+                   nil t nil "-Q" "--batch" "-l"
+                   (expand-file-name "test/round-four-org-smoke.el" mcg-emacs-dir))))
+      (ert-info ((buffer-string)) (should (= status 0))))))
+
+(provide 'round-four-tests)

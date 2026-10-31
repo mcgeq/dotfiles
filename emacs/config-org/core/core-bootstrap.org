@@ -358,9 +358,9 @@ If not provided, it defaults to the parent of site-lisp/config/core/."
     (add-to-list 'load-path (file-name-as-directory dir))))
 
 (defun mcg--directory-has-el-files-p (dir)
-  "Return non-nil when DIR contains Emacs Lisp source files."
-  (and (file-directory-p dir)
-       (directory-files dir nil "\\.el\\'" t)))
+  "Return non-nil when DIR contains loadable Emacs Lisp source files."
+  (require 'core-extensions)
+  (mcg--find-el-files-in-dir dir))
 
 (defun mcg-setup-load-path ()
   "Set up `load-path' for MCG configuration.
@@ -387,18 +387,13 @@ Adds core, modules, and extensions directories to load-path."
   (mcg-log "Setup load-path with %d entries" (length load-path)))
 
 (defun mcg--add-extensions-to-load-path (dir)
-  "Recursively add extension directories under DIR to `load-path'.
-Only adds directories that contain .el files."
-  (when (and (file-directory-p dir)
-             (not (mcg--extension-dir-excluded-p dir)))
-    (dolist (entry (directory-files dir t "^[^.]"))
-      (when (file-directory-p entry)
-        (unless (mcg--extension-dir-excluded-p entry)
-          ;; Check if directory contains .el files
-          (if (mcg--directory-has-el-files-p entry)
-              (mcg--add-to-load-path-front entry)
-            ;; Otherwise, recurse into subdirectories
-            (mcg--add-extensions-to-load-path entry)))))))
+  "Add extension paths from the shared index rooted at DIR."
+  ;; Bootstrap has already installed the core path when this function runs.
+  (require 'core-extensions)
+  (let ((mcg-extensions-dir dir))
+    (unless mcg-extension-cache (mcg-cache-load))
+    (dolist (entry (mcg-list-extensions))
+      (mcg--add-to-load-path-front (cdr entry)))))
 #+end_src
 
 ** GC Optimization

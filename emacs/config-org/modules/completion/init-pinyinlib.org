@@ -43,7 +43,7 @@
 (defun mcg--setup-pinyin ()
   "Setup pinyin completion support."
   (when (and mcg-completion-enable-pinyin
-             (mcg-require-extension "pinyinlib" t))
+             (mcg-require-extension "pinyinlib"))
 
     ;; Add pinyin matching to orderless styles
     (unless (member 'mcg/completion-regex-pinyin orderless-matching-styles)

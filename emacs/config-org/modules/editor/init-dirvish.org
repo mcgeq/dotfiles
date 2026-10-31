@@ -77,10 +77,11 @@ Dirvish 核心配置，包括基本设置、快速访问、属性配置和快捷
 
 (defun mcg--setup-dirvish ()
   "Setup Dirvish file manager."
-  (when (mcg-require-extension "dirvish" t)
+  (when (mcg-require-extension "dirvish")
     (dirvish-override-dired-mode)
 
-    (mcg-bind-key "C-c d" 'dirvish "editor/dirvish")
+    (require 'core-bindings)
+    (mcg-bind-module-commands :editor 'dirvish)
     (define-key dirvish-mode-map (kbd ";") 'dired-up-directory)
     (define-key dirvish-mode-map (kbd "?") 'dirvish-dispatch)
     (define-key dirvish-mode-map (kbd "a") 'dirvish-setup-menu)

@@ -25,8 +25,8 @@
 #+begin_src emacs-lisp
 (defun mcg--setup-nerd-icons-completion ()
   "Setup nerd-icons-completion."
-  (when (and (mcg-require-extension "nerd-icons" t)
-             (mcg-require-extension "nerd-icons-completion" t))
+  (when (and (mcg-require-extension "nerd-icons")
+             (mcg-require-extension "nerd-icons-completion"))
     (nerd-icons-completion-mode 1)
     (with-eval-after-load 'marginalia
       (add-hook 'marginalia-mode-hook #'nerd-icons-completion-marginalia-setup))

@@ -33,7 +33,7 @@ Orderless 模糊匹配引擎配置。
 
 (defun mcg--setup-orderless ()
   "Setup Orderless fuzzy matching engine."
-  (when (mcg-require-extension "orderless" t)
+  (when (mcg-require-extension "orderless")
     ;; Core completion styles
     (setq completion-styles '(orderless partial-completion basic)
           completion-category-defaults nil)

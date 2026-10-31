@@ -26,7 +26,7 @@
 #+begin_src emacs-lisp
 (defun mcg--setup-nerd-icons ()
   "Setup nerd-icons."
-  (if (mcg-require-extension "nerd-icons" t)
+  (if (mcg-require-extension "nerd-icons")
       (progn
         ;; Use unified icon font from init-font.el
         (setq nerd-icons-font-family (mcg-get-icon-font))

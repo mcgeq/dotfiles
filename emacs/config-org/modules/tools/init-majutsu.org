@@ -37,6 +37,7 @@ Majutsu - Magit-style interface for Jujutsu (jj).
 ;;; Code:
 
 (require 'core-lib)
+(require 'core-bindings)
 #+end_src
 
 ** Variables
@@ -45,9 +46,6 @@ Majutsu - Magit-style interface for Jujutsu (jj).
 ;;; ============================================================
 ;;; Variables
 ;;; ============================================================
-
-(defvar mcg-tools-majutsu-prefix "C-x M-j"
-  "Prefix key for majutsu commands.")
 
 (defvar mcg-tools-majutsu-enable-evil-integration t
   "Whether to enable evil integration for majutsu.")
@@ -62,10 +60,10 @@ Majutsu - Magit-style interface for Jujutsu (jj).
 
 (defun mcg--setup-majutsu ()
   "Setup majutsu - Magit for Jujutsu."
-  (if (mcg-require-extension 'majutsu t)
+  (if (mcg-require-extension 'majutsu)
       (progn
         ;; Setup keybindings
-        (mcg-bind-key mcg-tools-majutsu-prefix 'majutsu "tools/majutsu")
+        (mcg-bind-module-commands :tools 'majutsu)
         
         ;; Optional: Setup evil integration
         (when (and mcg-tools-majutsu-enable-evil-integration
@@ -73,7 +71,7 @@ Majutsu - Magit-style interface for Jujutsu (jj).
           (require 'majutsu-evil nil t))
         
         (mcg-log "Majutsu configured with keybinding %s" mcg-tools-majutsu-prefix))
-    (mcg-log-error "Failed to load Majutsu - ensure jj is installed")))
+    (error "Failed to load Majutsu - ensure jj is installed")))
 
 ;; Setup majutsu after module load
 (mcg--setup-majutsu)

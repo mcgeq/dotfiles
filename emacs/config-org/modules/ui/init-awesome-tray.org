@@ -53,7 +53,7 @@
 #+begin_src emacs-lisp
 (defun mcg--setup-awesome-tray ()
   "Setup awesome-tray."
-  (if (mcg-require-extension "awesome-tray" t)
+  (if (mcg-require-extension "awesome-tray")
       (progn
         (setq awesome-tray-position mcg-awesome-tray-position)
         (setq awesome-tray-active-modules mcg-awesome-tray-active-modules)

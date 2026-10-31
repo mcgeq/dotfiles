@@ -47,7 +47,7 @@ Options: 'any, nil, or specific key.")
 
  (defun mcg--setup-vertico ()
   "Setup Vertico vertical completion interface."
-   (when (mcg-require-extension "vertico" t)
+   (when (mcg-require-extension "vertico")
     ;; Display settings
     (setq vertico-count mcg-completion-vertico-count)
     (setq vertico-resize nil)              ; Fixed height

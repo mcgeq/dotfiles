@@ -33,18 +33,6 @@ Org Agenda configuration with time grid, lunar calendar support, and custom view
 ;;; Variables
 ;;; ============================================================
 
-(defcustom mcg-org-agenda-files
-  (list (expand-file-name "agenda" mcg-org-directory))
-  "Org agenda file list or directories to scan."
-  :type '(repeat (choice file directory))
-  :group 'mcg-org)
-
-(defcustom mcg-org-agenda-diary-file
-  (expand-file-name "diary.org" (expand-file-name "agenda" mcg-org-directory))
-  "Org agenda diary file."
-  :type 'file
-  :group 'mcg-org)
-
 (defcustom mcg-calendar-location-longitude 116.9962
   "Current location longitude for sunrise and sunset calculation."
   :type 'number
@@ -172,7 +160,7 @@ Org Agenda configuration with time grid, lunar calendar support, and custom view
 (defun mcg-org-agenda-setup-files ()
   "Setup Org Agenda file configuration."
   (with-eval-after-load 'org
-    (setq org-agenda-files mcg-org-agenda-files)
+    (mcg-org-sync-storage)
     (setq org-agenda-use-time-grid mcg-org-agenda-use-time-grid)
     (setq org-agenda-current-time-string mcg-org-agenda-current-time-string)
     (mcg-log "Configured org-agenda files")))

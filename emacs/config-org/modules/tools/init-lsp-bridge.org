@@ -150,13 +150,13 @@ Can be overridden in private/config.el."
                               "site-lisp/extensions/lsp/lsp-bridge"
                               mcg-emacs-dir))))
     (if (not (file-directory-p lsp-bridge-path))
-        (mcg-log-warning "lsp-bridge path not found: %s" lsp-bridge-path)
+        (error "lsp-bridge path not found: %s" lsp-bridge-path)
       (add-to-list 'load-path lsp-bridge-path)
       (let ((acm-path (expand-file-name "acm" lsp-bridge-path)))
         (when (file-directory-p acm-path)
           (add-to-list 'load-path acm-path)))
       ;; lsp-bridge has a hard dependency on markdown-mode.
-      (mcg-require-extension "markdown-mode" t)
+      (mcg-require-extension "markdown-mode")
       (if (require 'lsp-bridge nil t)
           (progn
             ;; Load acm-terminal in terminal (non-graphical environment)
@@ -230,7 +230,7 @@ Can be overridden in private/config.el."
             ;; Setup keybindings hook
             (add-hook 'lsp-bridge-mode-hook #'mcg-lsp-setup-keybindings)
             (mcg-log "lsp-bridge configured"))
-        (mcg-log-error "Failed to load lsp-bridge from %s" lsp-bridge-path)))))
+        (error "Failed to load lsp-bridge from %s" lsp-bridge-path)))))
 #+end_src
 
 ** Initialize

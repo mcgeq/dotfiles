@@ -41,9 +41,9 @@ Highlight TODO-style annotations in code and text buffers.
 #+begin_src emacs-lisp
 (defun mcg--setup-hl-todo ()
   "Setup global hl-todo keyword highlighting."
-  (when (and (mcg-require-extension "compat" t)
-             (mcg-require-extension "cond-let" t)
-             (mcg-require-extension "hl-todo" t))
+  (when (and (mcg-require-extension "compat")
+             (mcg-require-extension "cond-let")
+             (mcg-require-extension "hl-todo"))
     (setq hl-todo-keyword-faces mcg-hl-todo-keyword-faces)
     (setq hl-todo-include-modes '(prog-mode text-mode conf-mode))
     (setq hl-todo-exclude-modes '(org-mode))

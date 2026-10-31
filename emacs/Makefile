@@ -78,7 +78,7 @@ early-init.el: config-org/early-init.org
 	@echo Tangling: $< to $@
 	$(EE) --eval "(mcg-batch-tangle-to-file \"$<\" \"$(abspath early-init.el)\")"
 
-# early-init.el special handling (copy to ~/.emacs.d/)
+# Generated early-init.el stays in the repository; installation is explicit.
 $(DST_DIR)/early-init.el: $(SRC_DIR)/early-init.org
 ifeq ($(IS_UNIX),1)
 	@mkdir -p $(DST_DIR)
@@ -87,6 +87,8 @@ else
 endif
 	@echo Tangling: $< to $@
 	$(EE) --eval "(mcg-batch-tangle-to-file \"$<\" \"$@\")"
+
+install-early-init: $(DST_DIR)/early-init.el
 ifeq ($(IS_UNIX),1)
 	@echo Copying early-init.el to ~/.emacs.d/
 	@mkdir -p ~/.emacs.d && cp -f $(DST_DIR)/early-init.el ~/.emacs.d/early-init.el
@@ -107,11 +109,13 @@ endif
 # Generate all directory rules
 $(foreach dir,$(DIRS),$(eval $(call tangle_template,$(dir))))
 
-# Main build target
-$(foreach dir,$(DIRS),$(eval $(call tangle_template,$(dir))))
+# Generate repository-local files without installing or creating private config.
+generate: init.el early-init.el $(DST_DIR)/early-init.el $(DST_DIR)/init.el $(DST_DIR)/private/config-example.el $(foreach dir,$(DIRS),build-$(subst /,-,$(dir)))
+
+.PHONY: generate install-early-init $(foreach dir,$(DIRS),build-$(subst /,-,$(dir)))
 
 # 主构建目标
-all: ensure-private-config-file init.el early-init.el $(DST_DIR)/early-init.el $(DST_DIR)/init.el $(DST_DIR)/private/config-example.el $(foreach dir,$(DIRS),build-$(subst /,-,$(dir)))
+all: ensure-private-config-file init.el early-init.el $(DST_DIR)/early-init.el $(DST_DIR)/init.el $(DST_DIR)/private/config-example.el $(foreach dir,$(DIRS),build-$(subst /,-,$(dir))) install-early-init
 	@echo [OK] Configuration generated from Org files!
 
 # Tangle single directory
@@ -120,16 +124,10 @@ tangle-dir:
 ifndef DIR
 	$(error DIR is required. Usage: make tangle-dir DIR=core)
 endif
-	@echo Tangling directory: $(SRC_DIR)/$(DIR)
-ifeq ($(IS_UNIX),1)
-	@mkdir -p $(DST_DIR)/$(DIR)
-else
-	@powershell -Command "if (-not (Test-Path '$(DST_DIR)/$(DIR)')) { New-Item -ItemType Directory -Path '$(DST_DIR)/$(DIR)' -Force | Out-Null }"
+ifeq ($(filter $(DIR),$(DIRS)),)
+	$(error Unsupported DIR: $(DIR). Choose one of: $(DIRS))
 endif
-	@for file in $(SRC_DIR)/$(DIR)/*.org; do \
-		echo "Tangling: $$file"; \
-		$(EE) --eval "(let* ((source \"$$file\") (target (expand-file-name (concat (file-name-base source) \".el\") \"$(DST_DIR)/$(DIR)/\"))) (mcg-batch-tangle-to-file source target))"; \
-	done
+	$(MAKE) build-$(subst /,-,$(DIR))
 	@echo [OK] Tangled $(DIR)
 
 # Tangle 单个文件 (手动指定)
@@ -178,7 +176,7 @@ else
 	@powershell -Command "if (Test-Path '$(DST_DIR)') { Get-ChildItem -Path '$(DST_DIR)' -Filter '*.el' -Recurse | ForEach-Object { Write-Host ('  ' + $$_.FullName.Substring((Get-Location).Path.Length + 1)) } }"
 endif
 
-.PHONY: all tangle-file clean clean-all list
+.PHONY: all tangle-dir tangle-file clean clean-all list
 
 # =============================================================================
 # Byte Compile
@@ -208,7 +206,7 @@ compile: all elc
 # Testing
 # =============================================================================
 
-test:
+test: generate
 	@echo Running tests...
 	$(EM) -Q --batch \
 		-L "$(DST_DIR)" \
@@ -216,7 +214,7 @@ test:
 		-l test/run-tests.el \
 		-f ert-run-tests-batch-and-exit
 
-test-verbose:
+test-verbose: generate
 	@echo Running tests (verbose)...
 	$(EM) -Q --batch \
 		-L "$(DST_DIR)" \
@@ -355,6 +353,7 @@ help:
 	@echo.
 	@echo Build:
 	@echo   make all        - Generate config from Org files (default)
+	@echo   make generate   - Generate repository-local config without installation
 	@echo   make compile    - Generate and byte-compile config
 	@echo   make build      - Full build: init submodules + generate + compile
 	@echo   make clean      - Clean generated .el files
@@ -379,7 +378,7 @@ help:
 	@echo   make gsrm       - Remove submodule (CAT=... NAME=...)
 	@echo.
 	@echo Testing:
-	@echo   make test       - Run all tests
+	@echo   make test       - Generate repository-local config and run all tests
 	@echo   make profile-startup - Show startup module load times
 	@echo.
 	@echo Quick shortcuts: init=gsb, up=gsu, st=gsst, h=help

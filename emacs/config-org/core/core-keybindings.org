@@ -1,0 +1,302 @@
+#+TITLE: Keybinding Registry
+#+PROPERTY: header-args:emacs-lisp :tangle core-keybindings.el :lexical t
+
+* Keybinding Registry
+
+#+begin_src emacs-lisp
+;;; core-keybindings.el --- Map-scoped key registration -*- lexical-binding: t; -*-
+(require 'cl-lib)
+(require 'core-bootstrap)
+#+end_src
+
+** Keybinding Registry
+
+键绑定注册表系统，支持冲突检测和管理。
+
+*** Registry Variables
+
+#+begin_src emacs-lisp
+(defvar mcg-keybinding-registry nil
+  "Hash table registry for keybindings.
+Maps keymap objects by identity to tables of canonical key descriptions.
+Each inner table maps strings to (command . source) pairs.")
+
+(defvar mcg-keybinding-conflicts nil
+  "List of detected keybinding conflicts.
+Each entry is (key old-binding new-binding keymap prefix-info).
+Bindings are (command . source); PREFIX-INFO is nil for an exact-key conflict.")
+#+end_src
+
+*** Registry Initialization
+
+#+begin_src emacs-lisp
+(defun mcg-keybinding-init ()
+  "Initialize the keybinding registry."
+  (unless mcg-keybinding-registry
+    (setq mcg-keybinding-registry (make-hash-table :test 'eq)))
+  (unless (eq (hash-table-test mcg-keybinding-registry) 'eq)
+    ;; The old flat registry did not retain map identity; import it as global.
+    (let ((legacy mcg-keybinding-registry)
+          (bindings (make-hash-table :test 'equal)))
+      (maphash (lambda (key binding)
+                 (puthash (mcg-normalize-key key) binding bindings))
+               legacy)
+      (setq mcg-keybinding-registry (make-hash-table :test 'eq))
+      (unless (zerop (hash-table-count bindings))
+        (puthash global-map bindings mcg-keybinding-registry)))))
+
+(defun mcg--keybinding-table (keymap &optional create)
+  "Return the registry table for KEYMAP, creating it when CREATE is non-nil."
+  (mcg-keybinding-init)
+  (or (gethash keymap mcg-keybinding-registry)
+      (when create
+        (puthash keymap (make-hash-table :test 'equal) mcg-keybinding-registry))))
+#+end_src
+
+*** Key Normalization
+
+#+begin_src emacs-lisp
+(defun mcg-normalize-key (key)
+  "Normalize KEY to a canonical string form.
+Handles both string and vector key representations."
+  (key-description (mcg--key-vector key)))
+#+end_src
+
+*** Bind and Unbind Keys
+
+#+begin_src emacs-lisp
+(defcustom mcg-keybinding-conflict-policy 'reject
+  "How `mcg-bind-key' handles conflicting bindings.
+When set to `reject', conflicting bindings are recorded but not installed.
+When set to `overwrite', conflicting bindings are recorded and installed."
+  :type '(choice (const :tag "Reject conflicts" reject)
+                 (const :tag "Overwrite conflicts" overwrite))
+  :group 'mcg)
+
+(defun mcg--key-vector (key)
+  "Return KEY as a vector accepted by `lookup-key'."
+  (cond ((vectorp key) key)
+        ((stringp key) (vconcat (kbd key)))
+        (t (signal 'wrong-type-argument (list '(or stringp vectorp) key)))))
+
+(defun mcg--key-prefix-vector-p (prefix key)
+  "Return non-nil when PREFIX vector is a proper prefix of KEY vector."
+  (and (< (length prefix) (length key))
+       (cl-loop for i below (length prefix)
+                always (equal (aref prefix i) (aref key i)))))
+
+(defun mcg--keymap-command-p (command)
+  "Return non-nil when COMMAND denotes a keymap prefix."
+  (or (keymapp command)
+      (and (symbolp command)
+           (boundp command)
+           (keymapp (symbol-value command)))
+      (and (symbolp command)
+           (fboundp command)
+           (keymapp (symbol-function command)))))
+
+(defun mcg-ensure-prefix-map (key name source)
+  "Bind prefix KEY as NAME from SOURCE, preserving existing children."
+  (let* ((existing (lookup-key global-map (kbd key)))
+         (map (cond ((keymapp existing)
+                     (if (symbolp existing) (indirect-function existing) existing))
+                    ((mcg--keymap-command-p existing)
+                     (if (and (symbolp existing) (fboundp existing))
+                         (symbol-function existing)
+                       (symbol-value existing)))
+                    ((or (null existing) (numberp existing)) (make-sparse-keymap))
+                    (t (error "Key %s is already a non-prefix command" key)))))
+    (set name map)
+    (fset name map)
+    (mcg-bind-key key name source)
+    map))
+
+(defun mcg--registered-prefix-conflict (normalized-key command keymap)
+  "Return prefix conflict info for NORMALIZED-KEY and COMMAND.
+The return value is (CONFLICT-KIND CONFLICT-KEY CONFLICT-BINDING), or nil.
+Prefix maps are allowed to have child bindings."
+  (let ((new-vector (mcg--key-vector normalized-key))
+        (bindings (mcg--keybinding-table keymap))
+        conflict)
+    (when bindings
+      (maphash
+       (lambda (registered-key registered-binding)
+         (let* ((registered-vector (mcg--key-vector registered-key))
+                (registered-command (car registered-binding)))
+           (cond
+            ;; Existing shorter non-keymap command blocks the new longer key.
+            ((and (mcg--key-prefix-vector-p registered-vector new-vector)
+                  (not (mcg--keymap-command-p registered-command)))
+             (setq conflict (list :blocked-by-shorter registered-key registered-binding)))
+            ;; New shorter non-keymap command would block an existing longer key.
+            ((and (mcg--key-prefix-vector-p new-vector registered-vector)
+                  (not (mcg--keymap-command-p command)))
+             (setq conflict (list :would-block-longer registered-key registered-binding))))))
+       bindings))
+    conflict))
+
+(defun mcg--prune-keybinding-descendants (key keymap bindings)
+  "Remove descendants of KEY no longer installed in KEYMAP from BINDINGS."
+  (when bindings
+    (let ((prefix (mcg--key-vector key)) obsolete)
+      (maphash
+       (lambda (registered-key binding)
+         (let ((vector (mcg--key-vector registered-key)))
+           (when (and (mcg--key-prefix-vector-p prefix vector)
+                      (not (eq (lookup-key keymap vector) (car binding))))
+             (push registered-key obsolete))))
+       bindings)
+      (dolist (registered-key obsolete) (remhash registered-key bindings)))))
+
+(defun mcg-bind-key (key command source &optional keymap)
+  "Bind KEY to COMMAND, registering it from SOURCE.
+SOURCE is a string identifying where the binding comes from (e.g., module name).
+KEYMAP is the keymap to bind in (defaults to global-map).
+Returns t if binding was installed, nil if it was rejected due to conflict."
+  (mcg-keybinding-init)
+  (let* ((normalized-key (mcg-normalize-key key))
+         (keymap (or keymap global-map))
+         (bindings (mcg--keybinding-table keymap))
+         (existing (and bindings (gethash normalized-key bindings)))
+         (new-binding (cons command source))
+         (prefix-conflict (mcg--registered-prefix-conflict normalized-key command keymap))
+         (has-conflict nil))
+
+    (when (and existing
+               (not (eq (car existing) command)))
+      (setq has-conflict t)
+      (push (list normalized-key existing new-binding keymap nil) mcg-keybinding-conflicts)
+      (mcg-log-warning "Keybinding conflict for %s: %s (%s) -> %s (%s)"
+                       normalized-key
+                       (car existing) (cdr existing)
+                       command source))
+
+    (when prefix-conflict
+      (setq has-conflict t)
+      (push (list normalized-key (nth 2 prefix-conflict) new-binding keymap prefix-conflict)
+            mcg-keybinding-conflicts)
+      (mcg-log-warning "Keybinding prefix conflict for %s: %S -> %s (%s)"
+                       normalized-key prefix-conflict command source))
+
+    (if (and has-conflict
+             (eq mcg-keybinding-conflict-policy 'reject))
+        (progn
+          (mcg-log-warning "Rejected keybinding %s from %s" normalized-key source)
+          nil)
+      (define-key keymap (mcg--key-vector key) command)
+      (setq bindings (mcg--keybinding-table keymap t))
+      (puthash normalized-key new-binding bindings)
+      (mcg--prune-keybinding-descendants normalized-key keymap bindings)
+      (mcg-log "Bound %s to %s (from %s)" normalized-key command source)
+      t)))
+
+(defun mcg-unbind-key (key &optional keymap)
+  "Unbind KEY and remove it from the registry.
+KEYMAP is the keymap to unbind from (defaults to global-map)."
+  (mcg-keybinding-init)
+  (let* ((normalized-key (mcg-normalize-key key))
+         (keymap (or keymap global-map))
+         (bindings (mcg--keybinding-table keymap)))
+    (define-key keymap (mcg--key-vector key) nil)
+    (when bindings
+      (remhash normalized-key bindings)
+      (mcg--prune-keybinding-descendants normalized-key keymap bindings))
+    (mcg-log "Unbound %s" normalized-key)))
+#+end_src
+
+*** Keybinding Lookup
+
+#+begin_src emacs-lisp
+(defun mcg-lookup-keybinding (key &optional keymap)
+  "Look up KEY in the keybinding registry.
+KEYMAP defaults to `global-map'.
+Returns (command . source) or nil if not registered."
+  (let ((bindings (mcg--keybinding-table (or keymap global-map))))
+    (when bindings (gethash (mcg-normalize-key key) bindings))))
+
+(defun mcg-list-keybindings (&optional keymap)
+  "Return registered keybindings for KEYMAP, defaulting to `global-map'.
+Each entry is (key command source)."
+  (let ((table (mcg--keybinding-table (or keymap global-map))) bindings)
+    (when table
+      (maphash (lambda (key binding)
+                 (push (list key (car binding) (cdr binding)) bindings))
+               table))
+    (sort bindings (lambda (a b) (string< (car a) (car b))))))
+#+end_src
+
+*** Show Keybindings
+
+#+begin_src emacs-lisp
+(defun mcg--keybinding-map-labels ()
+  "Return map/label pairs for reports without printing keymap contents."
+  (mcg-keybinding-init)
+  (let ((labels (list (cons global-map "global-map"))) (index 0))
+    (maphash (lambda (keymap _bindings)
+               (unless (eq keymap global-map)
+                 (push (cons keymap (format "keymap-%d" (cl-incf index))) labels)))
+             mcg-keybinding-registry)
+    (nreverse labels)))
+
+(defun mcg--insert-keybinding-conflicts (labels)
+  "Insert conflict details using map LABELS into the current buffer."
+  (dolist (conflict mcg-keybinding-conflicts)
+    (let* ((key (nth 0 conflict))
+           (old (nth 1 conflict))
+           (new (nth 2 conflict))
+           (keymap (or (nth 3 conflict) global-map))
+           (prefix-info (nth 4 conflict)))
+      (insert (format "Key: %s [%s]\n" key (cdr (assq keymap labels))))
+      (insert (format "  Previous: %s (from %s)\n" (car old) (cdr old)))
+      (insert (format "  Requested: %s (from %s)\n" (car new) (cdr new)))
+      (when prefix-info
+        (insert (format "  Prefix: %s at %s\n" (car prefix-info) (nth 1 prefix-info))))
+      (insert "\n"))))
+
+(defun mcg-show-keybindings ()
+  "Display all registered keybindings grouped by keymap."
+  (interactive)
+  (let* ((labels (mcg--keybinding-map-labels))
+         (total (cl-loop for (keymap . _label) in labels
+                         sum (length (mcg-list-keybindings keymap))))
+        (buf (get-buffer-create "*MCG Keybindings*")))
+    (with-current-buffer buf
+      (erase-buffer)
+      (insert "=== MCG Keybindings ===\n\n")
+      (insert (format "Total bindings: %d\n" total))
+      (when mcg-keybinding-conflicts
+        (insert (format "Conflicts detected: %d\n" (length mcg-keybinding-conflicts))))
+      (dolist (entry labels)
+        (let ((bindings (mcg-list-keybindings (car entry))))
+          (when bindings
+            (insert (format "\nKeymap: %s\n" (cdr entry)))
+            (insert (format "%-20s %-40s %s\n" "Key" "Command" "Source"))
+            (insert (make-string 80 ?-) "\n")
+            (dolist (binding bindings)
+              (insert (format "%-20s %-40s %s\n"
+                              (nth 0 binding) (nth 1 binding) (nth 2 binding)))))))
+
+      ;; Show conflicts if any
+      (when mcg-keybinding-conflicts
+        (insert "\n\n=== Keybinding Conflicts ===\n\n")
+        (mcg--insert-keybinding-conflicts labels)))
+    (display-buffer buf)))
+
+(defun mcg-show-keybinding-conflicts ()
+  "Display keybinding conflicts in a buffer."
+  (interactive)
+  (if (null mcg-keybinding-conflicts)
+      (message "No keybinding conflicts detected.")
+    (let ((buf (get-buffer-create "*MCG Keybinding Conflicts*")))
+      (with-current-buffer buf
+        (erase-buffer)
+        (insert "=== MCG Keybinding Conflicts ===\n\n")
+        (insert (format "Total conflicts: %d\n\n" (length mcg-keybinding-conflicts)))
+        (mcg--insert-keybinding-conflicts (mcg--keybinding-map-labels)))
+      (display-buffer buf))))
+#+end_src
+
+
+#+begin_src emacs-lisp
+(provide 'core-keybindings)
+#+end_src

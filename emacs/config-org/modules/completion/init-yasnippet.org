@@ -88,7 +88,7 @@ YASnippet 代码片段系统配置。
 
 (defun mcg--setup-yasnippet ()
   "Set up YASnippet code snippet system."
-  (when (mcg-require-extension "yasnippet" t)
+  (when (mcg-require-extension "yasnippet")
     ;; Set custom snippet directories
     (let ((custom-dirs
            (list (expand-file-name "site-lisp/snippets" mcg-emacs-dir)

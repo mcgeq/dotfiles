@@ -22,6 +22,7 @@ Unified compile, build, test, and run commands.
 ;;; Code:
 
 (require 'core-lib)
+(require 'core-dev-tools)
 (require 'compile)
 #+end_src
 
@@ -77,24 +78,15 @@ Unified compile, build, test, and run commands.
       (`(,runner run) (format "%s start" runner)))))
 
 (defun mcg-compile--python-command (root action)
-  "Return Python command for ROOT and ACTION.
-When the Python module is loaded, reuse its project-aware pytest detection."
+  "Return Python command for ROOT and ACTION using shared tool selection."
   (pcase action
     ('build "python -m build")
     ((or 'test 'run)
-     (if (fboundp 'mcg-python--pytest-command)
-         (mcg-python--pytest-command (file-name-as-directory root))
-       "python -m pytest"))))
+     (mcg-python--pytest-command (file-name-as-directory root)))))
 
 (defun mcg-compile--zig-command (action)
-  "Return Zig command for ACTION.
-When the Zig module is loaded, reuse its build command helper."
-  (if (fboundp 'mcg-zig-build-command)
-      (mcg-zig-build-command action)
-    (pcase action
-      ('build "zig build")
-      ('test "zig build test")
-      ('run "zig build run"))))
+  "Return Zig command for ACTION using shared tool selection."
+  (mcg-zig-build-command action))
 
 (defun mcg-compile--guess-command (root action)
   "Guess a shell command for ROOT and ACTION."
@@ -209,14 +201,8 @@ With prefix EDIT, edit the guessed command before running."
 (setq compilation-always-kill t)
 (setq compilation-ask-about-save nil)
 
-(define-prefix-command 'mcg-compile-map)
-(mcg-bind-key "C-c c" 'mcg-compile-map "tools/compile")
-(mcg-bind-key "C-c c c" #'mcg-compile "tools/compile")
-(mcg-bind-key "C-c c r" #'mcg-recompile "tools/compile")
-(mcg-bind-key "C-c c b" #'mcg-compile-build "tools/compile")
-(mcg-bind-key "C-c c t" #'mcg-compile-test "tools/compile")
-(mcg-bind-key "C-c c R" #'mcg-compile-run "tools/compile")
-(mcg-bind-key "M-g e" #'mcg-compile-errors "tools/compile")
+(require 'core-bindings)
+(mcg-bind-module-commands :tools 'compile)
 
 (mcg-log "compile module configured")
 #+end_src

@@ -187,14 +187,29 @@ emacs/
 | Command           | Description                    |
 |-------------------+--------------------------------|
 | make              | Generate config from Org files |
+| make generate     | Generate repository-local config without installation |
 | make clean        | Clean generated files          |
-| make test         | Run all tests                  |
+| make test         | Generate config and run all tests |
 | make profile-startup | Show startup module load times |
 | make init         | Initialize Git Submodules      |
 | make st           | Check package status           |
 | make up           | Update packages safely         |
 | make lock-packages| Lock current package versions  |
 | make h            | Show help                      |
+
+=make generate= updates files inside this repository and preserves the private
+=config.el=. =make all= also creates a minimal private config when absent and
+installs early-init into the user Emacs directory. Use =make tangle-dir DIR=modules/org=
+to update one configured directory through the same incremental build rules.
+
+The test entrypoint discovers sorted =test/*-tests.el= suites automatically,
+excluding =run-tests.el= itself. Shared setup lives in =test/test-helper.el=;
+the original configuration regressions live in =test/config-tests.el=.
+After generation, tests can also run from the repository root:
+
+#+begin_src sh
+emacs -Q --batch -l emacs/test/run-tests.el -f ert-run-tests-batch-and-exit
+#+end_src
 
 ** Startup Profiling
 
@@ -397,11 +412,33 @@ buffer can appear early while heavier or on-demand tools finish loading later:
 | Idle         | After 2s idle | visual chrome and heavy/on-demand tools: awesome-tray, holo-layer, vundo, yasnippet, compile, blink-search, dirvish, org, magit, clutch, lsp-bridge, color-rg, majutsu, vale |
 | Deferred     | On demand   | trigger-backed language and writing modules such as python, zig, web, and markdown |
 
+Within one =mcg!= declaration, repeated category/module pairs retain their first
+position and use the last entry's enabled state and loading metadata. A final
+=-module= removes that module from the enabled order and metadata registry.
+
 Some idle modules expose lightweight lazy command entries before the module is
 loaded. The command keys are available immediately, but the backing module is
 loaded on first use. This keeps startup fast while avoiding an early keybinding
 gap for compile, magit, vundo, blink-search, color-rg, dirvish, org capture,
 clutch, and majutsu.
+
+These nine groups share their declarations in =config-org/core/core-bindings.org=.
+Both lazy entry points and initialized modules use =mcg-bind-module-commands=;
+edit the shared declaration when changing their keys. Prefix setup preserves
+existing children, and =mcg-tools-majutsu-prefix= also controls the early entry.
+Existing commands and autoloads initialize their module before first execution.
+If setup fails after defining commands, all lazy entries for that module are
+restored so both background failures and sibling command calls remain retryable.
+
+Extension discovery and cache handling live in =config-org/core/core-extensions.org=.
+Bootstrap and runtime lookups share the same index, prefer a package's =lisp/=
+directory, ignore dotfiles such as =.dir-locals.el=, and honor the same exclusions
+and =mcg-extension-discovery-max-depth=. Cache validation covers nested directory
+changes and discovery options. Duplicate package names use the first path in
+sorted traversal order and produce a warning. Selected load directories also
+track Elisp filenames, so removal of the last =lisp/= source invalidates the
+cache even when directory timestamps coincide. =mcg-extension-direct-path= remains
+a compatible entry into this index; =M-x mcg-show-extensions= forces a refresh.
 
 Two idle choices are intentional:
 
@@ -439,7 +476,16 @@ configurable from =site-lisp/config/private/config.el=:
 (mcg-add-idle-load-category :enhance)  ; Add entire category
 #+end_src
 
+Repeated idle setup replaces the previous timer. Each callback handles one
+queued module, and the timer handle is cleared when the queue drains. Failures
+remain recorded; explicitly adding the failed module again allows a retry.
+
 ** Deferred Loading
+
+=mcg-setup-deferred-loading= follows =:load deferred= metadata and accepts an
+optional category list. The startup wrapper uses the same implementation.
+Each selected deferred module needs an entry in =mcg-module-triggers=;
+missing entries report the category and module instead of silently skipping it.
 
 Language and writing modules are loaded on-demand when you open a matching
 file. Markdown is deferred so ordinary startup does not pay for Markdown mode.
@@ -563,6 +609,28 @@ High-frequency idle modules use lazy command entries: compile, magit, vundo,
 blink-search, color-rg, dirvish, org capture, clutch, and majutsu keys are
 available immediately, and their modules are loaded on first use.
 
+The registry implementation lives in =config-org/core/core-keybindings.org= and
+remains available through =core-lib=. Bindings and prefix conflicts are scoped to
+the target keymap's identity; equal-looking maps have independent registrations.
+Strings and vectors share canonical key descriptions. A failed Emacs binding or
+unbinding operation preserves the previous registration. Removing or replacing a
+prefix removes registrations for child keys that are no longer installed.
+
+=mcg-lookup-keybinding= and =mcg-list-keybindings= accept an optional keymap,
+defaulting to =global-map=. List rows retain the =(key command source)= shape.
+=M-x mcg-show-keybindings= groups all registered maps; conflict reports include
+the target map and the blocking prefix where applicable.
+
+#+begin_src emacs-lisp
+(mcg-bind-key "C-c t" #'ignore "my-mode" my-mode-map)
+(mcg-lookup-keybinding "C-c t" my-mode-map)
+(mcg-list-keybindings my-mode-map)
+#+end_src
+
+After rebuilding this refactor, restart Emacs to recreate registrations with map
+identity. An old flat registry can only be imported as global bindings because it
+did not retain the original target maps.
+
 ** Quick Reference
 
 | Prefix  | Description      |
@@ -670,25 +738,57 @@ Core storage is controlled by =mcg-org-directory=,
 =mcg-org-agenda-directory=, and =mcg-org-notes-directory=. Agenda behavior is
 configured through =mcg-org-agenda-files= and =mcg-org-agenda-custom-commands=.
 
+Storage options and =mcg-org-set-storage-root= are available from =core-org=
+before Org loads. The helper resets derived paths and synchronizes Org's runtime
+variables; put individual path overrides after the helper call. Capture setup
+fills missing template keys and preserves existing user entries, including Hugo
+templates. Repeated setup keeps those entries in their existing order.
+
+Display settings apply locally to Org buffers. Use =mcg-org-time-locale= to
+customize their time locale (default: =zh_CN.UTF-8=).
+
 Babel is conservative by default: =mcg-org-babel-confirm-evaluate= is enabled,
 =mcg-org-export-babel-evaluate= is disabled, and Zig support is controlled by
 =mcg-org-babel-enable-zig=. Source block prompts use
 =mcg-org-babel-src-block-languages=. Default Babel languages are
 =emacs-lisp=, =shell=, =python=, =js=, =css=, and =org=; enable =C=, =dot=,
 =plantuml=, or =sql= from private config only when a project needs them.
+Successful Babel language initialization is reused until its effective options
+change; failed initialization can be retried.
 
 Hugo capture and export are opt-in. The default is =mcg-org-hugo-enable nil=;
 set =(setq mcg-org-hugo-enable t)= in =site-lisp/config/private/config.el= to
-load easy-hugo, ox-hugo, and the =h=/=hb= capture templates. Related knobs are
+load easy-hugo and the =h=/=hb= capture templates, and enable ox-hugo when
+Org's export library =ox= loads. Related knobs are
 =mcg-blog-base-directory=, =mcg-org-hugo-postdir=, and
 =mcg-org-blog-capture-directory=. The current capture surface creates a
 one-file-per-post =hb= template instead of topic-specific shortcuts.
+GFM also initializes after =ox= loads. Put export customizations in
+=(with-eval-after-load 'ox ...)=, or explicitly load =ox= when needed.
 
 * 🔧 Customization
 
 ** User Settings
 
 Edit =site-lisp/config/private/config.el= for machine-local settings:
+
+This file is loaded once after core initialization and before feature modules.
+Theme, font, and idle-delay options therefore apply on the first initialization.
+Move existing calls that require initialized immediate modules into
+=mcg-after-init-hook=. For idle/deferred modules, use =with-eval-after-load=:
+
+#+begin_src emacs-lisp
+(add-hook 'mcg-after-init-hook
+          (lambda () (message "Immediate modules are ready")))
+(with-eval-after-load 'init-org
+  (setq org-startup-folded 'content))
+#+end_src
+
+Python runner/formatter selection, Web formatter detection, and Zig build
+commands live in =core-dev-tools=. Compile and doctor use the same rules even
+before language modules load. Required package/setup failures are recorded by
+the module loader; explicitly optional integrations retain their fallbacks.
+Failed file-triggered loads remain retryable on the next visit.
 
 #+begin_src emacs-lisp
 (setq mcg-ui-theme 'ef-dream)

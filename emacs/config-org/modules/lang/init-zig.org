@@ -29,6 +29,7 @@
 ;;; Code:
 
 (require 'core-lib)
+(require 'core-dev-tools)
 (mcg-require-extension 'zig-mode t)
 #+end_src
 
@@ -218,13 +219,6 @@
         (mcg-compile--run command root)
       (let ((default-directory root))
         (compile command)))))
-
-(defun mcg-zig-build-command (action)
-  "Return Zig build command for ACTION."
-  (pcase action
-    ('build "zig build")
-    ('run "zig build run")
-    ('test "zig build test")))
 
 (defun mcg/zig-build ()
   "Run zig build."

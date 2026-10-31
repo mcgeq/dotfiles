@@ -74,6 +74,7 @@
 ;; 3. core-modules: module system, mcg! macro
 (require 'core-modules)
 (mcg-modules-init)
+(require 'core-bindings)
 #+end_src
 
 *** Load core-doctor
@@ -97,7 +98,7 @@
   ;; Declare which modules to enable using mcg! macro
   ;; Modules prefixed with `-' are disabled
   ;; Modules can declare loading strategy with `:load':
-  ;;   immediate - load during startup before private config
+  ;;   immediate - load during startup after private options
   ;;   idle      - load after the first frame when Emacs is idle
   ;;   deferred  - load on file trigger from `mcg-module-triggers'
   ;;
@@ -192,85 +193,13 @@
 ** Setup Lazy Command Entries
 
 #+begin_src emacs-lisp
-(defun mcg--idle-module-command-entries-enabled-p (category module)
-  "Return non-nil when MODULE in CATEGORY should expose lazy command entries."
-  (and (mcg-module-enabled-p category module)
-       (eq (mcg-module-load-strategy category module) 'idle)))
-
-(defun mcg--bind-idle-module-command-entries (category module source bindings)
-  "Bind lazy command entry BINDINGS for idle MODULE in CATEGORY.
-BINDINGS is an alist of (KEY . COMMAND)."
-  (when (mcg--idle-module-command-entries-enabled-p category module)
-    (dolist (binding bindings)
-      (mcg-bind-lazy-module-key
-       (car binding) (cdr binding) source category module))))
-
 (defun mcg-setup-idle-module-command-entries ()
-  "Expose high-value commands from idle modules immediately."
-  (when (mcg--idle-module-command-entries-enabled-p :tools 'compile)
-    (define-prefix-command 'mcg-compile-map)
-    (mcg-bind-key "C-c c" 'mcg-compile-map "tools/compile")
-    (mcg--bind-idle-module-command-entries
-     :tools 'compile "tools/compile"
-     '(("C-c c c" . mcg-compile)
-       ("C-c c r" . mcg-recompile)
-       ("C-c c b" . mcg-compile-build)
-       ("C-c c t" . mcg-compile-test)
-       ("C-c c R" . mcg-compile-run)
-       ("M-g e" . mcg-compile-errors))))
-
-  (mcg--bind-idle-module-command-entries
-   :tools 'blink-search "tools/blink-search"
-   '(("C-c s b" . blink-search)
-     ("C-c s d" . mcg/blink-search-grep-current-dir)
-     ("C-c s p" . mcg/blink-search-project-root)))
-
-  (mcg--bind-idle-module-command-entries
-   :tools 'color-rg "tools/color-rg"
-   '(("C-c s g" . color-rg-search-input)
-     ("C-c s G" . mcg/color-rg-search-project)
-     ("C-c s s" . color-rg-search-symbol)
-     ("C-c s S" . mcg/color-rg-search-symbol-in-project)))
-
-  (mcg--bind-idle-module-command-entries
-   :tools 'magit "tools/magit"
-   '(("C-x g" . magit-status)
-     ("C-x M-g" . magit-dispatch)
-     ("C-c g s" . magit-status)
-     ("C-c g l" . magit-log)
-     ("C-c g d" . magit-dispatch)
-     ("C-c g f" . magit-file-dispatch)
-     ("C-c g ?" . mcg/magit-menu)))
-
-  (mcg--bind-idle-module-command-entries
-   :editor 'dirvish "editor/dirvish"
-   '(("C-c d" . dirvish)))
-
-  (mcg--bind-idle-module-command-entries
-   :tools 'clutch "tools/clutch"
-   '(("C-c ; c" . clutch-query-console)
-     ("C-c ; j" . clutch-jump)
-     ("C-c ; t" . clutch-list-tables)
-     ("C-c ; s" . clutch-show-schema)
-     ("C-c ; R" . clutch-recent)
-     ("C-c ; ?" . clutch-dispatch)))
-
-  (mcg--bind-idle-module-command-entries
-   :tools 'majutsu "tools/majutsu"
-   '(("C-x M-j" . majutsu)))
-
-  (mcg--bind-idle-module-command-entries
-   :org 'org "org/capture"
-   '(("C-c n c" . org-capture)
-     ("C-c n a" . org-agenda)
-     ("C-c n l" . org-store-link)
-     ("C-c n t" . org-todo-list)))
-
-  (mcg--bind-idle-module-command-entries
-   :editor 'vundo "editor/vundo"
-   '(("C-x u" . vundo)
-     ("C-c u" . vundo)
-     ("C-/" . vundo))))
+  "Expose declared commands from enabled idle modules immediately."
+  (dolist (entry mcg-module-command-bindings)
+    (let ((category (nth 0 entry)) (module (nth 1 entry)))
+      (when (and (mcg-module-enabled-p category module)
+                 (eq (mcg-module-load-strategy category module) 'idle))
+        (mcg-bind-module-commands category module t)))))
 #+end_src
 
 ** Load Immediate Modules
@@ -297,8 +226,7 @@ BINDINGS is an alist of (KEY . COMMAND)."
 #+begin_src emacs-lisp
 (defun mcg-setup-deferred-modules ()
   "Set up trigger-based loading for modules declared with `:load deferred'."
-  (dolist (mod-key (mcg-list-modules-by-load-strategy 'deferred))
-    (mcg-defer-module (car mod-key) (cdr mod-key))))
+  (mcg-setup-deferred-loading))
 #+end_src
 
 ** Load Private Configuration
@@ -319,8 +247,13 @@ BINDINGS is an alist of (KEY . COMMAND)."
                         (error-message-string err)))))))
 
 (defun mcg-load-private-config ()
-  "Load private config."
+  "Load private options before feature modules are initialized."
   (mcg-load-private-file "config.el" "private/config"))
+
+(defvar mcg-after-init-hook nil
+  "Hook run after immediate modules and lazy entry points are initialized.
+Register post-module customization here from private/config.el.
+Use `with-eval-after-load' for idle or deferred modules.")
 #+end_src
 
 ** Startup Statistics
@@ -345,6 +278,9 @@ BINDINGS is an alist of (KEY . COMMAND)."
 (defun mcg-init ()
   "Main initialization function.
 Called to set up the complete MCG Emacs configuration."
+  ;; Options must be available before any feature module consumes them.
+  (mcg-load-private-config)
+
   ;; Expose selected idle-module commands without paying their startup cost.
   (mcg-setup-idle-module-command-entries)
 
@@ -357,8 +293,8 @@ Called to set up the complete MCG Emacs configuration."
   ;; Setup deferred loading for writing and language modules
   (mcg-setup-deferred-modules)
 
-  ;; Load private configuration last
-  (mcg-load-private-config)
+  ;; Apply customizations that need initialized immediate modules.
+  (run-hooks 'mcg-after-init-hook)
 
   ;; Display startup statistics
   (add-hook 'emacs-startup-hook #'mcg-display-startup-stats 95))

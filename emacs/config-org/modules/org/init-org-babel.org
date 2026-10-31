@@ -263,6 +263,21 @@ BODY is the code content, PARAMS are the parameters."
     (define-key org-mode-map (kbd "C-c C-v C-r") #'mcg/org-babel-remove-all-results)
     (define-key org-mode-map (kbd "C-c C-v i") #'mcg/org-insert-src-block))
   (mcg-log "Configured org-babel keybindings"))
+
+(defvar mcg-org-babel--configured-options nil
+  "Effective options from the last successful Babel language setup.")
+
+(defun mcg-org-babel-mode-setup ()
+  "Load Babel languages once per effective option set, retrying failures."
+  (let ((options (list (mcg-org-babel--effective-load-languages)
+                       mcg-org-babel-enable-zig
+                       mcg-org-babel-zig-default-header-args
+                       mcg-org-babel-jupyter-default-header-args)))
+    (unless (equal options mcg-org-babel--configured-options)
+      (mcg-org-babel-setup-languages)
+      (mcg-org-babel-setup-zig)
+      (mcg-org-babel--maybe-enable-jupyter-defaults)
+      (setq mcg-org-babel--configured-options (copy-tree options)))))
 #+end_src
 
 ** Initialize
@@ -273,10 +288,7 @@ BODY is the code content, PARAMS are the parameters."
 (mcg-org-babel-setup-basic)
 (mcg-org-babel-setup-defaults)
 
-(add-hook 'org-mode-hook
-          (lambda ()
-            (mcg-org-babel-setup-languages)
-            (mcg-org-babel-setup-zig)))
+(add-hook 'org-mode-hook #'mcg-org-babel-mode-setup)
 
 (mcg-org-babel-setup-keybindings)
 #+end_src

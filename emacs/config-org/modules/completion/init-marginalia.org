@@ -29,7 +29,7 @@
 
 (defun mcg--setup-marginalia ()
   "Setup marginalia annotations."
-  (when (mcg-require-extension "marginalia" t)
+  (when (mcg-require-extension "marginalia")
     ;; Alignment settings
     (setq marginalia-align 'right
           marginalia-align-offset 0

@@ -27,7 +27,7 @@
 
 (defun mcg--setup-blink-search ()
   "Setup Blink-search fast search framework."
-  (when (mcg-require-extension "blink-search" t)
+  (when (mcg-require-extension "blink-search")
     ;; Common directories
     (setq blink-search-common-directory
           `(("HOME" "~/")
@@ -111,9 +111,8 @@ Blink-search 辅助函数。
   "Setup Blink-search keybindings."
   ;; Extend the shared C-c s search prefix from init-consult.
   (when (featurep 'blink-search)
-    (mcg-bind-key "C-c s b" 'blink-search "tools/blink-search")
-    (mcg-bind-key "C-c s d" 'mcg/blink-search-grep-current-dir "tools/blink-search")
-    (mcg-bind-key "C-c s p" 'mcg/blink-search-project-root "tools/blink-search"))
+    (require 'core-bindings)
+    (mcg-bind-module-commands :tools 'blink-search))
 
     (mcg-log "Blink-search keybindings configured"))
 #+end_src

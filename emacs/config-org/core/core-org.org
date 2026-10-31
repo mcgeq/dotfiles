@@ -1,0 +1,146 @@
+#+TITLE: Shared Org Storage and Templates
+#+PROPERTY: header-args:emacs-lisp :tangle core-org.el :lexical t
+
+* Shared Org Storage and Templates
+
+Storage options are available to private configuration before Org loads.
+
+#+begin_src emacs-lisp
+;;; core-org.el --- Shared Org configuration -*- lexical-binding: t; -*-
+(require 'core-bootstrap)
+(defgroup mcg-org nil
+  "Org mode configuration variables."
+  :group 'org
+  :prefix "mcg-org-")
+
+(defcustom mcg-org-directory
+  (expand-file-name "~/org")
+  "Root directory for Org mode files."
+  :type 'directory
+  :group 'mcg-org)
+
+(defcustom mcg-org-agenda-directory
+  (expand-file-name "agenda" mcg-org-directory)
+  "Org agenda files directory."
+  :type 'directory
+  :group 'mcg-org)
+
+(defcustom mcg-org-notes-directory
+  (expand-file-name "notes" mcg-org-directory)
+  "Org notes files directory."
+  :type 'directory
+  :group 'mcg-org)
+
+(defcustom mcg-org-default-notes-file
+  (expand-file-name "notes.org" mcg-org-notes-directory)
+  "Default notes file."
+  :type 'file
+  :group 'mcg-org)
+
+(defcustom mcg-org-task-file
+  (expand-file-name "tasks.org" mcg-org-agenda-directory)
+  "Task file."
+  :type 'file
+  :group 'mcg-org)
+
+
+(defcustom mcg-org-diary-file
+  (expand-file-name "diary.org" mcg-org-agenda-directory)
+  "Diary file."
+  :type 'file
+  :group 'mcg-org)
+
+(defcustom mcg-org-journal-file
+  (expand-file-name "journal.org" mcg-org-notes-directory)
+  "Journal file."
+  :type 'file
+  :group 'mcg-org)
+
+(defcustom mcg-org-billing-file
+  (expand-file-name "billing.org" mcg-org-notes-directory)
+  "Billing file."
+  :type 'file
+  :group 'mcg-org)
+
+(defcustom mcg-org-password-file
+  (expand-file-name "passwords.org" mcg-org-notes-directory)
+  "Password management file."
+  :type 'file
+  :group 'mcg-org)
+
+(defcustom mcg-org-capture-notes-directory
+  (expand-file-name "capture" mcg-org-notes-directory)
+  "Directory for one-file-per-capture notes."
+  :type 'directory
+  :group 'mcg-org)
+
+(defcustom mcg-org-capture-journal-directory
+  (expand-file-name "journal" mcg-org-notes-directory)
+  "Directory for one-file-per-capture journal entries."
+  :type 'directory
+  :group 'mcg-org)
+
+(defcustom mcg-org-agenda-files
+  (list mcg-org-agenda-directory)
+  "Org agenda file list or directories to scan."
+  :type '(repeat (choice file directory))
+  :group 'mcg-org)
+
+(defcustom mcg-org-agenda-diary-file
+  mcg-org-diary-file
+  "Org agenda diary file."
+  :type 'file
+  :group 'mcg-org)
+
+
+(defvar org-directory)
+(defvar org-default-notes-file)
+(defvar org-agenda-files)
+(defvar org-agenda-diary-file)
+(defvar diary-file)
+(defvar org-capture-templates)
+
+(defun mcg-org-sync-storage ()
+  "Apply shared storage options to Org without loading Org itself."
+  (setq org-directory mcg-org-directory
+        org-default-notes-file mcg-org-default-notes-file
+        org-agenda-files mcg-org-agenda-files
+        org-agenda-diary-file mcg-org-agenda-diary-file
+        diary-file mcg-org-agenda-diary-file))
+
+(defun mcg-org-register-capture-templates (templates)
+  "Register missing keys from TEMPLATES, preserving existing user entries."
+  (dolist (template templates)
+    (unless (assoc (car template) org-capture-templates)
+      (setq org-capture-templates
+            (append org-capture-templates (list template))))))
+
+(defun mcg-org-set-storage-root (root)
+  "Set Org storage ROOT and refresh all derived Org capture paths."
+  (let* ((root-dir (file-name-as-directory (expand-file-name root)))
+         (agenda-dir (expand-file-name "agenda" root-dir))
+         (notes-dir (expand-file-name "notes" root-dir)))
+    (setq mcg-org-directory root-dir
+          mcg-org-agenda-directory agenda-dir
+          mcg-org-notes-directory notes-dir
+          mcg-org-default-notes-file (expand-file-name "notes.org" notes-dir)
+          mcg-org-task-file (expand-file-name "tasks.org" agenda-dir)
+          mcg-org-diary-file (expand-file-name "diary.org" agenda-dir)
+          mcg-org-journal-file (expand-file-name "journal.org" notes-dir)
+          mcg-org-billing-file (expand-file-name "billing.org" notes-dir)
+          mcg-org-password-file (expand-file-name "passwords.org" notes-dir)
+          mcg-org-capture-notes-directory (expand-file-name "capture" notes-dir)
+          mcg-org-capture-journal-directory (expand-file-name "journal" notes-dir)
+          mcg-org-agenda-files (list agenda-dir)
+          mcg-org-agenda-diary-file mcg-org-diary-file)
+    (mcg-org-sync-storage)
+    (mapc (lambda (dir)
+            (unless (file-directory-p dir)
+              (make-directory dir t)))
+          (list root-dir agenda-dir notes-dir
+                mcg-org-capture-notes-directory
+                mcg-org-capture-journal-directory))
+    root-dir))
+
+(provide 'core-org)
+#+end_src

@@ -256,19 +256,22 @@ Hugo 集成配置，包括 capture 模板。
 (defun mcg-org-hugo-setup-capture-templates ()
   "Setup Hugo blog capture templates."
   (when mcg-org-hugo-enable
-    ;; Add Hugo post category
-    (add-to-list 'org-capture-templates '("h" "Hugo Post"))
+    (mcg-org-register-capture-templates
+     (let ((org-capture-templates nil))
+       ;; Add Hugo post category
+       (add-to-list 'org-capture-templates '("h" "Hugo Post"))
 
-    ;; One-file-per-post blog template. Category and tags are entered
-    ;; during capture, so topic-specific shortcuts are intentionally omitted.
-    (add-to-list 'org-capture-templates
-                 `("hb" "Blog Post"
-                   plain
-                   (file (lambda ()
-                           (mcg-org-hugo-capture-post-file)))
-                   (function mcg/org-hugo-new-subtree-post-capture-template)
-                   :jump-to-captured t
-                   :unnarrowed t))
+       ;; One-file-per-post blog template. Category and tags are entered
+       ;; during capture, so topic-specific shortcuts are intentionally omitted.
+       (add-to-list 'org-capture-templates
+                    `("hb" "Blog Post"
+                      plain
+                      (file (lambda ()
+                              (mcg-org-hugo-capture-post-file)))
+                      (function mcg/org-hugo-new-subtree-post-capture-template)
+                      :jump-to-captured t
+                      :unnarrowed t))
+       org-capture-templates))
 
     (add-hook 'org-capture-after-finalize-hook
               #'mcg-org-hugo-capture-reset-state)
@@ -288,15 +291,12 @@ Hugo 集成配置，包括 capture 模板。
   "Initialize Hugo blog integration."
   (when mcg-org-hugo-enable
     (mcg-org-hugo-setup-easy-hugo)
-    (mcg-org-hugo-setup-ox-hugo)
+    (with-eval-after-load 'ox
+      (mcg-org-hugo-setup-ox-hugo))
     (mcg-org-hugo-setup-capture-templates)))
 
 (mcg-org-hugo-init)
 
-;; Private configuration is loaded after immediate modules. Re-run the
-;; opt-in initialization once those local settings are available.
-(with-eval-after-load 'private-config
-  (mcg-org-hugo-init))
 #+end_src
 
 ** Provide Feature

@@ -32,9 +32,6 @@
 
 (require 'core-lib)
 (require 'org)
-(require 'ox)
-
-(add-to-list 'load-path (expand-file-name "modules/org" mcg-emacs-dir))
 #+end_src
 
 ** Variables
@@ -46,45 +43,24 @@ Org 模式相关的配置变量。
 ;;; Variables
 ;;; ============================================================
 
-(defgroup mcg-org nil
-  "Org mode configuration variables."
-  :group 'org
-  :prefix "mcg-org-")
-
-(defcustom mcg-org-directory
-  (expand-file-name "~/org")
-  "Root directory for Org mode files."
-  :type 'directory
-  :group 'mcg-org)
-
-(defcustom mcg-org-agenda-directory
-  (expand-file-name "agenda" mcg-org-directory)
-  "Org agenda files directory."
-  :type 'directory
-  :group 'mcg-org)
-
-(defcustom mcg-org-notes-directory
-  (expand-file-name "notes" mcg-org-directory)
-  "Org notes files directory."
-  :type 'directory
-  :group 'mcg-org)
-
-(defcustom mcg-org-default-notes-file
-  (expand-file-name "notes.org" mcg-org-notes-directory)
-  "Default notes file."
-  :type 'file
-  :group 'mcg-org)
-
-(defcustom mcg-org-task-file
-  (expand-file-name "tasks.org" mcg-org-agenda-directory)
-  "Task file."
-  :type 'file
-  :group 'mcg-org)
-
 (defcustom mcg-org-enable-pretty-symbols t
   "Whether to enable Org mode symbol beautification."
   :type 'boolean
   :group 'mcg-org)
+
+(defcustom mcg-org-time-locale "zh_CN.UTF-8"
+  "Time locale used inside Org buffers."
+  :type 'string
+  :group 'mcg-org)
+
+(defconst mcg-org-prettify-symbols-alist
+  (mapcan (lambda (entry)
+            (list entry (cons (upcase (car entry)) (cdr entry))))
+          '(("#+begin_src" . "↪")
+            ("#+end_src" . "↩")
+            (":PROPERTIES:" . "⥼")
+            (":END:" . "⥽")))
+  "Default prettification rules installed only in Org buffers.")
 
 (defcustom mcg-org-ellipsis " ..."
   "String shown after folded Org headlines and drawers.
@@ -167,6 +143,7 @@ Org 核心配置。
 
 (defun mcg--setup-org-core ()
   "Set up org mode core configuration."
+  (mcg-org-sync-storage)
   (setq org-ellipsis mcg-org-ellipsis
         org-tags-column 0
         org-log-into-drawer t
@@ -203,29 +180,16 @@ Org 核心配置。
    '(org-ellipsis ((t (:inherit 'fixed-pitch))))
    '(org-headline-done ((t (:inherit 'variable-pitch)))))
 
-  (setq line-spacing 0.25
-        org-list-demote-modify-bullet '(("+" . "-") ("-" . "+") ("*" . "+") ("1." . "a.")))
+  (setq org-list-demote-modify-bullet '(("+" . "-") ("-" . "+") ("*" . "+") ("1." . "a.")))
 
   (font-lock-add-keywords
    'org-mode
    '(("^ +\\([-*]\\) "
       (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "▻"))))))
 
-  (setq prettify-symbols-alist
-        (mapcan (lambda (x) (list x (cons (upcase (car x)) (cdr x))))
-                '(("#+begin_src" . "↪")
-                  ("#+end_src" . "↩")
-                  (":PROPERTIES:" . "⥼")
-                  (":END:" . "⥽"))))
-  (setq prettify-symbols-unprettify-at-point t)
-
   (setq org-time-stamp-custom-formats
         '("<%Y-%m-%d %A %H:%M:%S>" . "<%Y-%m-%d %A %H:%M:%S>"))
-  (setq system-time-locale "zh_CN.UTF-8")
   (setq org-display-custom-times t)
-
-  (require 'ox-gfm nil t)
-  (add-to-list 'org-export-backends 'md)
 
   (mcg-log "Org core configured"))
 #+end_src
@@ -244,7 +208,9 @@ Org 核心配置。
 (require 'init-visual-fill-column)
 (require 'init-org-download)
 (require 'init-mixed-pitch)
-(require 'init-ox-gfm)
+(with-eval-after-load 'ox
+  (require 'init-ox-gfm)
+  (add-to-list 'org-export-backends 'md))
 (require 'init-org-numbering)
 (require 'init-org-agenda)
 (require 'init-org-babel)
@@ -261,6 +227,9 @@ Org 核心配置。
 (defun mcg-org-mode-setup ()
   "Org mode initialization setup."
   (setq-local line-spacing 2)
+  (setq-local system-time-locale mcg-org-time-locale)
+  (setq-local prettify-symbols-alist (copy-tree mcg-org-prettify-symbols-alist))
+  (setq-local prettify-symbols-unprettify-at-point t)
   (visual-line-mode 1)
 
   (when mcg-org-enable-pretty-symbols

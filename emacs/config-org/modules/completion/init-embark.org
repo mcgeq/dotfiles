@@ -25,7 +25,7 @@
 #+begin_src emacs-lisp
 (defun mcg--setup-embark ()
   "Setup embark."
-  (when (mcg-require-extension "embark" t)
+  (when (mcg-require-extension "embark")
     (mcg-bind-key "C-." #'embark-act "completion/embark")
     (mcg-bind-key "C-;" #'embark-dwim "completion/embark")
     (setq prefix-help-command #'embark-prefix-help-command)

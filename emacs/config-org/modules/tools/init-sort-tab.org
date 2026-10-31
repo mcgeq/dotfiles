@@ -23,7 +23,7 @@
 #+begin_src emacs-lisp
 (defun mcg--setup-sort-tab ()
   "Setup sort-tab."
-  (when (mcg-require-extension "sort-tab" t)
+  (when (mcg-require-extension "sort-tab")
     (when (fboundp 'sort-tab-mode)
       (sort-tab-mode 1))
     (mcg-log "sort-tab configured")))

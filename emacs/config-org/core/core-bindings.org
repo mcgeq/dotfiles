@@ -1,0 +1,98 @@
+#+TITLE: Shared Module Command Bindings
+#+PROPERTY: header-args:emacs-lisp :tangle core-bindings.el :lexical t
+
+* Shared Module Command Bindings
+
+Idle entry points and initialized modules consume the same declarations.
+Keys expressed as symbols resolve private options at binding time.
+
+#+begin_src emacs-lisp
+;;; core-bindings.el --- Shared module commands -*- lexical-binding: t; -*-
+(require 'core-lib)
+
+(defvar mcg-tools-majutsu-prefix "C-x M-j"
+  "Key for Majutsu, used by both lazy and initialized bindings.")
+
+(defconst mcg-module-command-bindings
+  '((:tools compile "tools/compile"
+     ("C-c c c" . mcg-compile)
+     ("C-c c r" . mcg-recompile)
+     ("C-c c b" . mcg-compile-build)
+     ("C-c c t" . mcg-compile-test)
+     ("C-c c R" . mcg-compile-run)
+     ("M-g e" . mcg-compile-errors))
+    (:tools blink-search "tools/blink-search"
+     ("C-c s b" . blink-search)
+     ("C-c s d" . mcg/blink-search-grep-current-dir)
+     ("C-c s p" . mcg/blink-search-project-root))
+    (:tools color-rg "tools/color-rg"
+     ("C-c s g" . color-rg-search-input)
+     ("C-c s G" . mcg/color-rg-search-project)
+     ("C-c s s" . color-rg-search-symbol)
+     ("C-c s S" . mcg/color-rg-search-symbol-in-project)
+     ("C-c s ." . color-rg-search-symbol-in-current-file)
+     ("C-c s ," . color-rg-search-input-in-current-file)
+     ("C-c s t" . mcg/color-rg-search-project-with-type)
+     ("C-c s O" . mcg/color-rg-search-in-org-directory)
+     ("C-c s c" . mcg/color-rg-search-in-config))
+    (:tools magit "tools/magit"
+     ("C-x g" . magit-status)
+     ("C-x M-g" . magit-dispatch)
+     ("C-c g s" . magit-status)
+     ("C-c g l" . magit-log)
+     ("C-c g d" . magit-dispatch)
+     ("C-c g f" . magit-file-dispatch)
+     ("C-c g p" . magit-push)
+     ("C-c g P" . magit-pull)
+     ("C-c g b b" . magit-branch-create)
+     ("C-c g b r" . magit-branch-rename)
+     ("C-c g b d" . magit-branch-delete)
+     ("C-c g m a" . magit-submodule-add)
+     ("C-c g m r" . magit-submodule-remove)
+     ("C-c g m u" . magit-submodule-update)
+     ("C-c g ?" . mcg/magit-menu))
+    (:editor dirvish "editor/dirvish" ("C-c d" . dirvish))
+    (:tools clutch "tools/clutch"
+     ("C-c ; c" . clutch-query-console)
+     ("C-c ; j" . clutch-jump)
+     ("C-c ; t" . clutch-list-tables)
+     ("C-c ; s" . clutch-show-schema)
+     ("C-c ; R" . clutch-recent)
+     ("C-c ; ?" . clutch-dispatch))
+    (:tools majutsu "tools/majutsu" (mcg-tools-majutsu-prefix . majutsu))
+    (:org org "org/capture"
+     ("C-c n c" . org-capture)
+     ("C-c n a" . org-agenda)
+     ("C-c n l" . org-store-link)
+     ("C-c n t" . org-todo-list))
+    (:editor vundo "editor/vundo"
+     ("C-x u" . vundo)
+     ("C-c u" . vundo)
+     ("C-/" . vundo)
+     ("C-?" . undo-redo)))
+  "Shared rows of (CATEGORY MODULE SOURCE (KEY . COMMAND)...).")
+
+(defun mcg-bind-module-commands (category module &optional lazy)
+  "Install shared bindings for MODULE in CATEGORY.
+When LAZY is non-nil, commands initialize their module before execution."
+  (let ((entry (cl-find-if (lambda (row)
+                             (and (eq (nth 0 row) category)
+                                  (eq (nth 1 row) module)))
+                           mcg-module-command-bindings)))
+    (when entry
+      (when (and (eq category :tools) (eq module 'compile))
+        (mcg-ensure-prefix-map "C-c c" 'mcg-compile-map "tools/compile"))
+      (when (and (eq category :tools) (memq module '(blink-search color-rg)))
+        (mcg-ensure-prefix-map "C-c s" 'mcg-search-map "completion/consult"))
+      (dolist (binding (nthcdr 3 entry))
+        (let ((key (if (symbolp (car binding))
+                       (symbol-value (car binding))
+                     (car binding)))
+              (command (cdr binding))
+              (source (nth 2 entry)))
+          (if lazy
+              (mcg-bind-lazy-module-key key command source category module)
+            (mcg-bind-key key command source)))))))
+
+(provide 'core-bindings)
+#+end_src

@@ -183,12 +183,26 @@ emacs/
 | make              | 从 Org 文件生成配置  |
 | make clean        | 清理生成文件         |
 | make test         | 运行所有测试         |
+| make generate     | 仅生成仓库内配置，不安装 |
 | make profile-startup | 查看启动模块耗时     |
 | make init         | 初始化 Git 子模块    |
 | make st           | 检查包状态           |
 | make up           | 安全更新包           |
 | make lock-packages| 锁定当前包版本       |
 | make h            | 显示帮助             |
+
+=make test= 会先生成配置，再执行全部测试。=make generate= 只更新仓库内文件，
+保留私有 =config.el=；=make all= 还会在私有配置缺失时创建最小文件，并将
+early-init 安装到用户 Emacs 目录。=make tangle-dir DIR=modules/org= 使用同一套
+增量构建规则更新指定目录。
+
+测试入口按文件名顺序自动发现 =test/*-tests.el= 套件，并排除入口自身
+=run-tests.el=。公共夹具位于 =test/test-helper.el=，原有配置回归断言位于
+=test/config-tests.el=。生成配置后，也可以从仓库根目录运行：
+
+#+begin_src sh
+emacs -Q --batch -l emacs/test/run-tests.el -f ert-run-tests-batch-and-exit
+#+end_src
 
 ** 启动 Profiling
 
@@ -326,6 +340,21 @@ make st
 但背后的模块会在首次调用时加载。这样既保留启动速度，也避免 compile、magit、vundo、
 blink-search、color-rg、dirvish、org capture、clutch、majutsu 这些高频入口在启动初期出现按键空窗。
 
+这九组快捷键统一声明在 =config-org/core/core-bindings.org= 中。延迟入口和模块正式初始化
+都通过 =mcg-bind-module-commands= 安装绑定，修改这些按键时只需维护共享声明。
+前缀初始化会保留已有子键；=mcg-tools-majutsu-prefix= 同时控制 Majutsu 的提前入口。
+已有命令和 autoload 也会在首次执行前完成对应模块的初始化。
+若初始化在定义命令后失败，会恢复该模块的全部懒加载入口，后台失败和同模块其他命令
+的调用仍会重新尝试初始化。
+
+扩展发现与缓存集中在 =config-org/core/core-extensions.org=。启动加载路径和运行期查找
+共用一份索引，优先选择包的 =lisp/= 目录，忽略 =.dir-locals.el= 等点文件，并遵循同一套
+排除规则和 =mcg-extension-discovery-max-depth=。缓存校验覆盖深层目录变化及发现选项。
+选中的加载目录还会记录 Elisp 文件名；即使目录时间戳相同，删除 =lisp/= 最后一个
+源码文件也能使缓存失效并重新选择路径。
+同名包按排序后的遍历顺序选择首个路径并发出警告。=mcg-extension-direct-path= 保留为
+索引的兼容入口；=M-x mcg-show-extensions= 可以强制刷新。
+
 其中两个 idle 决策是刻意保留的：
 
 - =awesome-tray= 会替换 mode-line，放到首个 scratch frame 之后加载可以避免启动时明显重绘。
@@ -361,6 +390,10 @@ idle 延迟仍可在 =site-lisp/config/private/config.el= 中配置：
 
 ** Deferred 加载
 
+=mcg-setup-deferred-loading= 按 =:load deferred= 元数据选择模块，并支持可选的
+类别列表；启动入口复用同一实现。每个选中的 deferred 模块都需要在
+=mcg-module-triggers= 中配置文件触发器，缺失时会明确报告类别和模块名。
+
 语言和写作模块在打开匹配文件时按需加载。Markdown 按需加载，所以普通启动
 不会提前付出 Markdown mode 的成本。Vale 默认关闭：模块会在 idle 阶段加载，
 但只有在 =site-lisp/config/private/config.el= 中把 =mcg-vale-enable nil=
@@ -388,6 +421,13 @@ M-x mcg-list-modules
 ** 模块声明
 
 在 =init.org= 中使用 =mcg!= 宏声明启用的模块：
+
+同一次 =mcg!= 声明内，重复的类别/模块组合保留首次出现的位置，以最后一次
+声明的启用状态和加载元数据为准。最后使用 =-module= 时，会移除其启用记录、
+加载顺序和元数据，避免同时处于启用与禁用状态。
+
+重复初始化 idle 加载会替换旧计时器，每次回调处理一个队列项，队列耗尽后
+清空计时器引用。加载失败会保留错误记录，显式重新加入失败模块即可重试。
 
 #+begin_src emacs-lisp
 (mcg! :ui
@@ -473,6 +513,24 @@ M-x mcg-list-modules
 高频 idle 模块使用 lazy command entry：compile、magit、vundo、blink-search、color-rg、
 dirvish、org capture、clutch、majutsu 的按键启动后立即可用，对应模块在首次调用时加载。
 
+注册表实现位于 =config-org/core/core-keybindings.org=，仍可通过 =core-lib= 使用。
+绑定和前缀冲突按目标 keymap 的对象身份分别登记，内容相同的两个 keymap 也互不干扰。
+字符串与向量按键使用统一的规范表示；Emacs 绑定或解绑失败时，原有记录会保留。
+移除或替换前缀时，会同步清理已经失效的子键记录。
+
+=mcg-lookup-keybinding= 和 =mcg-list-keybindings= 新增可选 keymap 参数，省略时查询
+=global-map=；列表行仍为 =(key command source)=。=M-x mcg-show-keybindings= 按 keymap
+分组显示全部登记项，冲突报告会标明目标 keymap 以及造成冲突的前缀。
+
+#+begin_src emacs-lisp
+(mcg-bind-key "C-c t" #'ignore "my-mode" my-mode-map)
+(mcg-lookup-keybinding "C-c t" my-mode-map)
+(mcg-list-keybindings my-mode-map)
+#+end_src
+
+生成本轮配置后，建议重启 Emacs，以实际 keymap 身份重新登记。旧版扁平注册表没有保存
+目标 keymap，兼容导入只能把旧记录视为全局绑定。
+
 ** 快速参考
 
 | 前缀    | 描述           |
@@ -544,6 +602,22 @@ Org Babel LSP 支持都需要显式开启，分别由 =mcg-lsp-enable-inlay-hint
 
 编辑 =site-lisp/config/private/config.el= 放置本机设置：
 
+该文件在核心初始化之后、功能模块加载之前执行一次，主题、字体与 idle 延迟等
+选项可以在首次初始化时生效。已有配置中需要调用已初始化 immediate 模块的代码，
+请移入 =mcg-after-init-hook=；idle/deferred 模块使用 =with-eval-after-load=：
+
+#+begin_src emacs-lisp
+(add-hook 'mcg-after-init-hook
+          (lambda () (message "Immediate modules are ready")))
+(with-eval-after-load 'init-org
+  (setq org-startup-folded 'content))
+#+end_src
+
+Python 工具与格式化命令、Web 格式化检测及 Zig 构建命令统一由 =core-dev-tools=
+提供。语言模块尚未加载时，compile 和 doctor 也使用相同规则。必需包缺失或初始化
+失败会由模块加载器记录；明确标为可选的集成仍可回退。文件触发加载失败后，下次
+访问仍可重试。
+
 #+begin_src emacs-lisp
 (setq mcg-ui-theme 'ef-dream)
 (setq mcg-font-height 140)
@@ -588,19 +662,31 @@ Org Babel LSP 支持都需要显式开启，分别由 =mcg-lsp-enable-inlay-hint
 =mcg-org-notes-directory= 控制。Agenda 使用 =mcg-org-agenda-files= 和
 =mcg-org-agenda-custom-commands= 配置文件范围与自定义视图。
 
+=core-org= 在 Org 加载前提供存储选项和 =mcg-org-set-storage-root=。
+该函数重置派生路径并同步 Org 的运行时变量；单独覆盖某条路径时，应放在调用之后。
+Capture 初始化只补齐缺失的模板键，保留已有用户模板（包括 Hugo 模板）；
+重复初始化也会保留已有模板的顺序。
+
+显示设置仅作用于 Org 缓冲区。可通过 =mcg-org-time-locale= 调整时间区域设置，
+默认值为 =zh_CN.UTF-8=。
+
 Babel 默认偏保守：=mcg-org-babel-confirm-evaluate= 开启，
 =mcg-org-export-babel-evaluate= 关闭；Zig 支持由
 =mcg-org-babel-enable-zig= 控制，插入源码块的候选语言来自
 =mcg-org-babel-src-block-languages=。默认 Babel 语言是 =emacs-lisp=、
 =shell=、=python=、=js=、=css= 和 =org=；=C=、=dot=、=plantuml=、=sql=
 这类扩展语言只在项目需要时从 private 配置启用。
+Babel 会复用已成功完成的语言初始化，直到有效配置发生变化；初始化失败后可以重试。
 
 Hugo capture/export 默认关闭：默认值是 =mcg-org-hugo-enable nil=。需要时在
 =site-lisp/config/private/config.el= 中设置 =(setq mcg-org-hugo-enable t)=，
-才会加载 easy-hugo、ox-hugo 以及 =h=/=hb= capture 模板。相关配置包括
+才会加载 easy-hugo 以及 =h=/=hb= capture 模板，并在 Org 导出库 =ox= 加载后
+启用 ox-hugo。相关配置包括
 =mcg-blog-base-directory=、=mcg-org-hugo-postdir= 和
 =mcg-org-blog-capture-directory=。当前 capture 入口提供一类 one-file-per-post
 的 =hb= 模板，而不是按主题拆分多个快捷模板。
+GFM 同样在 =ox= 加载后初始化。导出相关定制可以放在
+=(with-eval-after-load 'ox ...)= 中，也可以在需要时主动加载 =ox=。
 
 * 🔍 调试
 

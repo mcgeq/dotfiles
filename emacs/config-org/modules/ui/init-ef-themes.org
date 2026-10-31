@@ -49,13 +49,13 @@
 
 (defun mcg--setup-ef-themes ()
   "Setup ef-themes."
-  (let ((has-modus (mcg-require-extension "modus-themes" t))
-        (has-ef (mcg-require-extension "ef-themes" t)))
+  (let ((has-modus (mcg-require-extension "modus-themes"))
+        (has-ef (mcg-require-extension "ef-themes")))
     (cond
      ((not has-modus)
-      (mcg-log-error "Missing dependency: modus-themes (required by ef-themes)"))
+      (error "Missing dependency: modus-themes (required by ef-themes)"))
      ((not has-ef)
-      (mcg-log-error "Missing extension: ef-themes"))
+      (error "Missing extension: ef-themes"))
      (t
       (mapc #'disable-theme custom-enabled-themes)
       (load-theme mcg-ui-theme t)

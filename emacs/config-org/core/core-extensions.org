@@ -1,0 +1,337 @@
+#+TITLE: Extension Index and Cache
+#+PROPERTY: header-args:emacs-lisp :tangle core-extensions.el :lexical t
+
+* Extension Index and Cache
+
+#+begin_src emacs-lisp
+;;; core-extensions.el --- Extension discovery and cache -*- lexical-binding: t; -*-
+(require 'cl-lib)
+(require 'seq)
+(require 'core-bootstrap)
+#+end_src
+
+** Extension Cache System
+
+扩展缓存系统，用于缓存扩展路径以提高查找性能。
+
+*** Cache Variables
+
+#+begin_src emacs-lisp
+(defvar mcg-extension-cache nil
+  "Hash table cache for extension paths.
+Maps extension names (strings) to their full directory paths.")
+
+(defvar mcg-extension-cache-file nil
+  "File path for persisting the extension cache.
+Set during initialization based on mcg-cache-dir.")
+
+(defvar mcg-extension-cache-version 6
+  "Version number for the cache format.
+Increment when cache format changes to invalidate old caches.")
+
+(defcustom mcg-extension-cache-validate-signature t
+  "Non-nil means validate extension cache signature before using cached entries."
+  :type 'boolean
+  :group 'mcg)
+
+(defcustom mcg-extension-discovery-max-depth 3
+  "Maximum recursive depth when scanning `mcg-extensions-dir' for extensions."
+  :type 'integer
+  :group 'mcg)
+#+end_src
+
+*** Cache Initialization
+
+#+begin_src emacs-lisp
+(defun mcg-cache-init ()
+  "Initialize the extension cache system.
+Creates the cache hash table and sets up the cache file path."
+  (unless mcg-extension-cache
+    (setq mcg-extension-cache (make-hash-table :test 'equal)))
+  (when mcg-cache-dir
+    (setq mcg-extension-cache-file
+          (expand-file-name "extension-cache.el" mcg-cache-dir))))
+#+end_src
+
+*** Cache Operations
+
+#+begin_src emacs-lisp
+(defun mcg-cache-lookup (key)
+  "Look up KEY in the extension cache.
+Returns the cached value or nil if not found."
+  (mcg-cache-init)
+  (gethash key mcg-extension-cache))
+
+(defun mcg-cache-store (key value)
+  "Store VALUE under KEY in the extension cache.
+Returns VALUE."
+  (mcg-cache-init)
+  (puthash key value mcg-extension-cache)
+  value)
+
+(defun mcg--extension-name-string (name)
+  "Return canonical string representation for extension NAME."
+  (if (symbolp name) (symbol-name name) name))
+
+(defun mcg-cache-remove (key)
+  "Remove KEY from the extension cache."
+  (mcg-cache-init)
+  (remhash key mcg-extension-cache))
+
+(defun mcg-cache-clear ()
+  "Clear all entries from the extension cache."
+  (interactive)
+  (mcg-cache-init)
+  (clrhash mcg-extension-cache)
+  (mcg-log "Extension cache cleared"))
+#+end_src
+
+*** Cache Persistence
+
+#+begin_src emacs-lisp
+(defun mcg-cache-save ()
+  "Save the extension cache to disk."
+  (interactive)
+  (mcg-cache-init)
+  (when mcg-extension-cache-file
+    (with-temp-file mcg-extension-cache-file
+      (insert ";; MCG Extension Cache - Auto-generated\n")
+      (insert (format ";; Version: %d\n" mcg-extension-cache-version))
+      (insert (format ";; Generated: %s\n\n" (current-time-string)))
+      (insert "(setq mcg-extension-cache\n")
+      (insert "  #s(hash-table size ")
+      (insert (format "%d " (hash-table-count mcg-extension-cache)))
+      (insert "test equal data (\n")
+      (maphash (lambda (k v)
+                 (insert (format "    %S %S\n" k v)))
+               mcg-extension-cache)
+      (insert "  )))\n"))
+    (mcg-log "Extension cache saved to %s" mcg-extension-cache-file)))
+
+(defun mcg-cache-load ()
+  "Load the extension cache from disk if available."
+  (interactive)
+  (mcg-cache-init)
+  (when (and mcg-extension-cache-file
+             (file-exists-p mcg-extension-cache-file))
+    (condition-case err
+        (progn
+          (load mcg-extension-cache-file nil t)
+          (mcg-log "Extension cache loaded from %s" mcg-extension-cache-file))
+      (error
+       (mcg-log-warning "Failed to load extension cache: %s"
+                        (error-message-string err))
+       (mcg-cache-clear)))))
+#+end_src
+
+*** Cache Signature
+
+#+begin_src emacs-lisp
+(defun mcg--extension-directory-state (dir path)
+  "Return directory state used to validate DIR and load PATH.
+Container and selected load-path entries detect changes when mtimes coincide."
+  (list dir (file-attribute-modification-time (file-attributes dir))
+        path (when (and path (not (equal path dir)))
+               (file-attribute-modification-time (file-attributes path)))
+        (when (and (null path) (file-directory-p dir))
+          (directory-files dir nil "^[^.]"))
+        (when (and path (file-directory-p path))
+          (directory-files path nil "^[^.].*\\.el\\'"))
+        (when (equal dir path)
+          (let ((lisp (expand-file-name "lisp" dir)))
+            (when (file-directory-p lisp)
+              (list (file-attribute-modification-time (file-attributes lisp))
+                    (directory-files lisp nil "^[^.].*\\.el\\'" t)))))))
+
+(defun mcg--extensions-signature (&optional refresh)
+  "Describe directories visited by discovery, including nested packages.
+Reuse watched paths unless REFRESH or discovery options require a new walk."
+  (unless mcg-extensions-dir
+    (mcg-init-paths))
+  (let* ((metadata (list :version mcg-extension-cache-version
+                         :root (expand-file-name mcg-extensions-dir)
+                         :depth mcg-extension-discovery-max-depth
+                         :excluded (copy-sequence mcg-extension-load-path-excluded-dirs)))
+         (cached (mcg-cache-lookup 'cache-signature))
+         (watched (plist-get cached :directories))
+         directories)
+    (if (and (not refresh) watched
+             (cl-loop for (key value) on metadata by #'cddr
+                      always (equal value (plist-get cached key))))
+        (setq directories
+              (mapcar (lambda (entry)
+                        (mcg--extension-directory-state (nth 0 entry) (nth 2 entry)))
+                      watched))
+      ;; Watching the root also invalidates an empty index on the first addition.
+      (push (mcg--extension-directory-state mcg-extensions-dir nil) directories)
+      (mcg--walk-extension-directories
+       mcg-extensions-dir mcg-extension-discovery-max-depth
+       (lambda (dir path)
+         (push (mcg--extension-directory-state dir path) directories)))
+      (setq directories (nreverse directories)))
+    (append metadata (list :directories directories))))
+
+(defun mcg-cache-valid-p ()
+  "Return non-nil if current cache matches extensions directory signature."
+  (if (not mcg-extension-cache-validate-signature)
+      t
+    (equal (mcg-cache-lookup 'cache-signature)
+           (mcg--extensions-signature))))
+
+(defun mcg-cache-update-signature ()
+  "Persist current extension directory signature into cache."
+  (mcg-cache-store 'cache-signature (mcg--extensions-signature)))
+#+end_src
+
+** Extension Discovery
+
+扩展发现系统，用于递归查找 extensions 目录中的包。
+
+*** Internal Discovery Functions
+
+#+begin_src emacs-lisp
+(defun mcg--find-el-files-in-dir (dir)
+  "Check if DIR contains loadable .el files.
+Package metadata such as .dir-locals.el is ignored."
+  (and (file-directory-p dir)
+       (directory-files dir nil "^[^.].*\\.el\\'" t)))
+
+(defun mcg--walk-extension-directories (dir depth visit)
+  "Call VISIT with each candidate directory and its load path under DIR.
+Use DEPTH levels and the same exclusion and package rules for all callers."
+  (when (and (> depth 0) (file-directory-p dir))
+    (dolist (entry (directory-files dir t "^[^.]"))
+      (when (and (file-directory-p entry)
+                 (not (mcg--extension-dir-excluded-p entry)))
+        (let ((path (mcg--extension-check-path entry)))
+          (funcall visit entry path)
+          (unless path
+            (mcg--walk-extension-directories entry (1- depth) visit)))))))
+
+(defun mcg--discover-extensions-recursive (dir &optional depth)
+  "Recursively discover extensions under DIR.
+DEPTH limits recursion (default 3).
+Returns a list of (name . path) pairs for directories containing .el files."
+  (let ((seen (make-hash-table :test 'equal)) results)
+    (mcg--walk-extension-directories
+     dir (or depth mcg-extension-discovery-max-depth)
+     (lambda (entry path)
+       (when path
+         (let ((name (file-name-nondirectory entry)))
+           ;; Sorted traversal makes duplicate resolution stable for all users.
+           (if (gethash name seen)
+               (mcg-log-warning "Duplicate extension %s ignored: %s" name path)
+             (puthash name t seen)
+             (push (cons name path) results))))))
+    (nreverse results)))
+#+end_src
+
+*** Extension Listing
+
+#+begin_src emacs-lisp
+(defun mcg-list-extensions (&optional force-refresh)
+  "List all extensions in the extensions directory.
+Returns an alist of (name . path) pairs.
+If FORCE-REFRESH is non-nil, bypass the cache and rediscover extensions."
+  (interactive "P")
+  (unless mcg-extensions-dir
+    (mcg-init-paths))
+
+  (mcg-cache-init)
+  (let* ((cached (gethash 'all-extensions mcg-extension-cache 'missing))
+         (signature (when (or force-refresh
+                              mcg-extension-cache-validate-signature
+                              (eq cached 'missing))
+                      (mcg--extensions-signature))))
+    (if (and (not force-refresh)
+             (not (eq cached 'missing))
+             (or (not mcg-extension-cache-validate-signature)
+                 (equal signature (mcg-cache-lookup 'cache-signature))))
+        cached
+      ;; Discover extensions
+      (let ((extensions (mcg--discover-extensions-recursive mcg-extensions-dir)))
+        ;; Reset potentially stale entries before rewriting cache.
+        (mcg-cache-clear)
+        ;; Cache the result
+        (mcg-cache-store 'all-extensions extensions)
+        ;; Also cache individual extension paths
+        (dolist (ext extensions)
+          (mcg-cache-store (car ext) (cdr ext)))
+        ;; A changed parent may introduce new paths that must now be watched.
+        (mcg-cache-store 'cache-signature (mcg--extensions-signature t))
+        (mcg-log "Discovered %d extensions" (length extensions))
+        extensions))))
+#+end_src
+
+*** Extension Path Lookup
+
+#+begin_src emacs-lisp
+
+(defun mcg-extension-path (name)
+  "Get the path for extension NAME.
+Returns the full directory path or nil if not found."
+  (mcg-list-extensions)
+  (mcg-cache-lookup (mcg--extension-name-string name)))
+
+(defun mcg--extension-check-path (path)
+  "Return extension PATH or its lisp subdir when valid."
+  (when (file-directory-p path)
+    (or (let ((lisp-path (expand-file-name "lisp" path)))
+          (and (mcg--find-el-files-in-dir lisp-path) lisp-path))
+        (and (mcg--find-el-files-in-dir path) path))))
+
+(defun mcg-extension-direct-path (name)
+  "Compatibility entry point for extension NAME in the shared index."
+  (mcg-extension-path name))
+
+(defun mcg-extension-exists-p (name)
+  "Check if extension NAME exists.
+Returns non-nil if the extension is found."
+  (not (null (mcg-extension-path name))))
+#+end_src
+
+*** Extension Require
+
+#+begin_src emacs-lisp
+(defun mcg-require-extension (name &optional noerror)
+  "Require extension NAME, adding its path to load-path first.
+Supports extensions in any location (direct or nested in subdirectories).
+If NOERROR is non-nil, return nil instead of signaling an error
+if the extension is not found."
+  (let ((path (mcg-extension-path name)))
+    (if path
+        (progn
+          (add-to-list 'load-path path)
+          (require (intern (if (symbolp name) (symbol-name name) name))
+                   nil noerror))
+      (if noerror
+          (progn
+            (mcg-log-warning "Extension not found: %s" name)
+            nil)
+        (error "Extension not found: %s" name)))))
+#+end_src
+
+*** Show Extensions
+
+#+begin_src emacs-lisp
+(defun mcg-show-extensions ()
+  "Display all discovered extensions in a buffer."
+  (interactive)
+  (let ((extensions (mcg-list-extensions t))
+        (buf (get-buffer-create "*MCG Extensions*")))
+    (with-current-buffer buf
+      (erase-buffer)
+      (insert "=== MCG Extensions ===\n\n")
+      (insert (format "Extensions directory: %s\n" mcg-extensions-dir))
+      (insert (format "Total extensions: %d\n\n" (length extensions)))
+      (insert (format "%-30s %s\n" "Name" "Path"))
+      (insert (make-string 80 ?-) "\n")
+      (dolist (ext (sort extensions (lambda (a b) (string< (car a) (car b)))))
+        (insert (format "%-30s %s\n" (car ext) (cdr ext)))))
+    (display-buffer buf)))
+#+end_src
+
+
+#+begin_src emacs-lisp
+(provide 'core-extensions)
+#+end_src

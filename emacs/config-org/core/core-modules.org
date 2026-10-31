@@ -53,6 +53,9 @@ Modules prefixed with `-' in mcg! are added here.")
   "List of loaded module keys.
 Each entry is (CATEGORY . MODULE) for modules that have been loaded.")
 
+(defvar mcg-lazy-module-commands nil
+  "Alist mapping module keys to commands whose setup must remain retryable.")
+
 (defvar mcg-module-load-errors nil
   "Alist of module load errors.
 Structure: (((CATEGORY . MODULE) . ERROR-INFO) ...).
@@ -216,7 +219,8 @@ The strategy is one of `immediate', `idle', or `deferred'."
   "Parse ARGS from mcg! macro into module alist.
 Returns alist of ((CATEGORY . ((MODULE ENABLED METADATA) ...)) ...).
 Modules prefixed with `-' are marked as disabled.
-Module entries may be bare symbols or lists like (MODULE :load STRATEGY)."
+Module entries may be bare symbols or lists like (MODULE :load STRATEGY).
+Repeated modules retain their first position and use the last declaration."
   (let ((result nil)
         (current-category nil))
     (dolist (arg args)
@@ -237,11 +241,14 @@ Module entries may be bare symbols or lists like (MODULE :load STRATEGY)."
                (module (if disabled
                            (intern (substring name 1))
                          raw-module))
-               (cat-entry (assq current-category result)))
+               (cat-entry (assq current-category result))
+               (existing (assq module (cdr cat-entry))))
           (when cat-entry
-            (setcdr cat-entry
-                    (append (cdr cat-entry)
-                            (list (list module (not disabled) metadata)))))))))
+            (if existing
+                (setcdr existing (list (not disabled) metadata))
+              (setcdr cat-entry
+                      (append (cdr cat-entry)
+                              (list (list module (not disabled) metadata))))))))))
     (nreverse result)))
 #+end_src
 
@@ -378,6 +385,9 @@ Returns t if successful, nil if failed."
             (mcg-log "Loaded module %s/%s" category mod-sym)
             t)
         (error
+         ;; A post-load hook may fail after the file was evaluated.
+         (setq mcg-loaded-modules (delete mod-key mcg-loaded-modules))
+         (mcg--restore-lazy-module-commands category mod-sym)
          (let* ((err-msg (error-message-string err))
                 (error-info
                  (mcg--make-module-error-info
@@ -408,24 +418,54 @@ Errors are recorded in `mcg-module-load-errors'."
 #+begin_src emacs-lisp
 (defun mcg--lazy-module-command-stub (category module command)
   "Return a lazy stub for COMMAND from MODULE in CATEGORY."
-  (let ((stub nil))
+  (let ((stub nil)
+        (original (and (fboundp command) (symbol-function command))))
     (setq stub
-          (lambda ()
+          (lambda (&rest args)
             (interactive)
-            (unless (mcg-load-module category module)
-              (user-error "Failed to load module %s/%s" category module))
-            (if (eq (symbol-function command) stub)
-                (user-error "Module %s/%s did not define command %s"
-                            category module command)
-              (call-interactively command))))
+            ;; Restore autoloads before require so package loading sees them.
+            (if original (fset command original) (fmakunbound command))
+            (condition-case err
+                (progn
+                  (unless (mcg-load-module category module)
+                    (user-error "Failed to load module %s/%s" category module))
+                  (unless (commandp command)
+                    (user-error "Module %s/%s did not define command %s"
+                                category module command)))
+              (error
+               ;; A failed setup may already have loaded the package itself.
+               ;; The loader restores all entries, including sibling commands.
+               (unless (and (fboundp command)
+                            (eq (symbol-function command)
+                                (get command 'mcg-lazy-module-stub)))
+                 (setq original (and (fboundp command) (symbol-function command)))
+                 (fset command stub))
+               (signal (car err) (cdr err))))
+            (if (called-interactively-p 'interactive)
+                (call-interactively command)
+              (apply command args))))
     stub))
 
 (defun mcg-define-lazy-module-command (category module command)
   "Define COMMAND as a lazy entry point for MODULE in CATEGORY.
-If COMMAND is already defined, leave it untouched."
-  (unless (fboundp command)
-    (fset command (mcg--lazy-module-command-stub category module command)))
+Existing commands and autoloads still run module setup before execution."
+  (cl-pushnew command
+              (alist-get (mcg--module-key category module)
+                         mcg-lazy-module-commands nil nil #'equal))
+  (unless (or (mcg-module-loaded-p category module)
+              (and (fboundp command)
+                   (eq (symbol-function command)
+                       (get command 'mcg-lazy-module-stub))))
+    (let ((stub (mcg--lazy-module-command-stub category module command)))
+      (put command 'mcg-lazy-module-stub stub)
+      (fset command stub)))
   command)
+
+(defun mcg--restore-lazy-module-commands (category module)
+  "Restore all lazy command entries after MODULE in CATEGORY fails setup."
+  (dolist (command (alist-get (mcg--module-key category module)
+                             mcg-lazy-module-commands nil nil #'equal))
+    (mcg-define-lazy-module-command category module command)))
 
 (defun mcg-bind-lazy-module-key (key command source category module &optional keymap)
   "Bind KEY to lazy COMMAND from MODULE in CATEGORY.
@@ -513,8 +553,10 @@ TRIGGER is (PATTERN . MODE) or looked up from `mcg-module-triggers'."
         (add-to-list 'auto-mode-alist
                      (cons pattern
                            (lambda ()
-                             (mcg--trigger-deferred-load mod-key)
-                             (funcall mode)))))
+                             (if (mcg--trigger-deferred-load mod-key)
+                                 (funcall mode)
+                               (user-error "Failed to load module %s/%s"
+                                           category module))))))
 
       (mcg-log "Deferred module %s/%s with trigger %s" category module trigger))))
 
@@ -523,23 +565,24 @@ TRIGGER is (PATTERN . MODE) or looked up from `mcg-module-triggers'."
 MOD-KEY is (CATEGORY . MODULE)."
   (let ((category (car mod-key))
         (module (cdr mod-key)))
-    ;; Remove from deferred list
-    (setq mcg-deferred-modules
-          (assoc-delete-all mod-key mcg-deferred-modules #'equal))
-    ;; Load the module
-    (mcg-load-module category module)))
+    ;; Keep failed triggers available for retry on the next visit.
+    (when (mcg-load-module category module)
+      (setq mcg-deferred-modules
+            (assoc-delete-all mod-key mcg-deferred-modules #'equal))
+      t)))
 
 (defun mcg-setup-deferred-loading (&optional categories)
-  "Set up deferred loading for trigger-backed modules.
-When CATEGORIES is non-nil, only modules from those categories are deferred."
-  (dolist (mod-key mcg-module-load-order)
+  "Set up enabled modules declared with the deferred loading strategy.
+When CATEGORIES is non-nil, only modules from those categories are deferred.
+Signal a user error if a selected module has no configured file trigger."
+  (dolist (mod-key (mcg-list-modules-by-load-strategy 'deferred))
     (let* ((category (car mod-key))
            (module (cdr mod-key))
            (trigger (cdr (assoc mod-key mcg-module-triggers))))
-      ;; Only defer modules that have triggers defined
-      (when (and trigger
-                 (or (null categories)
-                     (memq category categories)))
+      (when (or (null categories) (memq category categories))
+        (unless trigger
+          (user-error "No file trigger configured for deferred module %s/%s"
+                      category module))
         (mcg-defer-module category module trigger)))))
 
 (defun mcg-list-deferred-modules ()
@@ -575,20 +618,24 @@ Skips if module is already loaded or already in the queue."
            (category (car mod-key))
            (module (cdr mod-key)))
       (when (mcg-load-module category module)
-        (push mod-key mcg-idle-loaded-modules))
-      ;; Schedule next idle load if more modules remain
-      (when mcg-idle-load-modules
-        (setq mcg-idle-load-timer
-              (run-with-idle-timer mcg-idle-load-delay nil #'mcg--idle-load-next))))))
+        (cl-pushnew mod-key mcg-idle-loaded-modules :test #'equal))))
+  (mcg--schedule-idle-load))
+
+(defun mcg--schedule-idle-load ()
+  "Replace the pending idle timer, clearing it when no modules remain."
+  (when (timerp mcg-idle-load-timer)
+    (cancel-timer mcg-idle-load-timer))
+  (setq mcg-idle-load-timer
+        (when mcg-idle-load-modules
+          (run-with-idle-timer mcg-idle-load-delay nil #'mcg--idle-load-next))))
 
 ;; Alias for backward compatibility
 (defalias 'mcg--idle-load-next-module 'mcg--idle-load-next)
 
 (defun mcg-setup-idle-loading ()
-  "Set up idle loading for modules in `mcg-idle-load-modules'."
+  "Set up one idle timer for modules in `mcg-idle-load-modules'."
+  (mcg--schedule-idle-load)
   (when mcg-idle-load-modules
-    (setq mcg-idle-load-timer
-          (run-with-idle-timer mcg-idle-load-delay nil #'mcg--idle-load-next))
     (mcg-log "Scheduled %d modules for idle loading" (length mcg-idle-load-modules))))
 
 (defun mcg-list-idle-load-modules ()

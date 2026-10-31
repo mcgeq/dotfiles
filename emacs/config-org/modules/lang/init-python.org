@@ -29,6 +29,7 @@
 ;;; Code:
 
 (require 'core-lib)
+(require 'core-dev-tools)
 (require 'cl-lib)
 (require 'subr-x)
 (require 'python)
@@ -40,29 +41,6 @@
 ;;; ============================================================
 ;;; Variables
 ;;; ============================================================
-
-(defcustom mcg-python-test-command "python -m pytest"
-  "Command used to run Python tests."
-  :type 'string
-  :group 'mcg)
-
-(defcustom mcg-python-ruff-command "ruff"
-  "Command used to run Ruff."
-  :type 'string
-  :group 'mcg)
-
-(defconst mcg-python-ruff-format-quote-style "format.quote-style = 'single'"
-  "Ruff format config that preserves Python strings as single quotes.")
-
-(defconst mcg-python-ruff-format-config-file-name "ruff-format-single.toml"
-  "Filename for the generated Ruff formatter config.")
-
-(defcustom mcg-python-detect-project-tools t
-  "Whether Python commands should prefer project-local tool runners.
-When enabled, projects with uv, Poetry, or PDM lock files use the matching
-runner when its executable is available."
-  :type 'boolean
-  :group 'mcg)
 
 (defcustom mcg-python-use-ipython t
   "Whether `mcg/python-repl' should prefer IPython when available."
@@ -103,10 +81,6 @@ runner when its executable is available."
 ;;; Helpers
 ;;; ============================================================
 
-(defun mcg-python--project-root ()
-  "Return the current Python project root or `default-directory'."
-  (mcg-project-root-or-default))
-
 (defun mcg-python--save-and-compile (command &optional root)
   "Save buffers and run COMMAND with `compile' in ROOT."
   (save-some-buffers t)
@@ -121,109 +95,6 @@ runner when its executable is available."
 (defun mcg-python--quoted-current-file ()
   "Return the shell-quoted current buffer file."
   (shell-quote-argument (mcg-python--current-file)))
-
-(defun mcg-python--project-file-p (root file)
-  "Return non-nil when ROOT contains FILE."
-  (file-exists-p (expand-file-name file root)))
-
-(defun mcg-python--project-tool (&optional root)
-  "Return the detected Python project tool for ROOT, or nil.
-Only return a tool when `mcg-python-detect-project-tools' is enabled and the
-corresponding executable is available."
-  (let ((root (file-name-as-directory (or root (mcg-python--project-root)))))
-    (when mcg-python-detect-project-tools
-      (cond
-       ((and (mcg-python--project-file-p root "uv.lock")
-             (executable-find "uv"))
-        "uv")
-       ((and (mcg-python--project-file-p root "poetry.lock")
-             (executable-find "poetry"))
-        "poetry")
-       ((and (mcg-python--project-file-p root "pdm.lock")
-             (executable-find "pdm"))
-        "pdm")))))
-
-(defun mcg-python--project-tool-command (tool args &optional root)
-  "Return project-aware command parts for TOOL with ARGS in ROOT."
-  (pcase (mcg-python--project-tool root)
-    ("uv" (append (list "uv" "run" tool) args))
-    ("poetry" (append (list "poetry" "run" tool) args))
-    ("pdm" (append (list "pdm" "run" tool) args))
-    (_ (cons tool args))))
-
-(defun mcg-python--command-string (parts)
-  "Return shell command string from command PARTS."
-  (string-join parts " "))
-
-(defun mcg-python--shell-command-string (parts)
-  "Return a shell-quoted command string from command PARTS."
-  (string-join (mapcar #'shell-quote-argument parts) " "))
-
-(defun mcg-python--pytest-command (&optional root)
-  "Return the best pytest command for ROOT."
-  (let ((tool (mcg-python--project-tool root)))
-    (if tool
-        (mcg-python--command-string
-         (mcg-python--project-tool-command "pytest" nil root))
-      mcg-python-test-command)))
-
-(defun mcg-python--pyproject-has-ruff-config-p (file)
-  "Return non-nil when FILE contains a Ruff pyproject section."
-  (and (file-exists-p file)
-       (with-temp-buffer
-         (insert-file-contents file)
-         (goto-char (point-min))
-         (re-search-forward "^\\[tool\\.ruff\\(?:\\.[^]]+\\)?\\]$" nil t))))
-
-(defun mcg-python--ruff-project-config-p (&optional root)
-  "Return non-nil when ROOT declares Ruff configuration."
-  (let* ((root (file-name-as-directory (or root (mcg-python--project-root))))
-         (pyproject (expand-file-name "pyproject.toml" root)))
-    (or (mcg-python--project-file-p root ".ruff.toml")
-        (mcg-python--project-file-p root "ruff.toml")
-        (mcg-python--pyproject-has-ruff-config-p pyproject))))
-
-(defun mcg-python--ruff-format-args (&optional root)
-  "Return Ruff format args for ROOT without overriding project config."
-  (if (mcg-python--ruff-project-config-p root)
-      '("format")
-    (list "format" "--config" (mcg-python--ruff-format-config-file))))
-
-(defun mcg-python-format-candidates (&optional root)
-  "Return project-aware Python formatter command candidates for ROOT."
-  (let* ((root (file-name-as-directory (or root (mcg-python--project-root))))
-         (project-tool (mcg-python--project-tool root))
-         (ruff-format-args (mcg-python--ruff-format-args root))
-         (project-candidate
-          (when project-tool
-            (mcg-python--project-tool-command
-             "ruff" ruff-format-args root))))
-    (append (when project-candidate (list project-candidate))
-            (list (cons mcg-python-ruff-command ruff-format-args)
-                  (list "black" "--skip-string-normalization")))))
-
-(defun mcg-python--ruff-format-config-file ()
-  "Return a Ruff config file path that forces single-quote formatting."
-  (let* ((dir (or (and (boundp 'mcg-cache-dir) mcg-cache-dir)
-                  temporary-file-directory))
-         (file (expand-file-name mcg-python-ruff-format-config-file-name dir))
-         (contents "[format]\nquote-style = \"single\"\n"))
-    (unless (file-directory-p dir)
-      (make-directory dir t))
-    (unless (and (file-exists-p file)
-                 (with-temp-buffer
-                   (insert-file-contents file)
-                   (equal (buffer-string) contents)))
-      (with-temp-file file
-        (insert contents)))
-    file))
-
-(defun mcg-python--ruff-format-command (&optional root)
-  "Return Ruff format command parts for ROOT."
-  (mcg-python--project-tool-command
-   "ruff"
-   (mcg-python--ruff-format-args root)
-   root))
 
 (defun mcg-python--ruff-command (&rest args)
   "Return the best Ruff command for ARGS, or raise a user error."

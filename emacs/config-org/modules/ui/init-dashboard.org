@@ -132,7 +132,7 @@ The default prefers `nerd-icons'. Set nil to disable dashboard icons."
 (defun mcg--setup-dashboard ()
   "Setup dashboard."
   (if (and mcg-dashboard-enabled
-           (mcg-require-extension "dashboard" t))
+           (mcg-require-extension "dashboard"))
       (progn
         (mcg-dashboard-setup-recentf)
         (setq dashboard-banner-logo-title mcg-dashboard-banner-title)

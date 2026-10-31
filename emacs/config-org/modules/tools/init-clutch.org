@@ -133,7 +133,7 @@ Clutch 数据库客户端核心配置。
 ;;; Initialize
 ;;; ============================================================
 
-(when (mcg-require-extension 'clutch t)
+(when (mcg-require-extension 'clutch)
   ;; Load backend modules using require (they are submodules of clutch)
   (require 'clutch-db-mysql nil t)
   (require 'clutch-db-pg nil t)
@@ -152,12 +152,8 @@ Clutch 数据库客户端核心配置。
        (setq clutch-connection-alist mcg-tools-clutch-connections)))
 
   ;; Keybindings (C-c ; prefix for database operations)
-  (mcg-bind-key "C-c ; c" 'clutch-query-console "tools/clutch")
-  (mcg-bind-key "C-c ; j" 'clutch-jump "tools/clutch")
-  (mcg-bind-key "C-c ; t" 'clutch-list-tables "tools/clutch")
-  (mcg-bind-key "C-c ; s" 'clutch-show-schema "tools/clutch")
-  (mcg-bind-key "C-c ; R" 'clutch-recent "tools/clutch")
-  (mcg-bind-key "C-c ; ?" 'clutch-dispatch "tools/clutch")
+  (require 'core-bindings)
+  (mcg-bind-module-commands :tools 'clutch)
 
   ;; Transient menu prefix
   (transient-define-prefix mcg/clutch-menu ()

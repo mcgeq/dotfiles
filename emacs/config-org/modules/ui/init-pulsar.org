@@ -36,7 +36,7 @@ Pulse the current line after navigation commands for better visual orientation.
 
 (defun mcg--setup-pulsar ()
   "Setup Pulsar visual location feedback."
-  (when (mcg-require-extension "pulsar" t)
+  (when (mcg-require-extension "pulsar")
     (setq pulsar-face 'pulsar-cyan)
     (setq pulsar-highlight-face 'pulsar-yellow)
     (setq pulsar-delay 0.04)

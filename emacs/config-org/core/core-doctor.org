@@ -28,6 +28,7 @@
 (require 'seq)
 (require 'subr-x)
 (require 'core-bootstrap)
+(require 'core-dev-tools)
 #+end_src
 
 ** Doctor Variables
@@ -200,28 +201,6 @@ and :message describing the result.")
   "Return non-nil when ROOT contains FILE."
   (file-exists-p (mcg-doctor--root-file root file)))
 
-(defun mcg-doctor--root-has-any-file-p (root files)
-  "Return non-nil when ROOT contains any file in FILES."
-  (seq-some (lambda (file)
-              (mcg-doctor--root-has-file-p root file))
-            files))
-
-(defun mcg-doctor--file-contains-p (file regexp)
-  "Return non-nil when FILE contains REGEXP."
-  (when (file-exists-p file)
-    (with-temp-buffer
-      (insert-file-contents file)
-      (goto-char (point-min))
-      (re-search-forward regexp nil t))))
-
-(defun mcg-doctor--root-file-contains-any-p (root files regexp)
-  "Return non-nil when any file in FILES under ROOT contains REGEXP."
-  (seq-some (lambda (file)
-              (mcg-doctor--file-contains-p
-               (mcg-doctor--root-file root file)
-               regexp))
-            files))
-
 (defun mcg-doctor--yes-no (value)
   "Return yes/no display string for VALUE."
   (if value "yes" "no"))
@@ -250,39 +229,15 @@ and :message describing the result.")
 #+begin_src emacs-lisp
 (defun mcg-doctor--python-project-tool (root)
   "Return detected Python project tool for ROOT."
-  (cond
-   ((fboundp 'mcg-python--project-tool)
-    (mcg-python--project-tool root))
-   ((and (mcg-doctor--root-has-file-p root "uv.lock")
-         (executable-find "uv"))
-    "uv")
-   ((and (mcg-doctor--root-has-file-p root "poetry.lock")
-         (executable-find "poetry"))
-    "poetry")
-   ((and (mcg-doctor--root-has-file-p root "pdm.lock")
-         (executable-find "pdm"))
-    "pdm")))
+  (mcg-python--project-tool root))
 
-(defun mcg-doctor--python-pytest-command (root project-tool)
-  "Return Python pytest command for ROOT and PROJECT-TOOL."
-  (cond
-   ((fboundp 'mcg-python--pytest-command)
-    (mcg-python--pytest-command root))
-   ((member project-tool '("uv" "poetry" "pdm"))
-    (format "%s run pytest" project-tool))
-   (t "python -m pytest")))
+(defun mcg-doctor--python-pytest-command (root _project-tool)
+  "Return the shared Python pytest command for ROOT."
+  (mcg-python--pytest-command root))
 
 (defun mcg-doctor--python-formatter-command (root)
   "Return Python formatter command for ROOT."
-  (cond
-   ((fboundp 'mcg-python-format-candidates)
-    (mcg-doctor--first-command-string
-     (mcg-python-format-candidates root)))
-   ((fboundp 'mcg-python--ruff-format-command)
-    (mcg-doctor--first-command-string
-     (list (mcg-python--ruff-format-command root))))
-   ((executable-find "ruff") "ruff format")
-   (t "none")))
+  (mcg-doctor--first-command-string (mcg-python-format-candidates root)))
 
 (defun mcg-doctor--python-environment-summary (root)
   "Return Python development environment summary for ROOT."
@@ -310,64 +265,22 @@ and :message describing the result.")
 ** Web Environment
 
 #+begin_src emacs-lisp
-(defun mcg-doctor--web-eslint-config-files ()
-  "Return known ESLint config files for Web diagnostics."
-  '("eslint.config.js" "eslint.config.mjs" "eslint.config.cjs"
-    "eslint.config.ts" ".eslintrc" ".eslintrc.js" ".eslintrc.cjs"
-    ".eslintrc.json" ".eslintrc.yaml" ".eslintrc.yml"))
-
-(defun mcg-doctor--web-prettier-config-files ()
-  "Return known Prettier config files for Web diagnostics."
-  '(".prettierrc" ".prettierrc.json" ".prettierrc.json5"
-    ".prettierrc.yaml" ".prettierrc.yml" ".prettierrc.js"
-    ".prettierrc.cjs" ".prettierrc.mjs" "prettier.config.js"
-    "prettier.config.cjs" "prettier.config.mjs"))
-
 (defun mcg-doctor--web-has-antfu-eslint-p (root)
   "Return non-nil when ROOT declares Antfu ESLint config."
-  (if (fboundp 'mcg-format--web-project-has-antfu-eslint-p)
-      (mcg-format--web-project-has-antfu-eslint-p root)
-    (or (mcg-doctor--file-contains-p
-         (mcg-doctor--root-file root "package.json")
-         "@antfu/eslint-config")
-        (mcg-doctor--root-file-contains-any-p
-         root
-         (mcg-doctor--web-eslint-config-files)
-         "@antfu/eslint-config"))))
+  (mcg-format--web-project-has-antfu-eslint-p root))
 
 (defun mcg-doctor--web-has-eslint-p (root)
   "Return non-nil when ROOT declares ESLint."
-  (if (fboundp 'mcg-format--web-project-has-eslint-p)
-      (mcg-format--web-project-has-eslint-p root)
-    (or (mcg-doctor--web-has-antfu-eslint-p root)
-        (mcg-doctor--root-has-any-file-p
-         root
-         (mcg-doctor--web-eslint-config-files))
-        (mcg-doctor--file-contains-p
-         (mcg-doctor--root-file root "package.json")
-         "\"eslint\""))))
+  (mcg-format--web-project-has-eslint-p root))
 
 (defun mcg-doctor--web-has-prettier-p (root)
   "Return non-nil when ROOT declares Prettier."
-  (if (fboundp 'mcg-format--web-project-has-prettier-p)
-      (mcg-format--web-project-has-prettier-p root)
-    (or (mcg-doctor--root-has-any-file-p
-         root
-         (mcg-doctor--web-prettier-config-files))
-        (mcg-doctor--file-contains-p
-         (mcg-doctor--root-file root "package.json")
-         "\"prettier\""))))
+  (mcg-format--web-project-has-prettier-p root))
 
 (defun mcg-doctor--web-formatter-command (root)
   "Return Web formatter command for ROOT."
-  (cond
-   ((fboundp 'mcg-format--web-external-candidates)
-    (let ((default-directory (file-name-as-directory root)))
-      (mcg-doctor--first-command-string
-       (mcg-format--web-external-candidates))))
-   ((mcg-doctor--web-has-eslint-p root) "eslint --fix")
-   ((mcg-doctor--web-has-prettier-p root) "prettier --write")
-   (t "none")))
+  (let ((default-directory (file-name-as-directory root)))
+    (mcg-doctor--first-command-string (mcg-format--web-external-candidates))))
 
 (defun mcg-doctor--web-environment-summary (root)
   "Return Web development environment summary for ROOT."
@@ -390,12 +303,7 @@ and :message describing the result.")
 #+begin_src emacs-lisp
 (defun mcg-doctor--zig-command (action)
   "Return Zig build command for ACTION."
-  (if (fboundp 'mcg-zig-build-command)
-      (mcg-zig-build-command action)
-    (pcase action
-      ('build "zig build")
-      ('run "zig build run")
-      ('test "zig build test"))))
+  (mcg-zig-build-command action))
 
 (defun mcg-doctor--zig-environment-summary (root)
   "Return Zig development environment summary for ROOT."

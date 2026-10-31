@@ -102,15 +102,15 @@ Quick key bindings handled in Initialize section.
 ;; Load magit dependencies explicitly first
 ;; According to magit package-requires
 ;; Using improved mcg-require-extension that handles nested paths
-(mcg-require-extension 'compat t)
-(mcg-require-extension 'cond-let t)
-(mcg-require-extension 'llama t)
+(mcg-require-extension 'compat)
+(mcg-require-extension 'cond-let)
+(mcg-require-extension 'llama)
 (require 'seq nil t)  ;; Built-in with Emacs 24.1+
-(mcg-require-extension 'transient t)
-(mcg-require-extension 'with-editor t)
+(mcg-require-extension 'transient)
+(mcg-require-extension 'with-editor)
 
 ;; Load magit (which includes magit-section)
-(if (mcg-require-extension 'magit t)
+(if (mcg-require-extension 'magit)
     (progn
       ;; Setup basic magit configuration
       (setq magit-diff-refine-hunk mcg-tools-magit-diff-refine)
@@ -146,24 +146,11 @@ Quick key bindings handled in Initialize section.
           ("?" "Dispatch" magit-dispatch)]])
       
       ;; Setup keybindings
-      (mcg-bind-key "C-x g" 'magit-status "tools/magit")
-      (mcg-bind-key "C-x M-g" 'magit-dispatch "tools/magit")
-      (mcg-bind-key "C-c g s" 'magit-status "tools/magit")
-      (mcg-bind-key "C-c g l" 'magit-log "tools/magit")
-      (mcg-bind-key "C-c g d" 'magit-dispatch "tools/magit")
-      (mcg-bind-key "C-c g f" 'magit-file-dispatch "tools/magit")
-      (mcg-bind-key "C-c g p" 'magit-push "tools/magit")
-      (mcg-bind-key "C-c g P" 'magit-pull "tools/magit")
-      (mcg-bind-key "C-c g b b" 'magit-branch-create "tools/magit")
-      (mcg-bind-key "C-c g b r" 'magit-branch-rename "tools/magit")
-      (mcg-bind-key "C-c g b d" 'magit-branch-delete "tools/magit")
-      (mcg-bind-key "C-c g m a" 'magit-submodule-add "tools/magit")
-      (mcg-bind-key "C-c g m r" 'magit-submodule-remove "tools/magit")
-      (mcg-bind-key "C-c g m u" 'magit-submodule-update "tools/magit")
-      (mcg-bind-key "C-c g ?" 'mcg/magit-menu "tools/magit")
+      (require 'core-bindings)
+      (mcg-bind-module-commands :tools 'magit)
       
       (mcg-log "Magit configured with keybindings"))
-  (mcg-log-error "Failed to load Magit"))
+  (error "Failed to load Magit"))
 #+end_src
 
 ** Provide Feature

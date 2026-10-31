@@ -44,7 +44,7 @@
 #+begin_src emacs-lisp
 (defun mcg--setup-auto-save ()
   "Setup auto-save plugin."
-  (when (mcg-require-extension "auto-save" t)
+  (when (mcg-require-extension "auto-save")
     (setq auto-save-idle mcg-auto-save-idle)
     (setq auto-save-silent mcg-auto-save-silent)
     (setq auto-save-delete-trailing-whitespace

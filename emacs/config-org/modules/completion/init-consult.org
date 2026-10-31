@@ -24,7 +24,7 @@
 #+begin_src emacs-lisp
   (defun mcg--setup-consult ()
       "Setup Consult consulting search commands."
-      (when (mcg-require-extension "consult" t)
+      (when (mcg-require-extension "consult")
         ;; Preview configuration
         (setq consult-narrow-key "<")
         (setq consult-widen-key ">")
@@ -70,7 +70,7 @@
 
     (defun mcg--setup-consult-keybinding ()
       "Setup consult."
-      (when (mcg-require-extension "consult" t)
+      (when (mcg-require-extension "consult")
         (require 'consult-register nil t)
 
         (mcg-bind-key "C-x b" #'consult-buffer "completion/consult")
@@ -81,8 +81,7 @@
         (define-key minibuffer-local-map (kbd "C-r") #'consult-history)
 
         ;; 搜索与导航 (C-c s prefix - search)
-        (define-prefix-command 'mcg-search-map)
-        (mcg-bind-key "C-c s" 'mcg-search-map "completion/consult")
+        (mcg-ensure-prefix-map "C-c s" 'mcg-search-map "completion/consult")
         (mcg-bind-key "C-s" #'consult-line "completion/consult")
         (mcg-bind-key "C-c s l" #'consult-line "completion/consult")
         (mcg-bind-key "C-c s r" #'consult-ripgrep "completion/consult")
@@ -110,8 +109,7 @@
 
         ;; 缓冲区与文件 (C-c b / C-c f prefix)
         ;; C-c b is a prefix key for buffer operations
-        (define-prefix-command 'mcg-consult-buffer-map)
-        (mcg-bind-key "C-c b" 'mcg-consult-buffer-map "completion/consult")
+        (mcg-ensure-prefix-map "C-c b" 'mcg-consult-buffer-map "completion/consult")
         (define-key mcg-consult-buffer-map "b" #'consult-buffer)
         (define-key mcg-consult-buffer-map "m" #'consult-bookmark)
         (define-key mcg-consult-buffer-map "r" #'consult-recent-file)
@@ -125,8 +123,7 @@
 
         ;; 命令与寄存器
         ;; C-c x is a prefix; binding it directly to a command makes C-c x c unreachable.
-        (define-prefix-command 'mcg-consult-command-map)
-        (mcg-bind-key "C-c x" 'mcg-consult-command-map "completion/consult")
+        (mcg-ensure-prefix-map "C-c x" 'mcg-consult-command-map "completion/consult")
         (mcg-bind-key "C-x M-:" #'consult-complex-command "completion/consult")
         (mcg-bind-key "C-c x c" #'consult-complex-command "completion/consult")
         (mcg-bind-key "C-c x x" #'consult-mode-command "completion/consult")

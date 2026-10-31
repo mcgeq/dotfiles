@@ -33,12 +33,21 @@ Your actual machine-local settings and secrets live in
 ;; Startup loading strategy
 ;; Module loading strategy is declared in config-org/init.org with `:load'.
 ;; Supported values are:
-;;   immediate - load before private config
+;;   immediate - load after private options, during startup
 ;;   idle      - load after the first frame when Emacs is idle
 ;;   deferred  - load on file trigger from `mcg-module-triggers'
 ;; Example:
 ;;   (magit :load idle)
 ;;   (python :load deferred)
+
+;; This file is loaded once before feature modules. Put option assignments here.
+;; Move existing calls that need initialized modules into mcg-after-init-hook:
+;; (add-hook 'mcg-after-init-hook
+;;           (lambda ()
+;;             (mcg-bind-key "C-c T" #'mcg-ui-switch-theme "private")))
+;; Idle/deferred modules may not exist at that point; customize them by feature:
+;; (with-eval-after-load 'init-org
+;;   (setq org-startup-folded 'content))
 
 #+end_src
 
@@ -192,6 +201,19 @@ Your actual machine-local settings and secrets live in
 ;; It refreshes the agenda, notes, capture, diary, billing, password,
 ;; and `org-agenda-files' paths derived from the root directory.
 ;; (mcg-org-set-storage-root "~/org/")
+;; Set individual path overrides AFTER this call. When changing paths after
+;; Org has initialized, call `mcg-org-sync-storage' to apply them immediately.
+;; (setq mcg-org-agenda-files '("~/work/tasks.org"))
+
+;; Time locale applies only to Org buffers.
+;; (setq mcg-org-time-locale "zh_CN.UTF-8")
+
+;; Existing capture template keys take precedence over module defaults.
+;; (setq org-capture-templates
+;;       '(("n" "My note" entry (file "~/org/inbox.org") "* %?")))
+;; Export backends initialize after ox; defer export-specific settings likewise.
+;; (with-eval-after-load 'ox
+;;   (setq org-export-with-toc nil))
 
 ;; Hugo integration is opt-in
 ;; Default: nil

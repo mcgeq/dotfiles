@@ -63,7 +63,7 @@ Vundo 可视化撤销树配置。
 
 (defun mcg--setup-vundo ()
   "Setup Vundo visual undo."
-  (when (mcg-require-extension "vundo" t)
+  (when (mcg-require-extension "vundo")
     ;; Use Unicode symbols
     (setq vundo-glyph-alist vundo-unicode-symbols)
     (setq vundo-roll-back-on-quit nil)
@@ -76,10 +76,8 @@ Vundo 可视化撤销树配置。
         (advice-add fn :after #'mcg--vundo-force-writable)))
     
     ;; Keybindings
-    (mcg-bind-key "C-x u" 'vundo "editor/vundo")
-    (mcg-bind-key "C-c u" 'vundo "editor/vundo")
-    (mcg-bind-key "C-/" 'vundo "editor/vundo") ; Use vundo instead of default undo
-    (mcg-bind-key "C-?" 'undo-redo "editor/vundo")
+    (require 'core-bindings)
+    (mcg-bind-module-commands :editor 'vundo)
     
     (mcg-log "Vundo configured")))
 #+end_src
