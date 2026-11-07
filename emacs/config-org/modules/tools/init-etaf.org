@@ -1,0 +1,157 @@
+#+TITLE: Optional ETAF Applications
+#+PROPERTY: header-args:emacs-lisp :tangle init-etaf.el :lexical t
+
+* Optional ETAF Applications
+
+ETAF uses its official package.el archive. Module startup only defines commands;
+installation is explicit and opening installed applications is offline.
+
+#+begin_src emacs-lisp
+;;; init-etaf.el --- Optional ETAF applications -*- lexical-binding: t; -*-
+(require 'cl-lib)
+(require 'subr-x)
+
+(defconst mcg-etaf-packages '(etaf-ui etaf-manual etaf-md-preview)
+  "ETAF application targets installed by the configuration entrypoint.")
+
+(defconst mcg-etaf--package-family
+  '(etaf-install ecss ebox etaf etaf-ui etaf-manual etaf-md-preview)
+  "Packages that must not mix source checkouts and package.el installations.")
+
+(defconst mcg-etaf-archive '("etaf" . "https://etaf.top/packages/")
+  "Official ETAF package archive.")
+
+(defun mcg-etaf--discover-packages ()
+  "Read installed package descriptors without activating unrelated packages."
+  (require 'package)
+  (unless package--initialized
+    (package-initialize t)))
+
+(defun mcg-etaf--source-conflicts ()
+  "Return conflicting source paths for the managed ETAF package family."
+  (let (conflicts)
+    (dolist (name mcg-etaf--package-family)
+      (let ((files (list (locate-library (symbol-name name))
+                         (car (cl-find-if
+                               (lambda (entry)
+                                 (member (cons 'provide name) (cdr entry)))
+                               load-history))))
+            (installed (cdr (assq name package-alist))))
+        (dolist (file (delete-dups (delq nil files)))
+          (unless (cl-some
+                   (lambda (descriptor)
+                     (let ((dir (package-desc-dir descriptor)))
+                       (and dir (file-in-directory-p file dir))))
+                   installed)
+            (push (format "%s: %s" name file) conflicts)))))
+    (nreverse conflicts)))
+
+(defun mcg-etaf--prepare ()
+  "Check requirements and source conflicts without downloading packages."
+  (when (version< emacs-version "29.1")
+    (user-error "ETAF requires Emacs 29.1 or newer"))
+  (mcg-etaf--discover-packages)
+  (let ((conflicts (mcg-etaf--source-conflicts)))
+    (when conflicts
+      (user-error "ETAF source/package conflict; remove source paths and restart: %s"
+                  (string-join conflicts "; ")))))
+
+(defun mcg-etaf--activate (package)
+  "Activate installed PACKAGE, or explain the explicit installation step."
+  (mcg-etaf--prepare)
+  (unless (package-installed-p package)
+    (user-error "%s is not installed; run M-x mcg-etaf-install" package))
+  (unless (package-activate package)
+    (user-error "Could not activate %s; run M-x mcg-etaf-doctor" package)))
+
+(defun mcg-etaf--require-installer ()
+  "Load the already installed official package manager entrypoint."
+  (mcg-etaf--activate 'etaf-install)
+  (require 'etaf-install))
+
+(defun mcg-etaf-install ()
+  "Explicitly install the ETAF gallery, manual and Markdown preview.
+Uses the existing `package-user-dir' and official installer.  No application
+is opened.  Existing archives and signature verification policy are preserved."
+  (interactive)
+  (mcg-etaf--prepare)
+  (let ((existing (assoc (car mcg-etaf-archive) package-archives)))
+    (when (and existing (not (equal existing mcg-etaf-archive)))
+      (user-error "The etaf archive already points elsewhere: %s" (cdr existing)))
+    (add-to-list 'package-archives mcg-etaf-archive t))
+  (unless (package-installed-p 'etaf-install)
+    (let ((package-archives (list mcg-etaf-archive)))
+      (package-refresh-contents)
+      (package-install 'etaf-install)))
+  (mcg-etaf--require-installer)
+  (dolist (target mcg-etaf-packages)
+    (etaf-install target t))
+  (message "ETAF ready: M-x mcg-etaf-gallery, mcg-etaf-manual, mcg-etaf-markdown-preview"))
+
+(defun mcg-etaf-manage ()
+  "Open the official ETAF package management interface."
+  (interactive)
+  (mcg-etaf--require-installer)
+  ;; The official manager invokes target commands directly when opening rows.
+  (dolist (target mcg-etaf-packages)
+    (when (package-installed-p target)
+      (mcg-etaf--activate target)
+      (require target)))
+  (call-interactively #'etaf-install-manage))
+
+(defun mcg-etaf--open (package command)
+  "Open installed PACKAGE through public COMMAND in the current context."
+  (mcg-etaf--activate package)
+  (require package)
+  (unless (commandp command)
+    (user-error "%s did not provide %s; update packages and restart Emacs"
+                package command))
+  (call-interactively command))
+
+(defun mcg-etaf-gallery ()
+  "Open the installed ETAF component gallery."
+  (interactive)
+  (mcg-etaf--open 'etaf-ui 'etaf-ui-gallery-open))
+
+(defun mcg-etaf-manual ()
+  "Open the installed ETAF reference manual."
+  (interactive)
+  (mcg-etaf--open 'etaf-manual 'etaf-manual-open))
+
+(defun mcg-etaf-markdown-preview ()
+  "Preview Markdown using ETAF, preserving the source buffer context."
+  (interactive)
+  (mcg-etaf--open 'etaf-md-preview 'etaf-md-preview-open))
+
+(defun mcg-etaf-check ()
+  "Return local ETAF health as a doctor plist without package activation."
+  (mcg-etaf--discover-packages)
+  (let* ((conflicts (mcg-etaf--source-conflicts))
+         (missing (cl-remove-if #'package-installed-p
+                                (cons 'etaf-install mcg-etaf-packages)))
+         (compatible (not (version< emacs-version "29.1")))
+         (sqlite (and (fboundp 'sqlite-available-p) (sqlite-available-p))))
+    (list :status (cond ((or conflicts (not compatible)) :error)
+                        (missing :warning) (t :ok))
+          :message
+          (format "Emacs %s (29.1+ %s); missing: %s; SQLite: %s (optional); conflicts: %s"
+                  emacs-version (if compatible "yes" "no")
+                  (if missing (mapconcat #'symbol-name missing ", ") "none")
+                  (if sqlite "available" "unavailable")
+                  (if conflicts (string-join conflicts "; ") "none"))
+          :action (if conflicts "Remove conflicting source paths and restart Emacs."
+                    "Run M-x mcg-etaf-install; use M-x mcg-etaf-manage for updates."))))
+
+(defun mcg-etaf-doctor ()
+  "Show local ETAF installation health without network or installation."
+  (interactive)
+  (let ((health (mcg-etaf-check)))
+    (with-help-window "*MCG ETAF Doctor*"
+      (princ (format "ETAF: %s\n\n%s\n\n%s\n"
+                     (plist-get health :status) (plist-get health :message)
+                     (plist-get health :action))))
+    health))
+
+(provide 'init-etaf)
+;;; init-etaf.el ends here
+#+end_src

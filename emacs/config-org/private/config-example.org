@@ -51,6 +51,15 @@ Your actual machine-local settings and secrets live in
 
 #+end_src
 
+** ETAF Applications
+
+ETAF entrypoints are enabled by =:tools etaf= in =config-org/init.org=.
+Run =M-x mcg-etaf-install= once, then use =mcg-etaf-gallery=,
+=mcg-etaf-manual= or =mcg-etaf-markdown-preview=. Installation uses the existing
+=package-user-dir=; startup does not install packages or access the network.
+Use =mcg-etaf-manage= for updates/removal and =mcg-etaf-doctor= for offline checks.
+Do not add source copies of ETAF dependencies alongside package.el versions.
+
 ** LSP Bridge Configuration
 
 #+begin_src emacs-lisp

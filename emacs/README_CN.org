@@ -204,6 +204,28 @@ early-init 安装到用户 Emacs 目录。=make tangle-dir DIR=modules/org= 使�
 emacs -Q --batch -l emacs/test/run-tests.el -f ert-run-tests-batch-and-exit
 #+end_src
 
+** ETAF 应用
+
+轻量的 =:tools etaf= 模块只注册命令，启动时不激活包、不访问网络。ETAF 要求
+Emacs 29.1 及以上，通过官方 =https://etaf.top/packages/= 源和 package.el 管理，
+沿用现有 =package-user-dir=，与 Git 子模块扩展分开管理。
+
+首次运行 =M-x mcg-etaf-install=，安装组件画廊、参考手册、Markdown 预览及其依赖。
+只有该显式安装命令下载包，安装完成后不会自动打开应用。
+
+| 命令 | 用途 |
+|------+------|
+| =M-x mcg-etaf-gallery= | 打开组件画廊 |
+| =M-x mcg-etaf-manual= | 阅读交互式参考手册 |
+| =M-x mcg-etaf-markdown-preview= | 预览当前 Markdown 缓冲区 |
+| =M-x mcg-etaf-manage= | 官方安装、更新和卸载管理 |
+| =M-x mcg-etaf-doctor= | 离线检查本地安装与源码冲突 |
+
+打开功能时若缺少包，只提示安装命令。=M-x mcg-doctor= 也会显示 ETAF 健康状态。
+这三个目标不强制要求 SQLite。本次不安装浮动面板或外部后端，保留现有 posframe
+配置。同一 ETAF 包不要混用源码检出和 package.el 安装，更新后应重启 Emacs。
+在 =config-org/init.org= 中将 =etaf= 改为 =-etaf= 即可禁用这些入口。
+
 ** 启动 Profiling
 
 使用 =make profile-startup= 运行 batch 启动 profiling。报告会按耗时从高到低

@@ -211,6 +211,32 @@ After generation, tests can also run from the repository root:
 emacs -Q --batch -l emacs/test/run-tests.el -f ert-run-tests-batch-and-exit
 #+end_src
 
+** ETAF Applications
+
+The lightweight =:tools etaf= module defines optional application commands without
+activating packages or accessing the network at startup. ETAF requires Emacs
+29.1 or newer. Its official =https://etaf.top/packages/= archive uses package.el
+and the existing =package-user-dir=, separately from Git submodule extensions.
+
+Run =M-x mcg-etaf-install= once to install the component gallery, reference manual
+and Markdown preview with their dependencies. This explicit command downloads
+packages but opens no applications. Then use:
+
+| Command | Purpose |
+|---------+---------|
+| =M-x mcg-etaf-gallery= | Open the component gallery |
+| =M-x mcg-etaf-manual= | Read the interactive reference manual |
+| =M-x mcg-etaf-markdown-preview= | Preview the current Markdown buffer |
+| =M-x mcg-etaf-manage= | Manage official installation, updates and removal |
+| =M-x mcg-etaf-doctor= | Check local installation and conflicts offline |
+
+Opening a missing target reports the installation command rather than downloading
+it. =M-x mcg-doctor= also includes ETAF health. SQLite is optional for these
+targets. Floating panels and external backends are not installed; existing
+posframe configuration is preserved. Do not mix source checkouts of these ETAF
+packages with package.el copies. Restart Emacs after package updates.
+Change =etaf= to =-etaf= in =config-org/init.org= to disable these entrypoints.
+
 ** Startup Profiling
 
 Use =make profile-startup= to run a batch startup profile. The report lists

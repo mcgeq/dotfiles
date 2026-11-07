@@ -510,6 +510,8 @@ Displays a report of configuration health and potential issues."
                  (cons "Tree-sitter Grammars" #'mcg-doctor--check-treesit-grammars)
                  (cons "GC Settings" #'mcg-doctor--check-gc-settings)
                  (cons "Native Compilation" #'mcg-doctor--check-native-comp))))
+    (when (fboundp 'mcg-etaf-check)
+      (setq checks (append checks (list (cons "ETAF" #'mcg-etaf-check)))))
     (with-current-buffer buf
       (erase-buffer)
       (insert "MCG Emacs Doctor\n")
