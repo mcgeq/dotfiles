@@ -1,0 +1,507 @@
+#+TITLE: C/C++ Module
+#+AUTHOR: mcge
+#+PROPERTY: header-args:emacs-lisp :tangle init-cpp.el :lexical t
+
+* C/C++ Module
+
+** File Header
+
+#+begin_src emacs-lisp
+;;; init-cpp.el --- C/C++ language support for MCG Emacs -*- lexical-binding: t; -*-
+
+;; Copyright (C) 2024-2026 MCG
+;; Author: mcge <mcgeq@outlook.com>
+;; Keywords: languages, c, c++
+;; Compatibility: GNU Emacs 29.0+
+
+;;; Commentary:
+;; Unified C/C++/Objective-C support:
+;; - c-mode / c++-mode and tree-sitter variants
+;; - clangd / ccls integration via lsp-bridge
+;; - CMake, Makefile, and single-file compile/run workflows
+;; - clang-format integration through the unified format command
+;;
+;;; Code:
+
+(require 'core-lib)
+(require 'core-dev-tools)
+(require 'cl-lib)
+#+end_src
+
+** Variables
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Variables
+;;; ============================================================
+
+(defcustom mcg-cpp-enable-lsp t
+  "Whether C/C++ buffers should enable lsp-bridge when clangd is available."
+  :type 'boolean
+  :group 'mcg)
+
+(defcustom mcg-cpp-c-standard "-std=c17"
+  "Compiler standard flag used for C single-file builds."
+  :type 'string
+  :group 'mcg)
+
+(defcustom mcg-cpp-cxx-standard "-std=c++23"
+  "Compiler standard flag used for C++ single-file builds."
+  :type 'string
+  :group 'mcg)
+
+(defcustom mcg-cpp-compiler-c '("clang" "gcc")
+  "C compiler candidates, in preference order."
+  :type '(repeat string)
+  :group 'mcg)
+
+(defcustom mcg-cpp-compiler-cxx '("clang++" "g++")
+  "C++ compiler candidates, in preference order."
+  :type '(repeat string)
+  :group 'mcg)
+
+(defcustom mcg-cpp-warning-flags '("-Wall" "-Wextra" "-g")
+  "Extra compiler flags used for single-file builds."
+  :type '(repeat string)
+  :group 'mcg)
+
+(defcustom mcg-cpp-cmake-preset "default-debug"
+  "CMake preset used when a project has CMakePresets.json."
+  :type 'string
+  :group 'mcg)
+
+(defcustom mcg-cpp-lsp-idle-delay 0.8
+  "Idle delay before enabling `lsp-bridge' in C/C++ buffers."
+  :type 'number
+  :group 'mcg)
+
+(defvar-local mcg-cpp--lsp-attach-timer nil
+  "Idle timer used to defer `lsp-bridge' startup for the current buffer.")
+#+end_src
+
+** Mode Selection
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Mode Selection
+;;; ============================================================
+
+(defun mcg-cpp--treesit-available-p (language)
+  "Return non-nil when tree-sitter grammar LANGUAGE is available."
+  (and (fboundp 'treesit-language-available-p)
+       (treesit-language-available-p language)))
+
+(defun mcg-cpp--c-source-file-p (&optional file)
+  "Return non-nil when FILE is a C source file rather than a header or C++ file."
+  (let ((name (downcase (or file (buffer-file-name) ""))))
+    (string-match-p "\\.c\\'" name)))
+
+(defun mcg-cpp-deferred-mode ()
+  "Select a C/C++ major mode after the cpp module is deferred-loaded."
+  (cond
+   ((mcg-cpp--c-source-file-p)
+    (if (and (fboundp 'c-ts-mode) (mcg-cpp--treesit-available-p 'c))
+        (c-ts-mode)
+      (c-mode)))
+   ((and (fboundp 'c++-ts-mode) (mcg-cpp--treesit-available-p 'cpp))
+    (c++-ts-mode))
+   (t
+    (c++-mode))))
+
+(defun mcg-cpp--buffer-p (&optional buffer)
+  "Return non-nil when BUFFER is a C/C++ editing buffer."
+  (with-current-buffer (or buffer (current-buffer))
+    (derived-mode-p 'c-mode 'c-ts-mode 'c++-mode 'c++-ts-mode
+                    'objc-mode 'objc-ts-mode)))
+
+(defun mcg-cpp-mode-setup ()
+  "Setup function for C/C++ major modes."
+  (setq-local indent-tabs-mode nil)
+  (setq-local c-basic-offset 4)
+  ;; tree-sitter C/C++ modes use c-ts-mode-indent-offset instead of
+  ;; c-basic-offset (default 2), so pin it to keep the two paths in sync.
+  (when (boundp 'c-ts-mode-indent-offset)
+    (setq-local c-ts-mode-indent-offset 4))
+  (add-hook 'kill-buffer-hook #'mcg-cpp--cancel-lsp-attach-timer nil t)
+  (mcg-cpp-schedule-lsp))
+
+(add-hook 'c-mode-hook #'mcg-cpp-mode-setup)
+(add-hook 'c-ts-mode-hook #'mcg-cpp-mode-setup)
+(add-hook 'c++-mode-hook #'mcg-cpp-mode-setup)
+(add-hook 'c++-ts-mode-hook #'mcg-cpp-mode-setup)
+(add-hook 'objc-mode-hook #'mcg-cpp-mode-setup)
+#+end_src
+
+** LSP Integration
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; LSP Integration
+;;; ============================================================
+
+(defun mcg-cpp--server-executable ()
+  "Return the executable name of the configured C/C++ language server."
+  (if (equal (bound-and-true-p lsp-bridge-c-lsp-server) "ccls")
+      "ccls"
+    "clangd"))
+
+(defun mcg-cpp--server-available-p ()
+  "Return the language server executable path when available."
+  (executable-find (mcg-cpp--server-executable)))
+
+(defun mcg-cpp--cancel-lsp-attach-timer ()
+  "Cancel any pending deferred LSP startup for the current buffer."
+  (when (timerp mcg-cpp--lsp-attach-timer)
+    (cancel-timer mcg-cpp--lsp-attach-timer))
+  (setq mcg-cpp--lsp-attach-timer nil))
+
+(defun mcg-cpp--enable-lsp-in-buffer (buffer)
+  "Enable `lsp-bridge' in BUFFER when C/C++ LSP prerequisites are ready."
+  (when (buffer-live-p buffer)
+    (with-current-buffer buffer
+      (setq mcg-cpp--lsp-attach-timer nil)
+      (when (and mcg-cpp-enable-lsp
+                 (mcg-cpp--buffer-p)
+                 (mcg-cpp--server-available-p)
+                 (fboundp 'lsp-bridge-mode)
+                 (not (bound-and-true-p lsp-bridge-mode)))
+        (lsp-bridge-mode 1)))))
+
+(defun mcg-cpp-schedule-lsp ()
+  "Enable C/C++ LSP after Emacs has been idle briefly."
+  (mcg-cpp--cancel-lsp-attach-timer)
+  (cond
+   ((not mcg-cpp-enable-lsp)
+    nil)
+   ((not (mcg-cpp--server-available-p))
+    nil)
+   ((not (mcg-lsp--ensure-bridge-loaded))
+    nil)
+   ((bound-and-true-p lsp-bridge-mode)
+    t)
+   (t
+    (setq mcg-cpp--lsp-attach-timer
+          (run-with-idle-timer
+           mcg-cpp-lsp-idle-delay nil
+           #'mcg-cpp--enable-lsp-in-buffer (current-buffer))))))
+
+(defun mcg-cpp-schedule-lsp-for-open-buffers ()
+  "Schedule deferred LSP startup for every open C/C++ buffer."
+  (dolist (buffer (buffer-list))
+    (when (buffer-live-p buffer)
+      (with-current-buffer buffer
+        (when (mcg-cpp--buffer-p)
+          (mcg-cpp-schedule-lsp))))))
+
+(defun mcg-cpp--handle-module-load (category module)
+  "Backfill C/C++ LSP startup after MODULE in CATEGORY loads."
+  (when (and (eq category :tools)
+             (eq module 'lsp-bridge))
+    (mcg-cpp-schedule-lsp-for-open-buffers)))
+
+(add-hook 'mcg-module-load-hook #'mcg-cpp--handle-module-load)
+(with-eval-after-load 'lsp-bridge
+  (mcg-cpp-schedule-lsp-for-open-buffers))
+#+end_src
+
+** Build System Detection
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Build System Detection
+;;; ============================================================
+
+(defun mcg-cpp--dominating-file (directory names)
+  "Return the full path of the first file in NAMES at or above DIRECTORY."
+  (let ((dir (file-name-as-directory (expand-file-name directory))))
+    (catch 'found
+      (while t
+        (dolist (name names)
+          (let ((candidate (expand-file-name name dir)))
+            (when (file-exists-p candidate)
+              (throw 'found candidate))))
+        (let ((parent (file-name-directory (directory-file-name dir))))
+          (if (equal parent dir)
+              (throw 'found nil)
+            (setq dir parent)))))))
+
+(defun mcg-cpp--expand-cmake-path (value root)
+  "Expand CMake macros in VALUE using ROOT."
+  (let* ((parent (file-name-directory (directory-file-name root)))
+         (name (file-name-nondirectory (directory-file-name root))))
+    (replace-regexp-in-string
+     "\\${sourceDirName}" name
+     (replace-regexp-in-string
+      "\\${sourceParentDir}" parent
+      (replace-regexp-in-string "\\${sourceDir}" root value)))))
+
+(defun mcg-cpp--cmake-project-name (root)
+  "Read the project name from CMakeLists.txt under ROOT."
+  (let ((file (expand-file-name "CMakeLists.txt" root)))
+    (with-temp-buffer
+      (when (file-exists-p file)
+        (insert-file-contents file))
+      (goto-char (point-min))
+      (if (re-search-forward
+           "project[[:space:]]*([[:space:]]*\\([A-Za-z0-9_.+-]+\\)" nil t)
+          (match-string 1)
+        (file-name-nondirectory (directory-file-name root))))))
+
+(defun mcg-cpp--cmake-info (file)
+  "Return a plist describing the CMake project containing FILE."
+  (let ((found (mcg-cpp--dominating-file
+                (file-name-directory (expand-file-name file))
+                '("CMakePresets.json" "CMakeLists.txt"))))
+    (when found
+      (let* ((root (file-name-directory found))
+             (has-presets (equal (file-name-nondirectory found) "CMakePresets.json"))
+             (presets-file (expand-file-name "CMakePresets.json" root))
+             (preset mcg-cpp-cmake-preset)
+             (binary-dir nil))
+        (when has-presets
+          (let ((json-object-type 'alist)
+                (json-array-type 'list)
+                (json-key-type 'string)
+                (data (condition-case nil
+                          (json-read-file presets-file)
+                        (error nil))))
+            (dolist (item (cdr (assoc "configurePresets" data)))
+              (when (equal (cdr (assoc "name" item)) preset)
+                (setq binary-dir (cdr (assoc "binaryDir" item)))))))
+        (setq binary-dir
+              (file-name-as-directory
+               (expand-file-name
+                (if binary-dir
+                    (mcg-cpp--expand-cmake-path binary-dir root)
+                  (concat "build/" preset))
+                root)))
+        (let ((exe (expand-file-name
+                    (concat (mcg-cpp--cmake-project-name root)
+                            (if (eq system-type 'windows-nt) ".exe" ""))
+                    binary-dir)))
+          (list :root root
+                :binary-dir binary-dir
+                :preset preset
+                :exe exe
+                :has-presets has-presets))))))
+
+(defun mcg-cpp--makefile (file)
+  "Return the nearest Makefile path for FILE, or nil."
+  (mcg-cpp--dominating-file
+   (file-name-directory (expand-file-name file))
+   '("GNUmakefile" "makefile" "Makefile")))
+
+(defun mcg-cpp--make-targets (makefile)
+  "Return target names defined in MAKEFILE."
+  (with-temp-buffer
+    (insert-file-contents makefile)
+    (let (targets)
+      (goto-char (point-min))
+      (while (re-search-forward "^\\([A-Za-z0-9_.%-]+\\)[[:space:]]*:" nil t)
+        (push (match-string 1) targets))
+      targets)))
+#+end_src
+
+** Command Construction
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Command Construction
+;;; ============================================================
+
+(defun mcg-cpp--cmake-build-command (info)
+  "Return the CMake build command for INFO."
+  (if (plist-get info :has-presets)
+      (format "cmake --build --preset %s"
+              (shell-quote-argument (plist-get info :preset)))
+    (format "cmake -S %s -B %s && cmake --build %s"
+            (shell-quote-argument (plist-get info :root))
+            (shell-quote-argument (plist-get info :binary-dir))
+            (shell-quote-argument (plist-get info :binary-dir)))))
+
+(defun mcg-cpp--make-command (makefile action)
+  "Return (COMMAND . ROOT) for ACTION using MAKEFILE."
+  (let* ((root (file-name-directory makefile))
+         (make (or (executable-find "make")
+                   (executable-find "mingw32-make")
+                   (executable-find "gmake")))
+         (targets (mcg-cpp--make-targets makefile)))
+    (unless make
+      (user-error "No make executable found on PATH"))
+    (let ((make-cmd (shell-quote-argument make)))
+    (pcase action
+      ('build (cons make-cmd root))
+      ('run
+       (if (member "run" targets)
+           (cons (concat make-cmd " run") root)
+         (user-error "Makefile has no run target; add `run:' or use C-c C-c b")))
+      ('test
+       (cond
+        ((member "test" targets) (cons (concat make-cmd " test") root))
+        ((member "check" targets) (cons (concat make-cmd " check") root))
+        (t (user-error "Makefile has no test or check target"))))
+      ('clean
+       (if (member "clean" targets)
+           (cons (concat make-cmd " clean") root)
+         (user-error "Makefile has no clean target")))
+      (_ nil)))))
+
+(defun mcg-cpp--single-file-command (file action)
+  "Return the shell command for building ACTION of single FILE."
+  (let* ((c-source-p (mcg-cpp--c-source-file-p file))
+         (candidates (if c-source-p mcg-cpp-compiler-c mcg-cpp-compiler-cxx))
+         (compiler (cl-find-if #'executable-find candidates))
+         (standard (if c-source-p mcg-cpp-c-standard mcg-cpp-cxx-standard)))
+    (unless compiler
+      (user-error "No C/C++ compiler found on PATH; looked for: %s"
+                  (mapconcat #'identity candidates ", ")))
+    (let* ((path (expand-file-name file))
+           (dir (file-name-directory path))
+           (stem (file-name-sans-extension (file-name-nondirectory path)))
+           (output (expand-file-name
+                    (concat stem (if (eq system-type 'windows-nt) ".exe" ""))
+                    dir))
+           (build (format "%s %s %s %s -o %s"
+                          (shell-quote-argument compiler)
+                          standard
+                          (mapconcat #'shell-quote-argument mcg-cpp-warning-flags " ")
+                          (shell-quote-argument path)
+                          (shell-quote-argument output))))
+      (pcase action
+        ('build build)
+        ('run (format "%s && %s" build (shell-quote-argument output)))
+        ('test (user-error "No test target configured for single-file C/C++"))
+        ('clean (user-error "Single-file clean is not configured"))
+        (_ nil)))))
+
+(defun mcg-cpp--command-for-action (action)
+  "Return (COMMAND . ROOT) for ACTION in the current C/C++ buffer."
+  (let ((file (buffer-file-name)))
+    (unless file
+      (user-error "Current buffer is not visiting a file"))
+    (let ((cmake (mcg-cpp--cmake-info file))
+          (makefile (mcg-cpp--makefile file)))
+      (cond
+       (cmake
+        (let ((root (plist-get cmake :root))
+              (build-cmd (mcg-cpp--cmake-build-command cmake)))
+          (pcase action
+            ('build (cons build-cmd root))
+            ('run (cons (format "%s && %s"
+                                build-cmd
+                                (shell-quote-argument (plist-get cmake :exe)))
+                        root))
+            ('test (cons (format "ctest --test-dir %s --output-on-failure"
+                                 (shell-quote-argument (plist-get cmake :binary-dir)))
+                         root))
+            ('clean (cons (format "%s --target clean" build-cmd) root))
+            (_ nil))))
+       (makefile
+        (mcg-cpp--make-command makefile action))
+       (t
+        (cons (mcg-cpp--single-file-command file action)
+              (file-name-directory (expand-file-name file))))))))
+
+(defun mcg-cpp--compile (action)
+  "Run ACTION through the unified compile layer."
+  (let ((spec (mcg-cpp--command-for-action action)))
+    (mcg-compile--run (car spec) (cdr spec))))
+#+end_src
+
+** Commands
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Commands
+;;; ============================================================
+
+;;;###autoload
+(defun mcg/cpp-build ()
+  "Build the current C/C++ file or project."
+  (interactive)
+  (mcg-cpp--compile 'build))
+
+;;;###autoload
+(defun mcg/cpp-run ()
+  "Build and run the current C/C++ file or project."
+  (interactive)
+  (mcg-cpp--compile 'run))
+
+;;;###autoload
+(defun mcg/cpp-test ()
+  "Run C/C++ project tests."
+  (interactive)
+  (mcg-cpp--compile 'test))
+
+;;;###autoload
+(defun mcg/cpp-clean ()
+  "Clean the current C/C++ project."
+  (interactive)
+  (mcg-cpp--compile 'clean))
+#+end_src
+
+** Keybindings
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Keybindings
+;;; ============================================================
+
+(defvar mcg-cpp-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "C-c C-c b") #'mcg/cpp-build)
+    (define-key map (kbd "C-c C-c r") #'mcg/cpp-run)
+    (define-key map (kbd "C-c C-c t") #'mcg/cpp-test)
+    (define-key map (kbd "C-c C-c c") #'mcg/cpp-clean)
+    (define-key map (kbd "C-c C-r") #'mcg/cpp-run)
+    (define-key map (kbd "C-c C-f") #'mcg-format-buffer)
+    map)
+  "Keymap for C/C++ specific commands.")
+
+(defun mcg-cpp-setup-keybindings ()
+  "Setup C/C++ specific keybindings."
+  (use-local-map (make-composed-keymap mcg-cpp-mode-map (current-local-map))))
+
+(add-hook 'c-mode-hook #'mcg-cpp-setup-keybindings)
+(add-hook 'c-ts-mode-hook #'mcg-cpp-setup-keybindings)
+(add-hook 'c++-mode-hook #'mcg-cpp-setup-keybindings)
+(add-hook 'c++-ts-mode-hook #'mcg-cpp-setup-keybindings)
+(add-hook 'objc-mode-hook #'mcg-cpp-setup-keybindings)
+#+end_src
+
+** Help Command
+
+#+begin_src emacs-lisp
+;;; ============================================================
+;;; Help Command
+;;; ============================================================
+
+(defun mcg/cpp-help ()
+  "Show C/C++ keybindings and command help."
+  (interactive)
+  (with-help-window "*MCG C/C++ Help*"
+    (princ "
+C/C++ workflows:
+  CMakePresets.json -> cmake --build --preset <preset>
+  CMakeLists.txt    -> cmake -S . -B build/<preset> && cmake --build ...
+  Makefile          -> make / make run / make test / make clean
+  Single file       -> clang/clang++ or gcc/g++ with -std=c17 / -std=c++23
+
+KEYS:
+  C-c C-c b    Build current file or project
+  C-c C-c r    Build and run
+  C-c C-c t    Run project tests
+  C-c C-c c    Clean project
+  C-c C-r      Build and run current file
+  C-c C-f      Format buffer (clang-format or clangd)
+
+LSP: clangd or ccls through lsp-bridge.
+")))
+#+end_src
+
+** Provide Feature
+
+#+begin_src emacs-lisp
+(provide 'init-cpp)
+;;; init-cpp.el ends here
+#+end_src

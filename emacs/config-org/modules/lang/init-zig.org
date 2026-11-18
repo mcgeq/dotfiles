@@ -144,7 +144,7 @@
     nil)
    ((not (mcg-zig--zls-available-p))
     (mcg-zig--warn-missing-zls))
-   ((and (fboundp 'lsp-bridge-mode)
+   ((and (mcg-lsp--ensure-bridge-loaded)
          (not (bound-and-true-p lsp-bridge-mode)))
     (lsp-bridge-mode 1))))
 
@@ -156,7 +156,7 @@
     nil)
    ((not (mcg-zig--zls-available-p))
     (mcg-zig--warn-missing-zls))
-   ((not (fboundp 'lsp-bridge-mode))
+   ((not (mcg-lsp--ensure-bridge-loaded))
     nil)
    ((bound-and-true-p lsp-bridge-mode)
     t)

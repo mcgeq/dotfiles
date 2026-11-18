@@ -464,6 +464,9 @@ OV is the overlay object."
   "Set indentation for various languages to N spaces."
   ;; C/C++
   (setq-local c-basic-offset n)
+  ;; C/C++ tree-sitter (c++-ts-mode shares this variable with c-ts-mode)
+  (when (boundp 'c-ts-mode-indent-offset)
+    (setq-local c-ts-mode-indent-offset n))
   ;; JavaScript (only if the variable exists)
   (when (boundp 'javascript-indent-level)
     (setq-local javascript-indent-level n))
@@ -505,7 +508,8 @@ OV is the overlay object."
 (defun mcg-editor-setup-language-indent ()
   "Setup language-specific indentation."
   ;; Languages with 4-space indentation
-  (dolist (hook '(c-mode-hook c++-mode-hook java-mode-hook
+  (dolist (hook '(c-mode-hook c-ts-mode-hook c++-mode-hook c++-ts-mode-hook
+                  java-mode-hook
                   haskell-mode-hook asm-mode-hook sh-mode-hook
                   ruby-mode-hook rust-mode-hook python-mode-hook
                   python-ts-mode-hook))

@@ -38,7 +38,7 @@
 
 ** 语言支持
    完整的开发支持：
-   - *系统编程*: Zig，包含 build/test/run 辅助命令
+   - *系统编程*: C、C++ 和 Zig，包含 build/test/run 辅助命令
    - *Web 开发*: TypeScript, JavaScript, HTML/CSS, JSX/React, Vue
    - *动态语言*: Python，包含 pytest 和 Ruff 辅助命令
    - *标记语言*: Markdown, Org Mode
@@ -172,7 +172,7 @@ emacs/
 | enhance    |      2 | Help 和最近文件增强          |
 | org        |     13 | Org、agenda、capture、导出、Hugo |
 | writing    |      2 | Markdown 编辑、可选 Vale 文稿诊断 |
-| lang       |      3 | Python、Zig、Web 集成        |
+| lang       |      4 | Python、C/C++、Zig、Web 集成   |
 
 * ⚙️ 配置管理
 
@@ -356,7 +356,7 @@ make st
 |----------+----------+------|
 | Immediate | 启动时 | 首屏必需项：font、ef-themes、nerd-icons、pulsar、编辑默认值、minibuffer 基础、project/diagnostics 基础 |
 | Idle | 空闲 2 秒后 | 视觉外壳和重/按需工具：awesome-tray、holo-layer、vundo、yasnippet、compile、blink-search、dirvish、org、magit、clutch、lsp-bridge、color-rg、majutsu、vale |
-| Deferred | 按需触发 | 有文件类型触发器的语言与写作模块，例如 python、zig、web 和 markdown |
+| Deferred | 按需触发 | 有文件类型触发器的语言与写作模块，例如 python、cpp、zig、web 和 markdown |
 
 部分 idle 模块会在模块加载前暴露轻量 lazy command entry。按键入口启动后立即可用，
 但背后的模块会在首次调用时加载。这样既保留启动速度，也避免 compile、magit、vundo、
@@ -416,14 +416,15 @@ idle 延迟仍可在 =site-lisp/config/private/config.el= 中配置：
 类别列表；启动入口复用同一实现。每个选中的 deferred 模块都需要在
 =mcg-module-triggers= 中配置文件触发器，缺失时会明确报告类别和模块名。
 
-语言和写作模块在打开匹配文件时按需加载。Markdown 按需加载，所以普通启动
-不会提前付出 Markdown mode 的成本。Vale 默认关闭：模块会在 idle 阶段加载，
+语言和写作模块在打开匹配文件时按需加载。C/C++、Zig、Python 和 Web 模块使用文件触发器；
+Markdown 按需加载，所以普通启动不会提前付出 Markdown mode 的成本。Vale 默认关闭：模块会在 idle 阶段加载，
 但只有在 =site-lisp/config/private/config.el= 中把 =mcg-vale-enable nil=
 改为 =(setq mcg-vale-enable t)= 后才运行文稿诊断。
 
 | 文件扩展名 | 加载模块 |
 |------------+----------|
 | =.py=      | python   |
+| =.c=, =.h=, =.cc=, =.cpp=, =.cxx=, =.hpp=, =.hh=, =.hxx= | cpp |
 | =.zig=     | zig      |
 | =.html=, =.css=, =.js=, =.ts=, =.tsx=, =.vue= | web |
 | =.md=      | markdown |
@@ -486,6 +487,7 @@ M-x mcg-list-modules
       
       :lang
       (python :load deferred)
+      (cpp :load deferred)
       (zig :load deferred)
       (web :load deferred))
 #+end_src
@@ -575,6 +577,13 @@ dirvish、org capture、clutch、majutsu 的按键启动后立即可用，对应
 在包含 =build.zig= 的 Zig 项目中，=C-c c t= 和 =C-c c R= 会使用与 Zig
 模块一致的 =zig build test= 和 =zig build run=。
 
+C/C++ 的 =cpp= 模块提供 =C-c C-c b/r/t/c=（构建/运行/测试/清理）和
+=C-c C-r=（编译并运行当前文件）。它会先探测 CMake presets、=CMakeLists.txt=
+和 =Makefile=，找不到时回退到单文件编译：C 用 =clang=/=gcc= 加 =-std=c17=，
+C++ 用 =clang++/g++= 加 =-std=c++23=，并带 =-Wall -Wextra -g=。
+有对应 grammar 时使用 tree-sitter 的 =c-ts-mode=/=c++-ts-mode=，否则用
+=c-mode=/=c++-mode=；四种模式下的按键和 =clang-format= 格式化均可用。
+
 ** LSP 导航
 
 | 快捷键 | 描述         |
@@ -636,9 +645,11 @@ Org Babel LSP 支持都需要显式开启，分别由 =mcg-lsp-enable-inlay-hint
 #+end_src
 
 Python 工具与格式化命令、Web 格式化检测及 Zig 构建命令统一由 =core-dev-tools=
-提供。语言模块尚未加载时，compile 和 doctor 也使用相同规则。必需包缺失或初始化
-失败会由模块加载器记录；明确标为可选的集成仍可回退。文件触发加载失败后，下次
-访问仍可重试。
+提供；其中还有 Zig 与 C/C++ 模块共用的 =mcg-lsp--ensure-bridge-loaded=，
+让它们在打开源文件时即可挂载 lsp-bridge，无需等待 idle 队列。C/C++ 构建命令
+位于 =cpp= 模块。语言模块尚未加载时，compile 和 doctor 也使用相同规则。
+必需包缺失或初始化失败会由模块加载器记录；明确标为可选的集成仍可回退。
+文件触发加载失败后，下次访问仍可重试。
 
 #+begin_src emacs-lisp
 (setq mcg-ui-theme 'ef-dream)

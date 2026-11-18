@@ -222,6 +222,17 @@ Chinese version: [[file:KEYBINDINGS.zh-CN.org][KEYBINDINGS.zh-CN.org]]
 | C-c C-c F | mcg/python-ruff-format |
 | C-c C-z | mcg/python-repl |
 
+** C/C++
+Supports =c-mode=/=c++-mode= as well as tree-sitter =c-ts-mode=/=c++-ts-mode= (auto-selected when grammars are available); all keys work in all four modes.
+| Key | Command |
+|-----+---------|
+| C-c C-c b | mcg/cpp-build |
+| C-c C-c r | mcg/cpp-run |
+| C-c C-c t | mcg/cpp-test |
+| C-c C-c c | mcg/cpp-clean |
+| C-c C-r | mcg/cpp-run |
+| C-c C-f | mcg-format-buffer |
+
 ** Zig
 | Key | Command |
 |-----+---------|

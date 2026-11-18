@@ -42,7 +42,7 @@ and generated configuration can be rebuilt from this repo.
 
 ** Language Support
    Full development support for:
-   - *Systems*: Zig, with build/test/run helpers
+   - *Systems*: C, C++, and Zig, with build/test/run helpers
    - *Web*: TypeScript, JavaScript, HTML/CSS, JSX/React, Vue
    - *Dynamic*: Python, with pytest and Ruff helpers
    - *Markup*: Markdown, Org Mode
@@ -178,7 +178,7 @@ emacs/
 | enhance    |       2 | Help and recent file enhancements   |
 | org        |      13 | Org, agenda, capture, export, Hugo  |
 | writing    |       2 | Markdown editing and optional Vale prose diagnostics |
-| lang       |       3 | Python, Zig, and Web integrations   |
+| lang       |       4 | Python, C/C++, Zig, and Web integrations |
 
 * ⚙️ Configuration Management
 
@@ -396,6 +396,7 @@ Use =mcg!= macro in =init.org= to declare enabled modules:
       
       :lang
       (python :load deferred)
+      (cpp :load deferred)
       (zig :load deferred)
       (web :load deferred))
 #+end_src
@@ -436,7 +437,7 @@ buffer can appear early while heavier or on-demand tools finish loading later:
 |--------------+-------------+---------|
 | Immediate    | At startup  | first-frame essentials: font, ef-themes, nerd-icons, pulsar, editor defaults, minibuffer basics, project/diagnostics basics |
 | Idle         | After 2s idle | visual chrome and heavy/on-demand tools: awesome-tray, holo-layer, vundo, yasnippet, compile, blink-search, dirvish, org, magit, clutch, lsp-bridge, color-rg, majutsu, vale |
-| Deferred     | On demand   | trigger-backed language and writing modules such as python, zig, web, and markdown |
+| Deferred     | On demand   | trigger-backed language and writing modules such as python, cpp, zig, web, and markdown |
 
 Within one =mcg!= declaration, repeated category/module pairs retain their first
 position and use the last entry's enabled state and loading metadata. A final
@@ -514,7 +515,8 @@ Each selected deferred module needs an entry in =mcg-module-triggers=;
 missing entries report the category and module instead of silently skipping it.
 
 Language and writing modules are loaded on-demand when you open a matching
-file. Markdown is deferred so ordinary startup does not pay for Markdown mode.
+file. C/C++, Zig, Python, and Web modules use file triggers; Markdown is
+deferred so ordinary startup does not pay for Markdown mode.
 Vale is optional: the module is idle-loaded, and diagnostics only run when you
 change the default =mcg-vale-enable nil= to =(setq mcg-vale-enable t)= in
 =site-lisp/config/private/config.el=.
@@ -522,6 +524,7 @@ change the default =mcg-vale-enable nil= to =(setq mcg-vale-enable t)= in
 | File Extension | Module Loaded |
 |----------------+---------------|
 | =.py=          | python        |
+| =.c=, =.h=, =.cc=, =.cpp=, =.cxx=, =.hpp=, =.hh=, =.hxx= | cpp |
 | =.zig=         | zig           |
 | =.html=, =.css=, =.js=, =.ts=, =.tsx=, =.vue= | web |
 | =.md=          | markdown      |
@@ -680,6 +683,14 @@ available.
 For Zig projects with =build.zig=, =C-c c t= and =C-c c R= use the same
 =zig build test= and =zig build run= commands as the Zig module.
 
+For C/C++, the =cpp= module adds =C-c C-c b/r/t/c= (build/run/test/clean) and
+=C-c C-r= (compile and run the current file). It detects CMake presets,
+=CMakeLists.txt=, and =Makefile= before falling back to a single-file compile:
+C uses =clang=/=gcc= with =-std=c17=, C++ uses =clang++/g++= with =-std=c++23=,
+plus =-Wall -Wextra -g=. Tree-sitter modes (=c-ts-mode=/=c++-ts-mode=) are used
+when their grammars are available, otherwise =c-mode=/=c++-mode=; bindings and
+formatting (=clang-format=) work in all four.
+
 ** LSP Navigation
 
 | Key   | Description          |
@@ -811,9 +822,12 @@ Move existing calls that require initialized immediate modules into
 #+end_src
 
 Python runner/formatter selection, Web formatter detection, and Zig build
-commands live in =core-dev-tools=. Compile and doctor use the same rules even
-before language modules load. Required package/setup failures are recorded by
-the module loader; explicitly optional integrations retain their fallbacks.
+commands live in =core-dev-tools=, which also provides the shared
+=mcg-lsp--ensure-bridge-loaded= helper used by the Zig and C/C++ modules to
+attach lsp-bridge without waiting for its idle load slot. C/C++ build commands
+live in the =cpp= module. Compile and doctor use the same rules even before
+language modules load. Required package/setup failures are recorded by the
+module loader; explicitly optional integrations retain their fallbacks.
 Failed file-triggered loads remain retryable on the next visit.
 
 #+begin_src emacs-lisp

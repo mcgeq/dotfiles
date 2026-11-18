@@ -1938,6 +1938,126 @@
         (goto-char (point-min))
         (should (search-forward snippet nil t))))))
 
+(ert-deftest mcg-cpp-deferred-trigger-covers-c-and-cxx-files ()
+  (let ((modules-source
+         (expand-file-name "config-org/core/core-modules.org" mcg-emacs-dir))
+        (init-source
+         (expand-file-name "config-org/init.org" mcg-emacs-dir))
+        (cpp-source
+         (expand-file-name "config-org/modules/lang/init-cpp.org" mcg-emacs-dir)))
+    (with-temp-buffer
+      (insert-file-contents modules-source)
+      (dolist (snippet '("((:lang . cpp)"
+                         "c\\\\|h\\\\|cc\\\\|cpp"
+                         "mcg-cpp-deferred-mode"))
+        (goto-char (point-min))
+        (should (search-forward snippet nil t))))
+    (with-temp-buffer
+      (insert-file-contents init-source)
+      (should (search-forward "(cpp :load deferred)" nil t)))
+    (with-temp-buffer
+      (insert-file-contents cpp-source)
+      (dolist (snippet '("defun mcg-cpp-deferred-mode"
+                         "c-ts-mode"
+                         "c++-ts-mode"
+                         "c-mode"
+                         "c++-mode"))
+        (goto-char (point-min))
+        (should (search-forward snippet nil t))))))
+
+(ert-deftest mcg-cpp-single-file-defaults-to-cxx23 ()
+  (let ((source (expand-file-name "config-org/modules/lang/init-cpp.org"
+                                  mcg-emacs-dir)))
+    (with-temp-buffer
+      (insert-file-contents source)
+      (dolist (snippet '("(defcustom mcg-cpp-c-standard \"-std=c17\""
+                         "(defcustom mcg-cpp-cxx-standard \"-std=c++23\""
+                         "(defcustom mcg-cpp-compiler-cxx '(\"clang++\" \"g++\")"
+                         "(defcustom mcg-cpp-warning-flags '(\"-Wall\" \"-Wextra\" \"-g\")"))
+        (goto-char (point-min))
+        (should (search-forward snippet nil t))))))
+
+(ert-deftest mcg-cpp-commands-use-unified-compile-runner ()
+  (let ((source (expand-file-name "config-org/modules/lang/init-cpp.org"
+                                  mcg-emacs-dir)))
+    (with-temp-buffer
+      (insert-file-contents source)
+      (dolist (snippet '("(defun mcg-cpp--cmake-info"
+                         "(defun mcg-cpp--make-command"
+                         "(defun mcg-cpp--single-file-command"
+                         "(mcg-compile--run (car spec) (cdr spec))"
+                         "(mcg-lsp--ensure-bridge-loaded)"))
+        (goto-char (point-min))
+        (should (search-forward snippet nil t))))))
+
+(ert-deftest mcg-cpp-formatting-integrates-clang-format ()
+  (let ((source (expand-file-name "config-org/modules/editor/init-format.org"
+                                  mcg-emacs-dir)))
+    (with-temp-buffer
+      (insert-file-contents source)
+      (dolist (snippet '("c-mode c-ts-mode c++-mode c++-ts-mode"
+                         "(c++-mode . mcg-format-with-external-command)"
+                         "(c++-ts-mode . ((\"clang-format\")))"))
+        (goto-char (point-min))
+        (should (search-forward snippet nil t))))))
+
+(ert-deftest mcg-cpp-ts-modes-have-full-support ()
+  "Tree-sitter C/C++ modes must be wired into mode setup, keys and indent."
+  (let ((cpp-source (expand-file-name "config-org/modules/lang/init-cpp.org"
+                                      mcg-emacs-dir))
+        (defaults-source (expand-file-name "config-org/modules/editor/init-defaults.org"
+                                           mcg-emacs-dir)))
+    (with-temp-buffer
+      (insert-file-contents cpp-source)
+      (dolist (snippet '("(add-hook 'c-ts-mode-hook #'mcg-cpp-mode-setup)"
+                         "(add-hook 'c++-ts-mode-hook #'mcg-cpp-mode-setup)"
+                         "(add-hook 'c-ts-mode-hook #'mcg-cpp-setup-keybindings)"
+                         "(add-hook 'c++-ts-mode-hook #'mcg-cpp-setup-keybindings)"
+                         "(setq-local c-ts-mode-indent-offset 4)"))
+        (goto-char (point-min))
+        (should (search-forward snippet nil t))))
+    (with-temp-buffer
+      (insert-file-contents defaults-source)
+      (dolist (snippet '("c-mode-hook c-ts-mode-hook c++-mode-hook c++-ts-mode-hook"
+                         "(setq-local c-ts-mode-indent-offset n)"))
+        (goto-char (point-min))
+        (should (search-forward snippet nil t))))))
+
+(ert-deftest mcg-cpp-mode-setup-pins-ts-indent-to-four ()
+  "Running the mode setup in a buffer pins the ts indent offset to 4."
+  (require 'init-cpp)
+  (when (fboundp 'c++-ts-mode)
+    (with-temp-buffer
+      (c++-ts-mode)
+      (cl-letf (((symbol-function 'mcg-cpp-schedule-lsp) (lambda () nil)))
+        (mcg-cpp-mode-setup))
+      (should (eq c-basic-offset 4))
+      (should (eq c-ts-mode-indent-offset 4)))))
+
+(ert-deftest mcg-cpp-single-file-run-builds-and-executes-with-cxx23 ()
+  (require 'init-cpp)
+  (let* ((dir (make-temp-file "mcg-cpp-single-file" t))
+         (file (expand-file-name "hello.cpp" dir))
+         (result nil))
+    (unwind-protect
+        (progn
+          (with-temp-file file (insert "int main() { return 0; }\n"))
+          (cl-letf (((symbol-function 'executable-find)
+                     (lambda (name)
+                       (and (equal name "clang++") "clang++")))
+                    ((symbol-function 'mcg-compile--run)
+                     (lambda (command root)
+                       (setq result (cons command root)))))
+            (with-temp-buffer
+              (setq buffer-file-name file)
+              (mcg/cpp-run)))
+          (should result)
+          (should (string-match-p "-std=c\\+\\+23" (car result)))
+          (should (string-match-p "clang\\+\\+" (car result)))
+          (should (string-match-p "&&" (car result)))
+          (should (equal (cdr result) (file-name-as-directory dir))))
+      (delete-directory dir t))))
+
 (ert-deftest mcg-zig-deferred-trigger-uses-safe-mode-dispatch ()
   (let ((modules-source
          (expand-file-name "config-org/core/core-modules.org" mcg-emacs-dir))

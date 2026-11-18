@@ -179,6 +179,7 @@
    ;; Lang
    :lang
    (python :load deferred)
+   (cpp :load deferred)
    (zig :load deferred)
    (web :load deferred)
    )

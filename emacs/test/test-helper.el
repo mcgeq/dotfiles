@@ -8,7 +8,8 @@
   "Repository Emacs directory, independent of the calling directory.")
 
 (dolist (relative '("core" "modules/editor" "modules/completion"
-                    "modules/tools" "modules/enhance" "modules/org" "modules/ui"))
+                    "modules/tools" "modules/enhance" "modules/org" "modules/ui"
+                    "modules/lang"))
   (add-to-list 'load-path
                (expand-file-name relative
                                  (expand-file-name "site-lisp/config/" mcg-test-root))))

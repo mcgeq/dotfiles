@@ -114,9 +114,9 @@ Functions receive (CATEGORY MODULE) as arguments.")
     ((:lang . python) . ("\\.py\\'" . python-ts-mode))
     ((:lang . typescript) . ("\\.tsx?\\'" . typescript-ts-mode))
     ((:lang . web) . ("\\.\\(html?\\|css\\|scss\\|less\\|jsx?\\|tsx?\\|vue\\)\\'" . mcg-web-deferred-mode))
-    ((:lang . cpp) . ("\\.\\(cpp\\|cc\\|cxx\\|h\\|hpp\\)\\'" . c++-ts-mode))
     ((:lang . lua) . ("\\.lua\\'" . lua-mode))
     ((:lang . zig) . ("\\.zig\\'" . mcg-zig-deferred-mode))
+    ((:lang . cpp) . ("\\.\\(c\\|h\\|cc\\|cpp\\|cxx\\|hpp\\|hh\\|hxx\\)\\'" . mcg-cpp-deferred-mode))
     ;; Writing modules
     ((:writing . markdown) . ("\\.md\\'" . mcg-markdown-deferred-mode)))
   "Alist mapping module keys to their file triggers.

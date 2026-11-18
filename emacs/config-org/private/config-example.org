@@ -115,6 +115,17 @@ Do not add source copies of ETAF dependencies alongside package.el versions.
 ;; (setq mcg-vale-enable t)
 ;; (setq mcg-vale-command "vale")
 
+;; C/C++ language support
+;; Default: mcg-cpp-c-standard = "-std=c17"
+;; Default: mcg-cpp-cxx-standard = "-std=c++23"
+;; Single-file builds try clang/clang++ first, then gcc/g++.
+;; (setq mcg-cpp-c-standard "-std=c11")
+;; (setq mcg-cpp-cxx-standard "-std=c++20")
+;; (setq mcg-cpp-compiler-c '("gcc"))
+;; (setq mcg-cpp-compiler-cxx '("g++"))
+;; (setq mcg-cpp-warning-flags '("-Wall" "-Wextra" "-Wpedantic" "-g"))
+;; (setq mcg-cpp-cmake-preset "default-debug")
+
 ;; Enable Zig LSP when zls is available
 ;; Default: mcg-zig-enable-lsp = t
 ;; Default: mcg-zig-warn-missing-zls = nil

@@ -105,6 +105,13 @@ Unified compile, build, test, and run commands.
       ('run "go run .")))
    ((mcg-compile--root-has-p root "package.json")
     (mcg-compile--js-command root action))
+   ((or (mcg-compile--root-has-p root "CMakePresets.json")
+        (mcg-compile--root-has-p root "CMakeLists.txt"))
+    (let ((preset (or (bound-and-true-p mcg-cpp-cmake-preset)
+                      "default-debug")))
+      (pcase action
+        ('build (format "cmake --build --preset %s" preset))
+        ('test (format "ctest --test-dir build/%s --output-on-failure" preset)))))
    ((or (mcg-compile--root-has-p root "Makefile")
         (mcg-compile--root-has-p root "makefile"))
     (pcase action

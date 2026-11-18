@@ -40,6 +40,7 @@
 
 (defcustom mcg-format-on-save-modes
   '(python-mode python-ts-mode
+    c-mode c-ts-mode c++-mode c++-ts-mode
     zig-mode zig-ts-mode
     web-mode html-mode css-mode css-ts-mode scss-mode less-css-mode
     js-mode js-ts-mode js-jsx-mode typescript-mode typescript-ts-mode tsx-ts-mode
@@ -56,6 +57,10 @@
 (defcustom mcg-format-command-alist
   '((python-mode . mcg-format-with-external-command)
     (python-ts-mode . mcg-format-with-external-command)
+    (c-mode . mcg-format-with-external-command)
+    (c-ts-mode . mcg-format-with-external-command)
+    (c++-mode . mcg-format-with-external-command)
+    (c++-ts-mode . mcg-format-with-external-command)
     (zig-mode . mcg-format-zig-buffer)
     (zig-ts-mode . mcg-format-zig-buffer)
     (web-mode . mcg-format-with-external-command)
@@ -87,6 +92,10 @@
 (defcustom mcg-format-external-command-alist
   '((python-mode . mcg-python-format-candidates)
     (python-ts-mode . mcg-python-format-candidates)
+    (c-mode . (("clang-format")))
+    (c-ts-mode . (("clang-format")))
+    (c++-mode . (("clang-format")))
+    (c++-ts-mode . (("clang-format")))
     (zig-mode . (("zig" "fmt")))
     (zig-ts-mode . (("zig" "fmt")))
     (web-mode . mcg-format--web-external-candidates)

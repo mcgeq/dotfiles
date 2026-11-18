@@ -223,6 +223,17 @@
 | C-c C-c F | mcg/python-ruff-format | Ruff 格式化 |
 | C-c C-z | mcg/python-repl | 打开 Python REPL |
 
+** C/C++
+支持 =c-mode=/=c++-mode= 与 tree-sitter 的 =c-ts-mode=/=c++-ts-mode=（有对应 grammar 时自动选用），按键在四种模式下均生效。
+| 快捷键 | 命令 | 说明 |
+|--------+------+------|
+| C-c C-c b | mcg/cpp-build | 编译当前文件或项目 |
+| C-c C-c r | mcg/cpp-run | 编译并运行 |
+| C-c C-c t | mcg/cpp-test | 运行项目测试 |
+| C-c C-c c | mcg/cpp-clean | 清理项目 |
+| C-c C-r | mcg/cpp-run | 编译并运行当前文件 |
+| C-c C-f | mcg-format-buffer | 格式化当前 buffer |
+
 ** Zig
 | 快捷键 | 命令 | 说明 |
 |--------+------+------|

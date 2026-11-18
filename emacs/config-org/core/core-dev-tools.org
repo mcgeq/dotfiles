@@ -258,6 +258,29 @@ Existing Python/format/Zig helper names and options remain available for compati
       (list (mcg-format--node-tool-command root "prettier" '("--write")))))))
 #+end_src
 
+** LSP Bridge On-Demand Loading
+
+#+begin_src emacs-lisp
+(defcustom mcg-lsp-load-bridge-on-demand t
+  "Whether language modules may load the idle lsp-bridge module on demand.
+This keeps language LSP features available immediately when a source file is
+opened, instead of waiting for the whole idle module queue to drain."
+  :type 'boolean
+  :group 'mcg)
+
+(defun mcg-lsp--ensure-bridge-loaded ()
+  "Load the lsp-bridge module on demand when it is enabled but not loaded.
+Return non-nil when `lsp-bridge-mode' is available afterwards."
+  (when (and mcg-lsp-load-bridge-on-demand
+             (fboundp 'mcg-module-enabled-p)
+             (mcg-module-enabled-p :tools 'lsp-bridge)
+             (fboundp 'mcg-module-loaded-p)
+             (not (mcg-module-loaded-p :tools 'lsp-bridge))
+             (fboundp 'mcg-load-module))
+    (mcg-load-module :tools 'lsp-bridge))
+  (fboundp 'lsp-bridge-mode))
+#+end_src
+
 ** Zig Commands
 
 #+begin_src emacs-lisp
